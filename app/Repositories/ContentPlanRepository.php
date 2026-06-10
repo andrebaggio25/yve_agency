@@ -31,7 +31,6 @@ class ContentPlanRepository extends Repository
         $cond = implode(' AND ', $where);
         $sql  = "SELECT cp.*,
                         c.name   AS client_name,
-                        c.logo   AS client_logo,
                         u.name   AS created_by_name,
                         (SELECT COUNT(*) FROM content_plan_items i WHERE i.content_plan_id = cp.id) AS total_items,
                         (SELECT COUNT(*) FROM content_plan_items i WHERE i.content_plan_id = cp.id AND i.status = 'approved') AS approved_items

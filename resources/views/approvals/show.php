@@ -87,7 +87,7 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
 
   <!-- Items -->
   <div class="space-y-4">
-    <?php foreach ($plan['items'] as $item):
+    <?php foreach ($plan['items'] as $loopIdx => $item):
       $isc    = $statusColors[$item['status']] ?? $statusColors['draft'];
       $iLabel = ContentPlanService::itemStatusLabel($item['status']);
       $parsed = $item['drive_parsed'] ?? ($item['drive_url'] ? $drive->parse($item['drive_url']) : null);
@@ -106,7 +106,7 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
               <?= !empty($item['content_type']) ? ' · ' . e($item['content_type']) : '' ?>
             </p>
             <?php endif; ?>
-            <h3 class="font-semibold text-white"><?= e($item['title'] ?: 'Item ' . $loop_index) ?></h3>
+            <h3 class="font-semibold text-white"><?= e($item['title'] ?: 'Item ' . ($loopIdx + 1)) ?></h3>
             <?php if (!empty($item['theme'])): ?>
             <p class="text-sm text-gray-400 mt-0.5"><?= e($item['theme']) ?></p>
             <?php endif; ?>
