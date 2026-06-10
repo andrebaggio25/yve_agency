@@ -1,0 +1,10 @@
+/vendor/
+/.env
+/storage/logs/*.log
+/storage/cache/*
+/storage/uploads/*
+/storage/exports/*
+/storage/framework/*
+*.DS_Store
+.phpunit.result.cache
+.php-cs-fixer.cache
