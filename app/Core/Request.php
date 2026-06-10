@@ -99,10 +99,23 @@ class Request
         return $this->server[$key] ?? $default;
     }
 
-    /** Returns only specified keys from the body */
-    public function only(string ...$keys): array
+    /** Returns only specified keys from the body. Accepts array or variadic strings. */
+    public function only(array|string ...$keys): array
     {
-        return array_intersect_key($this->body, array_flip($keys));
+        $flat = (count($keys) === 1 && is_array($keys[0])) ? $keys[0] : $keys;
+        return array_intersect_key(array_merge($this->query, $this->body), array_flip($flat));
+    }
+
+    /** Parse JSON request body and return value at key (or full decoded array if no key) */
+    public function json(string $key = '', mixed $default = null): mixed
+    {
+        static $decoded = null;
+        if ($decoded === null) {
+            $raw     = file_get_contents('php://input');
+            $decoded = json_decode($raw ?: '{}', true) ?? [];
+        }
+        if ($key === '') return $decoded;
+        return $decoded[$key] ?? $default;
     }
 
     /** Returns all body + query input */

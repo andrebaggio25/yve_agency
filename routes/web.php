@@ -7,6 +7,8 @@ use App\Controllers\DashboardController;
 use App\Controllers\UserController;
 use App\Controllers\RoleController;
 use App\Controllers\ClientController;
+use App\Controllers\ContentPlanController;
+use App\Controllers\ApprovalController;
 use App\Middlewares\AuthMiddleware;
 use App\Middlewares\CsrfMiddleware;
 use App\Middlewares\RateLimitMiddleware;
@@ -64,4 +66,27 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/clientes/{clientId}/acesso',    [ClientController::class, 'accessIndex'],  [ClientAccessMiddleware::class]);
     $router->post('/clientes/{clientId}/acesso',   [ClientController::class, 'grantAccess'],  [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->delete('/clientes/{clientId}/acesso/{userId}', [ClientController::class, 'revokeAccess'], [CsrfMiddleware::class]);
+
+    // ── Planos de Conteúdo ────────────────────────────────────────────────────
+    $router->get('/conteudo',                   [ContentPlanController::class, 'index']);
+    $router->get('/conteudo/criar',             [ContentPlanController::class, 'create']);
+    $router->post('/conteudo',                  [ContentPlanController::class, 'store'],           [CsrfMiddleware::class]);
+    $router->get('/conteudo/{planId}',          [ContentPlanController::class, 'show']);
+    $router->get('/conteudo/{planId}/editar',   [ContentPlanController::class, 'edit']);
+    $router->put('/conteudo/{planId}',          [ContentPlanController::class, 'update'],          [CsrfMiddleware::class]);
+    $router->delete('/conteudo/{planId}',       [ContentPlanController::class, 'destroy'],         [CsrfMiddleware::class]);
+    $router->post('/conteudo/{planId}/enviar',  [ContentPlanController::class, 'sendToApproval'],  [CsrfMiddleware::class]);
+
+    // Itens do plano
+    $router->post('/conteudo/{planId}/items',                     [ContentPlanController::class, 'storeItem'],   [CsrfMiddleware::class]);
+    $router->put('/conteudo/{planId}/items/{itemId}',             [ContentPlanController::class, 'updateItem'],  [CsrfMiddleware::class]);
+    $router->delete('/conteudo/{planId}/items/{itemId}',          [ContentPlanController::class, 'destroyItem'], [CsrfMiddleware::class]);
+    $router->post('/conteudo/{planId}/items/reorder',             [ContentPlanController::class, 'reorderItems'],[CsrfMiddleware::class]);
+
+    // ── Aprovações (área do cliente) ──────────────────────────────────────────
+    $router->get('/aprovacoes',                              [ApprovalController::class, 'index']);
+    $router->get('/aprovacoes/{planId}',                     [ApprovalController::class, 'show']);
+    $router->post('/aprovacoes/{planId}/aprovar',            [ApprovalController::class, 'approvePlan'],    [CsrfMiddleware::class]);
+    $router->post('/aprovacoes/{planId}/revisao',            [ApprovalController::class, 'requestRevision'],[CsrfMiddleware::class]);
+    $router->post('/aprovacoes/{planId}/items/{itemId}',     [ApprovalController::class, 'feedback'],       [CsrfMiddleware::class]);
 });
