@@ -124,6 +124,48 @@ class SubscriptionRepository extends Repository
         ", $params);
     }
 
+    /**
+     * All agencies, with their most recent active subscription (or null).
+     * Used in the admin subscriptions overview.
+     */
+    public function allAgenciesWithSubscription(): array
+    {
+        return $this->all("
+            SELECT
+                a.id AS agency_id,
+                a.name AS agency_name,
+                a.status AS agency_status,
+                s.id AS sub_id,
+                s.plan_id,
+                s.status,
+                s.billing_cycle,
+                s.current_period_start,
+                s.current_period_end,
+                p.name AS plan_name,
+                p.slug AS plan_slug
+            FROM agencies a
+            LEFT JOIN LATERAL (
+                SELECT * FROM agency_subscriptions
+                WHERE agency_id = a.id
+                ORDER BY id DESC
+                LIMIT 1
+            ) s ON true
+            LEFT JOIN subscription_plans p ON p.id = s.plan_id
+            ORDER BY a.name
+        ");
+    }
+
+    public function findSubscriptionById(int $id): ?array
+    {
+        return $this->first("
+            SELECT s.*, p.name AS plan_name, a.name AS agency_name
+            FROM agency_subscriptions s
+            JOIN subscription_plans p ON p.id = s.plan_id
+            JOIN agencies a ON a.id = s.agency_id
+            WHERE s.id = :id
+        ", [':id' => $id]);
+    }
+
     public function createSubscription(array $data): int
     {
         $this->query("

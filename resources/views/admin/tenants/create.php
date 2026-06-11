@@ -85,6 +85,37 @@
     </div>
   </div>
 
+  <!-- Assinatura inicial -->
+  <div class="card p-6 space-y-4">
+    <p class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1">Assinatura inicial <span class="text-gray-600">(opcional)</span></p>
+
+    <div class="grid grid-cols-3 gap-4">
+      <div class="col-span-1">
+        <label class="label-field">Plano</label>
+        <select name="plan_id" class="input-field w-full">
+          <option value="0">Sem plano</option>
+          <?php foreach ($plans as $p): ?>
+          <option value="<?= $p['id'] ?>"><?= e($p['name']) ?><?= $p['price_monthly'] > 0 ? ' — R$ ' . number_format($p['price_monthly'], 0, ',', '.') . '/mês' : ' (grátis)' ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div>
+        <label class="label-field">Ciclo</label>
+        <select name="billing_cycle" class="input-field w-full">
+          <option value="monthly">Mensal</option>
+          <option value="yearly">Anual</option>
+        </select>
+      </div>
+      <div>
+        <label class="label-field">Status</label>
+        <select name="subscription_status" class="input-field w-full">
+          <option value="trialing">Trial</option>
+          <option value="active">Ativa</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
   <div class="flex items-center justify-between">
     <a href="/admin/tenants" class="btn-secondary text-sm px-4 py-2">Cancelar</a>
     <button type="submit" class="btn-primary text-sm px-6 py-2.5">Criar tenant</button>

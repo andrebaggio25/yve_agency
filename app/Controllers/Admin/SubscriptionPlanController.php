@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Core\Controller;
+use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repositories\SubscriptionRepository;
@@ -64,29 +65,49 @@ class SubscriptionPlanController extends Controller
 
     public function subscriptions(Request $request): Response
     {
-        $filters = [
-            'status'  => $request->query('status', ''),
-            'plan_id' => $request->query('plan_id', ''),
-        ];
-        $subscriptions = $this->repo->allSubscriptions(array_filter($filters));
-        $plans         = $this->repo->allPlans();
+        $tenants = $this->repo->allAgenciesWithSubscription();
+        $plans   = $this->repo->allPlans();
 
-        return $this->view('admin.billing.subscriptions', compact('subscriptions', 'plans', 'filters'));
+        return $this->view('admin.billing.subscriptions', compact('tenants', 'plans'));
     }
 
-    public function assignPlan(Request $request): Response
+    public function editSubscription(Request $request): Response
     {
-        $agencyId     = (int) $request->post('agency_id', 0);
+        $agencyId = (int) $request->param('agencyId');
+        $existing = $this->repo->findActiveByAgency($agencyId);
+        $plans    = $this->repo->allPlans();
+
+        $agency = $this->findAgency($agencyId);
+        if (!$agency) {
+            $this->withError('Tenant não encontrado.');
+            return $this->redirect('/admin/assinaturas');
+        }
+
+        return $this->view('admin.billing.subscription_form', compact('agency', 'existing', 'plans'));
+    }
+
+    public function updateSubscription(Request $request): Response
+    {
+        $agencyId     = (int) $request->param('agencyId');
         $planId       = (int) $request->post('plan_id', 0);
         $billingCycle = $request->post('billing_cycle', 'monthly');
         $status       = $request->post('status', 'active');
 
-        if ($agencyId && $planId) {
+        if ($planId) {
             $this->billing->assignPlan($agencyId, $planId, $billingCycle, $status);
             $this->withSuccess('Assinatura atualizada.');
         }
 
         return $this->redirect('/admin/assinaturas');
+    }
+
+    private function findAgency(int $id): ?array
+    {
+        $pdo  = \App\Core\Database::connection();
+        $stmt = $pdo->prepare("SELECT id, name FROM agencies WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
     }
 
     private function planData(Request $request): array

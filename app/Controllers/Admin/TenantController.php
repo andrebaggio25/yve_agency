@@ -8,16 +8,20 @@ use App\Core\Controller;
 use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
+use App\Repositories\SubscriptionRepository;
+use App\Services\BillingService;
 use App\Support\Auth;
 use PDO;
 
 class TenantController extends Controller
 {
     private PDO $pdo;
+    private BillingService $billing;
 
-    public function __construct()
+    public function __construct(BillingService $billing)
     {
-        $this->pdo = Database::connection();
+        $this->pdo     = Database::connection();
+        $this->billing = $billing;
     }
 
     public function index(Request $request): Response
@@ -41,7 +45,8 @@ class TenantController extends Controller
     public function create(Request $request): Response
     {
         Auth::requirePlatformAdmin();
-        return $this->view('admin.tenants.create');
+        $plans = $this->billing->allPlans();
+        return $this->view('admin.tenants.create', compact('plans'));
     }
 
     public function store(Request $request): Response
@@ -53,9 +58,12 @@ class TenantController extends Controller
         $currency   = (string) $request->post('currency_code', 'BRL');
         $timezone   = (string) $request->post('timezone', 'America/Sao_Paulo');
         $status     = (string) $request->post('status', 'active');
-        $adminName  = trim((string) $request->post('admin_name', ''));
-        $adminEmail = trim((string) $request->post('admin_email', ''));
-        $adminPass  = trim((string) $request->post('admin_password', ''));
+        $adminName    = trim((string) $request->post('admin_name', ''));
+        $adminEmail   = trim((string) $request->post('admin_email', ''));
+        $adminPass    = trim((string) $request->post('admin_password', ''));
+        $planId       = (int) $request->post('plan_id', 0);
+        $billingCycle = (string) $request->post('billing_cycle', 'monthly');
+        $subStatus    = (string) $request->post('subscription_status', 'trialing');
 
         if (empty($name)) {
             $this->withError('O nome do tenant é obrigatório.');
@@ -122,6 +130,11 @@ class TenantController extends Controller
             $this->pdo->rollBack();
             $this->withError('Erro ao criar tenant: ' . $e->getMessage());
             return $this->redirect('/admin/tenants/criar');
+        }
+
+        // 4. Create subscription if plan selected
+        if ($planId > 0) {
+            $this->billing->assignPlan($agencyId, $planId, $billingCycle, $subStatus);
         }
 
         $passDisplay = $adminPass ? '(senha definida pelo admin)' : $password;

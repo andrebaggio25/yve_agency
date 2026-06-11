@@ -82,8 +82,9 @@ $router->group([PlatformAdminMiddleware::class], function ($router) {
     $router->post('/admin/planos',                      [SubscriptionPlanController::class, 'storePlan'],  [CsrfMiddleware::class]);
     $router->get('/admin/planos/{id}/editar',           [SubscriptionPlanController::class, 'editPlan']);
     $router->put('/admin/planos/{id}',                  [SubscriptionPlanController::class, 'updatePlan'], [CsrfMiddleware::class]);
-    $router->get('/admin/assinaturas',                  [SubscriptionPlanController::class, 'subscriptions']);
-    $router->post('/admin/assinaturas/atribuir',        [SubscriptionPlanController::class, 'assignPlan'], [CsrfMiddleware::class]);
+    $router->get('/admin/assinaturas',                          [SubscriptionPlanController::class, 'subscriptions']);
+    $router->get('/admin/assinaturas/{agencyId}/editar',        [SubscriptionPlanController::class, 'editSubscription']);
+    $router->post('/admin/assinaturas/{agencyId}',              [SubscriptionPlanController::class, 'updateSubscription'], [CsrfMiddleware::class]);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

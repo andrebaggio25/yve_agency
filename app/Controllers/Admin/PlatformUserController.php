@@ -42,7 +42,7 @@ class PlatformUserController extends Controller
         $whereClause = implode(' AND ', $where);
 
         $stmt = $this->pdo->prepare("
-            SELECT u.id, u.name, u.email, u.status, u.language, u.created_at,
+            SELECT u.id, u.name, u.email, u.status, u.created_at,
                    a.name AS agency_name, a.id AS agency_id,
                    STRING_AGG(r.name, ', ') AS roles
             FROM users u
