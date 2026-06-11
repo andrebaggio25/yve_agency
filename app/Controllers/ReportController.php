@@ -156,7 +156,7 @@ class ReportController extends Controller
         $clientId = (int) $request->param('clientId');
         $pdo      = Database::connection();
 
-        $client = $this->clientRepo->findById($clientId, $agencyId);
+        $client = $this->clientRepo->findByIdAndAgency($clientId, $agencyId);
         if (!$client) {
             return $this->redirect('/relatorio-executivo')->withError('Cliente não encontrado.');
         }

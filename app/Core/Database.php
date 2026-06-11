@@ -32,11 +32,15 @@ class Database
 
     private static function connectPgsql(): PDO
     {
+        $host = env('DB_HOST', '127.0.0.1');
+        $isRemote = $host !== '127.0.0.1' && $host !== 'localhost';
+
         $dsn = sprintf(
-            'pgsql:host=%s;port=%s;dbname=%s',
-            env('DB_HOST', '127.0.0.1'),
+            'pgsql:host=%s;port=%s;dbname=%s;sslmode=%s;application_name=yve_agency',
+            $host,
             env('DB_PORT', '5432'),
             env('DB_NAME', 'yve_agency'),
+            $isRemote ? 'require' : 'prefer',
         );
 
         return self::makePdo($dsn, env('DB_USER', 'postgres'), env('DB_PASS', ''));

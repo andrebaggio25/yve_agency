@@ -3,7 +3,7 @@
 
 <?php
 $statusLabels = ['trialing' => 'Trial', 'active' => 'Ativa', 'past_due' => 'Atrasada', 'cancelled' => 'Cancelada', 'suspended' => 'Suspensa', 'none' => 'Sem plano'];
-$statusColors = ['trialing' => 'text-blue-300 bg-blue-500/10', 'active' => 'text-green-300 bg-green-500/10', 'past_due' => 'text-red-300 bg-red-500/10', 'cancelled' => 'text-gray-500 bg-gray-700/20', 'none' => 'text-gray-400 bg-gray-500/10'];
+$statusColors = ['trialing' => 'text-blue-300 bg-blue-500/10', 'active' => 'text-green-300 bg-green-500/10', 'past_due' => 'text-red-300 bg-red-500/10', 'cancelled' => 'text-gray-500 bg-gray-700/20', 'suspended' => 'text-orange-300 bg-orange-500/10', 'none' => 'text-gray-400 bg-gray-500/10'];
 $tierColors   = ['free' => 'text-gray-300', 'starter' => 'text-blue-300', 'pro' => 'text-violet-300', 'enterprise' => 'text-yellow-300'];
 $tc           = $tierColors[$subscription['plan_slug'] ?? ''] ?? 'text-gray-300';
 

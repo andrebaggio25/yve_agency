@@ -62,6 +62,97 @@
 
       /* Mobile nav overlay */
       #mobile-nav { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s; }
+
+      /* ── Shared UI components ───────────────────────────────────────────── */
+
+      /* Card */
+      .card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 1rem;
+      }
+
+      /* Form inputs */
+      .input-field {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 0.75rem;
+        color: #f3f4f6;
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        outline: none;
+        width: 100%;
+      }
+      .input-field::placeholder { color: #6b7280; }
+      .input-field:focus {
+        border-color: rgba(139,92,246,0.6);
+        box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+      }
+      .input-field:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      select.input-field { appearance: auto; background-color: #0d0d14; }
+      textarea.input-field { resize: vertical; }
+
+      /* Labels */
+      .label-field {
+        display: block;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #d1d5db;
+        margin-bottom: 0.375rem;
+      }
+
+      /* Buttons */
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: #7c3aed;
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: 600;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.75rem;
+        border: none;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+        box-shadow: 0 4px 14px rgba(124,58,237,0.25);
+        text-decoration: none;
+      }
+      .btn-primary:hover { background: #6d28d9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,0.35); }
+      .btn-primary:active { transform: translateY(0); }
+
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: rgba(255,255,255,0.05);
+        color: #d1d5db;
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255,255,255,0.10);
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        text-decoration: none;
+      }
+      .btn-secondary:hover { background: rgba(255,255,255,0.09); color: #f9fafb; border-color: rgba(255,255,255,0.18); }
+
+      /* Badge/pill */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.125rem 0.625rem;
+      }
     </style>
 
     <?= view_slot('head') ?>

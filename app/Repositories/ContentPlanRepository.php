@@ -63,7 +63,6 @@ class ContentPlanRepository extends Repository
         return $this->first(
             "SELECT cp.*,
                     c.name AS client_name,
-                    c.logo AS client_logo,
                     u.name AS created_by_name
              FROM content_plans cp
              JOIN clients c ON c.id = cp.client_id
