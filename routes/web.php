@@ -70,7 +70,14 @@ $router->group([PlatformAdminMiddleware::class], function ($router) {
     $router->put('/admin/tenants/{id}',                 [TenantController::class, 'update'],  [CsrfMiddleware::class]);
     $router->delete('/admin/tenants/{id}',              [TenantController::class, 'destroy'], [CsrfMiddleware::class]);
 
-    $router->get('/admin/usuarios',                     [PlatformUserController::class, 'index']);
+    $router->get('/admin/usuarios',                          [PlatformUserController::class, 'index']);
+    $router->get('/admin/usuarios/novo',                     [PlatformUserController::class, 'create']);
+    $router->post('/admin/usuarios',                         [PlatformUserController::class, 'store'],        [CsrfMiddleware::class]);
+    $router->get('/admin/usuarios/{id}/editar',              [PlatformUserController::class, 'edit']);
+    $router->put('/admin/usuarios/{id}',                     [PlatformUserController::class, 'update'],       [CsrfMiddleware::class]);
+    $router->post('/admin/usuarios/{id}/senha',              [PlatformUserController::class, 'setPassword'],  [CsrfMiddleware::class]);
+    $router->post('/admin/usuarios/{id}/enviar-reset',       [PlatformUserController::class, 'sendReset'],    [CsrfMiddleware::class]);
+    $router->post('/admin/usuarios/{id}/status',             [PlatformUserController::class, 'toggleStatus'], [CsrfMiddleware::class]);
 
     $router->get('/admin/configuracoes',                [GlobalSettingsController::class, 'index']);
     $router->post('/admin/configuracoes',               [GlobalSettingsController::class, 'save'],         [CsrfMiddleware::class]);
