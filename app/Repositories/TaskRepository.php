@@ -86,7 +86,7 @@ class TaskRepository extends Repository
         return (int) $stmt->fetchColumn();
     }
 
-    public function update(int $id, int $agencyId, array $data): void
+    public function updateTask(int $id, int $agencyId, array $data): void
     {
         $this->pdo->prepare("
             UPDATE tasks SET

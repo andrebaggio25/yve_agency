@@ -136,7 +136,7 @@ class TaskController extends Controller
         $assignedTo = (int) $request->post('assigned_to', 0) ?: null;
         $title      = trim((string) $request->post('title', ''));
 
-        $this->repo->update($id, $agencyId, [
+        $this->repo->updateTask($id, $agencyId, [
             'client_id'   => $request->post('client_id', ''),
             'assigned_to' => $assignedTo,
             'title'       => $title,
