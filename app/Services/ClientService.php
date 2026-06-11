@@ -9,7 +9,11 @@ use App\Support\ActivityLogger;
 
 class ClientService
 {
-    public function __construct(private readonly ClientRepository $clientRepo) {}
+    public function __construct(
+        private readonly ClientRepository $clientRepo,
+        private readonly ?AutomationService $automations = null,
+        private readonly ?NotificationService $notifications = null,
+    ) {}
 
     public function listForUser(int $userId, int $agencyId, bool $canSeeAll): array
     {
@@ -82,7 +86,42 @@ class ClientService
 
         ActivityLogger::log('client_created', 'clients', null, (int) $clientId, ['name' => $data['name']]);
 
+        $this->maybeOnboard($agencyId, (int) $clientId);
+
         return ['success' => true, 'id' => (int) $clientId];
+    }
+
+    /**
+     * Automação client.onboarding: ao cadastrar o cliente, garante o portal_token
+     * e envia a mensagem de boas-vindas. Gate por agência + idempotência.
+     */
+    private function maybeOnboard(int $agencyId, int $clientId): void
+    {
+        if (!$this->automations) return;
+        if (!$this->automations->isEnabledForClient($agencyId, $clientId, 'client.onboarding')) return;
+
+        $dedupe = "client:{$clientId}:onboarding";
+        if (!$this->automations->shouldRun('client.onboarding', $dedupe)) return;
+
+        $client = $this->clientRepo->findByIdAndAgency($clientId, $agencyId);
+        if (!$client) return;
+
+        if (empty($client['portal_token'])) {
+            $token = bin2hex(random_bytes(16));
+            $this->clientRepo->updateById($clientId, [
+                'portal_token' => $token,
+                'updated_at'   => date('Y-m-d H:i:s'),
+            ]);
+            $client['portal_token'] = $token;
+        }
+
+        $portalUrl = rtrim((string) env('APP_URL', ''), '/') . '/portal/' . $client['portal_token'];
+
+        $this->notifications?->notifyEvent('client.onboarding', $agencyId, [
+            'client'     => $client,
+            'portal_url' => $portalUrl,
+        ]);
+        $this->automations->markRan($agencyId, $clientId, 'client.onboarding', $dedupe);
     }
 
     public function update(int $clientId, array $data, int $agencyId): array

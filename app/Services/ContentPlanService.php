@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Repositories\ClientRepository;
 use App\Repositories\ContentPlanRepository;
+use App\Repositories\TaskRepository;
 use App\Support\ActivityLogger;
 use App\Support\Auth;
 
@@ -16,6 +17,8 @@ class ContentPlanService
         private readonly GoogleDriveService    $drive,
         private readonly ?ClientRepository     $clientRepo = null,
         private readonly ?NotificationService  $notifications = null,
+        private readonly ?AutomationService    $automations = null,
+        private readonly ?TaskRepository       $taskRepo = null,
     ) {}
 
     // ── Plans ──────────────────────────────────────────────────────────────────
@@ -248,9 +251,56 @@ class ContentPlanService
                 'client'              => $client,
                 'responsible_user_id' => $plan['created_by'] ?? null,
             ]);
+            $this->maybeCreateProductionTasks($agencyId, $clientId, $planId, $plan);
         }
 
         return $affected > 0;
+    }
+
+    /**
+     * Automação content.approved_create_tasks: ao aprovar, cria as tarefas de
+     * produção (uma por item do plano) para a equipe. Gate por agência + idempotência.
+     */
+    private function maybeCreateProductionTasks(int $agencyId, int $clientId, int $planId, array $plan): void
+    {
+        if (!$this->automations || !$this->taskRepo) return;
+        if (!$this->automations->isEnabledForClient($agencyId, $clientId, 'content.approved_create_tasks')) return;
+
+        $dedupe = "plan:{$planId}:tasks";
+        if (!$this->automations->shouldRun('content.approved_create_tasks', $dedupe)) return;
+
+        $createdBy = (int) ($plan['created_by'] ?? 0);
+        $items     = $this->repo->getItems($planId);
+
+        if ($items) {
+            foreach ($items as $item) {
+                $this->taskRepo->create([
+                    'agency_id'   => $agencyId,
+                    'client_id'   => $clientId,
+                    'assigned_to' => !empty($item['assigned_to']) ? (int) $item['assigned_to'] : null,
+                    'created_by'  => $createdBy,
+                    'title'       => 'Produzir: ' . ($item['title'] ?: ($item['content_type'] ?? 'conteúdo')),
+                    'description' => $item['caption'] ?? null,
+                    'status'      => 'todo',
+                    'priority'    => 'medium',
+                    'due_date'    => $item['publish_date'] ?? null,
+                ]);
+            }
+        } else {
+            $this->taskRepo->create([
+                'agency_id'   => $agencyId,
+                'client_id'   => $clientId,
+                'assigned_to' => null,
+                'created_by'  => $createdBy,
+                'title'       => 'Produzir conteúdo: ' . ($plan['title'] ?? ''),
+                'description' => null,
+                'status'      => 'todo',
+                'priority'    => 'medium',
+                'due_date'    => null,
+            ]);
+        }
+
+        $this->automations->markRan($agencyId, $clientId, 'content.approved_create_tasks', $dedupe);
     }
 
     public function requestRevision(int $planId, int $clientId, string $note): bool

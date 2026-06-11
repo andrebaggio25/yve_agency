@@ -63,6 +63,7 @@ return [
     'nav.payments'          => 'Payments',
     'nav.financial_reports' => 'Reports',
     'nav.users'             => 'Users',
+    'nav.automations'       => 'Automations',
     'nav.executive_report'  => 'Exec. Report',
     'nav.subscription'      => 'Subscription',
     'nav.settings'          => 'Settings',

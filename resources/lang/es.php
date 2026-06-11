@@ -63,6 +63,7 @@ return [
     'nav.payments'          => 'Pagos',
     'nav.financial_reports' => 'Informes',
     'nav.users'             => 'Usuarios',
+    'nav.automations'       => 'Automatizaciones',
     'nav.executive_report'  => 'Informe Ejec.',
     'nav.subscription'      => 'Suscripción',
     'nav.settings'          => 'Configuración',

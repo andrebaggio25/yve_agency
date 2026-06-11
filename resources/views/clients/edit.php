@@ -70,6 +70,51 @@
       </div>
     </div>
 
+    <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-5">
+      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Notificações & automações</h2>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1.5">WhatsApp do cliente</label>
+        <input type="text" name="whatsapp" value="<?= old('whatsapp', $client['whatsapp'] ?? '') ?>"
+               placeholder="5511999998888"
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+        <p class="mt-1 text-xs text-gray-500">Com DDI + DDD. Necessário para os avisos por WhatsApp.</p>
+      </div>
+
+      <div class="flex flex-wrap gap-5">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" name="notify_whatsapp" value="1" <?= ($client['notify_whatsapp'] ?? true) ? 'checked' : '' ?>
+                 class="w-4 h-4 rounded accent-violet-500">
+          <span class="text-sm text-gray-300">Permitir avisos por WhatsApp</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" name="notify_email" value="1" <?= ($client['notify_email'] ?? true) ? 'checked' : '' ?>
+                 class="w-4 h-4 rounded accent-violet-500">
+          <span class="text-sm text-gray-300">Permitir avisos por e-mail</span>
+        </label>
+      </div>
+
+      <?php if (!empty($clientAutomations)): ?>
+      <div class="pt-2 border-t border-white/[0.06]">
+        <p class="text-xs font-medium text-gray-400 mb-1">Automações deste cliente</p>
+        <p class="text-xs text-gray-600 mb-3">Só disparam se a automação estiver ativada na agência (em Automações).</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <?php foreach ($clientAutomations as $key => $def): ?>
+          <label class="flex items-start gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 cursor-pointer hover:bg-white/[0.04] transition-colors">
+            <input type="checkbox" name="automations[<?= e($key) ?>]" value="1"
+                   <?= !empty($clientAutoSettings[$key]) ? 'checked' : '' ?>
+                   class="w-4 h-4 mt-0.5 rounded accent-violet-500">
+            <span>
+              <span class="block text-sm text-white"><?= e($def['label'] ?? $key) ?></span>
+              <span class="block text-xs text-gray-600"><?= e($def['description'] ?? '') ?></span>
+            </span>
+          </label>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <?php endif; ?>
+    </div>
+
     <div class="flex items-center justify-between">
       <?php if (\App\Support\Auth::can('clients.delete')): ?>
       <form action="/clientes/<?= e($client['id']) ?>" method="POST" class="inline"

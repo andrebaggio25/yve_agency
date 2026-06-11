@@ -9,13 +9,15 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Services\ClientService;
 use App\Services\BillingService;
+use App\Services\AutomationService;
 use App\Support\Auth;
 
 class ClientController extends Controller
 {
     public function __construct(
-        private readonly ClientService  $clientService,
-        private readonly BillingService $billing,
+        private readonly ClientService     $clientService,
+        private readonly BillingService    $billing,
+        private readonly AutomationService $automations,
     ) {}
 
     public function index(Request $request): Response
@@ -100,7 +102,11 @@ class ClientController extends Controller
             return $this->view('errors.404', [], 404);
         }
 
-        return $this->view('clients.edit', ['client' => $client]);
+        return $this->view('clients.edit', [
+            'client'            => $client,
+            'clientAutomations' => $this->automations->clientAutomations(),
+            'clientAutoSettings'=> $this->automations->settingsForClient($clientId),
+        ]);
     }
 
     public function update(Request $request): Response
@@ -108,18 +114,30 @@ class ClientController extends Controller
         Auth::requirePermission('clients.edit');
 
         $clientId = (int) $request->param('clientId');
+        $agencyId = (int) Auth::agencyId();
+
         $data = $request->only(
             'name', 'legal_name', 'document_type', 'document_number',
             'country', 'state', 'city', 'address', 'postal_code',
             'language', 'timezone', 'currency_code', 'segment', 'niche',
-            'status', 'start_date', 'manager_user_id',
+            'status', 'start_date', 'manager_user_id', 'whatsapp',
         );
+        // Booleanos vêm como 'true'/'false' (Postgres faz o cast; PHP false → '' quebraria).
+        $data['notify_whatsapp'] = $request->post('notify_whatsapp') ? 'true' : 'false';
+        $data['notify_email']    = $request->post('notify_email') ? 'true' : 'false';
 
-        $result = $this->clientService->update($clientId, $data, Auth::agencyId());
+        $result = $this->clientService->update($clientId, $data, $agencyId);
 
         if (!$result['success']) {
             $this->withErrors($result['errors']);
             return $this->redirect("/clientes/{$clientId}/editar");
+        }
+
+        // Opt-in das automações por cliente
+        $autos = $request->post('automations', []);
+        $autos = is_array($autos) ? $autos : [];
+        foreach (array_keys($this->automations->clientAutomations()) as $key) {
+            $this->automations->setClientSetting($agencyId, $clientId, $key, !empty($autos[$key]));
         }
 
         $this->withSuccess('Cliente atualizado.');

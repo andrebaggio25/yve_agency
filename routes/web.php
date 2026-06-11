@@ -10,6 +10,7 @@ use App\Controllers\ClientController;
 use App\Controllers\ContentPlanController;
 use App\Controllers\ApprovalController;
 use App\Controllers\SettingsController;
+use App\Controllers\AutomationController;
 use App\Controllers\QueueController;
 use App\Controllers\WhatsAppController;
 use App\Controllers\WebhookController;
@@ -222,6 +223,12 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->put('/tasks/{id}',               [TaskController::class, 'update'],       [CsrfMiddleware::class]);
     $router->post('/tasks/{id}/status',       [TaskController::class, 'updateStatus'], [CsrfMiddleware::class]);
     $router->delete('/tasks/{id}',            [TaskController::class, 'destroy'],      [CsrfMiddleware::class]);
+    // Automações
+    $router->get('/automations',           [AutomationController::class, 'index']);
+    $router->get('/automations/clients',   [AutomationController::class, 'matrix']);
+    $router->post('/automations/clients',  [AutomationController::class, 'saveMatrix'], [CsrfMiddleware::class]);
+    $router->put('/automations/{key}',     [AutomationController::class, 'update'],     [CsrfMiddleware::class]);
+
     // Settings / WhatsApp
     $router->get('/settings',                          [SettingsController::class, 'index']);
     $router->post('/settings',                         [SettingsController::class, 'save'], [CsrfMiddleware::class]);
@@ -435,6 +442,9 @@ $router->get('/queue/run',      [QueueController::class, 'run']);
 $router->get('/queue/sync-ads',     [QueueController::class, 'syncAds']);
 // Cron: sincronizar orgânico (token via ?token=)
 $router->get('/queue/sync-organic', [QueueController::class, 'syncOrganic']);
+// Cron: motor de automação — enfileira regras agendadas e processa a fila de jobs
+$router->get('/queue/scheduler',    [QueueController::class, 'scheduler']);
+$router->get('/queue/work',         [QueueController::class, 'work']);
 
 // Webhook Evolution API (token único por instância)
 $router->post('/webhook/evolution/{token}', [WebhookController::class, 'evolution']);
