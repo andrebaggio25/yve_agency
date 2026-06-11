@@ -6,6 +6,14 @@
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <title><?= e(view_slot('title', 'YVE Agency')) ?> — <?= e(env('APP_NAME', 'YVE Agency')) ?></title>
 
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//cdn.tailwindcss.com">
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -25,10 +33,10 @@
         }
       }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- defer: Chart.js only executes after HTML is parsed, unblocking first render -->
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <style>
       /* Dark base */
@@ -348,7 +356,7 @@ function notifBell() {
 
     async fetchCount() {
       try {
-        const r = await fetch('/notificacoes/count');
+        const r = await fetch('/notifications/count');
         const d = await r.json();
         this.count = d.count || 0;
       } catch {}
@@ -356,7 +364,7 @@ function notifBell() {
 
     async fetchList() {
       try {
-        const r = await fetch('/notificacoes');
+        const r = await fetch('/notifications');
         const d = await r.json();
         this.notifications = d.notifications || [];
       } catch {}
@@ -365,7 +373,7 @@ function notifBell() {
     async markRead(id) {
       try {
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        await fetch(`/notificacoes/${id}/lida`, {
+        await fetch(`/notifications/${id}/read`, {
           method: 'POST',
           headers: { 'X-CSRF-Token': csrf }
         });
@@ -377,7 +385,7 @@ function notifBell() {
     async markAllRead() {
       try {
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        await fetch('/notificacoes/todas-lidas', {
+        await fetch('/notifications/mark-all-read', {
           method: 'POST',
           headers: { 'X-CSRF-Token': csrf }
         });

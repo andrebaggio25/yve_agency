@@ -71,6 +71,9 @@ class Database
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES   => false,
+                // Reuses the TCP+SSL socket across PHP-FPM requests — eliminates the
+                // 200-500ms SSL handshake cost on every page load for remote hosts.
+                PDO::ATTR_PERSISTENT         => true,
             ]);
         } catch (PDOException $e) {
             throw new RuntimeException('Database connection failed: ' . $e->getMessage());

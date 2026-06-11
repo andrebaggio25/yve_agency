@@ -22,25 +22,25 @@ class DashboardController extends Controller
         $agencyId = (int) Auth::agencyId();
         $pdo      = Database::connection();
 
-        $active_clients = (int) $pdo->query(
-            "SELECT COUNT(*) FROM clients WHERE agency_id = {$agencyId} AND status = 'active'"
-        )->fetchColumn();
+        // One round-trip instead of four separate queries
+        $statsStmt = $pdo->prepare("
+            SELECT
+                (SELECT COUNT(*) FROM clients      WHERE agency_id = :a1 AND status = 'active')           AS active_clients,
+                (SELECT COUNT(*) FROM content_plans WHERE agency_id = :a2 AND status IN ('draft','revision')) AS pending_plans,
+                (SELECT COUNT(*) FROM content_plans WHERE agency_id = :a3 AND status = 'sent')             AS pending_approvals
+        ");
+        $statsStmt->execute([':a1' => $agencyId, ':a2' => $agencyId, ':a3' => $agencyId]);
+        $statsRow = $statsStmt->fetch();
 
-        $pending_plans = (int) $pdo->query(
-            "SELECT COUNT(*) FROM content_plans WHERE agency_id = {$agencyId} AND status IN ('draft','revision')"
-        )->fetchColumn();
-
-        $pending_approvals = (int) $pdo->query(
-            "SELECT COUNT(*) FROM content_plans WHERE agency_id = {$agencyId} AND status = 'sent'"
-        )->fetchColumn();
-
-        $recent_plans = $pdo->query(
-            "SELECT cp.id, cp.title, cp.status, cp.week_start, c.name AS client_name
-             FROM content_plans cp
-             JOIN clients c ON c.id = cp.client_id
-             WHERE cp.agency_id = {$agencyId}
-             ORDER BY cp.created_at DESC LIMIT 5"
-        )->fetchAll(\PDO::FETCH_ASSOC);
+        $recentStmt = $pdo->prepare("
+            SELECT cp.id, cp.title, cp.status, cp.week_start, c.name AS client_name
+            FROM content_plans cp
+            JOIN clients c ON c.id = cp.client_id
+            WHERE cp.agency_id = :aid
+            ORDER BY cp.created_at DESC LIMIT 5
+        ");
+        $recentStmt->execute([':aid' => $agencyId]);
+        $recent_plans = $recentStmt->fetchAll();
 
         $financialSummary = Auth::canAny('invoices.view', 'contracts.view')
             ? $this->invoiceRepo->summaryByAgency($agencyId)
@@ -48,9 +48,9 @@ class DashboardController extends Controller
 
         return $this->view('dashboard.index', [
             'stats' => [
-                'active_clients'    => $active_clients,
-                'pending_plans'     => $pending_plans,
-                'pending_approvals' => $pending_approvals,
+                'active_clients'    => (int) $statsRow['active_clients'],
+                'pending_plans'     => (int) $statsRow['pending_plans'],
+                'pending_approvals' => (int) $statsRow['pending_approvals'],
             ],
             'recent_plans'     => $recent_plans,
             'financialSummary' => $financialSummary,
