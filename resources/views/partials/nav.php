@@ -40,73 +40,73 @@ $icons = [
 ?>
 
 <?php if (Auth::can('dashboard.view')): ?>
-<?= navItem('/', $icons['dashboard'], 'Dashboard', $cp) ?>
+<?= navItem('/', $icons['dashboard'], t('nav.dashboard'), $cp) ?>
 <?php endif; ?>
 
 <?php if (Auth::canAny('clients.view', 'clients.view_all')): ?>
-<?= navItem('/clients', $icons['clients'], 'Clients', $cp) ?>
+<?= navItem('/clients', $icons['clients'], t('nav.clients'), $cp) ?>
 <?php endif; ?>
 
 <?php if (Auth::can('content.view')): ?>
 <div class="mt-1"></div>
-<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600">Content</p>
-<?= navItem('/content', $icons['content'], 'Plans', $cp) ?>
+<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600"><?= t('nav.section.content') ?></p>
+<?= navItem('/content', $icons['content'], t('nav.content_plans'), $cp) ?>
 <?php endif; ?>
 
 <?php if (Auth::can('approvals.view')): ?>
-<?= navItem('/approvals', $icons['approvals'], 'Approvals', $cp) ?>
+<?= navItem('/approvals', $icons['approvals'], t('nav.approvals'), $cp) ?>
 <?php endif; ?>
 <?php if (Auth::can('tasks.view')): ?>
-<?= navItem('/tasks', $icons['tasks'], 'Tasks', $cp) ?>
+<?= navItem('/tasks', $icons['tasks'], t('nav.tasks'), $cp) ?>
 <?php endif; ?>
 
 <?php if (Auth::canAny('ads_metrics.view', 'ai_insights.view', 'ads_actions.view', 'organic_metrics.view')): ?>
 <div class="mt-1"></div>
-<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600">Marketing</p>
+<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600"><?= t('nav.section.marketing') ?></p>
 <?php if (Auth::can('ads_metrics.view')): ?>
-<?= navItem('/traffic', $icons['traffic'], 'Paid Traffic', $cp) ?>
+<?= navItem('/traffic', $icons['traffic'], t('nav.traffic'), $cp) ?>
 <?php if (Auth::can('ads_actions.view')): ?>
-<?= navItem('/traffic/actions', $icons['actions'], 'Actions', $cp) ?>
+<?= navItem('/traffic/actions', $icons['actions'], t('nav.traffic_actions'), $cp) ?>
 <?php endif; ?>
 <?php endif; ?>
 <?php if (Auth::can('ai_insights.view')): ?>
-<?= navItem('/ai', $icons['ia'], 'AI Insights', $cp) ?>
+<?= navItem('/ai', $icons['ia'], t('nav.ai_insights'), $cp) ?>
 <?php endif; ?>
 <?php if (Auth::can('organic_metrics.view')): ?>
-<?= navItem('/organic', $icons['organic'], 'Organic', $cp) ?>
+<?= navItem('/organic', $icons['organic'], t('nav.organic'), $cp) ?>
 <?php endif; ?>
 <?php endif; ?>
 
 <?php if (Auth::canAny('invoices.view', 'contracts.view', 'payments.view')): ?>
 <div class="mt-1"></div>
-<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600">Financial</p>
-<?= navItem('/financial', $icons['financial'], 'Overview', $cp, '/financial') ?>
+<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600"><?= t('nav.section.financial') ?></p>
+<?= navItem('/financial', $icons['financial'], t('nav.financial_overview'), $cp, '/financial') ?>
 <?php if (Auth::can('contracts.view')): ?>
-<?= navItem('/contracts', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'Contracts', $cp) ?>
+<?= navItem('/contracts', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', t('nav.contracts'), $cp) ?>
 <?php endif; ?>
 <?php if (Auth::can('invoices.view')): ?>
-<?= navItem('/invoices', 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z', 'Invoices', $cp) ?>
+<?= navItem('/invoices', 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z', t('nav.invoices'), $cp) ?>
 <?php endif; ?>
 <?php if (Auth::can('payments.view')): ?>
-<?= navItem('/payments', 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 'Payments', $cp) ?>
+<?= navItem('/payments', 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', t('nav.payments'), $cp) ?>
 <?php endif; ?>
 <?php if (Auth::can('financial_reports.view')): ?>
-<?= navItem('/financial/reports', 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 'Reports', $cp) ?>
+<?= navItem('/financial/reports', 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', t('nav.financial_reports'), $cp) ?>
 <?php endif; ?>
 <?php endif; ?>
 
 <?php if (Auth::canAny('users.view', 'dashboard.view')): ?>
 <div class="mt-1"></div>
-<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600">Admin</p>
+<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600"><?= t('nav.section.admin') ?></p>
 <?php if (Auth::can('users.view')): ?>
-<?= navItem('/users', $icons['users'], 'Users', $cp) ?>
+<?= navItem('/users', $icons['users'], t('nav.users'), $cp) ?>
 <?php endif; ?>
 <?php if (Auth::can('dashboard.view')): ?>
-<?= navItem('/executive-report', $icons['report'], 'Exec. Report', $cp) ?>
+<?= navItem('/executive-report', $icons['report'], t('nav.executive_report'), $cp) ?>
 <?php endif; ?>
 <?php endif; ?>
 
-<?= navItem('/subscription', 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 'Subscription', $cp) ?>
+<?= navItem('/subscription', 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', t('nav.subscription'), $cp) ?>
 <?php if (Auth::can('settings.view')): ?>
-<?= navItem('/settings', $icons['settings'], 'Settings', $cp) ?>
+<?= navItem('/settings', $icons['settings'], t('nav.settings'), $cp) ?>
 <?php endif; ?>
