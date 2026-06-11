@@ -24,8 +24,8 @@ class PlatformUserController extends Controller
     {
         Auth::requirePlatformAdmin();
 
-        $search   = trim((string) $request->get('q', ''));
-        $agencyId = (int) $request->get('agency_id', 0);
+        $search   = trim((string) $request->query('q', ''));
+        $agencyId = (int) $request->query('agency_id', 0);
 
         $where  = ["u.is_platform_admin = FALSE"];
         $params = [];
