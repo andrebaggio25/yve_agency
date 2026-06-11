@@ -48,7 +48,7 @@ class AiInsightController extends Controller
         $id       = (int) $request->param('id');
         $agencyId = Auth::agencyId();
 
-        $insight = $this->repo->findById($id, $agencyId);
+        $insight = $this->repo->findByIdAndAgency($id, $agencyId);
         if (!$insight) {
             return Response::view('errors.404', [], 404);
         }
@@ -75,7 +75,7 @@ class AiInsightController extends Controller
         $until     = $request->post('until', date('Y-m-d'));
         $type      = $request->post('type', 'performance_summary');
 
-        $account = $this->accountRepo->findById($accountId, $agencyId);
+        $account = $this->accountRepo->findByIdAndAgency($accountId, $agencyId);
         if (!$account) {
             $this->withError('Conta não encontrada.');
             return $this->redirect('/ia');
@@ -109,7 +109,7 @@ class AiInsightController extends Controller
         $account     = null;
 
         if ($accountId) {
-            $account = $this->accountRepo->findById($accountId, $agencyId);
+            $account = $this->accountRepo->findByIdAndAgency($accountId, $agencyId);
             try {
                 $suggestions = $this->aiService->recommendActions($accountId, $since, $until);
             } catch (\Throwable $e) {

@@ -62,7 +62,7 @@ class AiInsightRepository extends Repository
         ", $params);
     }
 
-    public function findById(int $id, int $agencyId): ?array
+    public function findByIdAndAgency(int $id, int $agencyId): ?array
     {
         return $this->first("
             SELECT i.*, a.name AS account_name, c.name AS client_name

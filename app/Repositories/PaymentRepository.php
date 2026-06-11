@@ -36,7 +36,7 @@ class PaymentRepository extends Repository
         ", $params);
     }
 
-    public function findById(int $id, int $agencyId): ?array
+    public function findByIdAndAgency(int $id, int $agencyId): ?array
     {
         return $this->first("
             SELECT p.*, i.invoice_number, i.title AS invoice_title, cl.name AS client_name

@@ -105,7 +105,7 @@ class TaskController extends Controller
     public function show(Request $request): Response
     {
         Auth::requirePermission('tasks.view');
-        $task = $this->repo->findById((int) $request->param('id'), (int) Auth::agencyId());
+        $task = $this->repo->findByIdAndAgency((int) $request->param('id'), (int) Auth::agencyId());
         if (!$task) return Response::view('errors.404', [], 404);
 
         return $this->view('tasks.show', compact('task'));
@@ -117,7 +117,7 @@ class TaskController extends Controller
     {
         Auth::requirePermission('tasks.edit');
         $agencyId = (int) Auth::agencyId();
-        $task     = $this->repo->findById((int) $request->param('id'), $agencyId);
+        $task     = $this->repo->findByIdAndAgency((int) $request->param('id'), $agencyId);
         if (!$task) return Response::view('errors.404', [], 404);
 
         $clients = $this->clientRepo->findByAgency($agencyId);
@@ -132,7 +132,7 @@ class TaskController extends Controller
         $id       = (int) $request->param('id');
         $agencyId = (int) Auth::agencyId();
 
-        $prevTask   = $this->repo->findById($id, $agencyId);
+        $prevTask   = $this->repo->findByIdAndAgency($id, $agencyId);
         $assignedTo = (int) $request->post('assigned_to', 0) ?: null;
         $title      = trim((string) $request->post('title', ''));
 

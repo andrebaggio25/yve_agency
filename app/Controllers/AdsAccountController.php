@@ -250,7 +250,7 @@ class AdsAccountController extends Controller
     {
         Auth::requirePermission('ads_metrics.view');
         $id      = (int) $request->param('id');
-        $account = $this->repo->findById($id, Auth::agencyId());
+        $account = $this->repo->findByIdAndAgency($id, Auth::agencyId());
 
         if (!$account) {
             $this->withError('Conta não encontrada.');

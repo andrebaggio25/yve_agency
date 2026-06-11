@@ -60,7 +60,7 @@ class AdsActionService
 
     public function approve(int $id, int $agencyId): void
     {
-        $action = $this->repo->findById($id, $agencyId);
+        $action = $this->repo->findByIdAndAgency($id, $agencyId);
         if (!$action || $action['status'] !== 'pending') {
             throw new \RuntimeException('Ação não encontrada ou já processada.');
         }
@@ -69,7 +69,7 @@ class AdsActionService
 
     public function reject(int $id, int $agencyId): void
     {
-        $action = $this->repo->findById($id, $agencyId);
+        $action = $this->repo->findByIdAndAgency($id, $agencyId);
         if (!$action || $action['status'] !== 'pending') {
             throw new \RuntimeException('Ação não encontrada ou já processada.');
         }
@@ -82,12 +82,12 @@ class AdsActionService
      */
     public function execute(int $id, int $agencyId): void
     {
-        $action = $this->repo->findById($id, $agencyId);
+        $action = $this->repo->findByIdAndAgency($id, $agencyId);
         if (!$action || $action['status'] !== 'approved') {
             throw new \RuntimeException('Ação não aprovada ou não encontrada.');
         }
 
-        $account = $this->accountRepo->findById($action['ad_account_id'], $agencyId);
+        $account = $this->accountRepo->findByIdAndAgency($action['ad_account_id'], $agencyId);
         if (!$account) {
             throw new \RuntimeException('Conta de anúncios não encontrada.');
         }

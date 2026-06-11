@@ -51,6 +51,12 @@ $router->post('/esqueci-senha',          [AuthController::class, 'sendResetLink'
 $router->get('/redefinir-senha/{token}', [AuthController::class, 'showResetPassword']);
 $router->post('/redefinir-senha',        [AuthController::class, 'resetPassword'],  [CsrfMiddleware::class]);
 
+// English aliases for auth
+$router->get('/forgot-password',           [AuthController::class, 'showForgotPassword']);
+$router->post('/forgot-password',          [AuthController::class, 'sendResetLink'], [CsrfMiddleware::class]);
+$router->get('/reset-password/{token}',    [AuthController::class, 'showResetPassword']);
+$router->post('/reset-password',           [AuthController::class, 'resetPassword'],  [CsrfMiddleware::class]);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Platform Admin (/admin/*)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -88,6 +94,146 @@ $router->group([AuthMiddleware::class], function ($router) {
     // Dashboard
     $router->get('/',          [DashboardController::class, 'index']);
     $router->get('/dashboard', [DashboardController::class, 'index']);
+
+    // ── English URL aliases ───────────────────────────────────────────────────
+    // Users
+    $router->get('/users',                [UserController::class, 'index']);
+    $router->get('/users/new',            [UserController::class, 'create']);
+    $router->post('/users',               [UserController::class, 'store'],  [CsrfMiddleware::class]);
+    $router->get('/users/roles',          [RoleController::class, 'index']);
+    $router->get('/users/roles/new',      [RoleController::class, 'create']);
+    $router->post('/users/roles',         [RoleController::class, 'store'],  [CsrfMiddleware::class]);
+    $router->get('/users/roles/{id}',     [RoleController::class, 'show']);
+    $router->get('/users/roles/{id}/edit',[RoleController::class, 'edit']);
+    $router->put('/users/roles/{id}',     [RoleController::class, 'update'], [CsrfMiddleware::class]);
+    $router->delete('/users/roles/{id}',  [RoleController::class, 'destroy'],[CsrfMiddleware::class]);
+    $router->get('/users/{id}',           [UserController::class, 'show']);
+    $router->get('/users/{id}/edit',      [UserController::class, 'edit']);
+    $router->put('/users/{id}',           [UserController::class, 'update'], [CsrfMiddleware::class]);
+    $router->delete('/users/{id}',        [UserController::class, 'destroy'],[CsrfMiddleware::class]);
+    // Clients
+    $router->get('/clients',                  [ClientController::class, 'index']);
+    $router->get('/clients/new',              [ClientController::class, 'create']);
+    $router->post('/clients',                 [ClientController::class, 'store'],  [CsrfMiddleware::class]);
+    $router->get('/clients/{clientId}',       [ClientController::class, 'show'],   [ClientAccessMiddleware::class]);
+    $router->get('/clients/{clientId}/edit',  [ClientController::class, 'edit'],   [ClientAccessMiddleware::class]);
+    $router->put('/clients/{clientId}',       [ClientController::class, 'update'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->delete('/clients/{clientId}',    [ClientController::class, 'destroy'],[CsrfMiddleware::class]);
+    $router->get('/clients/{clientId}/access',         [ClientController::class, 'accessIndex'],  [ClientAccessMiddleware::class]);
+    $router->post('/clients/{clientId}/access',        [ClientController::class, 'grantAccess'],  [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->delete('/clients/{clientId}/access/{userId}', [ClientController::class, 'revokeAccess'], [CsrfMiddleware::class]);
+    // Content plans
+    $router->get('/content',                  [ContentPlanController::class, 'index']);
+    $router->get('/content/new',              [ContentPlanController::class, 'create']);
+    $router->post('/content',                 [ContentPlanController::class, 'store'],          [CsrfMiddleware::class]);
+    $router->get('/content/{planId}',         [ContentPlanController::class, 'show']);
+    $router->get('/content/{planId}/edit',    [ContentPlanController::class, 'edit']);
+    $router->put('/content/{planId}',         [ContentPlanController::class, 'update'],         [CsrfMiddleware::class]);
+    $router->delete('/content/{planId}',      [ContentPlanController::class, 'destroy'],        [CsrfMiddleware::class]);
+    $router->post('/content/{planId}/send',   [ContentPlanController::class, 'sendToApproval'], [CsrfMiddleware::class]);
+    $router->post('/content/{planId}/items',             [ContentPlanController::class, 'storeItem'],   [CsrfMiddleware::class]);
+    $router->put('/content/{planId}/items/{itemId}',     [ContentPlanController::class, 'updateItem'],  [CsrfMiddleware::class]);
+    $router->delete('/content/{planId}/items/{itemId}',  [ContentPlanController::class, 'destroyItem'], [CsrfMiddleware::class]);
+    $router->post('/content/{planId}/items/reorder',     [ContentPlanController::class, 'reorderItems'],[CsrfMiddleware::class]);
+    // Approvals
+    $router->get('/approvals',                          [ApprovalController::class, 'index']);
+    $router->get('/approvals/{planId}',                 [ApprovalController::class, 'show']);
+    $router->post('/approvals/{planId}/approve',        [ApprovalController::class, 'approvePlan'],    [CsrfMiddleware::class]);
+    $router->post('/approvals/{planId}/revision',       [ApprovalController::class, 'requestRevision'],[CsrfMiddleware::class]);
+    $router->post('/approvals/{planId}/items/{itemId}', [ApprovalController::class, 'feedback'],       [CsrfMiddleware::class]);
+    // Financial
+    $router->get('/financial',          [FinancialController::class,       'index']);
+    $router->get('/financial/reports',  [FinancialReportController::class, 'index']);
+    // Contracts
+    $router->get('/contracts',               [ContractController::class, 'index']);
+    $router->get('/contracts/new',           [ContractController::class, 'create']);
+    $router->post('/contracts',              [ContractController::class, 'store'],   [CsrfMiddleware::class]);
+    $router->get('/contracts/{id}',          [ContractController::class, 'show']);
+    $router->get('/contracts/{id}/pdf',      [ContractController::class, 'printView']);
+    $router->get('/contracts/{id}/edit',     [ContractController::class, 'edit']);
+    $router->put('/contracts/{id}',          [ContractController::class, 'update'],  [CsrfMiddleware::class]);
+    $router->delete('/contracts/{id}',       [ContractController::class, 'destroy'], [CsrfMiddleware::class]);
+    // Invoices
+    $router->get('/invoices',                [InvoiceController::class, 'index']);
+    $router->get('/invoices/new',            [InvoiceController::class, 'create']);
+    $router->post('/invoices',               [InvoiceController::class, 'store'],    [CsrfMiddleware::class]);
+    $router->get('/invoices/{id}',           [InvoiceController::class, 'show']);
+    $router->get('/invoices/{id}/edit',      [InvoiceController::class, 'edit']);
+    $router->put('/invoices/{id}',           [InvoiceController::class, 'update'],   [CsrfMiddleware::class]);
+    $router->delete('/invoices/{id}',        [InvoiceController::class, 'destroy'],  [CsrfMiddleware::class]);
+    $router->post('/invoices/{id}/send',     [InvoiceController::class, 'send'],     [CsrfMiddleware::class]);
+    $router->get('/invoices/{id}/pdf',       [InvoiceController::class, 'printView']);
+    $router->post('/invoices/{id}/email',    [InvoiceController::class, 'sendEmail'],[CsrfMiddleware::class]);
+    // Payments
+    $router->get('/payments',                [PaymentController::class, 'index']);
+    $router->get('/payments/new',            [PaymentController::class, 'create']);
+    $router->post('/payments',               [PaymentController::class, 'store'],    [CsrfMiddleware::class]);
+    $router->delete('/payments/{id}',        [PaymentController::class, 'destroy'],  [CsrfMiddleware::class]);
+    // Traffic / Ads
+    $router->get('/traffic',                             [TrafficController::class,    'index']);
+    $router->get('/traffic/campaigns/{id}',              [TrafficController::class,    'campaign']);
+    $router->get('/traffic/adsets/{id}',                 [TrafficController::class,    'adSet']);
+    $router->get('/traffic/accounts',                    [AdsAccountController::class, 'index']);
+    $router->get('/traffic/accounts/oauth',              [AdsAccountController::class, 'oauthStart']);
+    $router->get('/traffic/accounts/oauth/callback',     [AdsAccountController::class, 'oauthCallback']);
+    $router->post('/traffic/accounts/oauth/save',        [AdsAccountController::class, 'oauthSave'],   [CsrfMiddleware::class]);
+    $router->get('/traffic/accounts/new',                [AdsAccountController::class, 'create']);
+    $router->post('/traffic/accounts',                   [AdsAccountController::class, 'store'],   [CsrfMiddleware::class]);
+    $router->post('/traffic/accounts/{id}/sync',         [AdsAccountController::class, 'syncOne'], [CsrfMiddleware::class]);
+    $router->delete('/traffic/accounts/{id}',            [AdsAccountController::class, 'destroy'], [CsrfMiddleware::class]);
+    $router->get('/traffic/actions',                     [AdsActionController::class,  'index']);
+    $router->get('/traffic/actions/new',                 [AdsActionController::class,  'create']);
+    $router->post('/traffic/actions',                    [AdsActionController::class,  'store'],   [CsrfMiddleware::class]);
+    $router->get('/traffic/actions/{id}',                [AdsActionController::class,  'show']);
+    $router->post('/traffic/actions/{id}/approve',       [AdsActionController::class,  'approve'], [CsrfMiddleware::class]);
+    $router->post('/traffic/actions/{id}/reject',        [AdsActionController::class,  'reject'],  [CsrfMiddleware::class]);
+    $router->post('/traffic/actions/{id}/execute',       [AdsActionController::class,  'execute'], [CsrfMiddleware::class]);
+    $router->get('/traffic/accounts/{accountId}/campaigns', [AdsActionController::class, 'campaignsForAccount']);
+    // AI Insights
+    $router->get('/ai',                             [AiInsightController::class, 'index']);
+    $router->get('/ai/generate',                    [AiInsightController::class, 'generateForm']);
+    $router->post('/ai/generate',                   [AiInsightController::class, 'generate'],          [CsrfMiddleware::class]);
+    $router->get('/ai/recommendations',             [AiInsightController::class, 'recommendations']);
+    $router->post('/ai/recommendations/save',       [AiInsightController::class, 'saveRecommendations'],[CsrfMiddleware::class]);
+    $router->get('/ai/{id}',                        [AiInsightController::class, 'show']);
+    $router->delete('/ai/{id}',                     [AiInsightController::class, 'destroy'],            [CsrfMiddleware::class]);
+    // Organic
+    $router->get('/organic',                        [OrganicController::class, 'index']);
+    $router->get('/organic/accounts',               [OrganicController::class, 'accounts']);
+    $router->get('/organic/connect',                [OrganicController::class, 'connectForm']);
+    $router->post('/organic/connect',               [OrganicController::class, 'connect'],  [CsrfMiddleware::class]);
+    $router->get('/organic/accounts/{id}',          [OrganicController::class, 'account']);
+    $router->post('/organic/accounts/{id}/sync',    [OrganicController::class, 'syncOne'],  [CsrfMiddleware::class]);
+    $router->delete('/organic/accounts/{id}',       [OrganicController::class, 'destroy'],  [CsrfMiddleware::class]);
+    // Tasks
+    $router->get('/tasks',                    [TaskController::class, 'index']);
+    $router->get('/tasks/new',                [TaskController::class, 'create']);
+    $router->post('/tasks',                   [TaskController::class, 'store'],        [CsrfMiddleware::class]);
+    $router->get('/tasks/{id}',               [TaskController::class, 'show']);
+    $router->get('/tasks/{id}/edit',          [TaskController::class, 'edit']);
+    $router->put('/tasks/{id}',               [TaskController::class, 'update'],       [CsrfMiddleware::class]);
+    $router->post('/tasks/{id}/status',       [TaskController::class, 'updateStatus'], [CsrfMiddleware::class]);
+    $router->delete('/tasks/{id}',            [TaskController::class, 'destroy'],      [CsrfMiddleware::class]);
+    // Settings / WhatsApp
+    $router->get('/settings',                          [SettingsController::class, 'index']);
+    $router->post('/settings',                         [SettingsController::class, 'save'], [CsrfMiddleware::class]);
+    $router->get('/settings/whatsapp',                 [WhatsAppController::class, 'index']);
+    $router->post('/settings/whatsapp/activate',       [WhatsAppController::class, 'activate'],         [CsrfMiddleware::class]);
+    $router->get('/settings/whatsapp/qr',              [WhatsAppController::class, 'qrCode']);
+    $router->get('/settings/whatsapp/status',          [WhatsAppController::class, 'checkStatus']);
+    $router->post('/settings/whatsapp/disconnect',     [WhatsAppController::class, 'disconnect'],      [CsrfMiddleware::class]);
+    $router->post('/settings/whatsapp/webhook',        [WhatsAppController::class, 'configureWebhook'], [CsrfMiddleware::class]);
+    // Subscription
+    $router->get('/subscription', [BillingController::class, 'index']);
+    // Executive report
+    $router->get('/executive-report',                      [ReportController::class, 'index']);
+    $router->get('/executive-report/client/{clientId}',    [ReportController::class, 'clientReport']);
+    // Notifications
+    $router->get('/notifications',               [SettingsController::class, 'notificationsIndex']);
+    $router->get('/notifications/count',         [SettingsController::class, 'notificationsCount']);
+    $router->post('/notifications/mark-all-read',[SettingsController::class, 'notificationsMarkAllRead'], [CsrfMiddleware::class]);
+    $router->post('/notifications/{id}/read',    [SettingsController::class, 'notificationsMarkRead'],    [CsrfMiddleware::class]);
+    // ── End English aliases ───────────────────────────────────────────────────
 
     // ── Usuários ──────────────────────────────────────────────────────────────
     $router->get('/usuarios',             [UserController::class, 'index']);

@@ -59,7 +59,7 @@ class AiInsightService
             'model'            => $model,
         ]);
 
-        return $this->insightRepo->findById($id, $agencyId) ?? [];
+        return $this->insightRepo->findByIdAndAgency($id, $agencyId) ?? [];
     }
 
     /**

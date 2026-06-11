@@ -52,7 +52,7 @@ class PaymentService
 
     public function delete(int $id): void
     {
-        $payment = $this->paymentRepo->findById($id, Auth::agencyId());
+        $payment = $this->paymentRepo->findByIdAndAgency($id, Auth::agencyId());
         if (!$payment) {
             throw new \RuntimeException("Pagamento não encontrado.");
         }

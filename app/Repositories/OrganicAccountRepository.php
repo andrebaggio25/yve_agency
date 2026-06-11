@@ -21,7 +21,7 @@ class OrganicAccountRepository extends Repository
         ", [':aid' => $agencyId]);
     }
 
-    public function findById(int $id, int $agencyId): ?array
+    public function findByIdAndAgency(int $id, int $agencyId): ?array
     {
         return $this->first("
             SELECT a.*, c.name AS client_name

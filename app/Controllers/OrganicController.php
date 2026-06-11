@@ -62,7 +62,7 @@ class OrganicController extends Controller
         $id       = (int) $request->param('id');
         $agencyId = Auth::agencyId();
 
-        $account = $this->accountRepo->findById($id, $agencyId);
+        $account = $this->accountRepo->findByIdAndAgency($id, $agencyId);
         if (!$account) {
             return Response::view('errors.404', [], 404);
         }
@@ -173,7 +173,7 @@ class OrganicController extends Controller
     {
         Auth::requirePermission('organic_metrics.view');
         $id      = (int) $request->param('id');
-        $account = $this->accountRepo->findById($id, Auth::agencyId());
+        $account = $this->accountRepo->findByIdAndAgency($id, Auth::agencyId());
 
         if (!$account) {
             $this->withError('Conta não encontrada.');

@@ -88,7 +88,7 @@ class AdsActionController extends Controller
     {
         Auth::requirePermission('ads_actions.view');
         $id     = (int) $request->param('id');
-        $action = $this->repo->findById($id, Auth::agencyId());
+        $action = $this->repo->findByIdAndAgency($id, Auth::agencyId());
         if (!$action) {
             return Response::view('errors.404', [], 404);
         }

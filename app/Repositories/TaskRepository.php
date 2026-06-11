@@ -50,7 +50,7 @@ class TaskRepository extends Repository
         return $this->all($sql, $params);
     }
 
-    public function findById(int $id, int $agencyId): ?array
+    public function findByIdAndAgency(int $id, int $agencyId): ?array
     {
         return $this->first("
             SELECT t.*,

@@ -80,7 +80,7 @@ class AdsActionRepository extends Repository
         ", $params);
     }
 
-    public function findById(int $id, int $agencyId): ?array
+    public function findByIdAndAgency(int $id, int $agencyId): ?array
     {
         return $this->first("
             SELECT
