@@ -8,11 +8,15 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Services\UserService;
+use App\Services\BillingService;
 use App\Support\Auth;
 
 class UserController extends Controller
 {
-    public function __construct(private readonly UserService $userService) {}
+    public function __construct(
+        private readonly UserService    $userService,
+        private readonly BillingService $billing,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -33,6 +37,11 @@ class UserController extends Controller
     public function store(Request $request): Response
     {
         Auth::requirePermission('users.create');
+
+        if (!$this->billing->checkLimit((int) Auth::agencyId(), 'users')) {
+            $this->withError('Limite de usuários do seu plano atingido. Faça upgrade para adicionar mais.');
+            return $this->redirect('/usuarios/novo');
+        }
 
         $data = $request->only('name', 'email', 'password', 'password_confirmation', 'phone');
 
@@ -79,7 +88,7 @@ class UserController extends Controller
         Auth::requirePermission('users.edit');
 
         $id   = (int) $request->param('id');
-        $data = $request->only('name', 'email', 'phone', 'status', 'password', 'password_confirmation', 'role_ids');
+        $data = $request->only('name', 'email', 'phone', 'status', 'password', 'password_confirmation', 'role_id', 'role_ids', 'language');
 
         $result = $this->userService->update($id, $data, Auth::agencyId());
 

@@ -35,6 +35,11 @@ class AuthController extends Controller
             return $this->redirect('/login');
         }
 
+        // Platform admin redirects to /admin panel, not dashboard
+        if (!empty($result['redirect'])) {
+            return $this->redirect($result['redirect']);
+        }
+
         $redirect = flash('redirect_after_login') ?? '/dashboard';
         return $this->redirect((string) $redirect);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Repositories\ClientRepository;
 use App\Repositories\ContentPlanRepository;
 use App\Support\ActivityLogger;
 use App\Support\Auth;
@@ -13,6 +14,8 @@ class ContentPlanService
     public function __construct(
         private readonly ContentPlanRepository $repo,
         private readonly GoogleDriveService    $drive,
+        private readonly ?ClientRepository     $clientRepo = null,
+        private readonly ?NotificationService  $notifications = null,
     ) {}
 
     // ── Plans ──────────────────────────────────────────────────────────────────
@@ -85,6 +88,18 @@ class ContentPlanService
             'sent_at' => date('Y-m-d H:i:s'),
         ]);
         ActivityLogger::log('content_plan.sent', 'content', null, null, ['plan_id' => $id]);
+
+        if ($affected > 0) {
+            $client = $this->clientRepo?->findByIdAndAgency((int) $plan['client_id'], $agencyId);
+            $this->notifications?->notifyEvent('plan.sent_for_approval', $agencyId, [
+                'plan_id'    => $id,
+                'plan_title' => $plan['title'],
+                'client_id'  => $plan['client_id'],
+                'client'     => $client,
+                'approval_url' => env('APP_URL') . "/aprovacoes/{$id}",
+            ]);
+        }
+
         return $affected > 0;
     }
 
@@ -218,11 +233,23 @@ class ContentPlanService
         $plan = $this->repo->findByIdForClient($planId, $clientId);
         if (!$plan) return false;
 
-        $affected = $this->repo->updatePlan($planId, (int) $plan['agency_id'], [
+        $agencyId = (int) $plan['agency_id'];
+        $affected = $this->repo->updatePlan($planId, $agencyId, [
             'status'      => 'approved',
             'approved_at' => date('Y-m-d H:i:s'),
         ]);
         ActivityLogger::log('content_plan.approved', 'approvals', null, $clientId, ['plan_id' => $planId]);
+
+        if ($affected > 0) {
+            $client = $this->clientRepo?->findByIdAndAgency($clientId, $agencyId);
+            $this->notifications?->notifyEvent('plan.approved', $agencyId, [
+                'plan_id'             => $planId,
+                'plan_title'          => $plan['title'],
+                'client'              => $client,
+                'responsible_user_id' => $plan['created_by'] ?? null,
+            ]);
+        }
+
         return $affected > 0;
     }
 
@@ -231,11 +258,21 @@ class ContentPlanService
         $plan = $this->repo->findByIdForClient($planId, $clientId);
         if (!$plan) return false;
 
-        $affected = $this->repo->updatePlan($planId, (int) $plan['agency_id'], [
+        $agencyId = (int) $plan['agency_id'];
+        $affected = $this->repo->updatePlan($planId, $agencyId, [
             'status' => 'revision',
             'notes'  => $note,
         ]);
         ActivityLogger::log('content_plan.revision_requested', 'approvals', null, $clientId, ['plan_id' => $planId]);
+
+        if ($affected > 0) {
+            $this->notifications?->notifyEvent('plan.revision_requested', $agencyId, [
+                'plan_id'    => $planId,
+                'plan_title' => $plan['title'],
+                'note'       => $note,
+            ]);
+        }
+
         return $affected > 0;
     }
 

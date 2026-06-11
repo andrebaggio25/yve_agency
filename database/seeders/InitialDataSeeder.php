@@ -19,6 +19,7 @@ final class InitialDataSeeder extends AbstractSeed
         $this->seedPermissions();
         $this->seedRoles();
         $this->seedAgencyAndSuperAdmin();
+        $this->seedPlatformAdmin();
     }
 
     private function seedCurrencies(): void
@@ -69,8 +70,10 @@ final class InitialDataSeeder extends AbstractSeed
             ['slug' => 'super_admin',     'name' => 'Super Admin',              'permissions' => '__ALL__'],
             ['slug' => 'agency_admin',    'name' => 'Admin da Agência',         'permissions' => '__ALL__'],
             ['slug' => 'traffic_manager', 'name' => 'Gestor de Tráfego',       'permissions' => [
-                'dashboard.view', 'clients.view', 'ads_metrics.view', 'ads_actions.request',
-                'ads_actions.approve', 'ai_insights.view', 'ai.generate_report', 'ai.recommend_ads_action',
+                'dashboard.view', 'clients.view', 'ads_metrics.view',
+                'ads_actions.view', 'ads_actions.request', 'ads_actions.approve', 'ads_actions.execute',
+                'ai_insights.view', 'ai.generate_report', 'ai.recommend_ads_action',
+                'organic_metrics.view',
                 'content.view', 'tasks.view', 'tasks.create', 'tasks.edit',
             ]],
             ['slug' => 'social_media',    'name' => 'Social Media',             'permissions' => [
@@ -181,5 +184,29 @@ final class InitialDataSeeder extends AbstractSeed
 
         echo "  ✓ Agency + super_admin seeded (email: {$adminEmail} / senha: admin123!)\n";
         echo "  ⚠ Altere a senha do super_admin após o primeiro login!\n";
+    }
+
+    private function seedPlatformAdmin(): void
+    {
+        $email  = 'platform@yveagency.com';
+        $exists = $this->fetchRow("SELECT id FROM users WHERE email = '{$email}'");
+        if ($exists) {
+            echo "  ✓ Platform admin já existe\n";
+            return;
+        }
+
+        $this->table('users')->insert([
+            'agency_id'        => null,
+            'name'             => 'Platform Admin',
+            'email'            => $email,
+            'password_hash'    => password_hash('platform123!', PASSWORD_ARGON2ID),
+            'is_platform_admin'=> true,
+            'status'           => 'active',
+            'created_at'       => date('Y-m-d H:i:s'),
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ])->saveData();
+
+        echo "  ✓ Platform admin seeded (email: {$email} / senha: platform123!)\n";
+        echo "  ⚠ Altere a senha do platform admin após o primeiro login!\n";
     }
 }

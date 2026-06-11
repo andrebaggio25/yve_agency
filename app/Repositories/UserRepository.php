@@ -149,4 +149,20 @@ class UserRepository extends Repository
             [':token' => $token],
         );
     }
+
+    /** Find all active users in an agency that have a given permission slug. */
+    public function findByAgencyAndPermission(int $agencyId, string $permissionSlug): array
+    {
+        return $this->all(
+            "SELECT DISTINCT u.id, u.name, u.email
+             FROM users u
+             JOIN user_roles ur ON ur.user_id = u.id
+             JOIN role_permissions rp ON rp.role_id = ur.role_id
+             JOIN permissions p ON p.id = rp.permission_id
+             WHERE u.agency_id = :agency_id
+               AND u.status = 'active'
+               AND p.slug = :slug",
+            [':agency_id' => $agencyId, ':slug' => $permissionSlug],
+        );
+    }
 }

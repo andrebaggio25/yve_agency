@@ -18,6 +18,20 @@ class ClientRepository extends Repository
         );
     }
 
+    public function findByAgencyPaginated(int $agencyId, int $page = 1, int $perPage = 20, string $q = ''): array
+    {
+        $params = [':agency_id' => $agencyId];
+        $where  = 'agency_id = :agency_id';
+        if ($q) {
+            $where .= ' AND (name ILIKE :q OR email ILIKE :q)';
+            $params[':q'] = "%{$q}%";
+        }
+        return $this->paginate(
+            "SELECT * FROM clients WHERE {$where} ORDER BY name",
+            $params, $page, $perPage
+        );
+    }
+
     public function findByIdAndAgency(int $id, int $agencyId): ?array
     {
         return $this->first(
@@ -126,6 +140,34 @@ class ClientRepository extends Repository
         return $this->all(
             'SELECT id, name, email FROM users WHERE agency_id = :agency_id AND status = :status ORDER BY name',
             [':agency_id' => $agencyId, ':status' => 'active'],
+        );
+    }
+
+    // ── Portal ────────────────────────────────────────────────────────────────
+
+    public function findByPortalToken(string $token): ?array
+    {
+        return $this->first(
+            'SELECT * FROM clients WHERE portal_token = :token LIMIT 1',
+            [':token' => $token],
+        );
+    }
+
+    public function regeneratePortalToken(int $id): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->query(
+            'UPDATE clients SET portal_token = :token WHERE id = :id',
+            [':token' => $token, ':id' => $id],
+        );
+        return $token;
+    }
+
+    public function setPortalEnabled(int $id, bool $enabled): void
+    {
+        $this->query(
+            'UPDATE clients SET portal_enabled = :enabled WHERE id = :id',
+            [':enabled' => $enabled, ':id' => $id],
         );
     }
 }

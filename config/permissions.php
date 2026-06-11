@@ -43,6 +43,7 @@ return [
     // Métricas
     'organic_metrics.view'        => 'Ver métricas orgânicas',
     'ads_metrics.view'            => 'Ver métricas de anúncios',
+    'ads_actions.view'            => 'Ver ações em campanha',
     'ads_actions.request'         => 'Solicitar ação em campanha',
     'ads_actions.approve'         => 'Aprovar ação em campanha',
     'ads_actions.execute'         => 'Executar ação em campanha',
@@ -126,4 +127,11 @@ return [
     'creative_library.view'       => 'Ver biblioteca de criativos',
     'brand_guidelines.view'       => 'Ver brand guidelines',
     'brand_guidelines.edit'       => 'Editar brand guidelines',
+
+    // Configurações
+    'settings.manage'             => 'Gerenciar configurações da agência',
+
+    // Portal do cliente
+    'portal.view'                 => 'Ver portal do cliente',
+    'portal.manage'               => 'Gerenciar portal (token, ativar/desativar)',
 ];

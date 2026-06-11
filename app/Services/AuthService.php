@@ -7,10 +7,14 @@ namespace App\Services;
 use App\Repositories\UserRepository;
 use App\Support\Auth;
 use App\Support\ActivityLogger;
+use App\Services\EmailService;
 
 class AuthService
 {
-    public function __construct(private readonly UserRepository $userRepo) {}
+    public function __construct(
+        private readonly UserRepository $userRepo,
+        private readonly EmailService   $email,
+    ) {}
 
     public function attempt(string $email, string $password, bool $remember = false): array
     {
@@ -33,10 +37,22 @@ class AuthService
             return ['success' => false, 'message' => 'Credenciais inválidas.'];
         }
 
+        // Platform admin tem acesso total — sem permissions/clients de agência
+        if (!empty($user['is_platform_admin'])) {
+            Auth::login($user, [], []);
+            $_SESSION['locale'] = \App\Core\Lang::normalize($user['language'] ?? 'pt');
+            $this->userRepo->updateLastLogin($user['id']);
+            ActivityLogger::log('login', 'auth', $user['id'], null, ['ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0']);
+            return ['success' => true, 'redirect' => '/admin'];
+        }
+
         $permissions = $this->userRepo->loadPermissions($user['id']);
         $clientIds   = $this->userRepo->loadClientIds($user['id']);
 
         Auth::login($user, $permissions, $clientIds);
+
+        // Store user's language preference in session for locale loading
+        $_SESSION['locale'] = \App\Core\Lang::normalize($user['language'] ?? 'pt');
 
         $this->userRepo->updateLastLogin($user['id']);
 
@@ -44,7 +60,7 @@ class AuthService
             'ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
         ]);
 
-        return ['success' => true];
+        return ['success' => true, 'redirect' => null];
     }
 
     public function logout(): void
@@ -67,11 +83,15 @@ class AuthService
 
         $this->userRepo->savePasswordResetToken($user['id'], $token, $expiresAt);
 
-        // TODO Phase 3: send email via EmailService
-        // For now: log the token (dev only)
-        if (env('APP_ENV') === 'development') {
-            logger("Password reset token for {$email}: {$token}");
-        }
+        $appUrl  = rtrim(env('APP_URL', 'http://localhost'), '/');
+        $resetUrl = "{$appUrl}/redefinir-senha/{$token}";
+        $appName  = env('APP_NAME', 'YVE Agency');
+
+        $this->email->send($user['email'], $user['name'], 'password_reset', [
+            'user_name' => $user['name'],
+            'reset_url' => $resetUrl,
+            'app_name'  => $appName,
+        ]);
 
         return ['success' => true];
     }

@@ -8,18 +8,33 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Services\ClientService;
+use App\Services\BillingService;
 use App\Support\Auth;
 
 class ClientController extends Controller
 {
-    public function __construct(private readonly ClientService $clientService) {}
+    public function __construct(
+        private readonly ClientService  $clientService,
+        private readonly BillingService $billing,
+    ) {}
 
     public function index(Request $request): Response
     {
         Auth::requirePermission('clients.view');
 
-        $clients = $this->clientService->listForUser(Auth::id(), Auth::agencyId(), Auth::can('clients.view_all'));
-        return $this->view('clients.index', ['clients' => $clients]);
+        $page    = max(1, (int) $request->query('page', '1'));
+        $q       = trim((string) $request->query('q', ''));
+        $agencyId = (int) Auth::agencyId();
+
+        if (Auth::can('clients.view_all')) {
+            $paginated = $this->clientService->listPaginated($agencyId, $page, 20, $q);
+        } else {
+            $all       = $this->clientService->listForUser(Auth::id(), $agencyId, false);
+            $total     = count($all);
+            $paginated = ['items' => $all, 'total' => $total, 'page' => 1, 'per_page' => $total, 'pages' => 1];
+        }
+
+        return $this->view('clients.index', ['paginated' => $paginated, 'q' => $q]);
     }
 
     public function create(Request $request): Response
@@ -31,6 +46,11 @@ class ClientController extends Controller
     public function store(Request $request): Response
     {
         Auth::requirePermission('clients.create');
+
+        if (!$this->billing->checkLimit((int) Auth::agencyId(), 'clients')) {
+            $this->withError('Limite de clientes do seu plano atingido. Faça upgrade para adicionar mais.');
+            return $this->redirect('/clientes/novo');
+        }
 
         $data = $request->only(
             'name', 'legal_name', 'document_type', 'document_number',

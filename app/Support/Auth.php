@@ -26,9 +26,10 @@ class Auth
             session_regenerate_id(true);
         }
 
-        $_SESSION['user']        = $user;
-        $_SESSION['permissions'] = $permissions;
-        $_SESSION['client_ids']  = $clientIds;
+        $_SESSION['user']               = $user;
+        $_SESSION['permissions']        = $permissions;
+        $_SESSION['client_ids']         = $clientIds;
+        $_SESSION['is_platform_admin']  = !empty($user['is_platform_admin']);
     }
 
     public static function logout(): void
@@ -69,7 +70,13 @@ class Auth
     public static function agencyId(): ?int
     {
         $user = self::user();
-        return $user ? (int) $user['agency_id'] : null;
+        if (!$user) return null;
+        return $user['agency_id'] !== null ? (int) $user['agency_id'] : null;
+    }
+
+    public static function isPlatformAdmin(): bool
+    {
+        return (bool) ($_SESSION['is_platform_admin'] ?? false);
     }
 
     public static function check(): bool
@@ -145,12 +152,29 @@ class Auth
     {
         self::requireLogin();
 
+        // Platform admin bypasses all tenant RBAC
+        if (self::isPlatformAdmin()) return;
+
         if (!self::can($permission)) {
             if (self::isAjax()) {
                 Response::json(['error' => 'Forbidden'], 403)->send();
                 exit;
             }
             Response::view('errors.403', ['permission' => $permission], 403)->send();
+            exit;
+        }
+    }
+
+    public static function requirePlatformAdmin(): void
+    {
+        self::requireLogin();
+
+        if (!self::isPlatformAdmin()) {
+            if (self::isAjax()) {
+                Response::json(['error' => 'Forbidden'], 403)->send();
+                exit;
+            }
+            Response::view('errors.403', [], 403)->send();
             exit;
         }
     }

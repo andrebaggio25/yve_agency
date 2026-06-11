@@ -11,7 +11,7 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 // Environment
 // ─────────────────────────────────────────────────────────────────────────────
 use Dotenv\Dotenv;
-use App\Core\{Container, Database, Router, View};
+use App\Core\{Container, Database, Lang, Router, View};
 
 $dotenv = Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->safeLoad();
@@ -45,6 +45,11 @@ ini_set('session.cookie_secure', $isHttps ? '1' : '0');
 ini_set('session.use_strict_mode', '1');
 ini_set('session.gc_maxlifetime', (string) env('SESSION_LIFETIME', 7200));
 session_start();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Locale (from session user preference; approval screens override per-client)
+// ─────────────────────────────────────────────────────────────────────────────
+Lang::setLocale($_SESSION['locale'] ?? 'pt');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Container

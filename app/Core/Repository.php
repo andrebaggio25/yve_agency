@@ -29,7 +29,18 @@ abstract class Repository
 
     protected function agencyScope(): string
     {
-        return $this->agencyId() !== null ? "agency_id = :__agency_id" : '1=1';
+        $id = $this->agencyId();
+
+        if ($id !== null) {
+            return "agency_id = :__agency_id";
+        }
+
+        // Platform admin vê todos os tenants
+        if (\App\Support\Auth::isPlatformAdmin()) {
+            return '1=1';
+        }
+
+        throw new \RuntimeException('No agency_id in session and user is not a platform admin.');
     }
 
     /** @param array<string,mixed> $params */
@@ -133,6 +144,45 @@ abstract class Repository
             "SELECT * FROM {$this->table} WHERE id = :id{$scope} LIMIT 1",
             $params,
         );
+    }
+
+    // -------------------------------------------------------------------------
+    // Pagination helper
+    // -------------------------------------------------------------------------
+
+    /**
+     * Run a COUNT query + a paginated SELECT and return pagination metadata.
+     * @param  array<string,mixed> $params
+     * @return array{items: array, total: int, page: int, per_page: int, pages: int}
+     */
+    protected function paginate(string $sql, array $params, int $page, int $perPage = 20): array
+    {
+        $page    = max(1, $page);
+        $offset  = ($page - 1) * $perPage;
+
+        // Count total without LIMIT/OFFSET — wrap the query
+        $countSql = "SELECT COUNT(*) FROM ({$sql}) AS __pq__";
+        $stmt     = $this->pdo->prepare($countSql);
+        $stmt->execute($params);
+        $total = (int) $stmt->fetchColumn();
+
+        // Paginated fetch
+        $stmt = $this->pdo->prepare("{$sql} LIMIT :__limit OFFSET :__offset");
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->bindValue(':__limit',  $perPage, \PDO::PARAM_INT);
+        $stmt->bindValue(':__offset', $offset,  \PDO::PARAM_INT);
+        $stmt->execute();
+        $items = $stmt->fetchAll();
+
+        return [
+            'items'    => $items,
+            'total'    => $total,
+            'page'     => $page,
+            'per_page' => $perPage,
+            'pages'    => max(1, (int) ceil($total / $perPage)),
+        ];
     }
 
     // -------------------------------------------------------------------------

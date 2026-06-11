@@ -19,6 +19,11 @@ class ClientService
         return $this->clientRepo->findByUserAccess($userId, $agencyId);
     }
 
+    public function listPaginated(int $agencyId, int $page = 1, int $perPage = 20, string $q = ''): array
+    {
+        return $this->clientRepo->findByAgencyPaginated($agencyId, $page, $perPage, $q);
+    }
+
     public function findById(int $id, int $agencyId): ?array
     {
         return $this->clientRepo->findByIdAndAgency($id, $agencyId);

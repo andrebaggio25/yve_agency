@@ -4,20 +4,24 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\Controller;
+use App\Core\Lang;
 use App\Core\Request;
 use App\Core\Response;
+use App\Repositories\ClientRepository;
 use App\Repositories\ContentPlanRepository;
 use App\Services\ContentPlanService;
 use App\Support\Auth;
 
-class ApprovalController
+class ApprovalController extends Controller
 {
     public function __construct(
         private readonly ContentPlanService    $service,
         private readonly ContentPlanRepository $repo,
+        private readonly ClientRepository      $clients,
     ) {}
 
-    /** Client-facing: list plans awaiting approval */
+    /** List plans awaiting approval */
     public function index(Request $request): Response
     {
         Auth::requirePermission('approvals.view');
@@ -31,28 +35,35 @@ class ApprovalController
             $plans       = array_merge($plans, $clientPlans);
         }
 
-        // Sort by week_start desc
         usort($plans, fn($a, $b) => strcmp($b['week_start'], $a['week_start']));
 
-        return Response::view('approvals/index', compact('plans'));
+        return $this->view('approvals.index', compact('plans'));
     }
 
-    /** Client-facing: show a single plan for approval */
-    public function show(Request $request, int $planId): Response
+    /** Show a single plan for approval */
+    public function show(Request $request): Response
     {
         Auth::requirePermission('approvals.view');
 
+        $planId    = (int) $request->param('planId');
         $clientIds = $_SESSION['client_ids'] ?? [];
         $agencyId  = (int) Auth::agencyId();
 
-        // Find which client this plan belongs to
-        $plan = null;
-        foreach ($clientIds as $clientId) {
-            $found = $this->repo->findByIdForClient($planId, (int) $clientId);
-            if ($found) { $plan = $found; break; }
+        $plan     = null;
+        $clientId = null;
+        foreach ($clientIds as $cid) {
+            $found = $this->repo->findByIdForClient($planId, (int) $cid);
+            if ($found) { $plan = $found; $clientId = (int) $cid; break; }
         }
 
-        if (!$plan) return Response::notFound('Plano não encontrado.');
+        if ($clientId) {
+            $clientRow = $this->clients->findByIdAndAgency($clientId, $agencyId);
+            if ($clientRow && !empty($clientRow['language'])) {
+                Lang::setLocale($clientRow['language']);
+            }
+        }
+
+        if (!$plan) return $this->view('errors.404', [], 404);
 
         $items = $this->repo->getItems($planId);
         foreach ($items as &$item) {
@@ -62,17 +73,18 @@ class ApprovalController
 
         $plan['items'] = $items;
 
-        return Response::view('approvals/show', compact('plan'));
+        return $this->view('approvals.show', compact('plan'));
     }
 
     /** Submit feedback on a single item */
-    public function feedback(Request $request, int $planId, int $itemId): Response
+    public function feedback(Request $request): Response
     {
         Auth::requirePermission('approvals.comment');
 
+        $planId    = (int) $request->param('planId');
+        $itemId    = (int) $request->param('itemId');
         $clientIds = $_SESSION['client_ids'] ?? [];
         $userId    = (int) Auth::id();
-        $agencyId  = (int) Auth::agencyId();
 
         $clientId = null;
         foreach ($clientIds as $cid) {
@@ -102,19 +114,21 @@ class ApprovalController
     }
 
     /** Approve entire plan */
-    public function approvePlan(Request $request, int $planId): Response
+    public function approvePlan(Request $request): Response
     {
         Auth::requirePermission('approvals.approve');
 
+        $planId    = (int) $request->param('planId');
         $clientIds = $_SESSION['client_ids'] ?? [];
+
         foreach ($clientIds as $clientId) {
             $ok = $this->service->approvePlan($planId, (int) $clientId);
             if ($ok) {
                 if ($request->wantsJson()) {
                     return Response::json(['success' => true]);
                 }
-                flash('success', 'Plano aprovado com sucesso!');
-                return Response::redirect("/aprovacoes/{$planId}");
+                $this->withSuccess('Plano aprovado com sucesso!');
+                return $this->redirect("/aprovacoes/{$planId}");
             }
         }
 
@@ -122,10 +136,11 @@ class ApprovalController
     }
 
     /** Request revision on entire plan */
-    public function requestRevision(Request $request, int $planId): Response
+    public function requestRevision(Request $request): Response
     {
         Auth::requirePermission('approvals.approve');
 
+        $planId    = (int) $request->param('planId');
         $clientIds = $_SESSION['client_ids'] ?? [];
         $note      = $request->input('note', '');
 
@@ -135,8 +150,8 @@ class ApprovalController
                 if ($request->wantsJson()) {
                     return Response::json(['success' => true]);
                 }
-                flash('success', 'Solicitação de revisão enviada.');
-                return Response::redirect("/aprovacoes/{$planId}");
+                $this->withSuccess('Solicitação de revisão enviada.');
+                return $this->redirect("/aprovacoes/{$planId}");
             }
         }
 

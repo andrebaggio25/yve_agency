@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Core\Container;
 use App\Core\Env;
+use App\Core\Lang;
 use App\Core\View;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -146,6 +147,11 @@ function old(string $key, mixed $default = ''): string
     return e($old[$key] ?? $default);
 }
 
+function flash_old(): array
+{
+    return $_SESSION['flash']['old'] ?? [];
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Formatting
 // ─────────────────────────────────────────────────────────────────────────────
@@ -164,6 +170,29 @@ function date_fmt(string|\DateTimeInterface|null $date, string $format = 'd/m/Y'
     if ($date === null) return '';
     $dt = is_string($date) ? new \DateTime($date) : $date;
     return $dt->format($format);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Logging shortcut
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Internationalisation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Translate a key. Usage: t('approval.approve_all'), t('common.save') */
+function t(string $key, array $replace = []): string
+{
+    return Lang::t($key, $replace);
+}
+
+/** Get/set the current locale */
+function locale(?string $set = null): string
+{
+    if ($set !== null) {
+        Lang::setLocale($set);
+    }
+    return Lang::getLocale();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
