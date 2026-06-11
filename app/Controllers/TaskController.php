@@ -39,7 +39,7 @@ class TaskController extends Controller
         $tasks   = $this->repo->listByAgency((int) $agencyId, array_filter($filters));
         $counts  = $this->repo->countByStatus((int) $agencyId);
         $clients = $this->clientRepo->findByAgency($agencyId);
-        $users   = $this->userRepo->listByAgency($agencyId);
+        $users   = $this->userRepo->findByAgency($agencyId);
 
         // Agrupar por status para o kanban
         $board = ['todo' => [], 'in_progress' => [], 'review' => [], 'done' => []];
@@ -57,7 +57,7 @@ class TaskController extends Controller
         Auth::requirePermission('tasks.create');
         $agencyId = Auth::agencyId();
         $clients  = $this->clientRepo->findByAgency($agencyId);
-        $users    = $this->userRepo->listByAgency($agencyId);
+        $users    = $this->userRepo->findByAgency($agencyId);
 
         $prefill = [
             'client_id'   => $request->query('client_id', ''),
@@ -121,7 +121,7 @@ class TaskController extends Controller
         if (!$task) return Response::view('errors.404', [], 404);
 
         $clients = $this->clientRepo->findByAgency($agencyId);
-        $users   = $this->userRepo->listByAgency($agencyId);
+        $users   = $this->userRepo->findByAgency($agencyId);
 
         return $this->view('tasks.edit', compact('task', 'clients', 'users'));
     }

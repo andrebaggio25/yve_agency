@@ -222,14 +222,15 @@ class SubscriptionRepository extends Repository
 
     public function eventsForAgency(int $agencyId, int $limit = 20): array
     {
+        $safeLimit = max(1, (int) $limit);
         return $this->all("
             SELECT e.*, p.name AS plan_name
             FROM billing_events e
             LEFT JOIN subscription_plans p ON p.id = e.plan_id
             WHERE e.agency_id = :agency_id
             ORDER BY e.created_at DESC
-            LIMIT :limit
-        ", [':agency_id' => $agencyId, ':limit' => $limit]);
+            LIMIT {$safeLimit}
+        ", [':agency_id' => $agencyId]);
     }
 
     // ── Usage counters ────────────────────────────────────────────────────────

@@ -32,11 +32,12 @@ class NotificationRepository extends Repository
 
     public function unreadForUser(int $userId, int $agencyId, int $limit = 20): array
     {
+        $safeLimit = max(1, (int) $limit);
         return $this->all(
-            'SELECT * FROM notifications
+            "SELECT * FROM notifications
              WHERE user_id = :user_id AND agency_id = :agency_id AND read_at IS NULL
-             ORDER BY created_at DESC LIMIT :limit',
-            [':user_id' => $userId, ':agency_id' => $agencyId, ':limit' => $limit],
+             ORDER BY created_at DESC LIMIT {$safeLimit}",
+            [':user_id' => $userId, ':agency_id' => $agencyId],
         );
     }
 
@@ -88,11 +89,11 @@ class NotificationRepository extends Repository
 
     public function pendingJobs(int $limit = 10): array
     {
+        $safeLimit = max(1, (int) $limit);
         return $this->all(
             "SELECT * FROM notification_jobs
              WHERE status = 'pending' AND (next_try_at IS NULL OR next_try_at <= NOW())
-             ORDER BY created_at ASC LIMIT :limit",
-            [':limit' => $limit],
+             ORDER BY created_at ASC LIMIT {$safeLimit}",
         );
     }
 
