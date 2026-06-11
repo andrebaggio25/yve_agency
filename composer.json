@@ -8,7 +8,7 @@
         "guzzlehttp/guzzle": "^7.8",
         "phpmailer/phpmailer": "^6.9",
         "monolog/monolog": "^3.5",
-        "firebase/php-jwt": "^6.10",
+        "firebase/php-jwt": "^7.0",
         "respect/validation": "^2.3",
         "robmorgan/phinx": "^0.16",
         "nesbot/carbon": "^3.7"
@@ -33,7 +33,10 @@
     },
     "config": {
         "optimize-autoloader": true,
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "8.3.0"
+        }
     },
     "audit": {
         "abandoned": "ignore",
