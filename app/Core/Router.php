@@ -43,6 +43,14 @@ class Router
         $this->add('DELETE', $uri, $handler, $middlewares);
     }
 
+    /** Aceita qualquer método HTTP — útil para webhooks e endpoints de cron */
+    public function any(string $uri, array $handler, array $middlewares = []): void
+    {
+        foreach (['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'] as $method) {
+            $this->add($method, $uri, $handler, $middlewares);
+        }
+    }
+
     /** Agrupa rotas com middlewares compartilhados */
     public function group(array $middlewares, \Closure $callback): void
     {

@@ -437,14 +437,14 @@ $router->group([AuthMiddleware::class], function ($router) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Cron: processar fila de notificações (token via ?token=)
-$router->get('/queue/run',      [QueueController::class, 'run']);
+$router->any('/queue/run',          [QueueController::class, 'run']);
 // Cron: sincronizar ads (token via ?token=)
-$router->get('/queue/sync-ads',     [QueueController::class, 'syncAds']);
+$router->any('/queue/sync-ads',     [QueueController::class, 'syncAds']);
 // Cron: sincronizar orgânico (token via ?token=)
-$router->get('/queue/sync-organic', [QueueController::class, 'syncOrganic']);
+$router->any('/queue/sync-organic', [QueueController::class, 'syncOrganic']);
 // Cron: motor de automação — enfileira regras agendadas e processa a fila de jobs
-$router->get('/queue/scheduler',    [QueueController::class, 'scheduler']);
-$router->get('/queue/work',         [QueueController::class, 'work']);
+$router->any('/queue/scheduler',    [QueueController::class, 'scheduler']);
+$router->any('/queue/work',         [QueueController::class, 'work']);
 
 // Webhook Evolution API (token único por instância)
 $router->post('/webhook/evolution/{token}', [WebhookController::class, 'evolution']);
