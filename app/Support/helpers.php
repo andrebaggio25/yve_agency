@@ -137,6 +137,26 @@ function has_flash(string $key): bool
     return isset($_SESSION['flash'][$key]);
 }
 
+function flash_messages(): void
+{
+    if (has_flash('success')) {
+        echo '<div class="mb-4 rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-300">' . e((string) flash('success')) . '</div>';
+    }
+    if (has_flash('error')) {
+        echo '<div class="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">' . e((string) flash('error')) . '</div>';
+    }
+    if (has_flash('errors')) {
+        $errors = flash('errors');
+        if (is_array($errors)) {
+            echo '<div class="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300"><ul class="list-disc list-inside space-y-1">';
+            foreach ($errors as $msg) {
+                echo '<li>' . e((string) $msg) . '</li>';
+            }
+            echo '</ul></div>';
+        }
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Old input (form repopulation after validation error)
 // ─────────────────────────────────────────────────────────────────────────────

@@ -86,7 +86,11 @@ class Router
             );
             $request->setParams($params);
 
-            $this->runRoute($route, $request)->send();
+            try {
+                $this->runRoute($route, $request)->send();
+            } catch (\Throwable $e) {
+                $this->handleError($e)->send();
+            }
             return;
         }
 
@@ -138,5 +142,28 @@ class Router
         }
 
         return Response::text('404 — Página não encontrada', 404);
+    }
+
+    private function handleError(\Throwable $e): Response
+    {
+        $isDev = env('APP_ENV', 'production') === 'development';
+
+        if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+            $body = ['error' => 'Internal server error'];
+            if ($isDev) {
+                $body['message'] = $e->getMessage();
+                $body['trace']   = explode("\n", $e->getTraceAsString());
+            }
+            return Response::json($body, 500);
+        }
+
+        $message = $isDev ? $e->getMessage() : null;
+        $trace   = $isDev ? $e->getTraceAsString() : null;
+
+        if (file_exists(resource_path('views/errors/500.php'))) {
+            return Response::view('errors.500', compact('message', 'trace'), 500);
+        }
+
+        return Response::text('500 — Erro interno', 500);
     }
 }
