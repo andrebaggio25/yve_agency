@@ -33,6 +33,8 @@ use App\Controllers\Admin\GlobalSettingsController;
 use App\Controllers\Admin\SubscriptionPlanController;
 use App\Controllers\BillingController;
 use App\Controllers\ReportController;
+use App\Controllers\ClickUpController;
+use App\Controllers\ClickUpWebhookController;
 use App\Middlewares\AuthMiddleware;
 use App\Middlewares\PlatformAdminMiddleware;
 use App\Middlewares\PortalMiddleware;
@@ -414,6 +416,11 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->post('/configuracoes/whatsapp/desconectar',[WhatsAppController::class, 'disconnect'],      [CsrfMiddleware::class]);
     $router->post('/configuracoes/whatsapp/webhook',   [WhatsAppController::class, 'configureWebhook'], [CsrfMiddleware::class]);
 
+    // ── Integração ClickUp ───────────────────────────────────────────────────
+    $router->get('/integrations/clickup',  [ClickUpController::class, 'index']);
+    $router->post('/integrations/clickup', [ClickUpController::class, 'store'],   [CsrfMiddleware::class]);
+    $router->delete('/integrations/clickup', [ClickUpController::class, 'destroy'], [CsrfMiddleware::class]);
+
     // ── Configurações (agência) ──────────────────────────────────────────────
     $router->get('/configuracoes',  [SettingsController::class, 'index']);
     $router->post('/configuracoes', [SettingsController::class, 'save'], [CsrfMiddleware::class]);
@@ -448,6 +455,9 @@ $router->any('/queue/work',         [QueueController::class, 'work']);
 
 // Webhook Evolution API (token único por instância)
 $router->post('/webhook/evolution/{token}', [WebhookController::class, 'evolution']);
+
+// Webhook ClickUp (token único por agência, valida HMAC X-Signature)
+$router->post('/webhook/clickup/{token}', [ClickUpWebhookController::class, 'handle']);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Portal do Cliente (público — acesso via portal_token na URL)

@@ -64,6 +64,7 @@ return [
     'nav.financial_reports' => 'Reports',
     'nav.users'             => 'Users',
     'nav.automations'       => 'Automations',
+    'nav.clickup'           => 'ClickUp',
     'nav.executive_report'  => 'Exec. Report',
     'nav.subscription'      => 'Subscription',
     'nav.settings'          => 'Settings',

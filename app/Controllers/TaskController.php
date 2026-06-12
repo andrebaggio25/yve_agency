@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
 use App\Support\Auth;
 use App\Repositories\TaskRepository;
 use App\Repositories\ClientRepository;
 use App\Repositories\UserRepository;
+use App\Services\ClickUpService;
 use App\Services\NotificationService;
 
 class TaskController extends Controller
@@ -20,7 +22,22 @@ class TaskController extends Controller
         private readonly ClientRepository    $clientRepo,
         private readonly UserRepository      $userRepo,
         private readonly NotificationService $notifications,
+        private readonly ClickUpService      $clickup,
     ) {}
+
+    private function enqueueClickUp(int $taskId, int $agencyId, string $action): void
+    {
+        if (!$this->clickup->isConfigured($agencyId)) return;
+
+        $payload = json_encode([
+            'job'  => \App\Jobs\ClickUpPushJob::class,
+            'data' => ['task_id' => $taskId, 'agency_id' => $agencyId, 'action' => $action],
+        ]);
+        Database::connection()->prepare("
+            INSERT INTO jobs (agency_id, queue, payload, available_at, status, created_at, updated_at)
+            VALUES (:a, 'clickup', :p, NOW(), 'pending', NOW(), NOW())
+        ")->execute([':a' => $agencyId, ':p' => $payload]);
+    }
 
     // ------------------------------------------------------------------- index
 
@@ -96,6 +113,8 @@ class TaskController extends Controller
             ]);
         }
 
+        $this->enqueueClickUp($id, (int) Auth::agencyId(), 'create');
+
         $this->withSuccess('Tarefa criada.');
         return $this->redirect('/tarefas/' . $id);
     }
@@ -157,6 +176,8 @@ class TaskController extends Controller
             ]);
         }
 
+        $this->enqueueClickUp($id, $agencyId, 'update');
+
         $this->withSuccess('Tarefa atualizada.');
         return $this->redirect('/tarefas/' . $id);
     }
@@ -174,7 +195,9 @@ class TaskController extends Controller
             return Response::json(['error' => 'Status inválido'], 422);
         }
 
-        $this->repo->updateStatus($id, (int) Auth::agencyId(), $status);
+        $agencyId = (int) Auth::agencyId();
+        $this->repo->updateStatus($id, $agencyId, $status);
+        $this->enqueueClickUp($id, $agencyId, 'update');
         return Response::json(['success' => true]);
     }
 

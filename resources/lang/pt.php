@@ -68,6 +68,7 @@ return [
     'nav.financial_reports' => 'Relatórios',
     'nav.users'             => 'Usuários',
     'nav.automations'       => 'Automações',
+    'nav.clickup'           => 'ClickUp',
     'nav.executive_report'  => 'Relatório Exec.',
     'nav.subscription'      => 'Assinatura',
     'nav.settings'          => 'Configurações',

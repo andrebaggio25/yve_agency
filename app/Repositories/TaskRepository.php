@@ -141,4 +141,34 @@ class TaskRepository extends Repository
         }
         return $counts;
     }
+
+    public function findByExternalId(string $externalId, int $agencyId): ?array
+    {
+        return $this->first(
+            "SELECT * FROM tasks WHERE external_id = :eid AND agency_id = :a",
+            [':eid' => $externalId, ':a' => $agencyId]
+        );
+    }
+
+    /** Atualiza campos vindos do ClickUp (sync_source, status, title, last_synced_at) */
+    public function syncFromClickUp(int $id, int $agencyId, array $data): void
+    {
+        $allowed = ['status', 'title', 'sync_source', 'last_synced_at'];
+        $sets    = [];
+        $params  = [':id' => $id, ':a' => $agencyId];
+
+        foreach ($allowed as $col) {
+            if (array_key_exists($col, $data)) {
+                $sets[]         = "{$col} = :{$col}";
+                $params[":{$col}"] = $data[$col];
+            }
+        }
+
+        if (empty($sets)) return;
+
+        $sets[] = 'updated_at = NOW()';
+        $this->pdo->prepare(
+            "UPDATE tasks SET " . implode(', ', $sets) . " WHERE id = :id AND agency_id = :a"
+        )->execute($params);
+    }
 }
