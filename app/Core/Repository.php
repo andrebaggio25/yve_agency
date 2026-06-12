@@ -78,7 +78,7 @@ abstract class Repository
     }
 
     /** @param array<string,mixed> $data */
-    protected function insert(array $data): int|string
+    public function insert(array $data): int|string
     {
         $cols        = array_keys($data);
         $placeholders = array_map(fn($c) => ":{$c}", $cols);
