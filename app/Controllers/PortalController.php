@@ -18,6 +18,7 @@ use App\Repositories\AdMetricsRepository;
 use App\Repositories\OrganicAccountRepository;
 use App\Repositories\OrganicMetricsRepository;
 use App\Services\ContentPlanService;
+use App\Services\GoogleDriveService;
 
 class PortalController extends Controller
 {
@@ -31,6 +32,7 @@ class PortalController extends Controller
         private readonly OrganicAccountRepository   $organicAccountRepo,
         private readonly OrganicMetricsRepository   $organicMetricsRepo,
         private readonly ContentPlanService      $planService,
+        private readonly GoogleDriveService      $drive,
     ) {}
 
     // ---------------------------------------------------------------- dashboard
@@ -104,6 +106,10 @@ class PortalController extends Controller
         }
 
         $items = $this->planRepo->getItems($planId);
+        foreach ($items as &$item) {
+            $item['drive_parsed'] = !empty($item['drive_url']) ? $this->drive->parse($item['drive_url']) : null;
+        }
+        unset($item);
 
         return $this->view('portal.plan_show', compact('client', 'token', 'plan', 'items'));
     }

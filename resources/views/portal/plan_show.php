@@ -10,6 +10,10 @@ $statusColors = [
   'in_revision'      => 'text-blue-300 bg-blue-500/10',
   'published'        => 'text-violet-300 bg-violet-500/10',
 ];
+$itemStatusColors = ['pending' => 'text-gray-400 bg-gray-500/10', 'approved' => 'text-green-300 bg-green-500/10', 'revision' => 'text-yellow-300 bg-yellow-500/10', 'rejected' => 'text-red-300 bg-red-500/10', 'draft' => 'text-gray-400 bg-gray-500/10'];
+$itemStatusLabels = ['pending' => 'Pendente', 'approved' => 'Aprovado', 'revision' => 'Revisão', 'rejected' => 'Rejeitado', 'draft' => 'Rascunho'];
+$platformColors   = ['instagram' => '#E1306C', 'tiktok' => '#010101', 'youtube' => '#FF0000', 'linkedin' => '#0A66C2', 'facebook' => '#1877F2', 'pinterest' => '#E60023'];
+$videoTypes       = ['Reels / Vídeo', 'reels', 'Story'];
 ?>
 
 <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
@@ -41,16 +45,14 @@ $statusColors = [
   <div class="flex flex-wrap gap-3 pt-4 border-t border-white/[0.06]" x-data="{showRevision: false}">
     <form method="POST" action="/portal/<?= $token ?>/planos/<?= $plan['id'] ?>/aprovar">
       <input type="hidden" name="_token" value="<?= csrf_token() ?>">
-      <button type="submit"
-              class="btn-primary text-sm px-5 py-2.5 gap-2">
+      <button type="submit" class="btn-primary text-sm px-5 py-2.5 gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
         Aprovar plano
       </button>
     </form>
-    <button @click="showRevision = !showRevision"
-            class="btn-secondary text-sm px-4 py-2.5">
+    <button @click="showRevision = !showRevision" class="btn-secondary text-sm px-4 py-2.5">
       Solicitar revisão
     </button>
 
@@ -71,46 +73,89 @@ $statusColors = [
 
 <!-- Itens do plano -->
 <?php if (!empty($items)): ?>
-<h2 class="text-sm font-semibold text-gray-300 mb-3">Conteúdos do plano (<?= count($items) ?>)</h2>
-<div class="space-y-3">
-  <?php
-  $itemStatusColors = ['pending' => 'text-gray-400 bg-gray-500/10', 'approved' => 'text-green-300 bg-green-500/10', 'revision' => 'text-yellow-300 bg-yellow-500/10', 'rejected' => 'text-red-300 bg-red-500/10'];
-  $itemStatusLabels = ['pending' => 'Pendente', 'approved' => 'Aprovado', 'revision' => 'Revisão', 'rejected' => 'Rejeitado'];
-  foreach ($items as $item): ?>
+<h2 class="text-sm font-semibold text-gray-300 mb-3">Posts (<?= count($items) ?>)</h2>
+<div class="space-y-4">
+  <?php foreach ($items as $item):
+    $parsedDrive = $item['drive_parsed'] ?? null;
+    $isVideo     = in_array($item['content_type'] ?? '', $videoTypes);
+    $pColor      = $platformColors[$item['platform'] ?? ''] ?? null;
+  ?>
   <div class="card p-4">
-    <div class="flex items-start justify-between gap-4">
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 flex-wrap mb-1">
-          <?php if ($item['content_type'] ?? null): ?>
-          <span class="text-xs text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full font-medium">
-            <?= e($item['content_type']) ?>
-          </span>
-          <?php endif; ?>
-          <?php if ($item['scheduled_date'] ?? null): ?>
-          <span class="text-xs text-gray-500"><?= date('d/m/Y', strtotime($item['scheduled_date'])) ?></span>
-          <?php endif; ?>
-        </div>
-        <p class="font-medium text-white text-sm"><?= e($item['title'] ?? $item['caption'] ?? 'Sem título') ?></p>
-        <?php if ($item['caption'] ?? null): ?>
-        <p class="text-xs text-gray-500 mt-1 line-clamp-2"><?= e($item['caption']) ?></p>
+
+    <!-- Post header: platform + format + date + status -->
+    <div class="flex items-start justify-between gap-3 mb-3">
+      <div class="flex items-center gap-2 flex-wrap">
+        <?php if ($pColor): ?>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-white" style="background:<?= $pColor ?>">
+          <?= ucfirst(e($item['platform'])) ?>
+        </span>
+        <?php endif; ?>
+        <?php if (!empty($item['content_type'])): ?>
+        <span class="text-xs text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded-full font-medium">
+          <?= e($item['content_type']) ?>
+        </span>
+        <?php endif; ?>
+        <?php if (!empty($item['publish_date'])): ?>
+        <span class="text-xs text-gray-500">
+          <?= date('d/m/Y', strtotime($item['publish_date'])) ?>
+          <?= !empty($item['publish_time']) ? ' · ' . substr($item['publish_time'], 0, 5) : '' ?>
+        </span>
         <?php endif; ?>
       </div>
-      <?php if ($item['status'] ?? null): ?>
-      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 <?= $itemStatusColors[$item['status']] ?? 'text-gray-400' ?>">
+      <?php if (!empty($item['status'])): ?>
+      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 <?= $itemStatusColors[$item['status']] ?? 'text-gray-400 bg-gray-500/10' ?>">
         <?= $itemStatusLabels[$item['status']] ?? $item['status'] ?>
       </span>
       <?php endif; ?>
     </div>
-    <?php if (!empty($item['media_url'] ?? '') && $item['media_url']): ?>
-    <img src="<?= e($item['media_url']) ?>" alt=""
-         class="mt-3 rounded-lg w-full max-h-48 object-cover opacity-80"
-         onerror="this.style.display='none'">
+
+    <!-- Cover image (always shown if available) -->
+    <?php if (!empty($item['cover_url'])): ?>
+    <div class="mb-3 rounded-xl overflow-hidden">
+      <img src="<?= e($item['cover_url']) ?>" alt="Capa"
+           class="w-full object-cover max-h-80"
+           onerror="this.parentElement.style.display='none'">
+    </div>
     <?php endif; ?>
+
+    <!-- Caption -->
+    <?php if (!empty($item['caption'])): ?>
+    <p class="text-sm text-gray-200 leading-relaxed whitespace-pre-line mb-3"><?= e($item['caption']) ?></p>
+    <?php endif; ?>
+
+    <!-- Drive embed (video player for Reels/Vídeo) or link for others -->
+    <?php if ($parsedDrive && $parsedDrive['valid']): ?>
+    <?php if ($isVideo || $parsedDrive['file_type'] === 'video'): ?>
+    <div class="rounded-xl overflow-hidden border border-white/10 bg-black/30">
+      <div class="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span class="text-xs text-gray-400">Vídeo</span>
+        <a href="<?= e($parsedDrive['original']) ?>" target="_blank" rel="noopener"
+           class="ml-auto text-xs text-violet-400 hover:text-violet-300 transition-colors">
+          Abrir Drive →
+        </a>
+      </div>
+      <div class="aspect-video">
+        <iframe src="<?= e($parsedDrive['embed_url']) ?>"
+                class="w-full h-full border-0" loading="lazy" allowfullscreen></iframe>
+      </div>
+    </div>
+    <?php else: ?>
+    <a href="<?= e($parsedDrive['original']) ?>" target="_blank" rel="noopener"
+       class="inline-flex items-center gap-2 text-xs text-violet-400 hover:text-violet-300 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      Ver arquivo no Drive →
+    </a>
+    <?php endif; ?>
+    <?php endif; ?>
+
   </div>
   <?php endforeach; ?>
 </div>
 <?php else: ?>
-<div class="card p-8 text-center text-gray-500 text-sm">Nenhum item adicionado ainda.</div>
+<div class="card p-8 text-center text-gray-500 text-sm">Nenhum post adicionado ainda.</div>
 <?php endif; ?>
 
 <?php view_end(); ?>

@@ -62,8 +62,9 @@ class ContentPlanRepository extends Repository
     {
         return $this->first(
             "SELECT cp.*,
-                    c.name AS client_name,
-                    u.name AS created_by_name
+                    c.name     AS client_name,
+                    c.timezone AS client_timezone,
+                    u.name     AS created_by_name
              FROM content_plans cp
              JOIN clients c ON c.id = cp.client_id
              JOIN users   u ON u.id = cp.created_by
