@@ -260,7 +260,7 @@ class InvoiceRepository extends Repository
             FROM invoices i
             LEFT JOIN clients c ON c.id = i.client_id
             WHERE i.client_id = :client_id
-            ORDER BY i.issue_date DESC
+            ORDER BY i.due_date DESC
         ", [':client_id' => $clientId]);
     }
 
