@@ -36,7 +36,7 @@ class ClickUpWebhookController extends Controller
         }
 
         // Verificar assinatura HMAC
-        $rawBody   = file_get_contents('php://input') ?: '';
+        $rawBody   = \App\Core\Request::rawInput();
         $signature = $_SERVER['HTTP_X_SIGNATURE'] ?? '';
         $expected  = hash_hmac('sha256', $rawBody, $integration['webhook_token']);
 

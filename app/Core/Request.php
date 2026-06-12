@@ -32,11 +32,16 @@ class Request
 
         $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
+        $body = $_POST;
+        if (empty($body) && str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')) {
+            $body = json_decode(self::rawInput() ?: '{}', true) ?? [];
+        }
+
         return new static(
             method:  $method,
             uri:     $uri,
             query:   $_GET,
-            body:    $_POST,
+            body:    $body,
             files:   $_FILES,
             server:  $_SERVER,
             cookies: $_COOKIE,
@@ -111,11 +116,20 @@ class Request
     {
         static $decoded = null;
         if ($decoded === null) {
-            $raw     = file_get_contents('php://input');
-            $decoded = json_decode($raw ?: '{}', true) ?? [];
+            $decoded = json_decode(self::rawInput() ?: '{}', true) ?? [];
         }
         if ($key === '') return $decoded;
         return $decoded[$key] ?? $default;
+    }
+
+    /** Raw php://input, cached so it can be read more than once. */
+    public static function rawInput(): string
+    {
+        static $cache = null;
+        if ($cache === null) {
+            $cache = file_get_contents('php://input') ?: '';
+        }
+        return $cache;
     }
 
     /** Returns all body + query input */

@@ -30,7 +30,7 @@ class WebhookController extends Controller
             return Response::json(['received' => true]);
         }
 
-        $body  = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body  = json_decode(\App\Core\Request::rawInput(), true) ?? [];
         $event = $body['event'] ?? $body['type'] ?? '';
 
         match ($event) {
