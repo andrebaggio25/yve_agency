@@ -35,6 +35,12 @@ class PortalController extends Controller
         private readonly GoogleDriveService      $drive,
     ) {}
 
+    // Returns true if status badge should change color
+    private static function videoTypes(): array
+    {
+        return ['Reels / Vídeo', 'reels', 'Story'];
+    }
+
     // ---------------------------------------------------------------- dashboard
 
     public function index(Request $request): Response
@@ -108,6 +114,8 @@ class PortalController extends Controller
         $items = $this->planRepo->getItems($planId);
         foreach ($items as &$item) {
             $item['drive_parsed'] = !empty($item['drive_url']) ? $this->drive->parse($item['drive_url']) : null;
+            $item['feedbacks']    = $this->planRepo->getFeedbacks((int) $item['id']);
+            $item['images_list']  = is_string($item['images'] ?? null) ? (json_decode($item['images'], true) ?? []) : ($item['images'] ?? []);
         }
         unset($item);
 
@@ -151,6 +159,69 @@ class PortalController extends Controller
 
         $this->withSuccess('Revisão solicitada.');
         return $this->redirect("/portal/{$token}/planos/{$planId}");
+    }
+
+    public function itemFeedback(Request $request): Response
+    {
+        $client  = PortalAuth::client();
+        $planId  = (int) $request->param('planId');
+        $itemId  = (int) $request->param('itemId');
+
+        $plan = $this->planRepo->findByIdForClient($planId, (int) $client['id']);
+        if (!$plan) {
+            return Response::json(['error' => 'Plano não encontrado'], 404);
+        }
+
+        $item = $this->planRepo->findItemForClient($itemId, (int) $client['id']);
+        if (!$item || (int) $item['content_plan_id'] !== $planId) {
+            return Response::json(['error' => 'Item não encontrado'], 404);
+        }
+
+        $type    = $request->input('feedback_type', 'comment');
+        $comment = trim((string) $request->input('comment', ''));
+        $tcRaw   = $request->input('timecode', '');
+
+        $allowed = ['approved', 'changes_requested', 'comment'];
+        if (!in_array($type, $allowed, true)) {
+            return Response::json(['error' => 'Tipo inválido'], 422);
+        }
+
+        // Parse timecode "MM:SS" → seconds
+        $timecodeSeconds = null;
+        if ($tcRaw !== '' && preg_match('/^(\d{1,2}):(\d{2})$/', trim((string) $tcRaw), $m)) {
+            $timecodeSeconds = (int)$m[1] * 60 + (int)$m[2];
+        }
+
+        $feedbackId = $this->planService->addFeedback(
+            $itemId, $planId, (int) $client['id'], null,
+            $type, $comment ?: null, $timecodeSeconds, 'client'
+        );
+
+        $author   = $client['name'] ?? 'Cliente';
+        $timecode = $timecodeSeconds !== null
+            ? sprintf('%d:%02d', intdiv($timecodeSeconds, 60), $timecodeSeconds % 60)
+            : null;
+
+        $typeLabels = [
+            'approved'          => 'Aprovado',
+            'changes_requested' => 'Alteração solicitada',
+            'comment'           => 'Comentário',
+        ];
+
+        return Response::json([
+            'success'  => true,
+            'feedback' => [
+                'id'            => $feedbackId,
+                'feedback_type' => $type,
+                'type_label'    => $typeLabels[$type],
+                'comment'       => $comment ?: null,
+                'client_name'   => $author,
+                'user_name'     => null,
+                'source'        => 'client',
+                'timecode'      => $timecode,
+                'created_at'    => date('Y-m-d H:i:s'),
+            ],
+        ]);
     }
 
     // ------------------------------------------------------------ invoices

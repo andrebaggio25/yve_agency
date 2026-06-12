@@ -42,6 +42,7 @@ class ContentPlanService
         foreach ($items as &$item) {
             $item['feedbacks']    = $this->repo->getFeedbacks((int) $item['id']);
             $item['drive_parsed'] = $item['drive_url'] ? $this->drive->parse($item['drive_url']) : null;
+            $item['images_list']  = is_string($item['images'] ?? null) ? (json_decode($item['images'], true) ?? []) : ($item['images'] ?? []);
         }
         unset($item);
 
@@ -151,6 +152,7 @@ class ContentPlanService
             'cta'             => $input['cta']           ?? null,
             'drive_url'       => $input['drive_url']     ?? null,
             'cover_url'       => $input['cover_url']     ?? null,
+            'images'          => !empty($input['images']) ? json_encode(array_values(array_filter((array) $input['images']))) : null,
             'assigned_to'     => !empty($input['assigned_to']) ? (int) $input['assigned_to'] : null,
             'status'          => 'draft',
             'sort_order'      => $input['sort_order']    ?? 0,
@@ -190,6 +192,7 @@ class ContentPlanService
             'cta'           => $input['cta']           ?? null,
             'drive_url'     => $input['drive_url']     ?? null,
             'cover_url'     => $input['cover_url']     ?? null,
+            'images'        => isset($input['images']) ? json_encode(array_values(array_filter((array) $input['images']))) : null,
             'assigned_to'   => !empty($input['assigned_to']) ? (int) $input['assigned_to'] : null,
             'status'        => $input['status']        ?? null,
             'sort_order'    => isset($input['sort_order']) ? (int) $input['sort_order'] : null,
@@ -209,8 +212,10 @@ class ContentPlanService
 
     // ── Feedback / Approval ────────────────────────────────────────────────────
 
-    public function addFeedback(int $itemId, int $planId, int $clientId, int $userId, string $type, ?string $comment): int
-    {
+    public function addFeedback(
+        int $itemId, int $planId, int $clientId, ?int $userId, string $type, ?string $comment,
+        ?int $timecodeSeconds = null, string $source = 'client'
+    ): int {
         $id = $this->repo->addFeedback([
             'content_plan_item_id' => $itemId,
             'content_plan_id'      => $planId,
@@ -218,16 +223,20 @@ class ContentPlanService
             'user_id'              => $userId,
             'feedback_type'        => $type,
             'comment'              => $comment,
+            'timecode_seconds'     => $timecodeSeconds,
+            'source'               => $source,
         ]);
 
-        // Auto-update item status based on feedback type
-        $statusMap = [
-            'approved'          => 'approved',
-            'changes_requested' => 'revision',
-            'rejected'          => 'rejected',
-        ];
-        if (isset($statusMap[$type])) {
-            $this->repo->updateItem($itemId, ['status' => $statusMap[$type]]);
+        // Agency plain comments do not change item status
+        if (!($source === 'agency' && $type === 'comment')) {
+            $statusMap = [
+                'approved'          => 'approved',
+                'changes_requested' => 'revision',
+                'rejected'          => 'rejected',
+            ];
+            if (isset($statusMap[$type])) {
+                $this->repo->updateItem($itemId, ['status' => $statusMap[$type]]);
+            }
         }
 
         ActivityLogger::log('approval.feedback_added', 'approvals', null, $clientId, ['item_id' => $itemId, 'type' => $type]);

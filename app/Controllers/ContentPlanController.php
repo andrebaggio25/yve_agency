@@ -158,7 +158,7 @@ class ContentPlanController extends Controller
         $agencyId = (int) Auth::agencyId();
         $input    = $request->only([
             'publish_date', 'publish_time', 'content_type', 'platform', 'title', 'theme',
-            'caption', 'script', 'cta', 'drive_url', 'cover_url', 'assigned_to', 'sort_order',
+            'caption', 'script', 'cta', 'drive_url', 'cover_url', 'images', 'assigned_to', 'sort_order',
         ]);
 
         try {
@@ -185,7 +185,7 @@ class ContentPlanController extends Controller
         $agencyId = (int) Auth::agencyId();
         $input    = $request->only([
             'publish_date', 'publish_time', 'content_type', 'platform', 'title', 'theme',
-            'caption', 'script', 'cta', 'drive_url', 'cover_url', 'assigned_to', 'status', 'sort_order',
+            'caption', 'script', 'cta', 'drive_url', 'cover_url', 'images', 'assigned_to', 'status', 'sort_order',
         ]);
 
         $ok = $this->service->updateItem($itemId, $agencyId, $input);

@@ -141,6 +141,24 @@ class ClientService
         return ['success' => true];
     }
 
+    public function setPortalAccess(int $clientId, int $agencyId, bool $enable): void
+    {
+        $client = $this->findById($clientId, $agencyId);
+        if (!$client) return;
+
+        if ($enable && empty($client['portal_token'])) {
+            $this->clientRepo->updateById($clientId, [
+                'portal_token' => bin2hex(random_bytes(16)),
+                'updated_at'   => date('Y-m-d H:i:s'),
+            ]);
+        } elseif (!$enable && !empty($client['portal_token'])) {
+            $this->clientRepo->updateById($clientId, [
+                'portal_token' => null,
+                'updated_at'   => date('Y-m-d H:i:s'),
+            ]);
+        }
+    }
+
     public function delete(int $clientId, int $agencyId): void
     {
         $client = $this->findById($clientId, $agencyId);

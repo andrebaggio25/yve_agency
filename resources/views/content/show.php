@@ -24,7 +24,11 @@ $total      = array_sum($plan['status_summary']);
 $approved   = ($plan['status_summary']['approved'] ?? 0);
 $pct        = $total > 0 ? round(($approved / $total) * 100) : 0;
 
-$clientTz = $plan['client_timezone'] ?? 'America/Sao_Paulo';
+$clientTz      = $plan['client_timezone'] ?? 'America/Sao_Paulo';
+$portalToken   = $plan['client_portal_token'] ?? null;
+$approvalUrl   = $portalToken
+    ? rtrim(env('APP_URL', ''), '/') . '/portal/' . $portalToken . '/planos/' . $plan['id']
+    : null;
 
 $platforms = [
   ['id' => 'instagram', 'label' => 'Instagram', 'color' => '#E1306C',
@@ -81,6 +85,18 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
           </svg>
           <span x-text="sending ? 'Enviando...' : 'Enviar para Aprovação'"></span>
+        </button>
+        <?php endif; ?>
+        <?php if ($approvalUrl): ?>
+        <button x-data="{copied:false}"
+                @click="navigator.clipboard.writeText('<?= e($approvalUrl) ?>').then(() => { copied=true; setTimeout(()=>copied=false,2000) })"
+                :class="copied ? 'border-emerald-500/40 text-emerald-300' : 'border-white/10 text-gray-300 hover:text-white hover:border-white/20'"
+                class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <template x-if="!copied"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></template>
+            <template x-if="copied"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></template>
+          </svg>
+          <span x-text="copied ? 'Copiado!' : 'Link de Aprovação'"></span>
         </button>
         <?php endif; ?>
         <?php if ($canEdit): ?>
@@ -233,6 +249,18 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
             </div>
 
             <div class="flex items-center gap-2 flex-shrink-0">
+              <?php if ($canEdit): ?>
+              <button @click.stop="openEdit()"
+                      class="opacity-0 group-hover:opacity-100 rounded-lg p-1.5 text-gray-500 hover:text-white hover:bg-white/10 transition-all"
+                      title="Editar">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button @click.stop="deleteItem()"
+                      class="opacity-0 group-hover:opacity-100 rounded-lg p-1.5 text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                      title="Excluir">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+              <?php endif; ?>
               <?php if ($parsedDrive && $parsedDrive['valid']): ?>
               <span class="flex-shrink-0 rounded-full p-1 bg-violet-500/10">
                 <?php
@@ -333,9 +361,23 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
             $fbLabel = ['approved'=>'Aprovado','changes_requested'=>'Revisão solicitada','rejected'=>'Rejeitado','comment'=>'Comentário'][$fb['feedback_type']] ?? $fb['feedback_type'];
           ?>
           <div class="rounded-xl <?= $fbClass ?> border border-white/5 p-3">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-semibold"><?= e($fb['user_name']) ?></span>
-              <span class="text-xs opacity-60"><?= date('d/m H:i', strtotime($fb['created_at'])) ?></span>
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-xs font-semibold">
+                  <?= e($fb['source'] === 'client' ? ($fb['client_name'] ?? 'Cliente') : ($fb['user_name'] ?? 'Equipe')) ?>
+                </span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold
+                  <?= $fb['source'] === 'client' ? 'text-violet-300 bg-violet-500/20' : 'text-gray-400 bg-white/10' ?>">
+                  <?= $fb['source'] === 'client' ? 'Cliente' : 'Equipe' ?>
+                </span>
+                <?php if (!empty($fb['timecode_seconds'])): ?>
+                <span class="inline-flex items-center gap-1 text-[10px] text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded-full font-mono">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <?= sprintf('%d:%02d', intdiv((int)$fb['timecode_seconds'], 60), (int)$fb['timecode_seconds'] % 60) ?>
+                </span>
+                <?php endif; ?>
+              </div>
+              <span class="text-xs opacity-60 flex-shrink-0"><?= date('d/m H:i', strtotime($fb['created_at'])) ?></span>
             </div>
             <p class="text-xs font-medium mb-1"><?= $fbLabel ?></p>
             <?php if (!empty($fb['comment'])): ?>
@@ -343,6 +385,32 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
             <?php endif; ?>
           </div>
           <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- Nota interna da equipe por item -->
+        <?php if ($canEdit): ?>
+        <div x-data="itemNote(<?= $item['id'] ?>)" class="pt-1">
+          <div x-show="!writing">
+            <button @click="writing = true"
+                    class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-violet-400 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Adicionar nota interna
+            </button>
+          </div>
+          <div x-show="writing" x-transition>
+            <textarea x-model="note" rows="2" placeholder="Nota visível apenas para a equipe..."
+                      @keydown.escape="writing = false; note = ''"
+                      class="w-full rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 resize-none mt-1"></textarea>
+            <div class="flex items-center gap-2 mt-1.5">
+              <button @click="submitNote()" :disabled="sending"
+                      class="rounded-lg bg-white/10 border border-white/10 px-3 py-1 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/20 transition-all disabled:opacity-50">
+                <span x-text="sending ? 'Salvando...' : 'Salvar nota'"></span>
+              </button>
+              <button @click="writing = false; note = ''" class="text-xs text-gray-600 hover:text-gray-400 transition-colors">Cancelar</button>
+              <span x-show="saved" class="text-xs text-emerald-400">✓ Salvo</span>
+            </div>
+          </div>
         </div>
         <?php endif; ?>
 
@@ -468,12 +536,34 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
                  class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50">
           <p class="text-xs text-gray-600 mt-1">URL da imagem (Drive, CDN ou outro host público)</p>
           <!-- Preview -->
-          <div x-show="itemModal.cover_url" class="mt-2 rounded-xl overflow-hidden border border-white/10" style="display:none">
-            <img :src="itemModal.cover_url" alt="Preview"
-                 class="w-full object-cover max-h-52"
-                 @error="$el.parentElement.style.display='none'"
-                 @load="$el.parentElement.style.display='block'">
+          <template x-if="itemModal.cover_url">
+            <div class="mt-2 rounded-xl overflow-hidden border border-white/10">
+              <img :src="itemModal.cover_url" alt="Preview" class="w-full object-cover max-h-52">
+            </div>
+          </template>
+        </div>
+
+        <!-- Carousel images -->
+        <div x-show="itemModal.content_type === 'Carrossel'" style="display:none">
+          <label class="block text-xs font-medium text-gray-400 mb-1.5">Fotos do Carrossel</label>
+          <div class="space-y-2">
+            <template x-for="(url, idx) in itemModal.images" :key="idx">
+              <div class="flex items-center gap-2">
+                <input type="url" x-model="itemModal.images[idx]"
+                       placeholder="https://..."
+                       class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50">
+                <button type="button" @click="itemModal.images.splice(idx, 1)"
+                        class="p-2 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+            </template>
           </div>
+          <button type="button" @click="itemModal.images.push('')"
+                  class="mt-2 inline-flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Adicionar foto
+          </button>
         </div>
 
         <!-- Caption -->
@@ -525,6 +615,63 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
     </div>
   </div>
 
+  <!-- ── Chat do Plano ──────────────────────────────────────────────────────── -->
+  <div class="mt-8 rounded-2xl border border-white/5 bg-white/[0.03]"
+       x-data="planChat(<?= $plan['id'] ?>)"
+       x-init="loadComments()">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+      <h2 class="text-base font-semibold text-white flex items-center gap-2">
+        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        Chat do Plano
+        <span class="text-xs font-normal text-gray-500">· visível apenas para a equipe</span>
+      </h2>
+      <button @click="loadComments()" class="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+        <svg class="w-3.5 h-3.5" :class="{'animate-spin': loading}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mensagens -->
+    <div class="px-5 py-4 space-y-3 max-h-80 overflow-y-auto" x-ref="chatMessages">
+      <template x-if="comments.length === 0 && !loading">
+        <p class="text-xs text-gray-600 text-center py-4">Nenhuma mensagem ainda. Inicie a conversa!</p>
+      </template>
+      <template x-for="c in comments" :key="c.id">
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-violet-300"
+               x-text="(c.user_name || '?').charAt(0).toUpperCase()"></div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline gap-2 mb-0.5">
+              <span class="text-xs font-semibold text-white" x-text="c.user_name"></span>
+              <span class="text-[10px] text-gray-600" x-text="chatDate(c.created_at)"></span>
+            </div>
+            <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap" x-text="c.message"></p>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Input -->
+    <div class="px-5 pb-4 pt-2 border-t border-white/5">
+      <div class="flex gap-2">
+        <textarea x-model="newMessage" rows="2"
+                  placeholder="Escreva uma mensagem para a equipe..."
+                  @keydown.ctrl.enter.prevent="sendComment()"
+                  class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 resize-none"></textarea>
+        <button @click="sendComment()" :disabled="sending || !newMessage.trim()"
+                class="self-end rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed">
+          <svg class="w-4 h-4" :class="{'animate-pulse': sending}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+        </button>
+      </div>
+      <p class="text-[10px] text-gray-700 mt-1">Ctrl+Enter para enviar</p>
+    </div>
+  </div>
+
 </div><!-- /x-data -->
 
 <script>
@@ -534,7 +681,7 @@ const CSRF    = document.querySelector('meta[name="csrf-token"]')?.content ?? ''
 const emptyModal = () => ({
   show: false, mode: 'add', editId: null,
   platform: '', content_type: '', publish_date: '', publish_time: '',
-  cover_url: '', caption: '', drive_url: '', assigned_to: ''
+  cover_url: '', caption: '', drive_url: '', assigned_to: '', images: []
 });
 
 function contentShow(planId) {
@@ -560,6 +707,7 @@ function contentShow(planId) {
         caption:      item.caption       || '',
         drive_url:    item.drive_url     || '',
         assigned_to:  item.assigned_to   ? String(item.assigned_to) : '',
+        images:       Array.isArray(item.images_list) ? [...item.images_list] : [],
       };
     },
 
@@ -572,7 +720,7 @@ function contentShow(planId) {
           : `/conteudo/${planId}/items`;
         const r = await fetch(url, {
           method: isEdit ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
           body: JSON.stringify({
             platform:     this.itemModal.platform,
             content_type: this.itemModal.content_type,
@@ -582,6 +730,7 @@ function contentShow(planId) {
             caption:      this.itemModal.caption,
             drive_url:    this.itemModal.drive_url,
             assigned_to:  this.itemModal.assigned_to,
+            images:       this.itemModal.images.filter(u => u.trim()),
           })
         });
         const d = await r.json();
@@ -602,7 +751,7 @@ function contentShow(planId) {
       try {
         const r = await fetch(`/conteudo/${planId}/enviar`, {
           method: 'POST',
-          headers: { 'X-CSRF-Token': CSRF }
+          headers: { 'X-CSRF-Token': CSRF, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         });
         const d = await r.json();
         if (d.success) {
@@ -622,6 +771,99 @@ function contentShow(planId) {
   }
 }
 
+function planChat(planId) {
+  return {
+    comments:   [],
+    newMessage: '',
+    loading:    false,
+    sending:    false,
+    _interval:  null,
+
+    async loadComments() {
+      this.loading = true;
+      try {
+        const r = await fetch(`/api/comentarios/content_plan/${planId}`, {
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const d = await r.json();
+        if (d.comments) {
+          this.comments = d.comments;
+          this.$nextTick(() => {
+            const el = this.$refs.chatMessages;
+            if (el) el.scrollTop = el.scrollHeight;
+          });
+        }
+      } catch {}
+      this.loading = false;
+    },
+
+    async sendComment() {
+      const msg = this.newMessage.trim();
+      if (!msg) return;
+      this.sending = true;
+      try {
+        const r = await fetch(`/api/comentarios/content_plan/${planId}`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-Token': CSRF },
+          body:    JSON.stringify({ message: msg }),
+        });
+        const d = await r.json();
+        if (d.success && d.comment) {
+          this.comments.push(d.comment);
+          this.newMessage = '';
+          this.$nextTick(() => {
+            const el = this.$refs.chatMessages;
+            if (el) el.scrollTop = el.scrollHeight;
+          });
+        }
+      } catch {}
+      this.sending = false;
+    },
+
+    chatDate(dt) {
+      if (!dt) return '';
+      const d = new Date(dt.replace(' ', 'T'));
+      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+           + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    },
+
+    init() {
+      this._interval = setInterval(() => this.loadComments(), 30000);
+    },
+    destroy() { clearInterval(this._interval); },
+  };
+}
+
+function itemNote(itemId) {
+  return {
+    writing: false,
+    note:    '',
+    sending: false,
+    saved:   false,
+
+    async submitNote() {
+      const msg = this.note.trim();
+      if (!msg) return;
+      this.sending = true;
+      try {
+        const r = await fetch(`/api/comentarios/content_plan_item/${itemId}`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-Token': CSRF },
+          body:    JSON.stringify({ message: msg }),
+        });
+        const d = await r.json();
+        if (d.success) {
+          this.writing = false;
+          this.note    = '';
+          this.saved   = true;
+          setTimeout(() => this.saved = false, 3000);
+        }
+      } catch {}
+      this.sending = false;
+    },
+  };
+}
+
 function itemCard(item) {
   return {
     expanded: false,
@@ -635,7 +877,7 @@ function itemCard(item) {
       if (!confirm('Excluir este post?')) return;
       const r = await fetch(`/conteudo/${PLAN_ID}/items/${item.id}`, {
         method: 'DELETE',
-        headers: { 'X-CSRF-Token': CSRF }
+        headers: { 'X-CSRF-Token': CSRF, 'X-Requested-With': 'XMLHttpRequest' }
       });
       const d = await r.json();
       if (d.success) this.$el.remove();
@@ -644,7 +886,7 @@ function itemCard(item) {
     async changeStatus(status) {
       const r = await fetch(`/conteudo/${PLAN_ID}/items/${item.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify({ status })
       });
       const d = await r.json();

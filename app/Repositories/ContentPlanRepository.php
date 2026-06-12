@@ -62,9 +62,10 @@ class ContentPlanRepository extends Repository
     {
         return $this->first(
             "SELECT cp.*,
-                    c.name     AS client_name,
-                    c.timezone AS client_timezone,
-                    u.name     AS created_by_name
+                    c.name         AS client_name,
+                    c.timezone     AS client_timezone,
+                    c.portal_token AS client_portal_token,
+                    u.name         AS created_by_name
              FROM content_plans cp
              JOIN clients c ON c.id = cp.client_id
              JOIN users   u ON u.id = cp.created_by
@@ -195,9 +196,13 @@ class ContentPlanRepository extends Repository
     public function getFeedbacks(int $itemId): array
     {
         return $this->all(
-            "SELECT f.*, u.name AS user_name, u.avatar AS user_avatar
+            "SELECT f.*,
+                    u.name   AS user_name,
+                    u.avatar AS user_avatar,
+                    c.name   AS client_name
              FROM content_feedbacks f
-             JOIN users u ON u.id = f.user_id
+             LEFT JOIN users   u ON u.id = f.user_id
+             LEFT JOIN clients c ON c.id = f.client_id
              WHERE f.content_plan_item_id = :item_id
              ORDER BY f.created_at ASC",
             [':item_id' => $itemId]

@@ -35,6 +35,7 @@ use App\Controllers\BillingController;
 use App\Controllers\ReportController;
 use App\Controllers\ClickUpController;
 use App\Controllers\ClickUpWebhookController;
+use App\Controllers\InternalCommentController;
 use App\Middlewares\AuthMiddleware;
 use App\Middlewares\PlatformAdminMiddleware;
 use App\Middlewares\PortalMiddleware;
@@ -453,6 +454,12 @@ $router->any('/queue/sync-organic', [QueueController::class, 'syncOrganic']);
 $router->any('/queue/scheduler',    [QueueController::class, 'scheduler']);
 $router->any('/queue/work',         [QueueController::class, 'work']);
 
+// API: comentários internos (equipe) — autenticado por sessão, sem CSRF (JSON API)
+$router->group([AuthMiddleware::class], function ($router) {
+    $router->get( '/api/comentarios/{type}/{entityId}', [InternalCommentController::class, 'index']);
+    $router->post('/api/comentarios/{type}/{entityId}', [InternalCommentController::class, 'store']);
+});
+
 // Webhook Evolution API (token único por instância)
 $router->post('/webhook/evolution/{token}', [WebhookController::class, 'evolution']);
 
@@ -468,6 +475,7 @@ $router->group([PortalMiddleware::class], function ($router) {
     $router->get('/portal/{portal_token}/planos/{planId}',             [PortalController::class, 'planShow']);
     $router->post('/portal/{portal_token}/planos/{planId}/aprovar',    [PortalController::class, 'planApprove'],  [CsrfMiddleware::class]);
     $router->post('/portal/{portal_token}/planos/{planId}/revisao',    [PortalController::class, 'planRevision'], [CsrfMiddleware::class]);
+    $router->post('/portal/{portal_token}/planos/{planId}/items/{itemId}/feedback', [PortalController::class, 'itemFeedback']);
     $router->get('/portal/{portal_token}/faturas',                     [PortalController::class, 'invoices']);
     $router->get('/portal/{portal_token}/contratos',                   [PortalController::class, 'contracts']);
 });

@@ -133,6 +133,10 @@ class ClientController extends Controller
             return $this->redirect("/clientes/{$clientId}/editar");
         }
 
+        // Portal do cliente
+        $enablePortal = (bool) $request->post('enable_portal');
+        $this->clientService->setPortalAccess($clientId, $agencyId, $enablePortal);
+
         // Opt-in das automações por cliente
         $autos = $request->post('automations', []);
         $autos = is_array($autos) ? $autos : [];

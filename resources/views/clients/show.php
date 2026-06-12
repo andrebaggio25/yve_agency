@@ -114,14 +114,14 @@
   </div>
   <div class="flex gap-2 flex-wrap">
     <form method="POST" action="/clientes/<?= $client['id'] ?>/portal/toggle">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <button class="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/20 transition-colors">
         <?= $client['portal_enabled'] ? 'Desativar portal' : 'Ativar portal' ?>
       </button>
     </form>
     <form method="POST" action="/clientes/<?= $client['id'] ?>/portal/regenerar"
           onsubmit="return confirm('Regenerar o link invalida o link anterior. Continuar?')">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <button class="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/20 transition-colors">
         Gerar novo link
       </button>
@@ -130,7 +130,7 @@
   <?php else: ?>
   <p class="text-sm text-gray-500">Nenhum link gerado ainda.</p>
   <form method="POST" action="/clientes/<?= $client['id'] ?>/portal/regenerar" class="mt-3">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
     <button class="text-sm text-violet-400 hover:text-violet-300">Gerar link de acesso</button>
   </form>
   <?php endif; ?>

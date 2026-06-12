@@ -29,7 +29,7 @@ class CsrfMiddleware implements Middleware
             return $next($request);
         }
 
-        $token   = $request->input('_csrf_token') ?? $request->server('HTTP_X_CSRF_TOKEN', '');
+        $token   = $request->input('_csrf_token') ?? $request->input('_token') ?? $request->server('HTTP_X_CSRF_TOKEN', '');
         $session = $_SESSION['csrf_token'] ?? null;
 
         if (!$session || !hash_equals($session, (string) $token)) {

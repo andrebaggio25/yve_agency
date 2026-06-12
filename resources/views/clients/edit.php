@@ -70,6 +70,43 @@
       </div>
     </div>
 
+    <!-- Portal do Cliente -->
+    <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-4" x-data="{enabled: <?= !empty($client['portal_token']) ? 'true' : 'false' ?>}">
+      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Portal do Cliente</h2>
+
+      <label class="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" name="enable_portal" value="1" x-model="enabled"
+               <?= !empty($client['portal_token']) ? 'checked' : '' ?>
+               class="w-4 h-4 mt-0.5 rounded accent-violet-500">
+        <span>
+          <span class="block text-sm text-white">Habilitar portal de aprovação</span>
+          <span class="block text-xs text-gray-500 mt-0.5">O cliente acessa planos, faturas e contratos pelo link. Desativar revoga o acesso imediatamente.</span>
+        </span>
+      </label>
+
+      <div x-show="enabled" x-transition style="display:none">
+        <?php if (!empty($client['portal_token'])): ?>
+        <?php
+          $portalLink = rtrim(env('APP_URL', ''), '/') . '/portal/' . $client['portal_token'];
+        ?>
+        <div class="flex items-center gap-2 rounded-xl bg-white/[0.03] border border-white/10 px-3 py-2.5">
+          <span class="flex-1 text-xs text-gray-400 truncate"><?= e($portalLink) ?></span>
+          <button type="button" x-data="{c:false}"
+                  @click="navigator.clipboard.writeText('<?= e($portalLink) ?>').then(()=>{c=true;setTimeout(()=>c=false,2000)})"
+                  :class="c ? 'text-emerald-400' : 'text-gray-500 hover:text-white'"
+                  class="flex-shrink-0 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <template x-if="!c"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></template>
+              <template x-if="c"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></template>
+            </svg>
+          </button>
+        </div>
+        <?php else: ?>
+        <p class="text-xs text-violet-400">Um link de acesso será gerado ao salvar.</p>
+        <?php endif; ?>
+      </div>
+    </div>
+
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-5">
       <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Notificações & automações</h2>
 

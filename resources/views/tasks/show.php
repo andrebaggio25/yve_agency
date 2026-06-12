@@ -79,8 +79,60 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
     </div>
   </div>
 
+  <!-- Chat da Tarefa -->
+  <div class="card mt-4"
+       x-data="planChat(<?= $task['id'] ?>, 'task')"
+       x-init="loadComments()">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+      <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        Comentários
+      </h2>
+      <button @click="loadComments()" class="text-gray-600 hover:text-gray-400 transition-colors">
+        <svg class="w-3.5 h-3.5" :class="{'animate-spin': loading}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+      </button>
+    </div>
+    <div class="px-5 py-4 space-y-3 max-h-72 overflow-y-auto" x-ref="chatMessages">
+      <template x-if="comments.length === 0 && !loading">
+        <p class="text-xs text-gray-600 text-center py-3">Nenhum comentário ainda.</p>
+      </template>
+      <template x-for="c in comments" :key="c.id">
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-violet-300"
+               x-text="(c.user_name || '?').charAt(0).toUpperCase()"></div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline gap-2 mb-0.5">
+              <span class="text-xs font-semibold text-white" x-text="c.user_name"></span>
+              <span class="text-[10px] text-gray-600" x-text="chatDate(c.created_at)"></span>
+            </div>
+            <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap" x-text="c.message"></p>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div class="px-5 pb-4 pt-2 border-t border-white/5">
+      <div class="flex gap-2">
+        <textarea x-model="newMessage" rows="2"
+                  placeholder="Adicionar comentário..."
+                  @keydown.ctrl.enter.prevent="sendComment()"
+                  class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 resize-none"></textarea>
+        <button @click="sendComment()" :disabled="sending || !newMessage.trim()"
+                class="self-end rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-40">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+        </button>
+      </div>
+      <p class="text-[10px] text-gray-700 mt-1">Ctrl+Enter para enviar</p>
+    </div>
+  </div>
+
   <!-- Ações -->
-  <div class="flex items-center gap-3 flex-wrap">
+  <div class="flex items-center gap-3 flex-wrap mt-4">
     <?php if (\App\Support\Auth::can('tasks.edit')): ?>
     <a href="/tarefas/<?= $task['id'] ?>/editar" class="btn-secondary text-sm px-4 py-2">Editar</a>
     <?php endif; ?>
@@ -114,5 +166,65 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
     <?php endif; ?>
   </div>
 </div>
+
+<?php view_start('scripts'); ?>
+<script>
+function planChat(entityId, entityType = 'content_plan') {
+    return {
+        comments: [], newMessage: '', loading: false, sending: false, _interval: null,
+        async loadComments() {
+            this.loading = true;
+            try {
+                const r = await fetch(`/api/comentarios/${entityType}/${entityId}`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const d = await r.json();
+                if (d.comments) {
+                    this.comments = d.comments;
+                    this.$nextTick(() => {
+                        const el = this.$refs.chatMessages;
+                        if (el) el.scrollTop = el.scrollHeight;
+                    });
+                }
+            } catch(e) {}
+            this.loading = false;
+        },
+        async sendComment() {
+            if (this.sending || !this.newMessage.trim()) return;
+            this.sending = true;
+            try {
+                const r = await fetch(`/api/comentarios/${entityType}/${entityId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ message: this.newMessage.trim() })
+                });
+                const d = await r.json();
+                if (d.success && d.comment) {
+                    this.comments.push(d.comment);
+                    this.newMessage = '';
+                    this.$nextTick(() => {
+                        const el = this.$refs.chatMessages;
+                        if (el) el.scrollTop = el.scrollHeight;
+                    });
+                }
+            } catch(e) {}
+            this.sending = false;
+        },
+        chatDate(dt) {
+            if (!dt) return '';
+            const d = new Date(dt);
+            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+                + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        },
+        init() { this._interval = setInterval(() => this.loadComments(), 30000); },
+        destroy() { clearInterval(this._interval); },
+    };
+}
+</script>
+<?php view_end(); ?>
 
 <?php view_end(); ?>
