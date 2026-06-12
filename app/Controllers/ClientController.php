@@ -120,8 +120,9 @@ class ClientController extends Controller
             'name', 'legal_name', 'document_type', 'document_number',
             'country', 'state', 'city', 'address', 'postal_code',
             'language', 'timezone', 'currency_code', 'segment', 'niche',
-            'status', 'start_date', 'manager_user_id', 'whatsapp',
+            'status', 'start_date', 'manager_user_id', 'whatsapp', 'logo_url',
         );
+        $data['logo_url'] = trim((string) ($data['logo_url'] ?? '')) ?: null;
         // Booleanos vêm como 'true'/'false' (Postgres faz o cast; PHP false → '' quebraria).
         $data['notify_whatsapp'] = $request->post('notify_whatsapp') ? 'true' : 'false';
         $data['notify_email']    = $request->post('notify_email') ? 'true' : 'false';

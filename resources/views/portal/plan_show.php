@@ -86,9 +86,16 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
     $feedbacks   = $item['feedbacks'] ?? [];
     $itemStatus  = $item['status'] ?? 'draft';
     $imagesList  = $item['images_list'] ?? [];
+    // Detect YouTube URL for timecode auto-capture
+    $youtubeId = null;
+    if (!empty($item['drive_url'])) {
+        preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $item['drive_url'], $ytm);
+        $youtubeId = $ytm[1] ?? null;
+    }
   ?>
   <div class="card overflow-hidden"
-       x-data="portalItem(<?= $idx ?>, '<?= $token ?>', <?= $plan['id'] ?>, <?= $item['id'] ?>, <?= htmlspecialchars(json_encode($feedbacks), ENT_QUOTES) ?>, '<?= htmlspecialchars($itemStatus, ENT_QUOTES) ?>')">
+       x-data="portalItem(<?= $idx ?>, '<?= $token ?>', <?= $plan['id'] ?>, <?= $item['id'] ?>, <?= htmlspecialchars(json_encode($feedbacks), ENT_QUOTES) ?>, '<?= htmlspecialchars($itemStatus, ENT_QUOTES) ?>', <?= $youtubeId ? "'" . e($youtubeId) . "'" : 'null' ?>)"
+       x-init="initYt()"
 
     <!-- Card header — sempre visível -->
     <div class="flex items-start gap-3 p-4 cursor-pointer" @click="expanded = !expanded">
@@ -138,8 +145,21 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         </div>
         <?php endif; ?>
 
+        <!-- Vídeo YouTube -->
+        <?php if ($youtubeId): ?>
+        <div class="rounded-xl overflow-hidden border border-white/10 bg-black/30">
+          <div class="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+            <svg class="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="currentColor"><path d="M21.582 7.18a2.721 2.721 0 00-1.917-1.93C18.005 5 12 5 12 5s-6.004 0-7.665.25A2.721 2.721 0 002.418 7.18C2.17 8.847 2 10.423 2 12s.17 3.153.418 4.82a2.721 2.721 0 001.917 1.93C6 19 12 19 12 19s6.005 0 7.665-.25a2.721 2.721 0 001.917-1.93C21.83 15.153 22 13.577 22 12s-.17-3.153-.418-4.82zM9.954 15.22V8.78L15.477 12 9.954 15.22z"/></svg>
+            <span class="text-xs text-gray-400">YouTube</span>
+          </div>
+          <div class="aspect-video">
+            <iframe id="yt-<?= $item['id'] ?>"
+                    src="https://www.youtube.com/embed/<?= e($youtubeId) ?>?enablejsapi=1&origin=<?= urlencode(rtrim(env('APP_URL',''), '/')) ?>"
+                    class="w-full h-full border-0" loading="lazy" allowfullscreen></iframe>
+          </div>
+        </div>
         <!-- Vídeo Drive -->
-        <?php if ($parsedDrive && $parsedDrive['valid'] && ($isVideo || $parsedDrive['file_type'] === 'video')): ?>
+        <?php elseif ($parsedDrive && $parsedDrive['valid'] && ($isVideo || $parsedDrive['file_type'] === 'video')): ?>
         <div class="rounded-xl overflow-hidden border border-white/10 bg-black/30">
           <div class="flex items-center gap-2 px-3 py-2 border-b border-white/5">
             <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,12 +270,21 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
 
             <!-- Timecode (só para vídeos) -->
             <?php if ($isVideo): ?>
-            <div class="flex items-center gap-2 mt-2">
+            <div class="flex items-center gap-2 mt-2 flex-wrap">
               <svg class="w-4 h-4 text-violet-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <input type="text" x-model="timecode" placeholder="Momento (ex: 1:23)"
-                     class="w-28 rounded-lg text-xs text-white placeholder-gray-600 px-2.5 py-1.5 font-mono focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+              <input type="text" x-model="timecode" placeholder="Ex: 1:23"
+                     class="w-24 rounded-lg text-xs text-white placeholder-gray-600 px-2.5 py-1.5 font-mono focus:outline-none focus:ring-1 focus:ring-violet-500/50"
                      style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
-              <span class="text-xs text-gray-600">Marque o trecho do vídeo (opcional)</span>
+              <?php if ($youtubeId): ?>
+              <button type="button" @click="captureYtTime()"
+                      title="Capturar momento atual do vídeo"
+                      class="inline-flex items-center gap-1 rounded-lg bg-red-600/20 border border-red-500/30 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-600/30 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Capturar
+              </button>
+              <?php else: ?>
+              <span class="text-xs text-gray-600">Trecho do vídeo (opcional)</span>
+              <?php endif; ?>
             </div>
             <?php endif; ?>
 
@@ -303,7 +332,28 @@ const STATUS_CLASSES = {
   rejected: 'text-red-300 bg-red-500/10',
 };
 
-function portalItem(idx, token, planId, itemId, initialFeedbacks, initialStatus) {
+// YouTube IFrame API bootstrap — loads once, resolves when ready
+let _ytApiReady = false;
+let _ytApiCallbacks = [];
+function ensureYtApi() {
+  return new Promise(resolve => {
+    if (_ytApiReady) return resolve();
+    _ytApiCallbacks.push(resolve);
+    if (!document.getElementById('yt-api-script')) {
+      const s = document.createElement('script');
+      s.id  = 'yt-api-script';
+      s.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(s);
+    }
+  });
+}
+window.onYouTubeIframeAPIReady = () => {
+  _ytApiReady = true;
+  _ytApiCallbacks.forEach(fn => fn());
+  _ytApiCallbacks = [];
+};
+
+function portalItem(idx, token, planId, itemId, initialFeedbacks, initialStatus, youtubeId = null) {
   return {
     expanded:     false,
     feedbacks:    initialFeedbacks,
@@ -314,6 +364,26 @@ function portalItem(idx, token, planId, itemId, initialFeedbacks, initialStatus)
     sending:      false,
     submitted:    false,
     errorMsg:     '',
+    _ytPlayer:    null,
+
+    initYt() {
+      if (!youtubeId) return;
+      ensureYtApi().then(() => {
+        this._ytPlayer = new YT.Player(`yt-${itemId}`, {
+          events: { onReady: () => {} }
+        });
+      });
+    },
+
+    captureYtTime() {
+      if (!this._ytPlayer || typeof this._ytPlayer.getCurrentTime !== 'function') {
+        this.errorMsg = 'Reproduza o vídeo antes de capturar o momento.';
+        setTimeout(() => this.errorMsg = '', 3000);
+        return;
+      }
+      const sec = Math.floor(this._ytPlayer.getCurrentTime());
+      this.timecode = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+    },
 
     get statusLabel() { return STATUS_LABELS[this.itemStatus] ?? this.itemStatus; },
     get statusClass()  { return STATUS_CLASSES[this.itemStatus] ?? ''; },

@@ -70,6 +70,24 @@
       </div>
     </div>
 
+    <!-- Visual do Portal -->
+    <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-5">
+      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Visual do Portal</h2>
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1.5">Logo do cliente (URL)</label>
+        <input type="url" name="logo_url" value="<?= old('logo_url', $client['logo_url'] ?? '') ?>"
+               placeholder="https://cdn.exemplo.com/logo.png"
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+        <p class="mt-1 text-xs text-gray-500">Exibido no portal de aprovação do cliente. URL pública (PNG, SVG, JPG).</p>
+        <?php if (!empty($client['logo_url'])): ?>
+        <div class="mt-3 flex items-center gap-3">
+          <img src="<?= e($client['logo_url']) ?>" alt="Logo atual" class="h-10 w-auto max-w-[120px] object-contain rounded-lg border border-white/10 bg-white/5 p-1">
+          <span class="text-xs text-gray-500">Logo atual</span>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div>
+
     <!-- Portal do Cliente -->
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-4" x-data="{enabled: <?= !empty($client['portal_token']) ? 'true' : 'false' ?>}">
       <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Portal do Cliente</h2>

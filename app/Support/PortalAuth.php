@@ -7,15 +7,22 @@ namespace App\Support;
 class PortalAuth
 {
     private static ?array $client = null;
+    private static ?array $agency = null;
 
-    public static function set(array $client): void
+    public static function set(array $client, ?array $agency = null): void
     {
         self::$client = $client;
+        self::$agency = $agency;
     }
 
     public static function client(): ?array
     {
         return self::$client;
+    }
+
+    public static function agency(): ?array
+    {
+        return self::$agency;
     }
 
     public static function clientId(): ?int

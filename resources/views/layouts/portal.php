@@ -15,31 +15,54 @@
     .btn-secondary:hover { background: rgba(255,255,255,.1); }
   </style>
 </head>
-<body class="min-h-full flex flex-col pb-14 sm:pb-0">
+<body class="min-h-full flex flex-col pb-16 sm:pb-0">
+
+<?php
+$agency = \App\Support\PortalAuth::agency();
+$agencyLogoUrl = $agency['logo_url'] ?? null;
+$clientLogoUrl = $client['logo_url'] ?? null;
+?>
 
   <!-- Top nav -->
-  <header class="flex-shrink-0 flex items-center justify-between px-4 sm:px-8 py-4"
+  <header class="flex-shrink-0 flex items-center justify-between px-4 sm:px-8 py-3"
           style="background:#111118; border-bottom:1px solid rgba(255,255,255,0.07);">
-    <div class="flex items-center gap-3">
+
+    <!-- Left: logos -->
+    <div class="flex items-center gap-3 min-w-0">
+      <!-- Client logo or avatar -->
+      <?php if ($clientLogoUrl): ?>
+      <img src="<?= e($clientLogoUrl) ?>" alt="<?= e($client['name'] ?? '') ?>"
+           class="h-9 w-auto max-w-[120px] object-contain rounded-lg flex-shrink-0">
+      <?php else: ?>
       <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
            style="background:#7c3aed;">
         <?= mb_strtoupper(mb_substr($client['name'] ?? 'C', 0, 1)) ?>
       </div>
-      <div>
-        <p class="text-sm font-semibold text-white leading-tight"><?= e($client['name'] ?? '') ?></p>
-        <p class="text-xs text-gray-500 leading-tight">Portal do cliente</p>
+      <?php endif; ?>
+
+      <div class="min-w-0">
+        <p class="text-sm font-semibold text-white leading-tight truncate"><?= e($client['name'] ?? '') ?></p>
+        <?php if ($agencyLogoUrl): ?>
+        <img src="<?= e($agencyLogoUrl) ?>" alt="Agência"
+             class="h-3.5 w-auto max-w-[80px] object-contain mt-0.5 opacity-60">
+        <?php else: ?>
+        <p class="text-[11px] text-gray-500 leading-tight"><?= e($agency['name'] ?? 'Portal do cliente') ?></p>
+        <?php endif; ?>
       </div>
     </div>
+
+    <!-- Right: desktop nav -->
     <?php $cpPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH); ?>
+    <?php
+    $navItems = [
+      "/portal/{$token}"           => ['label' => 'Início',            'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'],
+      "/portal/{$token}/planos"    => ['label' => 'Planos',            'icon' => 'M4 6h16M4 10h16M4 14h10'],
+      "/portal/{$token}/faturas"   => ['label' => 'Faturas',           'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2'],
+      "/portal/{$token}/contratos" => ['label' => 'Contratos',         'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+    ];
+    ?>
     <nav class="hidden sm:flex items-center gap-1 text-sm">
-      <?php
-      $navItems = [
-        "/portal/{$token}"           => 'Início',
-        "/portal/{$token}/planos"    => 'Planos de Conteúdo',
-        "/portal/{$token}/faturas"   => 'Faturas',
-        "/portal/{$token}/contratos" => 'Contratos',
-      ];
-      foreach ($navItems as $href => $label):
+      <?php foreach ($navItems as $href => $nav):
         $isActive = ($href === "/portal/{$token}")
           ? ($cpPath === $href)
           : str_starts_with($cpPath, $href);
@@ -47,7 +70,7 @@
           ? 'px-3 py-2 rounded-lg text-violet-300 bg-violet-500/10 font-medium text-sm'
           : 'px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors text-sm';
       ?>
-      <a href="<?= $href ?>" class="<?= $cls ?>"><?= $label ?></a>
+      <a href="<?= $href ?>" class="<?= $cls ?>"><?= $nav['label'] ?></a>
       <?php endforeach; ?>
     </nav>
   </header>
@@ -70,21 +93,24 @@
   <?php endif; ?>
 
   <!-- Main -->
-  <main class="flex-1 px-4 sm:px-8 py-8 max-w-5xl mx-auto w-full">
+  <main class="flex-1 px-4 sm:px-8 py-6 max-w-5xl mx-auto w-full">
     <?= view_slot('content') ?>
   </main>
 
   <!-- Mobile bottom nav -->
-  <nav class="sm:hidden fixed bottom-0 left-0 right-0 flex"
-       style="background:#111118; border-top:1px solid rgba(255,255,255,0.07);">
-    <?php foreach ($navItems as $href => $label):
+  <nav class="sm:hidden fixed bottom-0 left-0 right-0 flex safe-bottom"
+       style="background:#111118; border-top:1px solid rgba(255,255,255,0.07); padding-bottom:env(safe-area-inset-bottom)">
+    <?php foreach ($navItems as $href => $nav):
       $isActive = ($href === "/portal/{$token}")
         ? ($cpPath === $href)
         : str_starts_with($cpPath, $href);
-      $cls = $isActive ? 'text-violet-400 font-medium' : 'text-gray-500';
+      $cls = $isActive ? 'text-violet-400' : 'text-gray-600';
     ?>
-    <a href="<?= $href ?>" class="flex-1 flex flex-col items-center py-3 text-xs <?= $cls ?>">
-      <?= explode(' ', $label)[0] ?>
+    <a href="<?= $href ?>" class="flex-1 flex flex-col items-center py-3 gap-1 <?= $cls ?> transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="<?= $isActive ? '2' : '1.5' ?>" d="<?= $nav['icon'] ?>"/>
+      </svg>
+      <span class="text-[10px] font-medium"><?= $nav['label'] ?></span>
     </a>
     <?php endforeach; ?>
   </nav>
