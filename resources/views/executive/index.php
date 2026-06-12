@@ -126,7 +126,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
 </div>
 
 <!-- ── Row 3: Ads KPIs ────────────────────────────────────────────────── -->
-<?php if (Auth::can('ads_metrics.view')): ?>
+<?php if (\App\Support\Auth::can('ads_metrics.view')): ?>
 <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
   <?php
   $adsCards = [
@@ -207,7 +207,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
 </div>
 
 <!-- ── Row 5: Top campaigns ───────────────────────────────────────────── -->
-<?php if (!empty($topCampaigns) && Auth::can('ads_metrics.view')): ?>
+<?php if (!empty($topCampaigns) && \App\Support\Auth::can('ads_metrics.view')): ?>
 <h2 class="text-sm font-semibold text-gray-300 mb-3">Top Campanhas no Período</h2>
 <div class="card overflow-hidden">
   <div class="overflow-x-auto">
