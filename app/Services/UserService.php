@@ -42,7 +42,6 @@ class UserService
             'password_hash' => password_hash($data['password'], PASSWORD_ARGON2ID),
             'phone'         => $data['phone'] ?? null,
             'status'        => $data['status'] ?? 'active',
-            'language'      => $data['language'] ?? 'pt',
             'created_at'    => date('Y-m-d H:i:s'),
             'updated_at'    => date('Y-m-d H:i:s'),
         ]);
