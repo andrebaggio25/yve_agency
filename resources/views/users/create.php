@@ -37,12 +37,21 @@
                class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-300 mb-1.5">
-          <?= t('users.password') ?> <span class="text-red-400">*</span>
-        </label>
-        <input type="password" name="password" required minlength="8"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1.5">
+            <?= t('users.password') ?> <span class="text-red-400">*</span>
+          </label>
+          <input type="password" name="password" required minlength="8"
+                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1.5">
+            Confirmar senha <span class="text-red-400">*</span>
+          </label>
+          <input type="password" name="password_confirmation" required minlength="8"
+                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4">

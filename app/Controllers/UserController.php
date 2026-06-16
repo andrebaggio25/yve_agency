@@ -43,7 +43,7 @@ class UserController extends Controller
             return $this->redirect('/usuarios/novo');
         }
 
-        $data = $request->only('name', 'email', 'password', 'password_confirmation', 'phone');
+        $data = $request->only('name', 'email', 'password', 'password_confirmation', 'phone', 'role_id', 'language', 'status');
 
         $result = $this->userService->create($data, Auth::agencyId());
 

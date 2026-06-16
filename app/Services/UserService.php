@@ -41,10 +41,15 @@ class UserService
             'email'         => strtolower(trim($data['email'])),
             'password_hash' => password_hash($data['password'], PASSWORD_ARGON2ID),
             'phone'         => $data['phone'] ?? null,
-            'status'        => 'active',
+            'status'        => $data['status'] ?? 'active',
+            'language'      => $data['language'] ?? 'pt',
             'created_at'    => date('Y-m-d H:i:s'),
             'updated_at'    => date('Y-m-d H:i:s'),
         ]);
+
+        if (!empty($data['role_id'])) {
+            $this->userRepo->syncRoles((int) $userId, [(int) $data['role_id']]);
+        }
 
         ActivityLogger::log('user_created', 'users', null, null, ['new_user_id' => $userId]);
 
