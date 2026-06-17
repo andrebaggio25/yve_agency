@@ -392,6 +392,48 @@ class PortalController extends Controller
         }
     }
 
+    /** Proxy de conteúdo (preview/thumbnail) — streama o arquivo do Drive mantendo-o privado. */
+    public function driveFileRaw(Request $request): Response
+    {
+        $client   = PortalAuth::client();
+        $clientId = (int) $client['id'];
+        $agencyId = (int) $client['agency_id'];
+        $fileId   = (int) $request->param('fileId');
+
+        $row = $this->fileRepo->findForClient($fileId, $clientId);
+        if (!$row) {
+            return Response::json(['error' => 'Arquivo não encontrado'], 404);
+        }
+
+        return $this->streamDriveFile($agencyId, $row['drive_file_id'], $row['mime_type'] ?? null, $request->server('HTTP_RANGE', null));
+    }
+
+    /** Streama um arquivo do Drive direto pra saída (sem bufferizar na memória). */
+    private function streamDriveFile(int $agencyId, string $driveFileId, ?string $mime, ?string $range): Response
+    {
+        $resp = $this->driveApi->streamResponse($agencyId, $driveFileId, $range);
+
+        http_response_code($resp->getStatusCode());
+        foreach (['Content-Type', 'Content-Length', 'Content-Range', 'Accept-Ranges'] as $h) {
+            $v = $resp->getHeaderLine($h);
+            if ($v !== '') {
+                header("{$h}: {$v}");
+            }
+        }
+        if ($resp->getHeaderLine('Content-Type') === '' && $mime) {
+            header('Content-Type: ' . $mime);
+        }
+        header('Cache-Control: private, max-age=3600');
+
+        $body = $resp->getBody();
+        while (!$body->eof()) {
+            echo $body->read(65536);
+            @ob_flush();
+            flush();
+        }
+        exit;
+    }
+
     // ── helpers Drive ──────────────────────────────────────────────────────────
 
     /** Resolve o ID da pasta no Drive que será o pai (raiz do cliente ou subpasta). */

@@ -10,6 +10,7 @@ use App\Core\Response;
 use App\Repositories\ClientRepository;
 use App\Repositories\DriveFolderRepository;
 use App\Repositories\DriveFileRepository;
+use App\Services\GoogleDriveApiService;
 use App\Support\Auth;
 
 /**
@@ -22,6 +23,7 @@ class ClientFilesController extends Controller
         private readonly ClientRepository      $clientRepo,
         private readonly DriveFolderRepository $folderRepo,
         private readonly DriveFileRepository   $fileRepo,
+        private readonly GoogleDriveApiService $driveApi,
     ) {}
 
     public function index(Request $request): Response
@@ -78,6 +80,47 @@ class ClientFilesController extends Controller
                 'is_video'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'video/'),
             ], $this->fileRepo->forFolder($clientId, $folderId)),
         ]);
+    }
+
+    /** Proxy de conteúdo (preview/thumbnail) mantendo o arquivo privado. */
+    public function raw(Request $request): Response
+    {
+        Auth::requirePermission('clients.view');
+
+        $clientId = (int) $request->param('clientId');
+        $client   = $this->clientRepo->findByIdAndAgency($clientId, (int) Auth::agencyId());
+        if (!$client) {
+            return Response::json(['error' => 'Cliente não encontrado'], 404);
+        }
+
+        $fileId = (int) $request->param('fileId');
+        $row    = $this->fileRepo->findForClient($fileId, $clientId);
+        if (!$row) {
+            return Response::json(['error' => 'Arquivo não encontrado'], 404);
+        }
+
+        $agencyId = (int) Auth::agencyId();
+        $resp     = $this->driveApi->streamResponse($agencyId, $row['drive_file_id'], $request->server('HTTP_RANGE', null));
+
+        http_response_code($resp->getStatusCode());
+        foreach (['Content-Type', 'Content-Length', 'Content-Range', 'Accept-Ranges'] as $h) {
+            $v = $resp->getHeaderLine($h);
+            if ($v !== '') {
+                header("{$h}: {$v}");
+            }
+        }
+        if ($resp->getHeaderLine('Content-Type') === '' && !empty($row['mime_type'])) {
+            header('Content-Type: ' . $row['mime_type']);
+        }
+        header('Cache-Control: private, max-age=3600');
+
+        $body = $resp->getBody();
+        while (!$body->eof()) {
+            echo $body->read(65536);
+            @ob_flush();
+            flush();
+        }
+        exit;
     }
 
     private function buildBreadcrumb(array $folder, int $clientId): array

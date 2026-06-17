@@ -43,31 +43,57 @@
       <!-- Files -->
       <div x-show="files.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
         <template x-for="file in files" :key="file.id">
-          <a :href="file.web_view_link || '#'" target="_blank" rel="noopener"
-             class="group rounded-xl overflow-hidden bg-white/[0.03] border border-white/5 hover:border-violet-500/30 transition-all block">
+          <button @click="openPreview(file)"
+                  class="group rounded-xl overflow-hidden bg-white/[0.03] border border-white/5 hover:border-violet-500/30 transition-all text-left">
             <div class="aspect-square bg-black/30 flex items-center justify-center relative">
-              <template x-if="file.thumbnail">
-                <img :src="file.thumbnail" class="w-full h-full object-cover" @error="$el.style.display='none'">
+              <template x-if="file.is_image">
+                <img :src="rawUrl(file)" loading="lazy" class="w-full h-full object-cover" @error="$el.style.display='none'">
               </template>
-              <template x-if="!file.thumbnail">
-                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path x-show="file.is_video" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                  <path x-show="!file.is_video" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4z"/>
-                </svg>
+              <template x-if="file.is_video">
+                <video :src="rawUrl(file)" preload="metadata" muted class="w-full h-full object-cover"></video>
               </template>
-              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                <svg class="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              <template x-if="!file.is_image && !file.is_video">
+                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </template>
+              <div x-show="file.is_video" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span class="w-9 h-9 rounded-full bg-black/50 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </span>
               </div>
             </div>
             <div class="px-2 py-1.5">
               <p class="text-[11px] text-gray-300 truncate" x-text="file.name"></p>
               <p class="text-[10px] text-gray-600" x-text="humanSize(file.size_bytes)"></p>
             </div>
-          </a>
+          </button>
         </template>
       </div>
     </div>
   </template>
+
+  <!-- Lightbox -->
+  <div x-show="preview.open" x-transition.opacity @keydown.escape.window="closePreview()"
+       @click.self="closePreview()"
+       class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.88); display:none">
+    <button @click="closePreview()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <div class="max-w-4xl w-full max-h-[85vh] flex flex-col items-center">
+      <template x-if="preview.file && preview.file.is_image">
+        <img :src="rawUrl(preview.file)" class="max-h-[80vh] max-w-full object-contain rounded-lg">
+      </template>
+      <template x-if="preview.file && preview.file.is_video">
+        <video :src="rawUrl(preview.file)" controls autoplay playsinline class="max-h-[80vh] max-w-full rounded-lg bg-black"></video>
+      </template>
+      <template x-if="preview.file && !preview.file.is_image && !preview.file.is_video">
+        <div class="text-center">
+          <p class="text-sm text-gray-300 mb-3" x-text="preview.file.name"></p>
+          <a :href="rawUrl(preview.file)" target="_blank" rel="noopener" class="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white inline-flex">Abrir / baixar</a>
+        </div>
+      </template>
+      <p class="text-xs text-gray-400 mt-3 text-center" x-text="preview.file ? preview.file.name : ''"></p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -77,11 +103,15 @@ function driveBrowser(clientId) {
     folders: [],
     files: [],
     loading: false,
+    preview: { open: false, file: null },
+
+    base() { return `/clientes/${clientId}/conteudos`; },
+    rawUrl(file) { return `${this.base()}/file/${file.id}/raw`; },
 
     async load(folderId) {
       this.loading = true;
       try {
-        const url = `/clientes/${clientId}/conteudos/folders` + (folderId ? `?folder_id=${folderId}` : '');
+        const url = `${this.base()}/folders` + (folderId ? `?folder_id=${folderId}` : '');
         const r = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
         const d = await r.json();
         if (d.success) {
@@ -94,6 +124,9 @@ function driveBrowser(clientId) {
     },
 
     goTo(folderId) { this.load(folderId); },
+
+    openPreview(file) { this.preview = { open: true, file }; },
+    closePreview() { this.preview = { open: false, file: null }; },
 
     humanSize(bytes) {
       if (!bytes) return '';

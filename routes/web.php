@@ -293,8 +293,9 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->delete('/clientes/{clientId}', [ClientController::class, 'destroy'],[CsrfMiddleware::class]);
 
     // Conteúdos enviados pelo cliente (Drive) — galeria lado agência
-    $router->get('/clientes/{clientId}/conteudos',         [ClientFilesController::class, 'index'],   [ClientAccessMiddleware::class]);
-    $router->get('/clientes/{clientId}/conteudos/folders', [ClientFilesController::class, 'folders'], [ClientAccessMiddleware::class]);
+    $router->get('/clientes/{clientId}/conteudos',                  [ClientFilesController::class, 'index'],   [ClientAccessMiddleware::class]);
+    $router->get('/clientes/{clientId}/conteudos/folders',          [ClientFilesController::class, 'folders'], [ClientAccessMiddleware::class]);
+    $router->get('/clientes/{clientId}/conteudos/file/{fileId}/raw',[ClientFilesController::class, 'raw'],      [ClientAccessMiddleware::class]);
 
     // Acesso de usuários ao cliente
     $router->get('/clientes/{clientId}/acesso',                  [ClientController::class, 'accessIndex'],  [ClientAccessMiddleware::class]);
@@ -496,4 +497,5 @@ $router->group([PortalMiddleware::class], function ($router) {
     $router->get('/portal/{portal_token}/drive/folders',               [PortalController::class, 'driveFolders']);
     $router->post('/portal/{portal_token}/drive/folders',              [PortalController::class, 'driveCreateFolder']);
     $router->post('/portal/{portal_token}/drive/upload',               [PortalController::class, 'driveUpload']);
+    $router->get('/portal/{portal_token}/drive/file/{fileId}/raw',     [PortalController::class, 'driveFileRaw']);
 });

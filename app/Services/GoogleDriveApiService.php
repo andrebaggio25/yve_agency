@@ -244,6 +244,25 @@ class GoogleDriveApiService
         return $data;
     }
 
+    /**
+     * Abre o conteúdo do arquivo como stream (com suporte a Range), autenticado
+     * como a agência. Usado pelo proxy de preview/thumbnail — mantém o arquivo
+     * privado (os bytes passam pelo nosso servidor, não exigem link público).
+     */
+    public function streamResponse(int $agencyId, string $fileId, ?string $range = null): \Psr\Http\Message\ResponseInterface
+    {
+        $token   = $this->accessToken($agencyId);
+        $headers = ['Authorization' => 'Bearer ' . $token];
+        if ($range !== null && $range !== '') {
+            $headers['Range'] = $range;
+        }
+
+        return (new Client(['timeout' => 0, 'http_errors' => false]))->get(
+            "https://www.googleapis.com/drive/v3/files/{$fileId}?alt=media&supportsAllDrives=true",
+            ['headers' => $headers, 'stream' => true]
+        );
+    }
+
     /** Metadados do arquivo após o upload (thumbnail, link de visualização). */
     public function fileMeta(int $agencyId, string $fileId): array
     {
