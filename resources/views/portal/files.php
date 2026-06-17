@@ -155,7 +155,8 @@
         <img :src="rawUrl(preview.file)" class="max-h-[80vh] max-w-full object-contain rounded-lg">
       </template>
       <template x-if="preview.file && preview.file.is_video">
-        <video :src="rawUrl(preview.file)" controls autoplay playsinline class="max-h-[80vh] max-w-full rounded-lg bg-black"></video>
+        <iframe :src="`https://drive.google.com/file/d/${preview.file.drive_file_id}/preview`"
+                class="w-full max-w-3xl aspect-video rounded-lg bg-black" allow="autoplay; fullscreen" allowfullscreen></iframe>
       </template>
       <template x-if="preview.file && !preview.file.is_image && !preview.file.is_video">
         <div class="text-center">

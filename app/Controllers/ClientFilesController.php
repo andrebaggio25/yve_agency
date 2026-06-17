@@ -76,6 +76,7 @@ class ClientFilesController extends Controller
                 'size_bytes'    => (int) ($f['size_bytes'] ?? 0),
                 'thumbnail'     => $f['thumbnail_link'] ?? null,
                 'web_view_link' => $f['web_view_link'] ?? null,
+                'drive_file_id' => $f['drive_file_id'] ?? null,
                 'is_image'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'image/'),
                 'is_video'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'video/'),
             ], $this->fileRepo->forFolder($clientId, $folderId)),

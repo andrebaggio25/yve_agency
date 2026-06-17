@@ -263,6 +263,22 @@ class GoogleDriveApiService
         );
     }
 
+    /** Torna o arquivo visível por qualquer um com o link (habilita o preview nativo do Google). */
+    public function setAnyoneReader(int $agencyId, string $fileId): void
+    {
+        $token = $this->accessToken($agencyId);
+        (new Client(['timeout' => 15]))->post(
+            "https://www.googleapis.com/drive/v3/files/{$fileId}/permissions?supportsAllDrives=true",
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                    'Content-Type'  => 'application/json',
+                ],
+                'body' => json_encode(['role' => 'reader', 'type' => 'anyone']),
+            ]
+        );
+    }
+
     /** Metadados do arquivo após o upload (thumbnail, link de visualização). */
     public function fileMeta(int $agencyId, string $fileId): array
     {

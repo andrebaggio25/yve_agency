@@ -350,6 +350,13 @@ class PortalController extends Controller
             $parentDriveId = $this->resolveParentDriveId($client, $clientId, $agencyId, $folderId);
             $uploaded      = $this->driveApi->uploadToFolder($agencyId, $parentDriveId, $name, $mime, $tmp, $size);
 
+            // Torna público-por-link pra habilitar o preview nativo do Google (best-effort).
+            try {
+                $this->driveApi->setAnyoneReader($agencyId, $uploaded['id']);
+            } catch (\Throwable) {
+                // segue mesmo se a permissão falhar — o proxy ainda funciona
+            }
+
             $thumb = $uploaded['thumbnailLink'] ?? null;
             $webView = $uploaded['webViewLink'] ?? null;
             if ($thumb === null || $webView === null) {
@@ -475,6 +482,7 @@ class PortalController extends Controller
             'size_bytes'    => (int) ($f['size_bytes'] ?? 0),
             'thumbnail'     => $f['thumbnail_link'] ?? null,
             'web_view_link' => $f['web_view_link'] ?? null,
+            'drive_file_id' => $f['drive_file_id'] ?? null,
             'is_image'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'image/'),
             'is_video'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'video/'),
         ];
