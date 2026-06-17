@@ -310,91 +310,86 @@ class PortalController extends Controller
         }
     }
 
-    /** JSON: inicia a sessão resumável e devolve a session URI pro navegador. */
-    public function driveUploadInitiate(Request $request): Response
+    /**
+     * Relay de upload: o navegador envia o arquivo (multipart) pra cá e o
+     * servidor repassa pro Drive (server-to-server, sem CORS). Grava metadados.
+     */
+    public function driveUpload(Request $request): Response
     {
+        @set_time_limit(0);
+
         $client   = PortalAuth::client();
         $clientId = (int) $client['id'];
         $agencyId = (int) $client['agency_id'];
 
-        $name     = trim((string) $request->input('name', ''));
-        $mime     = (string) $request->input('mime', 'application/octet-stream');
-        $size     = (int) $request->input('size', 0);
+        $file = $request->file('file');
+        $err  = $file['error'] ?? UPLOAD_ERR_NO_FILE;
+        if (!$file || $err !== UPLOAD_ERR_OK) {
+            $msg = in_array($err, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
+                ? 'Arquivo maior que o limite do servidor.'
+                : 'Falha no envio do arquivo.';
+            return Response::json(['error' => $msg], 422);
+        }
+
+        $name = trim((string) ($file['name'] ?? 'arquivo'));
+        $mime = (string) ($file['type'] ?? 'application/octet-stream');
+        $size = (int) ($file['size'] ?? 0);
+        $tmp  = (string) ($file['tmp_name'] ?? '');
+
         $folderId = $request->input('folder_id', null);
         $folderId = ($folderId === null || $folderId === '') ? null : (int) $folderId;
 
-        if ($name === '' || $size <= 0) {
+        if ($folderId !== null && !$this->folderRepo->findForClient($folderId, $clientId)) {
+            return Response::json(['error' => 'Pasta não encontrada'], 404);
+        }
+        if ($name === '' || $size <= 0 || !is_uploaded_file($tmp)) {
             return Response::json(['error' => 'Arquivo inválido'], 422);
         }
 
         try {
             $parentDriveId = $this->resolveParentDriveId($client, $clientId, $agencyId, $folderId);
-            $sessionUri    = $this->driveApi->initiateResumable($agencyId, $parentDriveId, $name, $mime, $size);
+            $uploaded      = $this->driveApi->uploadToFolder($agencyId, $parentDriveId, $name, $mime, $tmp, $size);
 
-            return Response::json(['success' => true, 'sessionUri' => $sessionUri]);
-        } catch (\Throwable $e) {
-            return Response::json(['error' => 'Falha ao iniciar upload: ' . $e->getMessage()], 500);
-        }
-    }
+            $thumb = $uploaded['thumbnailLink'] ?? null;
+            $webView = $uploaded['webViewLink'] ?? null;
+            if ($thumb === null || $webView === null) {
+                try {
+                    $meta    = $this->driveApi->fileMeta($agencyId, $uploaded['id']);
+                    $thumb   = $thumb   ?? ($meta['thumbnailLink'] ?? null);
+                    $webView = $webView ?? ($meta['webViewLink'] ?? null);
+                } catch (\Throwable) {
+                    // segue sem metadados extras
+                }
+            }
 
-    /** JSON: grava os metadados após o navegador concluir o upload. */
-    public function driveUploadComplete(Request $request): Response
-    {
-        $client   = PortalAuth::client();
-        $clientId = (int) $client['id'];
-        $agencyId = (int) $client['agency_id'];
-
-        $driveFileId = trim((string) $request->input('drive_file_id', ''));
-        $name        = trim((string) $request->input('name', ''));
-        $mime        = (string) $request->input('mime', null);
-        $size        = (int) $request->input('size', 0);
-        $folderId    = $request->input('folder_id', null);
-        $folderId    = ($folderId === null || $folderId === '') ? null : (int) $folderId;
-
-        if ($driveFileId === '' || $name === '') {
-            return Response::json(['error' => 'Dados do arquivo ausentes'], 422);
-        }
-
-        // Valida posse da pasta destino (se houver).
-        if ($folderId !== null && !$this->folderRepo->findForClient($folderId, $clientId)) {
-            return Response::json(['error' => 'Pasta não encontrada'], 404);
-        }
-
-        // Metadados do Drive (thumbnail/link) — best-effort.
-        $thumb = null; $webView = null;
-        try {
-            $meta    = $this->driveApi->fileMeta($agencyId, $driveFileId);
-            $thumb   = $meta['thumbnailLink'] ?? null;
-            $webView = $meta['webViewLink'] ?? null;
-        } catch (\Throwable) {
-            // segue sem metadados extras
-        }
-
-        $id = $this->fileRepo->create([
-            'agency_id'      => $agencyId,
-            'client_id'      => $clientId,
-            'folder_id'      => $folderId,
-            'drive_file_id'  => $driveFileId,
-            'name'           => $name,
-            'mime_type'      => $mime ?: null,
-            'size_bytes'     => $size ?: null,
-            'thumbnail_link' => $thumb,
-            'web_view_link'  => $webView,
-            'uploaded_via'   => 'portal',
-        ]);
-
-        return Response::json([
-            'success' => true,
-            'file'    => $this->filePayload([
-                'id'             => $id,
+            $id = $this->fileRepo->create([
+                'agency_id'      => $agencyId,
+                'client_id'      => $clientId,
+                'folder_id'      => $folderId,
+                'drive_file_id'  => $uploaded['id'],
                 'name'           => $name,
-                'mime_type'      => $mime,
-                'size_bytes'     => $size,
+                'mime_type'      => $mime ?: null,
+                'size_bytes'     => $size ?: null,
                 'thumbnail_link' => $thumb,
                 'web_view_link'  => $webView,
-                'drive_file_id'  => $driveFileId,
-            ]),
-        ]);
+                'uploaded_via'   => 'portal',
+            ]);
+
+            return Response::json([
+                'success' => true,
+                'file'    => $this->filePayload([
+                    'id'             => $id,
+                    'name'           => $name,
+                    'mime_type'      => $mime,
+                    'size_bytes'     => $size,
+                    'thumbnail_link' => $thumb,
+                    'web_view_link'  => $webView,
+                    'drive_file_id'  => $uploaded['id'],
+                ]),
+            ]);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao enviar: ' . $e->getMessage()], 500);
+        }
     }
 
     // ── helpers Drive ──────────────────────────────────────────────────────────

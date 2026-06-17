@@ -207,6 +207,43 @@ class GoogleDriveApiService
         return $location;
     }
 
+    /**
+     * Upload server-side (relay): inicia a sessão resumável e envia os bytes
+     * a partir de um arquivo temporário, sem carregar tudo na memória.
+     * Usado quando o navegador não pode enviar direto pro Drive (CORS).
+     */
+    public function uploadToFolder(int $agencyId, string $parentDriveId, string $name, string $mime, string $tmpPath, int $size): array
+    {
+        $mime       = $mime ?: 'application/octet-stream';
+        $sessionUri = $this->initiateResumable($agencyId, $parentDriveId, $name, $mime, $size);
+
+        $stream = fopen($tmpPath, 'rb');
+        if ($stream === false) {
+            throw new RuntimeException('Não foi possível ler o arquivo enviado.');
+        }
+
+        try {
+            $resp = (new Client(['timeout' => 0]))->put($sessionUri, [
+                'headers' => [
+                    'Content-Type'   => $mime,
+                    'Content-Length' => (string) $size,
+                ],
+                'body' => $stream,
+            ]);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        $data = json_decode((string) $resp->getBody(), true) ?? [];
+        if (empty($data['id'])) {
+            throw new RuntimeException('O Drive não confirmou o arquivo enviado.');
+        }
+
+        return $data;
+    }
+
     /** Metadados do arquivo após o upload (thumbnail, link de visualização). */
     public function fileMeta(int $agencyId, string $fileId): array
     {

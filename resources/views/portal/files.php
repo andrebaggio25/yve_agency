@@ -84,18 +84,32 @@
 
         <!-- Uploads in progress -->
         <template x-for="(up, idx) in uploads" :key="'up'+idx">
-          <div class="rounded-xl bg-white/[0.03] border border-white/5 px-3 py-2.5 mb-2">
+          <div class="rounded-xl bg-white/[0.03] border border-white/5 px-3 py-2.5 mb-2"
+               :class="up.status==='error' ? 'border-rose-500/30' : ''">
             <div class="flex items-center justify-between gap-2 mb-1.5">
               <span class="text-xs text-gray-300 truncate" x-text="up.name"></span>
-              <span class="text-[10px] flex-shrink-0"
-                    :class="up.status==='error' ? 'text-rose-400' : (up.status==='done' ? 'text-emerald-400' : 'text-violet-400')"
-                    x-text="up.status==='error' ? (up.error||'Erro') : (up.status==='done' ? 'Concluído' : (up.status==='uploading' ? up.progress+'%' : 'Preparando…'))"></span>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-[10px]"
+                      :class="up.status==='error' ? 'text-rose-400' : (up.status==='done' ? 'text-emerald-400' : 'text-violet-400')"
+                      x-text="up.status==='error' ? (up.error||'Erro') : (up.status==='done' ? 'Concluído ✓' : (up.status==='processing' ? 'Salvando no Drive…' : (up.status==='canceled' ? 'Cancelado' : up.progress+'%')))"></span>
+                <!-- Cancelar (enquanto envia) -->
+                <button x-show="up.status==='uploading' || up.status==='processing'" @click="cancelUpload(up)"
+                        class="text-gray-500 hover:text-rose-400 transition-colors" title="Cancelar">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                <!-- Dispensar (erro/cancelado) -->
+                <button x-show="up.status==='error' || up.status==='canceled'" @click="removeUpload(up)"
+                        class="text-gray-500 hover:text-white transition-colors" title="Remover">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
             </div>
             <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
               <div class="h-full rounded-full transition-all"
-                   :class="up.status==='error' ? 'bg-rose-500' : (up.status==='done' ? 'bg-emerald-500' : 'bg-violet-500')"
-                   :style="`width: ${up.status==='done' ? 100 : up.progress}%`"></div>
+                   :class="(up.status==='error'||up.status==='canceled' ? 'bg-rose-500' : (up.status==='done' ? 'bg-emerald-500' : 'bg-violet-500')) + (up.status==='processing' ? ' animate-pulse' : '')"
+                   :style="`width: ${(up.status==='done'||up.status==='processing') ? 100 : up.progress}%`"></div>
             </div>
+            <p x-show="up.status==='uploading' && up.eta" class="text-[10px] text-gray-500 mt-1" x-text="up.eta"></p>
           </div>
         </template>
 
@@ -191,66 +205,82 @@ function driveManager(token) {
       for (const file of fileList) this.uploadOne(file);
     },
 
-    async uploadOne(file) {
-      const entry = { name: file.name, progress: 0, status: 'preparing', error: null };
+    uploadOne(file) {
+      const entry = { name: file.name, progress: 0, status: 'uploading', error: null, eta: '', xhr: null, startedAt: Date.now() };
       this.uploads.push(entry);
-      try {
-        // 1. iniciar sessão resumável
-        const initR = await fetch(`${this.base()}/drive/upload/initiate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-          body: JSON.stringify({ folder_id: this.folderId, name: file.name, mime: file.type || 'application/octet-stream', size: file.size }),
-        });
-        const initD = await initR.json();
-        if (!initD.success) throw new Error(initD.error || 'Falha ao iniciar');
 
-        // 2. enviar bytes direto pro Google (com progresso)
-        entry.status = 'uploading';
-        const driveFile = await this.putBytes(initD.sessionUri, file, entry);
+      const form = new FormData();
+      form.append('folder_id', this.folderId ?? '');
+      form.append('file', file);
 
-        // 3. registrar metadados
-        const compR = await fetch(`${this.base()}/drive/upload/complete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-          body: JSON.stringify({
-            folder_id: this.folderId,
-            drive_file_id: driveFile.id,
-            name: file.name,
-            mime: file.type || null,
-            size: file.size,
-          }),
-        });
-        const compD = await compR.json();
-        if (!compD.success) throw new Error(compD.error || 'Falha ao registrar');
+      const xhr = new XMLHttpRequest();
+      entry.xhr = xhr;
+      xhr.open('POST', `${this.base()}/drive/upload`, true);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-        entry.status = 'done';
-        entry.progress = 100;
-        this.files.unshift(compD.file);
-      } catch (e) {
-        entry.status = 'error';
-        entry.error = e.message || 'Erro';
+      // Progresso + ETA do envio navegador → servidor (a etapa mais lenta).
+      xhr.upload.onprogress = (e) => {
+        if (!e.lengthComputable) return;
+        entry.progress = Math.round((e.loaded / e.total) * 100);
+        const elapsed = (Date.now() - entry.startedAt) / 1000;
+        const rate = e.loaded / Math.max(elapsed, 0.1);
+        const remain = (e.total - e.loaded) / Math.max(rate, 1);
+        entry.eta = this.formatEta(remain);
+      };
+      // Bytes enviados; servidor agora repassa pro Drive.
+      xhr.upload.onload = () => { entry.status = 'processing'; entry.eta = ''; };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const d = JSON.parse(xhr.responseText);
+            if (d.success) {
+              entry.status = 'done';
+              entry.progress = 100;
+              this.files.unshift(d.file);
+              // some o item de progresso após 1.5s
+              setTimeout(() => { this.uploads = this.uploads.filter(u => u !== entry); }, 1500);
+            } else {
+              entry.status = 'error';
+              entry.error = d.error || 'Erro ao enviar';
+            }
+          } catch { entry.status = 'error'; entry.error = 'Resposta inválida do servidor'; }
+        } else if (xhr.status === 0) {
+          if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = 'Conexão interrompida'; }
+        } else {
+          entry.status = 'error';
+          entry.error = 'Erro (' + xhr.status + ')';
+          try { const d = JSON.parse(xhr.responseText); if (d.error) entry.error = d.error; } catch {}
+        }
+      };
+      xhr.onerror = () => { if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = 'Falha de conexão'; } };
+
+      xhr.send(form);
+    },
+
+    cancelUpload(entry) {
+      if (entry.xhr && (entry.status === 'uploading' || entry.status === 'processing')) {
+        entry.status = 'canceled';
+        entry.error = 'Cancelado';
+        entry.xhr.abort();
       }
     },
 
-    putBytes(sessionUri, file, entry) {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', sessionUri, true);
-        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) entry.progress = Math.round((e.loaded / e.total) * 100);
-        };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try { resolve(JSON.parse(xhr.responseText)); }
-            catch { reject(new Error('Resposta inválida do Drive')); }
-          } else {
-            reject(new Error('Erro no upload (' + xhr.status + ')'));
-          }
-        };
-        xhr.onerror = () => reject(new Error('Falha de rede no upload'));
-        xhr.send(file);
-      });
+    removeUpload(entry) {
+      this.uploads = this.uploads.filter(u => u !== entry);
+    },
+
+    retryUpload(entry) {
+      this.removeUpload(entry);
+    },
+
+    formatEta(sec) {
+      if (!isFinite(sec) || sec < 0) return '';
+      if (sec < 60) return Math.ceil(sec) + 's restantes';
+      const m = Math.floor(sec / 60);
+      const s = Math.ceil(sec % 60);
+      return `${m}min${s ? ' ' + s + 's' : ''} restantes`;
     },
 
     humanSize(bytes) {
