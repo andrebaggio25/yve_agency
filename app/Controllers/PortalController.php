@@ -17,8 +17,11 @@ use App\Repositories\AdAccountRepository;
 use App\Repositories\AdMetricsRepository;
 use App\Repositories\OrganicAccountRepository;
 use App\Repositories\OrganicMetricsRepository;
+use App\Repositories\DriveFolderRepository;
+use App\Repositories\DriveFileRepository;
 use App\Services\ContentPlanService;
 use App\Services\GoogleDriveService;
+use App\Services\GoogleDriveApiService;
 
 class PortalController extends Controller
 {
@@ -33,6 +36,9 @@ class PortalController extends Controller
         private readonly OrganicMetricsRepository   $organicMetricsRepo,
         private readonly ContentPlanService      $planService,
         private readonly GoogleDriveService      $drive,
+        private readonly DriveFolderRepository   $folderRepo,
+        private readonly DriveFileRepository     $fileRepo,
+        private readonly GoogleDriveApiService   $driveApi,
     ) {}
 
     // Returns true if status badge should change color
@@ -222,6 +228,219 @@ class PortalController extends Controller
                 'created_at'    => date('Y-m-d H:i:s'),
             ],
         ]);
+    }
+
+    // -------------------------------------------------- envio de conteúdos (Drive)
+
+    /** Página "Enviar conteúdos" do portal. */
+    public function driveFiles(Request $request): Response
+    {
+        $client = PortalAuth::client();
+        $token  = PortalAuth::token();
+
+        $connected = $this->driveApi->isConnected((int) $client['agency_id']);
+
+        return $this->view('portal.files', compact('client', 'token', 'connected'));
+    }
+
+    /** JSON: lista subpastas + arquivos da pasta atual (folder_id opcional = raiz). */
+    public function driveFolders(Request $request): Response
+    {
+        $client   = PortalAuth::client();
+        $clientId = (int) $client['id'];
+
+        $folderId = $request->input('folder_id', null);
+        $folderId = ($folderId === null || $folderId === '') ? null : (int) $folderId;
+
+        $current    = null;
+        $breadcrumb = [];
+        if ($folderId !== null) {
+            $current = $this->folderRepo->findForClient($folderId, $clientId);
+            if (!$current) {
+                return Response::json(['error' => 'Pasta não encontrada'], 404);
+            }
+            $breadcrumb = $this->buildBreadcrumb($current, $clientId);
+        }
+
+        return Response::json([
+            'success'    => true,
+            'folder'     => $current ? ['id' => (int) $current['id'], 'name' => $current['name']] : null,
+            'breadcrumb' => $breadcrumb,
+            'folders'    => array_map(fn($f) => [
+                'id'   => (int) $f['id'],
+                'name' => $f['name'],
+            ], $this->folderRepo->children($clientId, $folderId)),
+            'files'      => array_map(fn($f) => $this->filePayload($f), $this->fileRepo->forFolder($clientId, $folderId)),
+        ]);
+    }
+
+    /** JSON: cria subpasta. */
+    public function driveCreateFolder(Request $request): Response
+    {
+        $client   = PortalAuth::client();
+        $clientId = (int) $client['id'];
+        $agencyId = (int) $client['agency_id'];
+
+        $name     = trim((string) $request->input('name', ''));
+        $parentId = $request->input('parent_id', null);
+        $parentId = ($parentId === null || $parentId === '') ? null : (int) $parentId;
+
+        if ($name === '') {
+            return Response::json(['error' => 'Nome obrigatório'], 422);
+        }
+
+        try {
+            $parentDriveId = $this->resolveParentDriveId($client, $clientId, $agencyId, $parentId);
+            $driveFolderId = $this->driveApi->createFolder($agencyId, $name, $parentDriveId);
+
+            $id = $this->folderRepo->create([
+                'agency_id'       => $agencyId,
+                'client_id'       => $clientId,
+                'parent_id'       => $parentId,
+                'drive_folder_id' => $driveFolderId,
+                'name'            => $name,
+            ]);
+
+            return Response::json([
+                'success' => true,
+                'folder'  => ['id' => $id, 'name' => $name],
+            ]);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao criar pasta: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /** JSON: inicia a sessão resumável e devolve a session URI pro navegador. */
+    public function driveUploadInitiate(Request $request): Response
+    {
+        $client   = PortalAuth::client();
+        $clientId = (int) $client['id'];
+        $agencyId = (int) $client['agency_id'];
+
+        $name     = trim((string) $request->input('name', ''));
+        $mime     = (string) $request->input('mime', 'application/octet-stream');
+        $size     = (int) $request->input('size', 0);
+        $folderId = $request->input('folder_id', null);
+        $folderId = ($folderId === null || $folderId === '') ? null : (int) $folderId;
+
+        if ($name === '' || $size <= 0) {
+            return Response::json(['error' => 'Arquivo inválido'], 422);
+        }
+
+        try {
+            $parentDriveId = $this->resolveParentDriveId($client, $clientId, $agencyId, $folderId);
+            $sessionUri    = $this->driveApi->initiateResumable($agencyId, $parentDriveId, $name, $mime, $size);
+
+            return Response::json(['success' => true, 'sessionUri' => $sessionUri]);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao iniciar upload: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /** JSON: grava os metadados após o navegador concluir o upload. */
+    public function driveUploadComplete(Request $request): Response
+    {
+        $client   = PortalAuth::client();
+        $clientId = (int) $client['id'];
+        $agencyId = (int) $client['agency_id'];
+
+        $driveFileId = trim((string) $request->input('drive_file_id', ''));
+        $name        = trim((string) $request->input('name', ''));
+        $mime        = (string) $request->input('mime', null);
+        $size        = (int) $request->input('size', 0);
+        $folderId    = $request->input('folder_id', null);
+        $folderId    = ($folderId === null || $folderId === '') ? null : (int) $folderId;
+
+        if ($driveFileId === '' || $name === '') {
+            return Response::json(['error' => 'Dados do arquivo ausentes'], 422);
+        }
+
+        // Valida posse da pasta destino (se houver).
+        if ($folderId !== null && !$this->folderRepo->findForClient($folderId, $clientId)) {
+            return Response::json(['error' => 'Pasta não encontrada'], 404);
+        }
+
+        // Metadados do Drive (thumbnail/link) — best-effort.
+        $thumb = null; $webView = null;
+        try {
+            $meta    = $this->driveApi->fileMeta($agencyId, $driveFileId);
+            $thumb   = $meta['thumbnailLink'] ?? null;
+            $webView = $meta['webViewLink'] ?? null;
+        } catch (\Throwable) {
+            // segue sem metadados extras
+        }
+
+        $id = $this->fileRepo->create([
+            'agency_id'      => $agencyId,
+            'client_id'      => $clientId,
+            'folder_id'      => $folderId,
+            'drive_file_id'  => $driveFileId,
+            'name'           => $name,
+            'mime_type'      => $mime ?: null,
+            'size_bytes'     => $size ?: null,
+            'thumbnail_link' => $thumb,
+            'web_view_link'  => $webView,
+            'uploaded_via'   => 'portal',
+        ]);
+
+        return Response::json([
+            'success' => true,
+            'file'    => $this->filePayload([
+                'id'             => $id,
+                'name'           => $name,
+                'mime_type'      => $mime,
+                'size_bytes'     => $size,
+                'thumbnail_link' => $thumb,
+                'web_view_link'  => $webView,
+                'drive_file_id'  => $driveFileId,
+            ]),
+        ]);
+    }
+
+    // ── helpers Drive ──────────────────────────────────────────────────────────
+
+    /** Resolve o ID da pasta no Drive que será o pai (raiz do cliente ou subpasta). */
+    private function resolveParentDriveId(array $client, int $clientId, int $agencyId, ?int $folderId): string
+    {
+        if ($folderId !== null) {
+            $folder = $this->folderRepo->findForClient($folderId, $clientId);
+            if (!$folder) {
+                throw new \RuntimeException('Pasta não encontrada.');
+            }
+            return $folder['drive_folder_id'];
+        }
+
+        // Raiz do cliente (cria sob demanda).
+        return $this->driveApi->ensureClientFolder($client, $agencyId);
+    }
+
+    /** Monta o caminho (breadcrumb) subindo pelos parent_id. */
+    private function buildBreadcrumb(array $folder, int $clientId): array
+    {
+        $chain = [];
+        $cursor = $folder;
+        $guard  = 0;
+        while ($cursor && $guard < 50) {
+            array_unshift($chain, ['id' => (int) $cursor['id'], 'name' => $cursor['name']]);
+            $parentId = $cursor['parent_id'] ?? null;
+            $cursor = $parentId ? $this->folderRepo->findForClient((int) $parentId, $clientId) : null;
+            $guard++;
+        }
+        return $chain;
+    }
+
+    private function filePayload(array $f): array
+    {
+        return [
+            'id'            => (int) ($f['id'] ?? 0),
+            'name'          => $f['name'] ?? '',
+            'mime_type'     => $f['mime_type'] ?? null,
+            'size_bytes'    => (int) ($f['size_bytes'] ?? 0),
+            'thumbnail'     => $f['thumbnail_link'] ?? null,
+            'web_view_link' => $f['web_view_link'] ?? null,
+            'is_image'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'image/'),
+            'is_video'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'video/'),
+        ];
     }
 
     // ------------------------------------------------------------ invoices

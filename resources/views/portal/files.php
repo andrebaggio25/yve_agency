@@ -1,0 +1,269 @@
+<?php view_layout('portal'); view_start('title'); ?>Enviar conteúdos<?php view_end(); ?>
+<?php view_start('content'); ?>
+
+<div class="mb-6">
+  <h1 class="text-xl font-bold text-white">Enviar conteúdos</h1>
+  <p class="text-sm text-gray-400 mt-0.5">Organize em pastas e envie seus vídeos e fotos. Tudo vai direto para o nosso acervo.</p>
+</div>
+
+<?php if (!$connected): ?>
+<div class="card p-6 text-center">
+  <p class="text-sm text-gray-300 font-medium mb-1">Envio indisponível no momento</p>
+  <p class="text-xs text-gray-500">A agência ainda não habilitou o envio de arquivos. Fale com a gente.</p>
+</div>
+<?php else: ?>
+
+<div x-data="driveManager('<?= e($token) ?>')" x-init="load(null)">
+
+  <!-- Breadcrumb -->
+  <div class="flex items-center gap-1.5 text-sm mb-4 flex-wrap">
+    <button @click="goTo(null)" class="text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Início
+    </button>
+    <template x-for="crumb in breadcrumb" :key="crumb.id">
+      <span class="flex items-center gap-1.5">
+        <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        <button @click="goTo(crumb.id)" class="text-gray-400 hover:text-white transition-colors" x-text="crumb.name"></button>
+      </span>
+    </template>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="flex items-center gap-2 mb-4 flex-wrap">
+    <button @click="creatingFolder = true; $nextTick(() => $refs.folderInput?.focus())"
+            class="btn-secondary text-sm px-3 py-2 inline-flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11v4m-2-2h4"/></svg>
+      Nova pasta
+    </button>
+
+    <label class="btn-primary text-sm px-3 py-2 inline-flex items-center gap-1.5 cursor-pointer">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+      Enviar arquivos
+      <input type="file" multiple class="hidden" @change="onFiles($event.target.files); $event.target.value=''">
+    </label>
+  </div>
+
+  <!-- Create folder inline -->
+  <div x-show="creatingFolder" x-transition class="card p-3 mb-4 flex items-center gap-2" style="display:none">
+    <input x-ref="folderInput" type="text" x-model="newFolderName" placeholder="Nome da pasta (ex: Dia 15, Modelo Ana...)"
+           @keydown.enter="createFolder()" @keydown.escape="creatingFolder=false; newFolderName=''"
+           class="flex-1 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50">
+    <button @click="createFolder()" :disabled="!newFolderName.trim() || savingFolder"
+            class="btn-primary text-sm px-3 py-2 disabled:opacity-50" x-text="savingFolder ? 'Criando...' : 'Criar'"></button>
+    <button @click="creatingFolder=false; newFolderName=''" class="text-xs text-gray-500 hover:text-gray-300 px-2">Cancelar</button>
+  </div>
+
+  <!-- Drop zone + listing -->
+  <div @dragover.prevent="dragging=true" @dragleave.prevent="dragging=false"
+       @drop.prevent="dragging=false; onFiles($event.dataTransfer.files)"
+       class="rounded-2xl border-2 border-dashed transition-colors p-4"
+       :class="dragging ? 'border-violet-500 bg-violet-500/5' : 'border-white/10'">
+
+    <!-- Loading -->
+    <div x-show="loading" class="py-10 text-center text-sm text-gray-500">Carregando…</div>
+
+    <template x-if="!loading">
+      <div>
+        <!-- Empty -->
+        <div x-show="folders.length === 0 && files.length === 0 && uploads.length === 0" class="py-12 text-center">
+          <svg class="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <p class="text-sm text-gray-500">Arraste arquivos aqui ou use “Enviar arquivos”.</p>
+        </div>
+
+        <!-- Folders -->
+        <div x-show="folders.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+          <template x-for="folder in folders" :key="folder.id">
+            <button @click="goTo(folder.id)"
+                    class="flex items-center gap-2 rounded-xl bg-white/[0.03] border border-white/5 hover:border-violet-500/30 hover:bg-white/[0.06] transition-all px-3 py-3 text-left">
+              <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+              <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
+            </button>
+          </template>
+        </div>
+
+        <!-- Uploads in progress -->
+        <template x-for="(up, idx) in uploads" :key="'up'+idx">
+          <div class="rounded-xl bg-white/[0.03] border border-white/5 px-3 py-2.5 mb-2">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="text-xs text-gray-300 truncate" x-text="up.name"></span>
+              <span class="text-[10px] flex-shrink-0"
+                    :class="up.status==='error' ? 'text-rose-400' : (up.status==='done' ? 'text-emerald-400' : 'text-violet-400')"
+                    x-text="up.status==='error' ? (up.error||'Erro') : (up.status==='done' ? 'Concluído' : (up.status==='uploading' ? up.progress+'%' : 'Preparando…'))"></span>
+            </div>
+            <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div class="h-full rounded-full transition-all"
+                   :class="up.status==='error' ? 'bg-rose-500' : (up.status==='done' ? 'bg-emerald-500' : 'bg-violet-500')"
+                   :style="`width: ${up.status==='done' ? 100 : up.progress}%`"></div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Files -->
+        <div x-show="files.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          <template x-for="file in files" :key="file.id">
+            <div class="rounded-xl overflow-hidden bg-white/[0.03] border border-white/5">
+              <div class="aspect-square bg-black/30 flex items-center justify-center relative">
+                <template x-if="file.thumbnail">
+                  <img :src="file.thumbnail" class="w-full h-full object-cover" @error="$el.style.display='none'">
+                </template>
+                <template x-if="!file.thumbnail">
+                  <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path x-show="file.is_video" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    <path x-show="!file.is_video" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4z"/>
+                  </svg>
+                </template>
+              </div>
+              <div class="px-2 py-1.5">
+                <p class="text-[11px] text-gray-300 truncate" x-text="file.name"></p>
+                <p class="text-[10px] text-gray-600" x-text="humanSize(file.size_bytes)"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<script>
+function driveManager(token) {
+  return {
+    folderId: null,
+    breadcrumb: [],
+    folders: [],
+    files: [],
+    uploads: [],
+    loading: false,
+    dragging: false,
+    creatingFolder: false,
+    newFolderName: '',
+    savingFolder: false,
+
+    base() { return `/portal/${token}`; },
+
+    async load(folderId) {
+      this.loading = true;
+      this.folderId = folderId;
+      try {
+        const url = `${this.base()}/drive/folders` + (folderId ? `?folder_id=${folderId}` : '');
+        const r = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+        const d = await r.json();
+        if (d.success) {
+          this.breadcrumb = d.breadcrumb || [];
+          this.folders = d.folders || [];
+          this.files = d.files || [];
+        }
+      } catch (e) {}
+      this.loading = false;
+    },
+
+    goTo(folderId) {
+      this.uploads = [];
+      this.creatingFolder = false;
+      this.load(folderId);
+    },
+
+    async createFolder() {
+      const name = this.newFolderName.trim();
+      if (!name || this.savingFolder) return;
+      this.savingFolder = true;
+      try {
+        const r = await fetch(`${this.base()}/drive/folders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ parent_id: this.folderId, name }),
+        });
+        const d = await r.json();
+        if (d.success) {
+          this.folders.push(d.folder);
+          this.folders.sort((a, b) => a.name.localeCompare(b.name));
+          this.creatingFolder = false;
+          this.newFolderName = '';
+        } else {
+          alert(d.error || 'Falha ao criar pasta.');
+        }
+      } catch (e) { alert('Erro de conexão.'); }
+      this.savingFolder = false;
+    },
+
+    onFiles(fileList) {
+      for (const file of fileList) this.uploadOne(file);
+    },
+
+    async uploadOne(file) {
+      const entry = { name: file.name, progress: 0, status: 'preparing', error: null };
+      this.uploads.push(entry);
+      try {
+        // 1. iniciar sessão resumável
+        const initR = await fetch(`${this.base()}/drive/upload/initiate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ folder_id: this.folderId, name: file.name, mime: file.type || 'application/octet-stream', size: file.size }),
+        });
+        const initD = await initR.json();
+        if (!initD.success) throw new Error(initD.error || 'Falha ao iniciar');
+
+        // 2. enviar bytes direto pro Google (com progresso)
+        entry.status = 'uploading';
+        const driveFile = await this.putBytes(initD.sessionUri, file, entry);
+
+        // 3. registrar metadados
+        const compR = await fetch(`${this.base()}/drive/upload/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({
+            folder_id: this.folderId,
+            drive_file_id: driveFile.id,
+            name: file.name,
+            mime: file.type || null,
+            size: file.size,
+          }),
+        });
+        const compD = await compR.json();
+        if (!compD.success) throw new Error(compD.error || 'Falha ao registrar');
+
+        entry.status = 'done';
+        entry.progress = 100;
+        this.files.unshift(compD.file);
+      } catch (e) {
+        entry.status = 'error';
+        entry.error = e.message || 'Erro';
+      }
+    },
+
+    putBytes(sessionUri, file, entry) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', sessionUri, true);
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) entry.progress = Math.round((e.loaded / e.total) * 100);
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try { resolve(JSON.parse(xhr.responseText)); }
+            catch { reject(new Error('Resposta inválida do Drive')); }
+          } else {
+            reject(new Error('Erro no upload (' + xhr.status + ')'));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Falha de rede no upload'));
+        xhr.send(file);
+      });
+    },
+
+    humanSize(bytes) {
+      if (!bytes) return '';
+      const u = ['B', 'KB', 'MB', 'GB'];
+      let i = 0, n = bytes;
+      while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+      return n.toFixed(n < 10 && i > 0 ? 1 : 0) + ' ' + u[i];
+    },
+  };
+}
+</script>
+
+<?php endif; ?>
+
+<?php view_end(); ?>

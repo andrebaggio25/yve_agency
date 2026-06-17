@@ -7,6 +7,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\UserController;
 use App\Controllers\RoleController;
 use App\Controllers\ClientController;
+use App\Controllers\ClientFilesController;
 use App\Controllers\ContentPlanController;
 use App\Controllers\ApprovalController;
 use App\Controllers\SettingsController;
@@ -34,6 +35,7 @@ use App\Controllers\Admin\SubscriptionPlanController;
 use App\Controllers\BillingController;
 use App\Controllers\ReportController;
 use App\Controllers\ClickUpController;
+use App\Controllers\GoogleDriveController;
 use App\Controllers\ClickUpWebhookController;
 use App\Controllers\InternalCommentController;
 use App\Middlewares\AuthMiddleware;
@@ -290,6 +292,10 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->put('/clientes/{clientId}',    [ClientController::class, 'update'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->delete('/clientes/{clientId}', [ClientController::class, 'destroy'],[CsrfMiddleware::class]);
 
+    // Conteúdos enviados pelo cliente (Drive) — galeria lado agência
+    $router->get('/clientes/{clientId}/conteudos',         [ClientFilesController::class, 'index'],   [ClientAccessMiddleware::class]);
+    $router->get('/clientes/{clientId}/conteudos/folders', [ClientFilesController::class, 'folders'], [ClientAccessMiddleware::class]);
+
     // Acesso de usuários ao cliente
     $router->get('/clientes/{clientId}/acesso',                  [ClientController::class, 'accessIndex'],  [ClientAccessMiddleware::class]);
     $router->post('/clientes/{clientId}/acesso',                 [ClientController::class, 'grantAccess'],  [CsrfMiddleware::class, ClientAccessMiddleware::class]);
@@ -422,6 +428,12 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->post('/integrations/clickup', [ClickUpController::class, 'store'],   [CsrfMiddleware::class]);
     $router->delete('/integrations/clickup', [ClickUpController::class, 'destroy'], [CsrfMiddleware::class]);
 
+    // ── Integração Google Drive (OAuth) ──────────────────────────────────────
+    $router->get('/integrations/google-drive',                [GoogleDriveController::class, 'index']);
+    $router->get('/integrations/google-drive/oauth/start',    [GoogleDriveController::class, 'oauthStart']);
+    $router->get('/integrations/google-drive/oauth/callback', [GoogleDriveController::class, 'oauthCallback']);
+    $router->post('/integrations/google-drive/disconnect',    [GoogleDriveController::class, 'disconnect'], [CsrfMiddleware::class]);
+
     // ── Configurações (agência) ──────────────────────────────────────────────
     $router->get('/configuracoes',  [SettingsController::class, 'index']);
     $router->post('/configuracoes', [SettingsController::class, 'save'], [CsrfMiddleware::class]);
@@ -478,4 +490,11 @@ $router->group([PortalMiddleware::class], function ($router) {
     $router->post('/portal/{portal_token}/planos/{planId}/items/{itemId}/feedback', [PortalController::class, 'itemFeedback']);
     $router->get('/portal/{portal_token}/faturas',                     [PortalController::class, 'invoices']);
     $router->get('/portal/{portal_token}/contratos',                   [PortalController::class, 'contracts']);
+
+    // Envio de conteúdos (Drive) — JSON, sem CSRF (igual itemFeedback)
+    $router->get('/portal/{portal_token}/arquivos',                    [PortalController::class, 'driveFiles']);
+    $router->get('/portal/{portal_token}/drive/folders',               [PortalController::class, 'driveFolders']);
+    $router->post('/portal/{portal_token}/drive/folders',              [PortalController::class, 'driveCreateFolder']);
+    $router->post('/portal/{portal_token}/drive/upload/initiate',      [PortalController::class, 'driveUploadInitiate']);
+    $router->post('/portal/{portal_token}/drive/upload/complete',      [PortalController::class, 'driveUploadComplete']);
 });

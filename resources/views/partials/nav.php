@@ -113,6 +113,7 @@ $icons = [
 <?= navItem('/subscription', 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', t('nav.subscription'), $cp) ?>
 <?php if (\App\Support\Auth::can('settings.manage')): ?>
 <?= navItem('/integrations/clickup', 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', t('nav.clickup'), $cp) ?>
+<?= navItem('/integrations/google-drive', 'M7.71 3.5L1.15 15l3.43 5.95 6.56-11.45zm8.58 0H9.42l6.56 11.45h6.87zm-1.66 12.7l-3.43 5.95h11.66a1 1 0 00.86-1.5l-2.6-4.45z', 'Google Drive', $cp) ?>
 <?php endif; ?>
 <?php if (Auth::can('settings.view')): ?>
 <?= navItem('/settings', $icons['settings'], t('nav.settings'), $cp) ?>
