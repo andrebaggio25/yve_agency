@@ -11,18 +11,65 @@ use GuzzleHttp\Exception\GuzzleException;
 class MetaAdsService
 {
     private Client $http;
-    private string $baseUri = 'https://graph.facebook.com/v21.0/';
+    private string $apiVersion;
+    private string $baseUri;
 
     public function __construct(
         private readonly PlatformSettingsRepository $platformSettings,
     ) {
-        $this->http = new Client(['base_uri' => $this->baseUri, 'timeout' => 30]);
+        $this->apiVersion = env('META_API_VERSION', 'v21.0');
+        $this->baseUri    = "https://graph.facebook.com/{$this->apiVersion}/";
+        $this->http       = new Client(['base_uri' => $this->baseUri, 'timeout' => 30]);
     }
 
     private function appCredentials(): array
     {
         $s = $this->platformSettings->getMultiple(['meta_app_id', 'meta_app_secret']);
         return [$s['meta_app_id'] ?? '', $s['meta_app_secret'] ?? ''];
+    }
+
+    // ------------------------------------------------------------- OAuth (code → token, contas)
+
+    /**
+     * Troca o `code` do callback OAuth por um token de acesso (short-lived).
+     * @return array{access_token?: string, token_type?: string, expires_in?: int}
+     */
+    public function exchangeCodeForToken(string $code, string $redirectUri): array
+    {
+        [$appId, $appSecret] = $this->appCredentials();
+
+        return $this->get('oauth/access_token', [
+            'client_id'     => $appId,
+            'client_secret' => $appSecret,
+            'redirect_uri'  => $redirectUri,
+            'code'          => $code,
+        ]);
+    }
+
+    /**
+     * Lista as contas de anúncios vinculadas ao usuário do token.
+     * @return array<int,array{id:string,name?:string,currency?:string,account_status?:int}>
+     */
+    public function fetchUserAdAccounts(string $token): array
+    {
+        $data = $this->get('me/adaccounts', [
+            'fields'       => 'id,name,currency,account_status',
+            'limit'        => 200,
+            'access_token' => $token,
+        ]);
+
+        return $data['data'] ?? [];
+    }
+
+    /** Indica se um token ainda é válido (usado para detectar expiração). */
+    public function isTokenValid(string $token): bool
+    {
+        try {
+            $data = $this->validateToken($token);
+            return (bool) ($data['is_valid'] ?? false);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     // ------------------------------------------------------------------ token
@@ -276,16 +323,26 @@ class MetaAdsService
      */
     public function updateBudget(string $objectId, string $token, ?string $value): void
     {
-        if ($value === null) {
-            return;
-        }
-        // Extrai o número do valor proposto (ex: "R$ 50/dia" → 50 → 5000 centavos)
-        preg_match('/[\d.,]+/', str_replace('.', '', $value), $m);
-        $amount = (int) (((float) str_replace(',', '.', $m[0] ?? '0')) * 100);
+        $amount = $this->parseBudgetToCents($value);
         if ($amount <= 0) {
             return;
         }
         $this->post($objectId, ['daily_budget' => $amount, 'access_token' => $token]);
+    }
+
+    /**
+     * Converte um valor textual de orçamento em centavos.
+     * Ex.: "R$ 50/dia" → 5000 · "R$ 1.250,50" → 125050 · null/"" → 0
+     */
+    public function parseBudgetToCents(?string $value): int
+    {
+        if ($value === null) {
+            return 0;
+        }
+        // Remove separador de milhar (.) e extrai o número; vírgula vira decimal.
+        preg_match('/[\d.,]+/', str_replace('.', '', $value), $m);
+        $amount = (int) round(((float) str_replace(',', '.', $m[0] ?? '0')) * 100);
+        return $amount > 0 ? $amount : 0;
     }
 
     // ---------------------------------------------------------------- helpers
