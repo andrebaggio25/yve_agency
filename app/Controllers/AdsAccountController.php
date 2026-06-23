@@ -94,41 +94,37 @@ class AdsAccountController extends Controller
             return $this->redirect('/trafego/contas');
         }
 
-        [$appId, $appSecret] = $this->platformSettings->getMultiple(['meta_app_id', 'meta_app_secret'])
-            ? array_values($this->platformSettings->getMultiple(['meta_app_id', 'meta_app_secret']))
-            : ['', ''];
-
         $appUrl      = rtrim(env('APP_URL', 'http://localhost'), '/');
         $callbackUrl = "{$appUrl}/trafego/contas/oauth/callback";
 
-        // Trocar code por short-lived token
-        $tokenUrl = "https://graph.facebook.com/v21.0/oauth/access_token";
-        $resp = file_get_contents("{$tokenUrl}?client_id={$appId}&redirect_uri=" . urlencode($callbackUrl) . "&client_secret={$appSecret}&code={$code}");
-        $tokenData = json_decode($resp ?: '{}', true);
+        // Trocar code por short-lived token e depois por token de longa duração
+        try {
+            $tokenData = $this->meta->exchangeCodeForToken($code, $callbackUrl);
 
-        if (empty($tokenData['access_token'])) {
-            $this->withError('Falha ao obter token de acesso. Tente novamente.');
+            if (empty($tokenData['access_token'])) {
+                $this->withError('Falha ao obter token de acesso. Tente novamente.');
+                return $this->redirect('/trafego/contas/nova');
+            }
+
+            $shortToken = $tokenData['access_token'];
+
+            try {
+                $longTokenData = $this->meta->exchangeForLongLivedToken($shortToken);
+                $finalToken    = $longTokenData['access_token'] ?? $shortToken;
+                $expiresAt     = isset($longTokenData['expires_in'])
+                    ? date('Y-m-d H:i:s', time() + (int) $longTokenData['expires_in'])
+                    : null;
+            } catch (\Throwable) {
+                $finalToken = $shortToken;
+                $expiresAt  = null;
+            }
+
+            // Buscar contas de anúncios vinculadas ao usuário
+            $adAccounts = $this->meta->fetchUserAdAccounts($finalToken);
+        } catch (\Throwable $e) {
+            $this->withError('Erro na comunicação com o Facebook: ' . $e->getMessage());
             return $this->redirect('/trafego/contas/nova');
         }
-
-        $shortToken = $tokenData['access_token'];
-
-        // Trocar por token de longa duração
-        try {
-            $longTokenData = $this->meta->exchangeForLongLivedToken($shortToken);
-            $finalToken    = $longTokenData['access_token'] ?? $shortToken;
-            $expiresAt     = isset($longTokenData['expires_in'])
-                ? date('Y-m-d H:i:s', time() + (int) $longTokenData['expires_in'])
-                : null;
-        } catch (\Throwable) {
-            $finalToken = $shortToken;
-            $expiresAt  = null;
-        }
-
-        // Buscar contas de anúncios vinculadas ao usuário
-        $accountsResp = file_get_contents("https://graph.facebook.com/v21.0/me/adaccounts?fields=id,name,currency,account_status&access_token={$finalToken}");
-        $accountsData = json_decode($accountsResp ?: '{}', true);
-        $adAccounts   = $accountsData['data'] ?? [];
 
         if (empty($adAccounts)) {
             $this->withError('Nenhuma conta de anúncios encontrada para este usuário do Facebook.');

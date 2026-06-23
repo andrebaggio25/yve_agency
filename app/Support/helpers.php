@@ -30,7 +30,7 @@ function csrf_token(): string
 /** Render a hidden CSRF input (use inside every <form>) */
 function csrf_field(): string
 {
-    return '<input type="hidden" name="_csrf_token" value="' . csrf_token() . '">';
+    return '<input type="hidden" name="_token" value="' . csrf_token() . '">';
 }
 
 /** Render a hidden _method input for PUT/DELETE form spoofing */

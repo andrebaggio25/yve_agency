@@ -111,13 +111,15 @@ class GlobalSettingsController extends Controller
             return Response::json(['ok' => false, 'error' => 'Credenciais não configuradas.']);
         }
 
+        $verifySsl = env('EVOLUTION_SSL_VERIFY', 'true') !== 'false';
         $creds = $this->evolution->getGlobalCredentials();
         $ch    = curl_init(rtrim($creds['api_url'], '/') . '/instance/fetchInstances');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 10,
             CURLOPT_HTTPHEADER     => ['apikey: ' . $creds['api_key'], 'Accept: application/json'],
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => $verifySsl,
+            CURLOPT_SSL_VERIFYHOST => $verifySsl ? 2 : 0,
         ]);
         $raw  = (string) curl_exec($ch);
         $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);

@@ -122,8 +122,8 @@
     </header>
 
     <!-- Flash messages -->
-    <?php $flashSuccess = flash('success'); $flashError = flash('error'); ?>
-    <?php if ($flashSuccess || $flashError): ?>
+    <?php $flashSuccess = flash('success'); $flashError = flash('error'); $flashErrors = flash('errors'); ?>
+    <?php if ($flashSuccess || $flashError || (is_array($flashErrors) && $flashErrors)): ?>
     <div class="px-6 pt-4 space-y-2">
       <?php if ($flashSuccess): ?>
       <div x-data="{show:true}" x-show="show" x-transition class="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
@@ -139,6 +139,15 @@
         <button @click="show=false" class="ml-auto text-rose-400">✕</button>
       </div>
       <?php endif; ?>
+      <?php if (is_array($flashErrors) && $flashErrors): ?>
+      <div x-data="{show:true}" x-show="show" x-transition class="flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+        <svg class="w-4 h-4 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <ul class="flex-1 list-disc list-inside space-y-1">
+          <?php foreach ($flashErrors as $msg): ?><li><?= e((string) $msg) ?></li><?php endforeach; ?>
+        </ul>
+        <button @click="show=false" class="text-rose-400">✕</button>
+      </div>
+      <?php endif; ?>
     </div>
     <?php endif; ?>
 
@@ -152,5 +161,6 @@
 </div>
 
 <?= view_slot('scripts') ?>
+<?= view_partial('form_loading') ?>
 </body>
 </html>

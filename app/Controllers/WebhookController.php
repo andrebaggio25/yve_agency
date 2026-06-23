@@ -31,6 +31,15 @@ class WebhookController extends Controller
         }
 
         $body  = json_decode(\App\Core\Request::rawInput(), true) ?? [];
+
+        // A Evolution não assina os webhooks (sem HMAC). Além do token na URL,
+        // validamos que o nome da instância no payload bate com a instância dona
+        // do token — impede spoofing entre instâncias caso um token vaze.
+        $payloadInstance = (string) ($body['instance'] ?? $body['data']['instance'] ?? '');
+        if ($payloadInstance !== '' && $payloadInstance !== ($instance['instance_name'] ?? '')) {
+            return Response::json(['received' => true]);
+        }
+
         $event = $body['event'] ?? $body['type'] ?? '';
 
         match ($event) {

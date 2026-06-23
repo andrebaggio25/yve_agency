@@ -68,12 +68,12 @@
           <div class="flex items-center justify-end gap-3">
             <a href="/organico/contas/<?= $a['id'] ?>" class="text-xs text-violet-400 hover:text-violet-300">Ver</a>
             <form method="POST" action="/organico/contas/<?= $a['id'] ?>/sync">
-              <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+              <?= csrf_field() ?>
               <button class="text-xs text-violet-400 hover:text-violet-300">Sync</button>
             </form>
             <form method="POST" action="/organico/contas/<?= $a['id'] ?>"
                   onsubmit="return confirm('Remover esta conta?')">
-              <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+              <?= csrf_field() ?>
               <input type="hidden" name="_method" value="DELETE">
               <button class="text-xs text-red-400 hover:text-red-300">Remover</button>
             </form>

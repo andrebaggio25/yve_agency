@@ -11,7 +11,7 @@
   <!-- Formulário -->
   <div class="lg:col-span-2">
     <form method="POST" action="/configuracoes" class="space-y-6">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
 
       <!-- Dados da agência -->
       <div class="card p-6">

@@ -5,25 +5,34 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Repository;
+use App\Core\Secret;
 
 class ClickUpIntegrationRepository extends Repository
 {
     protected string $table = 'clickup_integrations';
 
+    private function decryptRow(?array $row): ?array
+    {
+        if ($row !== null && isset($row['api_token'])) {
+            $row['api_token'] = Secret::decrypt($row['api_token']);
+        }
+        return $row;
+    }
+
     public function findByAgency(int $agencyId): ?array
     {
-        return $this->first(
+        return $this->decryptRow($this->first(
             "SELECT * FROM clickup_integrations WHERE agency_id = :a",
             [':a' => $agencyId]
-        );
+        ));
     }
 
     public function findByToken(string $token): ?array
     {
-        return $this->first(
+        return $this->decryptRow($this->first(
             "SELECT * FROM clickup_integrations WHERE webhook_token = :t",
             [':t' => $token]
-        );
+        ));
     }
 
     public function upsert(int $agencyId, array $data): void
@@ -46,7 +55,7 @@ class ClickUpIntegrationRepository extends Repository
                 updated_at      = NOW()
         ")->execute([
             ':agency_id'      => $agencyId,
-            ':api_token'      => $data['api_token'],
+            ':api_token'      => Secret::encrypt($data['api_token']),
             ':workspace_id'   => $data['workspace_id'] ?? null,
             ':default_list_id'=> $data['default_list_id'],
             ':webhook_token'  => $data['webhook_token'] ?? bin2hex(random_bytes(32)),

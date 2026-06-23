@@ -95,7 +95,7 @@ $statusLabels = [
               <?php if (\App\Support\Auth::can('contracts.delete')): ?>
               <form method="POST" action="/contratos/<?= $c['id'] ?>" onsubmit="return confirm('Remover este contrato?')">
                 <input type="hidden" name="_method" value="DELETE">
-                <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+                <?= csrf_field() ?>
                 <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors">Remover</button>
               </form>
               <?php endif; ?>

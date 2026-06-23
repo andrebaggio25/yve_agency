@@ -77,9 +77,9 @@ $clientLogoUrl = $client['logo_url'] ?? null;
   </header>
 
   <!-- Flash -->
-  <?php $flashSuccess = flash('success'); $flashError = flash('error'); ?>
-  <?php if ($flashSuccess || $flashError): ?>
-  <div class="px-4 sm:px-8 pt-4">
+  <?php $flashSuccess = flash('success'); $flashError = flash('error'); $flashErrors = flash('errors'); ?>
+  <?php if ($flashSuccess || $flashError || (is_array($flashErrors) && $flashErrors)): ?>
+  <div class="px-4 sm:px-8 pt-4 space-y-2">
     <?php if ($flashSuccess): ?>
     <div class="rounded-xl px-4 py-3 text-sm text-green-300 bg-green-500/10 border border-green-500/20">
       <?= e($flashSuccess) ?>
@@ -88,6 +88,13 @@ $clientLogoUrl = $client['logo_url'] ?? null;
     <?php if ($flashError): ?>
     <div class="rounded-xl px-4 py-3 text-sm text-red-300 bg-red-500/10 border border-red-500/20">
       <?= e($flashError) ?>
+    </div>
+    <?php endif; ?>
+    <?php if (is_array($flashErrors) && $flashErrors): ?>
+    <div class="rounded-xl px-4 py-3 text-sm text-red-300 bg-red-500/10 border border-red-500/20">
+      <ul class="list-disc list-inside space-y-1">
+        <?php foreach ($flashErrors as $msg): ?><li><?= e((string) $msg) ?></li><?php endforeach; ?>
+      </ul>
     </div>
     <?php endif; ?>
   </div>
@@ -117,5 +124,6 @@ $clientLogoUrl = $client['logo_url'] ?? null;
   </nav>
 
   <?= view_slot('scripts') ?>
+  <?= view_partial('form_loading') ?>
 </body>
 </html>

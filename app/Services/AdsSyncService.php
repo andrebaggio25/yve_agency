@@ -48,6 +48,12 @@ class AdsSyncService
 
         $stats = ['campaigns' => 0, 'adsets' => 0, 'ads' => 0, 'metric_rows' => 0];
 
+        // ---- 0. Valida o token antes de sincronizar; se expirou, sinaliza e interrompe
+        if (!$this->meta->isTokenValid($token)) {
+            $this->accountRepo->setStatus($accountId, 'token_expired');
+            throw new \RuntimeException('Token do Facebook expirado ou inválido. Reconecte a conta para retomar a sincronização.');
+        }
+
         // ---- 1. Campanhas
         $after = null;
         do {

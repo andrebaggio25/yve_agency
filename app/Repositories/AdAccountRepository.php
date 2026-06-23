@@ -5,47 +5,62 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Repository;
+use App\Core\Secret;
 
 class AdAccountRepository extends Repository
 {
     protected string $table = 'ad_accounts';
 
+    private function decryptRow(?array $row): ?array
+    {
+        if ($row !== null && isset($row['access_token'])) {
+            $row['access_token'] = Secret::decrypt($row['access_token']);
+        }
+        return $row;
+    }
+
+    /** @param array<int,array> $rows @return array<int,array> */
+    private function decryptRows(array $rows): array
+    {
+        return array_map(fn ($r) => $this->decryptRow($r), $rows);
+    }
+
     public function listByAgency(int $agencyId): array
     {
-        return $this->all("
+        return $this->decryptRows($this->all("
             SELECT a.*, c.name AS client_name
             FROM ad_accounts a
             LEFT JOIN clients c ON c.id = a.client_id
             WHERE a.agency_id = :aid
             ORDER BY a.name
-        ", [':aid' => $agencyId]);
+        ", [':aid' => $agencyId]));
     }
 
     public function findByIdAndAgency(int $id, int $agencyId): ?array
     {
-        return $this->first("
+        return $this->decryptRow($this->first("
             SELECT a.*, c.name AS client_name
             FROM ad_accounts a
             LEFT JOIN clients c ON c.id = a.client_id
             WHERE a.id = :id AND a.agency_id = :aid
             LIMIT 1
-        ", [':id' => $id, ':aid' => $agencyId]);
+        ", [':id' => $id, ':aid' => $agencyId]));
     }
 
     public function findByClient(int $clientId, int $agencyId): array
     {
-        return $this->all("
+        return $this->decryptRows($this->all("
             SELECT * FROM ad_accounts
             WHERE client_id = :client_id AND agency_id = :agency_id AND status = 'active'
             ORDER BY name
-        ", [':client_id' => $clientId, ':agency_id' => $agencyId]);
+        ", [':client_id' => $clientId, ':agency_id' => $agencyId]));
     }
 
     public function findAllActive(): array
     {
-        return $this->all(
+        return $this->decryptRows($this->all(
             "SELECT * FROM ad_accounts WHERE status = 'active' ORDER BY agency_id, id"
-        );
+        ));
     }
 
     public function create(array $data): int
@@ -74,7 +89,7 @@ class AdAccountRepository extends Repository
             ':platform_account_id'=> $data['platform_account_id'],
             ':name'               => $data['name'],
             ':currency'           => $data['currency'] ?? 'BRL',
-            ':access_token'       => $data['access_token'],
+            ':access_token'       => Secret::encrypt($data['access_token']),
             ':token_type'         => $data['token_type'] ?? 'user',
             ':token_expires_at'   => $data['token_expires_at'] ?? null,
             ':sync_days_back'     => $data['sync_days_back'] ?? 30,
@@ -111,6 +126,6 @@ class AdAccountRepository extends Repository
         $this->pdo->prepare("
             UPDATE ad_accounts SET access_token = :token, token_expires_at = :exp, updated_at = NOW()
             WHERE id = :id
-        ")->execute([':token' => $token, ':exp' => $expiresAt, ':id' => $id]);
+        ")->execute([':token' => Secret::encrypt($token), ':exp' => $expiresAt, ':id' => $id]);
     }
 }

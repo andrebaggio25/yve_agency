@@ -17,7 +17,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
   </div>
 
   <form method="POST" action="/tarefas" class="card p-6 space-y-5">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
 
     <div>
       <label class="label-field">Título *</label>

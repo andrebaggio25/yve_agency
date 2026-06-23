@@ -7,7 +7,7 @@
   </div>
 
   <form method="POST" action="<?= $plan ? '/admin/planos/' . $plan['id'] : '/admin/planos' ?>" class="card p-6 space-y-5">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
     <?php if ($plan): ?><input type="hidden" name="_method" value="PUT"><?php endif; ?>
 
     <div class="grid grid-cols-2 gap-4">

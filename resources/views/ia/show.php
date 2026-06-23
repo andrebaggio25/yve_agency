@@ -66,7 +66,7 @@
        class="btn-secondary text-sm px-4 py-2">⚡ Gerar ações</a>
     <form method="POST" action="/ia/<?= $insight['id'] ?>"
           onsubmit="return confirm('Remover este insight?')" class="ml-auto">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <input type="hidden" name="_method" value="DELETE">
       <button type="submit" class="text-sm text-red-400 hover:text-red-300 transition-colors">Remover</button>
     </form>

@@ -7,7 +7,44 @@
     <p class="text-sm text-gray-400 mt-1">Conecte via OAuth (recomendado) ou insira o token manualmente.</p>
   </div>
 
-  <?php flash_messages(); ?>
+  <?php $redirectUri = rtrim(env('APP_URL', ''), '/') . '/trafego/contas/oauth/callback'; ?>
+
+  <?php if (!($metaAppConfigured ?? false)): ?>
+  <!-- Checklist de configuração (aparece enquanto o App Meta não estiver configurado) -->
+  <div class="card p-5 mb-5 border border-amber-500/20 bg-amber-500/5" x-data="{ copied: false }">
+    <p class="text-sm font-semibold text-amber-300 mb-1">Configuração necessária antes de conectar</p>
+    <p class="text-xs text-gray-400 mb-4">O OAuth do Meta só funciona após o administrador da plataforma criar um App Meta e cadastrar as credenciais.</p>
+
+    <ol class="text-xs text-gray-300 space-y-2.5 list-decimal list-inside mb-4">
+      <li>
+        Em <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener" class="text-violet-400 underline hover:text-violet-300">developers.facebook.com</a>,
+        crie um App e adicione o produto <span class="text-white">Marketing API</span>.
+      </li>
+      <li>
+        No App, em <span class="text-white">Facebook Login → Configurações</span>, cadastre esta <span class="text-white">URI de redirecionamento</span>:
+        <div class="flex items-center gap-2 mt-1.5">
+          <code class="flex-1 bg-black/30 border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-[11px] text-gray-200 font-mono break-all"><?= e($redirectUri) ?></code>
+          <button type="button"
+                  @click="navigator.clipboard.writeText('<?= e($redirectUri) ?>'); copied = true; setTimeout(() => copied = false, 2000)"
+                  class="btn-secondary text-xs px-3 py-1.5 flex-shrink-0">
+            <span x-show="!copied">Copiar</span>
+            <span x-show="copied" x-cloak class="text-green-400">Copiado!</span>
+          </button>
+        </div>
+      </li>
+      <li>
+        Os scopes usados são <code class="bg-white/[0.07] px-1 rounded">ads_read</code>,
+        <code class="bg-white/[0.07] px-1 rounded">ads_management</code> e
+        <code class="bg-white/[0.07] px-1 rounded">business_management</code>.
+        Para contas de terceiros em produção, eles exigem <span class="text-white">App Review (Acesso Avançado)</span> na Meta.
+      </li>
+      <li>
+        Cole o <span class="text-white">App ID</span> e o <span class="text-white">App Secret</span> em
+        <a href="/admin/configuracoes" class="text-violet-400 underline hover:text-violet-300">Admin → Configurações</a>.
+      </li>
+    </ol>
+  </div>
+  <?php endif; ?>
 
   <!-- OAuth (recomendado) -->
   <div class="card p-5 mb-5 border border-violet-500/20 bg-violet-500/5">
@@ -50,7 +87,7 @@
   </div>
 
   <form method="POST" action="/trafego/contas" class="card p-6 space-y-5">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
 
     <div>
       <label class="label-field">Token de acesso *</label>

@@ -28,6 +28,18 @@ class AiInsightService
 
     // ----------------------------------------------------------------- public
 
+    /** Indica se há provedor + chave de API configurados para gerar insights. */
+    public function isConfigured(): bool
+    {
+        $s = $this->platformSettings->getMultiple(['ai_provider', 'openai_api_key', 'anthropic_api_key']);
+        $provider = $s['ai_provider'] ?? 'openai';
+        $key = $provider === 'claude'
+            ? ($s['anthropic_api_key'] ?? '')
+            : ($s['openai_api_key'] ?? '');
+
+        return trim((string) $key) !== '';
+    }
+
     /**
      * Gera um insight de performance para uma conta no período dado.
      * Salva no banco e retorna o array persistido.

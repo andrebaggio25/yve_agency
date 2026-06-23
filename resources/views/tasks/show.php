@@ -147,7 +147,7 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
         <?php foreach ($statusLabels as $v => $l): ?>
         <?php if ($v !== $task['status']): ?>
         <form method="POST" action="/tarefas/<?= $task['id'] ?>/status">
-          <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+          <?= csrf_field() ?>
           <input type="hidden" name="status" value="<?= $v ?>">
           <button class="w-full text-left px-4 py-2 hover:bg-white/[0.05] text-gray-300"><?= $l ?></button>
         </form>
@@ -159,7 +159,7 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
     <?php if (\App\Support\Auth::can('tasks.delete')): ?>
     <form method="POST" action="/tarefas/<?= $task['id'] ?>" class="ml-auto"
           onsubmit="return confirm('Excluir esta tarefa?')">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <input type="hidden" name="_method" value="DELETE">
       <button class="text-sm text-red-400 hover:text-red-300">Excluir</button>
     </form>

@@ -48,7 +48,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
   <?php if (in_array($planStatus, ['sent', 'pending_approval'], true)): ?>
   <div class="flex flex-wrap gap-3 pt-4 border-t border-white/[0.06]" x-data="{showRevision: false}">
     <form method="POST" action="/portal/<?= $token ?>/planos/<?= $plan['id'] ?>/aprovar">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <button type="submit" class="btn-primary text-sm px-5 py-2.5 gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -62,7 +62,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
 
     <div x-show="showRevision" x-transition class="w-full mt-2">
       <form method="POST" action="/portal/<?= $token ?>/planos/<?= $plan['id'] ?>/revisao">
-        <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+        <?= csrf_field() ?>
         <textarea name="comment" rows="3" placeholder="Descreva o que precisa ser ajustado..."
                   class="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 resize-none"
                   style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);"></textarea>

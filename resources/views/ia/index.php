@@ -88,7 +88,7 @@
         <a href="/ia/<?= $i['id'] ?>" class="btn-secondary text-xs px-3 py-1.5">Ver</a>
         <form method="POST" action="/ia/<?= $i['id'] ?>"
               onsubmit="return confirm('Remover este insight?')">
-          <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+          <?= csrf_field() ?>
           <input type="hidden" name="_method" value="DELETE">
           <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors px-2 py-1.5">✕</button>
         </form>

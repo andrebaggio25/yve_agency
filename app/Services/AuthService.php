@@ -40,7 +40,7 @@ class AuthService
         // Platform admin tem acesso total — sem permissions/clients de agência
         if (!empty($user['is_platform_admin'])) {
             Auth::login($user, [], []);
-            $_SESSION['locale'] = \App\Core\Lang::normalize($user['language'] ?? 'pt');
+            $_SESSION['locale'] = \App\Core\Lang::normalize($user['agency_language'] ?? $user['language'] ?? 'pt');
             $this->userRepo->updateLastLogin($user['id']);
             ActivityLogger::log('login', 'auth', $user['id'], null, ['ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0']);
             return ['success' => true, 'redirect' => '/admin'];
@@ -52,7 +52,7 @@ class AuthService
         Auth::login($user, $permissions, $clientIds);
 
         // Store user's language preference in session for locale loading
-        $_SESSION['locale'] = \App\Core\Lang::normalize($user['language'] ?? 'pt');
+        $_SESSION['locale'] = \App\Core\Lang::normalize($user['agency_language'] ?? $user['language'] ?? 'pt');
 
         $this->userRepo->updateLastLogin($user['id']);
 

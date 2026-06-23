@@ -52,22 +52,35 @@
           <?= $a['last_synced_at'] ? date('d/m/Y H:i', strtotime($a['last_synced_at'])) : 'Nunca' ?>
         </td>
         <td class="px-5 py-3 text-center">
-          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-            <?= $a['status'] === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400' ?>">
-            <?= $a['status'] === 'active' ? 'Ativa' : 'Inativa' ?>
+          <?php
+            $statusStyles = [
+              'active'        => ['bg-green-500/15 text-green-400', 'Ativa'],
+              'token_expired' => ['bg-amber-500/15 text-amber-400', 'Token expirado'],
+            ];
+            [$badgeClass, $badgeLabel] = $statusStyles[$a['status']] ?? ['bg-red-500/15 text-red-400', 'Inativa'];
+          ?>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $badgeClass ?>">
+            <?= $badgeLabel ?>
           </span>
         </td>
         <td class="px-5 py-3 text-right">
           <div class="flex items-center justify-end gap-2">
+            <?php if ($a['status'] === 'token_expired'): ?>
+            <a href="/trafego/contas/oauth?client_id=<?= (int) ($a['client_id'] ?? 0) ?>"
+               class="text-xs text-amber-400 hover:text-amber-300 transition-colors font-medium">
+              Reconectar
+            </a>
+            <?php else: ?>
             <form method="POST" action="/trafego/contas/<?= $a['id'] ?>/sync">
-              <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+              <?= csrf_field() ?>
               <button type="submit" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">
                 Sincronizar
               </button>
             </form>
+            <?php endif; ?>
             <form method="POST" action="/trafego/contas/<?= $a['id'] ?>"
                   onsubmit="return confirm('Remover esta conta?')">
-              <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+              <?= csrf_field() ?>
               <input type="hidden" name="_method" value="DELETE">
               <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors">
                 Remover

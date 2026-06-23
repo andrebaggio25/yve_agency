@@ -7,8 +7,6 @@
     <p class="mt-1 text-sm text-gray-400">Sincronize tarefas do YVE com seus projetos no ClickUp.</p>
   </div>
 
-  <?php flash_messages(); ?>
-
   <?php if (!empty($integration) && ($integration['status'] ?? '') === 'active'): ?>
 
   <!-- Estado: conectado ────────────────────────────────────────────────────── -->

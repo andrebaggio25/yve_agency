@@ -47,7 +47,7 @@
     <p>Último sync: <?= date('d/m/Y H:i', strtotime($account['last_synced_at'])) ?></p>
     <?php endif; ?>
     <form method="POST" action="/organico/contas/<?= $account['id'] ?>/sync" class="mt-2">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <button type="submit" class="text-violet-400 hover:text-violet-300 transition-colors">Sincronizar</button>
     </form>
   </div>

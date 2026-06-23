@@ -17,7 +17,7 @@ return [
     'meta' => [
         'app_id'      => env('META_APP_ID', ''),
         'app_secret'  => env('META_APP_SECRET', ''),
-        'api_version' => env('META_API_VERSION', 'v19.0'),
+        'api_version' => env('META_API_VERSION', 'v21.0'),
     ],
 
     'google' => [

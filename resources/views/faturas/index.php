@@ -111,7 +111,7 @@ $statusLabels = [
               <?php endif; ?>
               <?php if (\App\Support\Auth::can('invoices.send') && $inv['status'] === 'draft'): ?>
               <form method="POST" action="/faturas/<?= $inv['id'] ?>/enviar">
-                <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+                <?= csrf_field() ?>
                 <button type="submit" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">Enviar</button>
               </form>
               <?php endif; ?>

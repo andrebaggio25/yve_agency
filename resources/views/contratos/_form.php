@@ -12,7 +12,7 @@ $v = fn(string $k, mixed $def = '') => $old[$k] ?? $contract[$k] ?? $def;
   <?php if ($method !== 'POST'): ?>
   <input type="hidden" name="_method" value="<?= e($method) ?>">
   <?php endif; ?>
-  <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+  <?= csrf_field() ?>
 
   <div class="grid sm:grid-cols-2 gap-6">
     <!-- Título -->
