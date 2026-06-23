@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Repository;
+use App\Core\Secret;
 
 class GoogleDriveIntegrationRepository extends Repository
 {
@@ -12,10 +13,15 @@ class GoogleDriveIntegrationRepository extends Repository
 
     public function findByAgency(int $agencyId): ?array
     {
-        return $this->first(
+        $row = $this->first(
             "SELECT * FROM google_drive_integrations WHERE agency_id = :a",
             [':a' => $agencyId]
         );
+        if ($row !== null) {
+            $row['access_token']  = Secret::decrypt($row['access_token'] ?? null);
+            $row['refresh_token'] = Secret::decrypt($row['refresh_token'] ?? null);
+        }
+        return $row;
     }
 
     /**
@@ -38,8 +44,9 @@ class GoogleDriveIntegrationRepository extends Repository
                 updated_at       = NOW()
         ")->execute([
             ':agency_id'        => $agencyId,
-            ':access_token'     => $data['access_token'] ?? null,
-            ':refresh_token'    => $data['refresh_token'] ?? '',
+            ':access_token'     => Secret::encrypt($data['access_token'] ?? null),
+            // mantém '' para que o COALESCE/NULLIF preserve o refresh_token atual
+            ':refresh_token'    => Secret::encrypt($data['refresh_token'] ?? '') ?? '',
             ':token_expires_at' => $data['token_expires_at'] ?? null,
             ':connected_email'  => $data['connected_email'] ?? null,
         ]);
@@ -52,7 +59,7 @@ class GoogleDriveIntegrationRepository extends Repository
             UPDATE google_drive_integrations
             SET access_token = :t, token_expires_at = :e, updated_at = NOW()
             WHERE agency_id = :a
-        ")->execute([':t' => $accessToken, ':e' => $expiresAt, ':a' => $agencyId]);
+        ")->execute([':t' => Secret::encrypt($accessToken), ':e' => $expiresAt, ':a' => $agencyId]);
     }
 
     public function setRootFolder(int $agencyId, string $folderId): void

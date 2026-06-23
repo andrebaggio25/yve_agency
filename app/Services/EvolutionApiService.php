@@ -241,13 +241,18 @@ class EvolutionApiService
             'Accept: application/json',
         ];
 
+        // Verificação TLS ligada por padrão; só desliga com EVOLUTION_SSL_VERIFY=false
+        // (necessário apenas para servidores Evolution self-hosted com cert self-signed).
+        $verifySsl = env('EVOLUTION_SSL_VERIFY', 'true') !== 'false';
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_CUSTOMREQUEST  => $method,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => $verifySsl,
+            CURLOPT_SSL_VERIFYHOST => $verifySsl ? 2 : 0,
         ]);
 
         if ($body !== null && in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
