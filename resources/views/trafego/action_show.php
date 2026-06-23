@@ -146,14 +146,14 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
 
     <?php if ($action['status'] === 'pending'): ?>
     <form method="POST" action="/trafego/acoes/<?= $action['id'] ?>/aprovar">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <button type="submit"
               class="rounded-xl bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors">
         ✓ Aprovar
       </button>
     </form>
     <form method="POST" action="/trafego/acoes/<?= $action['id'] ?>/rejeitar">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <button type="submit"
               class="rounded-xl bg-red-600/20 border border-red-500/30 px-5 py-2 text-sm font-medium text-red-400 hover:bg-red-600/30 transition-colors">
         ✕ Rejeitar
@@ -164,7 +164,7 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
     <?php if ($action['status'] === 'approved'): ?>
     <form method="POST" action="/trafego/acoes/<?= $action['id'] ?>/executar"
           onsubmit="return confirm('Executar esta ação via Meta Ads API agora?')">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <button type="submit"
               class="rounded-xl bg-green-600 px-5 py-2 text-sm font-medium text-white hover:bg-green-500 transition-colors">
         ⚡ Executar agora

@@ -13,7 +13,7 @@
 
   <!-- Dados principais -->
   <form method="POST" action="<?= $user ? '/admin/usuarios/' . $user['id'] : '/admin/usuarios' ?>" class="card p-6 space-y-5">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
     <?php if ($user): ?><input type="hidden" name="_method" value="PUT"><?php endif; ?>
 
     <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">Dados do usuário</p>
@@ -96,7 +96,7 @@
         </p>
       </div>
       <form method="POST" action="/admin/usuarios/<?= $user['id'] ?>/status">
-        <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+        <?= csrf_field() ?>
         <button type="submit"
                 class="text-sm px-4 py-2 rounded-xl border transition-all cursor-pointer
                   <?= $user['status'] === 'active'
@@ -119,14 +119,14 @@
         <p class="text-xs text-gray-500 mt-0.5">Envia um e-mail com link para o usuário criar nova senha.</p>
       </div>
       <form method="POST" action="/admin/usuarios/<?= $user['id'] ?>/enviar-reset">
-        <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+        <?= csrf_field() ?>
         <button type="submit" class="btn-secondary text-sm px-4 py-2">Enviar e-mail</button>
       </form>
     </div>
 
     <!-- Definir senha manualmente -->
     <form method="POST" action="/admin/usuarios/<?= $user['id'] ?>/senha" class="space-y-3">
-      <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+      <?= csrf_field() ?>
       <div>
         <p class="text-sm text-white font-medium mb-1">Definir senha manualmente</p>
         <p class="text-xs text-gray-500 mb-3">O usuário poderá usar essa senha imediatamente.</p>

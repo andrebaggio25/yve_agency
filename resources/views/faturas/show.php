@@ -51,7 +51,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
         <div @click.outside="emailModal = false" class="w-full max-w-md rounded-2xl border border-white/10 bg-[#111118] p-6 shadow-2xl">
           <h3 class="font-semibold text-white text-lg mb-4">Enviar Fatura por E-mail</h3>
           <form method="POST" action="/faturas/<?= $invoice['id'] ?>/email">
-            <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+            <?= csrf_field() ?>
             <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1.5">E-mail do destinatário <span class="text-red-400">*</span></label>
@@ -83,7 +83,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
       <?php endif; ?>
       <?php if (\App\Support\Auth::can('invoices.send') && $invoice['status'] === 'draft'): ?>
       <form method="POST" action="/faturas/<?= $invoice['id'] ?>/enviar">
-        <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+        <?= csrf_field() ?>
         <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-all">
           Marcar Enviada
         </button>
@@ -180,7 +180,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
             <?php if (\App\Support\Auth::can('payments.delete')): ?>
             <form method="POST" action="/pagamentos/<?= $p['id'] ?>" class="opacity-0 group-hover:opacity-100 transition-opacity" onsubmit="return confirm('Remover este pagamento?')">
               <input type="hidden" name="_method" value="DELETE">
-              <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+              <?= csrf_field() ?>
               <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors">Remover</button>
             </form>
             <?php endif; ?>
@@ -197,7 +197,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
   <?php if (\App\Support\Auth::can('invoices.delete') && $invoice['status'] === 'draft'): ?>
   <form method="POST" action="/faturas/<?= $invoice['id'] ?>" class="flex justify-end" onsubmit="return confirm('Remover esta fatura?')">
     <input type="hidden" name="_method" value="DELETE">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
     <button type="submit" class="text-sm text-red-400 hover:text-red-300 transition-colors">Remover fatura</button>
   </form>
   <?php endif; ?>

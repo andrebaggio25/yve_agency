@@ -8,7 +8,7 @@
 </div>
 
 <form method="POST" action="/admin/assinaturas/<?= $agency['id'] ?>" class="max-w-xl card p-6 space-y-5">
-  <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+  <?= csrf_field() ?>
 
   <div>
     <label class="label-field">Plano <span class="text-red-400">*</span></label>

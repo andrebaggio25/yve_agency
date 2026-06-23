@@ -13,7 +13,7 @@
   <form method="POST" action="/trafego/acoes"
         class="card p-6 space-y-5"
         x-data="actionForm()" x-init="init()">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
 
     <div>
       <label class="label-field">Conta de anúncios *</label>

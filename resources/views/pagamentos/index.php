@@ -49,7 +49,7 @@ $methodLabels = ['pix'=>'PIX','boleto'=>'Boleto','credit_card'=>'Cartão de Cré
             <?php if (\App\Support\Auth::can('payments.delete')): ?>
             <form method="POST" action="/pagamentos/<?= $p['id'] ?>" class="opacity-0 group-hover:opacity-100 transition-opacity" onsubmit="return confirm('Remover este pagamento?')">
               <input type="hidden" name="_method" value="DELETE">
-              <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+              <?= csrf_field() ?>
               <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors">Remover</button>
             </form>
             <?php endif; ?>

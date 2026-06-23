@@ -39,6 +39,8 @@
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <style>
+      /* Esconde elementos com x-cloak até o Alpine inicializar (evita flash) */
+      [x-cloak] { display: none !important; }
       /* Dark base */
       * { -webkit-font-smoothing: antialiased; }
       html { background: #09090f; }
@@ -285,8 +287,9 @@
     $flashSuccess = flash('success');
     $flashError   = flash('error');
     $flashInfo    = flash('info');
+    $flashErrors  = flash('errors');
     ?>
-    <?php if ($flashSuccess || $flashError || $flashInfo): ?>
+    <?php if ($flashSuccess || $flashError || $flashInfo || (is_array($flashErrors) && $flashErrors)): ?>
     <div class="px-4 sm:px-6 pt-4 space-y-2">
       <?php if ($flashSuccess): ?>
       <div x-data="{show:true}" x-show="show" x-transition
@@ -314,6 +317,20 @@
         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <?= e($flashInfo) ?>
         <button @click="show=false" class="ml-auto text-blue-400 hover:text-blue-200 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <?php endif; ?>
+      <?php if (is_array($flashErrors) && $flashErrors): ?>
+      <div x-data="{show:true}" x-show="show" x-transition
+           class="flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <ul class="flex-1 list-disc list-inside space-y-1">
+          <?php foreach ($flashErrors as $msg): ?>
+          <li><?= e((string) $msg) ?></li>
+          <?php endforeach; ?>
+        </ul>
+        <button @click="show=false" class="text-rose-400 hover:text-rose-200 transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
@@ -396,5 +413,6 @@ function notifBell() {
   };
 }
 </script>
+<?= view_partial('form_loading') ?>
 </body>
 </html>

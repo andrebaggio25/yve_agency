@@ -15,7 +15,7 @@
   </div>
 
   <form method="POST" action="/trafego/contas/oauth/salvar" class="card p-6 space-y-5">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
 
     <div>
       <label class="label-field">Conta de anúncios *</label>

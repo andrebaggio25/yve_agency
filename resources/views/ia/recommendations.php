@@ -44,7 +44,7 @@
 <?php else: ?>
 
 <form method="POST" action="/ia/recomendacoes/salvar">
-  <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+  <?= csrf_field() ?>
   <input type="hidden" name="account_id" value="<?= $accountId ?>">
 
   <div class="flex items-center justify-between mb-4">

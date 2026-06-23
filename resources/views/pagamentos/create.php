@@ -21,7 +21,7 @@
   </div>
 
   <form method="POST" action="/pagamentos" class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-6">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
     <input type="hidden" name="invoice_id" value="<?= $invoice ? $invoice['id'] : '' ?>">
 
     <div class="grid sm:grid-cols-2 gap-6">

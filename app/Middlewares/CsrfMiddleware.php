@@ -39,8 +39,10 @@ class CsrfMiddleware implements Middleware
             return Response::view('errors.419', [], 419);
         }
 
-        // Rotate token after use
-        unset($_SESSION['csrf_token']);
+        // Token estável por sessão (padrão Laravel/Rails). NÃO rotacionamos por
+        // request: rotacionar a cada POST quebra múltiplas abas e AJAX após POST
+        // (o token no <meta> fica obsoleto → 419 falso). A proteção CSRF não exige
+        // rotação por request; o segredo só é válido enquanto a sessão existir.
 
         return $next($request);
     }

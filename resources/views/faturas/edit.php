@@ -11,7 +11,7 @@
 
   <form method="POST" action="/faturas/<?= $invoice['id'] ?>" x-data="invoiceEditForm()" class="space-y-6">
     <input type="hidden" name="_method" value="PUT">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
 
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-6">
       <h2 class="font-semibold text-white border-b border-white/5 pb-3">Dados</h2>

@@ -19,7 +19,7 @@
   </div>
 
   <form method="POST" action="/organico/conectar" class="card p-6 space-y-5">
-    <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+    <?= csrf_field() ?>
 
     <div>
       <label class="label-field">Plataforma *</label>

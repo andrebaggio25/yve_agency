@@ -7,8 +7,6 @@
     <p class="mt-1 text-sm text-gray-400">Conecte o Drive da agência para que os clientes enviem conteúdos direto pelas pastas certas — sem precisar de conta Google.</p>
   </div>
 
-  <?php flash_messages(); ?>
-
   <?php $connected = !empty($integration) && ($integration['status'] ?? '') === 'active'; ?>
 
   <?php if (!$configured): ?>
