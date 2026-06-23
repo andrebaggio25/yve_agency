@@ -58,17 +58,25 @@ class AiInsightController extends Controller
 
     // ---------------------------------------------------------------- generate
 
+    private const AI_NOT_CONFIGURED = 'A IA ainda não foi configurada. Peça ao administrador da plataforma para definir o provedor e a chave de API em Configurações do Admin.';
+
     public function generateForm(Request $request): Response
     {
         Auth::requirePermission('ai_insights.view');
-        $accounts = $this->accountRepo->listByAgency(Auth::agencyId());
-        return $this->view('ia.generate', compact('accounts'));
+        $accounts     = $this->accountRepo->listByAgency(Auth::agencyId());
+        $aiConfigured = $this->aiService->isConfigured();
+        return $this->view('ia.generate', compact('accounts', 'aiConfigured'));
     }
 
     public function generate(Request $request): Response
     {
         Auth::requirePermission('ai_insights.view');
         $agencyId  = Auth::agencyId();
+
+        if (!$this->aiService->isConfigured()) {
+            $this->withError(self::AI_NOT_CONFIGURED);
+            return $this->redirect('/ia/gerar');
+        }
 
         $accountId = (int) $request->post('ad_account_id', 0);
         $since     = $request->post('since', date('Y-m-d', strtotime('-30 days')));
@@ -110,10 +118,14 @@ class AiInsightController extends Controller
 
         if ($accountId) {
             $account = $this->accountRepo->findByIdAndAgency($accountId, $agencyId);
-            try {
-                $suggestions = $this->aiService->recommendActions($accountId, $since, $until);
-            } catch (\Throwable $e) {
-                $this->withError('Erro ao gerar recomendações: ' . $e->getMessage());
+            if (!$this->aiService->isConfigured()) {
+                $this->withError(self::AI_NOT_CONFIGURED);
+            } else {
+                try {
+                    $suggestions = $this->aiService->recommendActions($accountId, $since, $until);
+                } catch (\Throwable $e) {
+                    $this->withError('Erro ao gerar recomendações: ' . $e->getMessage());
+                }
             }
         }
 

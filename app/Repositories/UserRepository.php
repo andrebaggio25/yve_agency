@@ -13,7 +13,10 @@ class UserRepository extends Repository
     public function findByEmail(string $email): ?array
     {
         return $this->first(
-            'SELECT * FROM users WHERE email = :email LIMIT 1',
+            'SELECT u.*, a.language AS agency_language
+             FROM users u
+             LEFT JOIN agencies a ON a.id = u.agency_id
+             WHERE u.email = :email LIMIT 1',
             [':email' => strtolower($email)],
         );
     }

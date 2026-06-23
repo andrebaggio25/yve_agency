@@ -72,6 +72,9 @@ class SettingsController extends Controller
             ':id'         => $agencyId,
         ]);
 
+        // Aplica o idioma imediatamente na sessão (antes derivava do user, que não tem a coluna)
+        $_SESSION['locale'] = \App\Core\Lang::normalize(trim((string) $request->post('language', 'pt')));
+
         $this->withSuccess('Configurações salvas.');
         return $this->redirect('/configuracoes');
     }
