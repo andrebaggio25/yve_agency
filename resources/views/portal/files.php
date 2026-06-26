@@ -191,6 +191,27 @@ $jsI18n = [
     </template>
   </div>
 
+  <!-- Confirmação de exclusão (modal nativo do app) -->
+  <div x-show="confirmBox.open" x-transition.opacity @keydown.escape.window="confirmCancel()"
+       @click.self="confirmCancel()"
+       class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(0,0,0,.7); display:none">
+    <div class="w-full max-w-sm rounded-2xl bg-[#1d1d29] border border-white/10 shadow-xl p-5">
+      <div class="flex items-start gap-3 mb-5">
+        <span class="w-9 h-9 rounded-full bg-rose-500/15 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </span>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold text-white mb-1"><?= t('portal.files.confirm_title') ?></p>
+          <p class="text-sm text-gray-400 break-words" x-text="confirmBox.message"></p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button @click="confirmCancel()" class="btn-secondary text-sm px-4 py-2"><?= t('portal.files.cancel') ?></button>
+        <button @click="confirmYes()" class="text-sm px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium"><?= t('portal.files.delete') ?></button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast de exclusão com Desfazer -->
   <div x-show="toast.show" x-transition.opacity
        class="fixed left-1/2 -translate-x-1/2 bottom-20 sm:bottom-6 z-50 w-[calc(100%-2rem)] max-w-md"
@@ -258,6 +279,8 @@ function driveManager(token, i18n, maxBytes) {
     preview: { open: false, file: null },
     toast: { show: false, msg: '', restore: null, busy: false },
     _toastTimer: null,
+    confirmBox: { open: false, message: '' },
+    _confirmAction: null,
 
     base() { return `/portal/${token}`; },
     rawUrl(file) { return `${this.base()}/drive/file/${file.id}/raw`; },
@@ -322,8 +345,11 @@ function driveManager(token, i18n, maxBytes) {
       this.savingFolder = false;
     },
 
-    async deleteFile(file) {
-      if (!confirm(this.i18n.confirm_delete_file.replace(':name', file.name))) return;
+    deleteFile(file) {
+      this.askConfirm(this.i18n.confirm_delete_file.replace(':name', file.name), () => this.doDeleteFile(file));
+    },
+
+    async doDeleteFile(file) {
       try {
         const r = await fetch(`${this.base()}/drive/file/${file.id}/delete`, {
           method: 'POST',
@@ -340,8 +366,11 @@ function driveManager(token, i18n, maxBytes) {
       } catch (e) { alert(this.i18n.err_conn); }
     },
 
-    async deleteFolder(folder) {
-      if (!confirm(this.i18n.confirm_delete_folder.replace(':name', folder.name))) return;
+    deleteFolder(folder) {
+      this.askConfirm(this.i18n.confirm_delete_folder.replace(':name', folder.name), () => this.doDeleteFolder(folder));
+    },
+
+    async doDeleteFolder(folder) {
       try {
         const r = await fetch(`${this.base()}/drive/folder/${folder.id}/delete`, {
           method: 'POST',
@@ -355,6 +384,22 @@ function driveManager(token, i18n, maxBytes) {
           alert(d.error || this.i18n.delete_failed);
         }
       } catch (e) { alert(this.i18n.err_conn); }
+    },
+
+    // Confirmação nativa do app (substitui o confirm() do navegador).
+    askConfirm(message, action) {
+      this._confirmAction = action;
+      this.confirmBox = { open: true, message };
+    },
+    confirmCancel() {
+      this._confirmAction = null;
+      this.confirmBox.open = false;
+    },
+    async confirmYes() {
+      const action = this._confirmAction;
+      this._confirmAction = null;
+      this.confirmBox.open = false;
+      if (action) await action();
     },
 
     showToast(msg, restore) {
