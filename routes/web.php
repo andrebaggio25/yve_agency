@@ -497,5 +497,7 @@ $router->group([PortalMiddleware::class], function ($router) {
     $router->get('/portal/{portal_token}/drive/folders',               [PortalController::class, 'driveFolders']);
     $router->post('/portal/{portal_token}/drive/folders',              [PortalController::class, 'driveCreateFolder']);
     $router->post('/portal/{portal_token}/drive/upload',               [PortalController::class, 'driveUpload']);
+    $router->post('/portal/{portal_token}/drive/file/{fileId}/delete', [PortalController::class, 'driveDeleteFile']);
+    $router->post('/portal/{portal_token}/drive/folder/{folderId}/delete', [PortalController::class, 'driveDeleteFolder']);
     $router->get('/portal/{portal_token}/drive/file/{fileId}/raw',     [PortalController::class, 'driveFileRaw']);
 });

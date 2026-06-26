@@ -1,8 +1,15 @@
-<?php view_layout('portal'); view_start('title'); ?>Faturas<?php view_end(); ?>
+<?php view_layout('portal'); view_start('title'); ?><?= t('portal.invoices.title') ?><?php view_end(); ?>
 <?php view_start('content'); ?>
 
 <?php
-$statusLabels = ['draft' => 'Rascunho', 'sent' => 'Em aberto', 'paid' => 'Paga', 'overdue' => 'Vencida', 'cancelled' => 'Cancelada', 'partial' => 'Parcial'];
+$statusLabels = [
+  'draft'     => t('portal.vstatus.draft'),
+  'sent'      => t('portal.vstatus.sent'),
+  'paid'      => t('portal.vstatus.paid'),
+  'overdue'   => t('portal.vstatus.overdue'),
+  'cancelled' => t('portal.vstatus.cancelled'),
+  'partial'   => t('portal.vstatus.partial'),
+];
 $statusColors = [
   'draft'     => 'text-gray-400 bg-gray-500/10',
   'sent'      => 'text-blue-300 bg-blue-500/10',
@@ -14,22 +21,22 @@ $statusColors = [
 ?>
 
 <div class="mb-6">
-  <h1 class="text-xl font-semibold text-white">Faturas</h1>
-  <p class="text-sm text-gray-400 mt-0.5"><?= count($invoices) ?> fatura<?= count($invoices) !== 1 ? 's' : '' ?></p>
+  <h1 class="text-xl font-semibold text-white"><?= t('portal.invoices.title') ?></h1>
+  <p class="text-sm text-gray-400 mt-0.5"><?= t(count($invoices) === 1 ? 'portal.invoices.count' : 'portal.invoices.count_plural', ['n' => count($invoices)]) ?></p>
 </div>
 
 <?php if (empty($invoices)): ?>
-<div class="card p-12 text-center text-gray-500">Nenhuma fatura disponível.</div>
+<div class="card p-12 text-center text-gray-500"><?= t('portal.invoices.empty') ?></div>
 <?php else: ?>
 <div class="card overflow-hidden">
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-white/[0.06]">
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Fatura</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">Emissão</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">Vencimento</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Valor</th>
-        <th class="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide"><?= t('portal.invoices.col_invoice') ?></th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell"><?= t('portal.invoices.col_issue') ?></th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell"><?= t('portal.invoices.col_due') ?></th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide"><?= t('portal.invoices.col_amount') ?></th>
+        <th class="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide"><?= t('portal.invoices.col_status') ?></th>
       </tr>
     </thead>
     <tbody class="divide-y divide-white/[0.04]">

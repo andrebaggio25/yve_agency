@@ -1,8 +1,13 @@
-<?php view_layout('portal'); view_start('title'); ?>Contratos<?php view_end(); ?>
+<?php view_layout('portal'); view_start('title'); ?><?= t('portal.contracts.title') ?><?php view_end(); ?>
 <?php view_start('content'); ?>
 
 <?php
-$statusLabels = ['draft' => 'Rascunho', 'active' => 'Ativo', 'expired' => 'Expirado', 'cancelled' => 'Cancelado'];
+$statusLabels = [
+  'draft'     => t('portal.cstatus.draft'),
+  'active'    => t('portal.cstatus.active'),
+  'expired'   => t('portal.cstatus.expired'),
+  'cancelled' => t('portal.cstatus.cancelled'),
+];
 $statusColors = [
   'draft'     => 'text-gray-400 bg-gray-500/10',
   'active'    => 'text-green-300 bg-green-500/10',
@@ -12,12 +17,12 @@ $statusColors = [
 ?>
 
 <div class="mb-6">
-  <h1 class="text-xl font-semibold text-white">Contratos</h1>
-  <p class="text-sm text-gray-400 mt-0.5"><?= count($contracts) ?> contrato<?= count($contracts) !== 1 ? 's' : '' ?></p>
+  <h1 class="text-xl font-semibold text-white"><?= t('portal.contracts.title') ?></h1>
+  <p class="text-sm text-gray-400 mt-0.5"><?= t(count($contracts) === 1 ? 'portal.contracts.count' : 'portal.contracts.count_plural', ['n' => count($contracts)]) ?></p>
 </div>
 
 <?php if (empty($contracts)): ?>
-<div class="card p-12 text-center text-gray-500">Nenhum contrato disponível.</div>
+<div class="card p-12 text-center text-gray-500"><?= t('portal.contracts.empty') ?></div>
 <?php else: ?>
 <div class="space-y-3">
   <?php foreach ($contracts as $ct): ?>
@@ -26,13 +31,13 @@ $statusColors = [
       <p class="font-medium text-white mb-1"><?= e($ct['title']) ?></p>
       <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
         <?php if ($ct['start_date'] ?? null): ?>
-        <span>Início: <?= date('d/m/Y', strtotime($ct['start_date'])) ?></span>
+        <span><?= t('portal.contracts.start') ?>: <?= date('d/m/Y', strtotime($ct['start_date'])) ?></span>
         <?php endif; ?>
         <?php if ($ct['end_date'] ?? null): ?>
-        <span>Fim: <?= date('d/m/Y', strtotime($ct['end_date'])) ?></span>
+        <span><?= t('portal.contracts.end') ?>: <?= date('d/m/Y', strtotime($ct['end_date'])) ?></span>
         <?php endif; ?>
         <?php if ($ct['value'] ?? null): ?>
-        <span class="font-semibold text-white">R$ <?= number_format((float)$ct['value'], 2, ',', '.') ?>/mês</span>
+        <span class="font-semibold text-white">R$ <?= number_format((float)$ct['value'], 2, ',', '.') ?><?= t('portal.contracts.per_month') ?></span>
         <?php endif; ?>
       </div>
     </div>
