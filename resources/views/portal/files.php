@@ -26,6 +26,11 @@ $jsI18n = [
   'err_invalid_response' => t('portal.files.err_invalid_response'),
   'create_failed'        => t('portal.files.create_failed'),
   'delete_failed'        => t('portal.files.delete_failed'),
+  'deleted_file'         => t('portal.files.deleted_file'),
+  'deleted_folder'       => t('portal.files.deleted_folder'),
+  'undo'                 => t('portal.files.undo'),
+  'restored'             => t('portal.files.restored'),
+  'restore_failed'       => t('portal.files.restore_failed'),
   'eta_seconds'          => t('portal.files.eta_seconds'),
   'eta_minutes'          => t('portal.files.eta_minutes'),
   'max_label'            => $maxLabel,
@@ -186,6 +191,22 @@ $jsI18n = [
     </template>
   </div>
 
+  <!-- Toast de exclusão com Desfazer -->
+  <div x-show="toast.show" x-transition.opacity
+       class="fixed left-1/2 -translate-x-1/2 bottom-20 sm:bottom-6 z-50 w-[calc(100%-2rem)] max-w-md"
+       style="display:none">
+    <div class="flex items-center gap-3 rounded-xl bg-[#1d1d29] border border-white/10 shadow-lg px-4 py-3">
+      <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      <span class="text-sm text-gray-200 flex-1 truncate" x-text="toast.msg"></span>
+      <button x-show="toast.restore" @click="undoDelete()" :disabled="toast.busy"
+              class="text-sm font-semibold text-violet-300 hover:text-violet-200 disabled:opacity-50 flex-shrink-0"
+              x-text="i18n.undo"></button>
+      <button @click="hideToast()" class="text-gray-500 hover:text-white flex-shrink-0" title="">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
   <!-- Lightbox de preview -->
   <div x-show="preview.open" x-transition.opacity @keydown.escape.window="closePreview()"
        @click.self="closePreview()"
@@ -235,6 +256,8 @@ function driveManager(token, i18n, maxBytes) {
     newFolderName: '',
     savingFolder: false,
     preview: { open: false, file: null },
+    toast: { show: false, msg: '', restore: null, busy: false },
+    _toastTimer: null,
 
     base() { return `/portal/${token}`; },
     rawUrl(file) { return `${this.base()}/drive/file/${file.id}/raw`; },
@@ -309,6 +332,8 @@ function driveManager(token, i18n, maxBytes) {
         const d = await r.json();
         if (d.success) {
           this.files = this.files.filter(f => f.id !== file.id);
+          // Toast com "Desfazer" (o arquivo foi pra lixeira do Drive).
+          this.showToast(this.i18n.deleted_file, d.restore || null);
         } else {
           alert(d.error || this.i18n.delete_failed);
         }
@@ -325,10 +350,45 @@ function driveManager(token, i18n, maxBytes) {
         const d = await r.json();
         if (d.success) {
           this.folders = this.folders.filter(f => f.id !== folder.id);
+          this.showToast(this.i18n.deleted_folder, null);
         } else {
           alert(d.error || this.i18n.delete_failed);
         }
       } catch (e) { alert(this.i18n.err_conn); }
+    },
+
+    showToast(msg, restore) {
+      if (this._toastTimer) clearTimeout(this._toastTimer);
+      this.toast = { show: true, msg, restore, busy: false };
+      this._toastTimer = setTimeout(() => { this.toast.show = false; }, 8000);
+    },
+
+    hideToast() {
+      if (this._toastTimer) clearTimeout(this._toastTimer);
+      this.toast.show = false;
+    },
+
+    async undoDelete() {
+      const r = this.toast.restore;
+      if (!r || this.toast.busy) return;
+      this.toast.busy = true;
+      try {
+        const resp = await fetch(`${this.base()}/drive/file/restore`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify(r),
+        });
+        const d = await resp.json();
+        if (d.success) {
+          // Reaparece na lista se ainda estamos na mesma pasta de origem.
+          const sameFolder = (r.folder_id ?? null) === (this.folderId ?? null);
+          if (sameFolder && d.file) this.files.unshift(d.file);
+          this.showToast(this.i18n.restored, null);
+        } else {
+          alert(d.error || this.i18n.restore_failed);
+          this.toast.busy = false;
+        }
+      } catch (e) { alert(this.i18n.err_conn); this.toast.busy = false; }
     },
 
     onFiles(fileList) {

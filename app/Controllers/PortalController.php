@@ -446,7 +446,72 @@ class PortalController extends Controller
         }
 
         $this->fileRepo->deleteForClient($fileId, $clientId);
-        return Response::json(['success' => true]);
+
+        // Dados para o "Desfazer" instantâneo no portal (o arquivo está na lixeira).
+        return Response::json([
+            'success' => true,
+            'restore' => [
+                'drive_file_id'  => $row['drive_file_id'],
+                'name'           => $row['name'],
+                'mime_type'      => $row['mime_type'] ?? null,
+                'size_bytes'     => (int) ($row['size_bytes'] ?? 0),
+                'thumbnail_link' => $row['thumbnail_link'] ?? null,
+                'web_view_link'  => $row['web_view_link'] ?? null,
+                'folder_id'      => $row['folder_id'] !== null ? (int) $row['folder_id'] : null,
+            ],
+        ]);
+    }
+
+    /** Desfaz a exclusão de um arquivo: restaura da lixeira do Drive e recria o registro. */
+    public function driveRestoreFile(Request $request): Response
+    {
+        $client   = PortalAuth::client();
+        $clientId = (int) $client['id'];
+        $agencyId = (int) $client['agency_id'];
+
+        $driveFileId = trim((string) $request->input('drive_file_id', ''));
+        if ($driveFileId === '') {
+            return Response::json(['error' => t('portal.files.not_found')], 422);
+        }
+
+        $folderId = $request->input('folder_id', null);
+        $folderId = ($folderId === null || $folderId === '') ? null : (int) $folderId;
+        if ($folderId !== null && !$this->folderRepo->findForClient($folderId, $clientId)) {
+            $folderId = null; // pasta original já não existe → restaura na raiz
+        }
+
+        try {
+            $this->driveApi->restore($agencyId, $driveFileId);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => t('portal.files.restore_failed') . ': ' . $e->getMessage()], 500);
+        }
+
+        $name = trim((string) $request->input('name', 'arquivo')) ?: 'arquivo';
+        $id = $this->fileRepo->create([
+            'agency_id'      => $agencyId,
+            'client_id'      => $clientId,
+            'folder_id'      => $folderId,
+            'drive_file_id'  => $driveFileId,
+            'name'           => $name,
+            'mime_type'      => $request->input('mime_type') ?: null,
+            'size_bytes'     => ((int) $request->input('size_bytes', 0)) ?: null,
+            'thumbnail_link' => $request->input('thumbnail_link') ?: null,
+            'web_view_link'  => $request->input('web_view_link') ?: null,
+            'uploaded_via'   => 'portal',
+        ]);
+
+        return Response::json([
+            'success' => true,
+            'file'    => $this->filePayload([
+                'id'             => $id,
+                'name'           => $name,
+                'mime_type'      => $request->input('mime_type'),
+                'size_bytes'     => (int) $request->input('size_bytes', 0),
+                'thumbnail_link' => $request->input('thumbnail_link'),
+                'web_view_link'  => $request->input('web_view_link'),
+                'drive_file_id'  => $driveFileId,
+            ]),
+        ]);
     }
 
     /** Exclui uma pasta e todo o conteúdo (Drive apaga em cascata; banco limpo recursivamente). */

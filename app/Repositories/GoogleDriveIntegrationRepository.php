@@ -62,6 +62,29 @@ class GoogleDriveIntegrationRepository extends Repository
         ")->execute([':t' => Secret::encrypt($accessToken), ':e' => $expiresAt, ':a' => $agencyId]);
     }
 
+    /**
+     * Atualiza access token e, se o Google rotacionou o refresh token (raro mas
+     * possível), persiste o novo também — evita perder a conexão silenciosamente.
+     */
+    public function updateTokens(int $agencyId, string $accessToken, ?string $refreshToken, ?string $expiresAt): void
+    {
+        if ($refreshToken !== null && $refreshToken !== '') {
+            $this->pdo->prepare("
+                UPDATE google_drive_integrations
+                SET access_token = :t, refresh_token = :r, token_expires_at = :e, updated_at = NOW()
+                WHERE agency_id = :a
+            ")->execute([
+                ':t' => Secret::encrypt($accessToken),
+                ':r' => Secret::encrypt($refreshToken),
+                ':e' => $expiresAt,
+                ':a' => $agencyId,
+            ]);
+            return;
+        }
+
+        $this->updateAccessToken($agencyId, $accessToken, $expiresAt);
+    }
+
     public function setRootFolder(int $agencyId, string $folderId): void
     {
         $this->pdo->prepare(
