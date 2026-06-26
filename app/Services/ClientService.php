@@ -159,6 +159,14 @@ class ClientService
         }
     }
 
+    /** Remove o vínculo da pasta do Drive (usado no "recriar pasta"). */
+    public function clearDriveFolder(int $clientId, int $agencyId): void
+    {
+        $client = $this->findById($clientId, $agencyId);
+        if (!$client) return;
+        $this->clientRepo->updateById($clientId, ['drive_folder_id' => null, 'updated_at' => date('Y-m-d H:i:s')]);
+    }
+
     public function delete(int $clientId, int $agencyId): void
     {
         $client = $this->findById($clientId, $agencyId);

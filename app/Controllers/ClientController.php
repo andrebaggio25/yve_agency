@@ -10,14 +10,16 @@ use App\Core\Response;
 use App\Services\ClientService;
 use App\Services\BillingService;
 use App\Services\AutomationService;
+use App\Services\GoogleDriveApiService;
 use App\Support\Auth;
 
 class ClientController extends Controller
 {
     public function __construct(
-        private readonly ClientService     $clientService,
-        private readonly BillingService    $billing,
-        private readonly AutomationService $automations,
+        private readonly ClientService        $clientService,
+        private readonly BillingService       $billing,
+        private readonly AutomationService    $automations,
+        private readonly GoogleDriveApiService $driveApi,
     ) {}
 
     public function index(Request $request): Response
@@ -97,7 +99,17 @@ class ClientController extends Controller
         $financial  = $this->clientService->getFinancialProfile($clientId);
         $integrations = $this->clientService->getIntegrations($clientId);
 
-        return $this->view('clients.show', compact('client', 'contacts', 'marketing', 'financial', 'integrations'));
+        $driveConnected = $this->driveApi->isConnected((int) Auth::agencyId());
+        $driveFolderOk  = false;
+        if ($driveConnected && !empty($client['drive_folder_id'])) {
+            try {
+                $driveFolderOk = $this->driveApi->exists((int) Auth::agencyId(), (string) $client['drive_folder_id']);
+            } catch (\Throwable) {
+                $driveFolderOk = false;
+            }
+        }
+
+        return $this->view('clients.show', compact('client', 'contacts', 'marketing', 'financial', 'integrations', 'driveConnected', 'driveFolderOk'));
     }
 
     public function edit(Request $request): Response
@@ -167,6 +179,38 @@ class ClientController extends Controller
 
         $this->withSuccess('Cliente removido.');
         return $this->redirect('/clientes');
+    }
+
+    /** Cria (ou recria/re-vincula) a pasta do cliente no Google Drive. */
+    public function createDriveFolder(Request $request): Response
+    {
+        Auth::requirePermission('clients.edit');
+
+        $clientId = (int) $request->param('clientId');
+        $agencyId = (int) Auth::agencyId();
+        $client   = $this->clientService->findById($clientId, $agencyId);
+        if (!$client) {
+            return $this->view('errors.404', [], 404);
+        }
+
+        if (!$this->driveApi->isConnected($agencyId)) {
+            $this->withError('Conecte o Google Drive primeiro (em Integrações).');
+            return $this->redirect("/clientes/{$clientId}");
+        }
+
+        try {
+            // "Recriar": limpa o vínculo e deixa o ensureClientFolder re-vincular ou criar.
+            if ($request->post('force') && !empty($client['drive_folder_id'])) {
+                $this->clientService->clearDriveFolder($clientId, $agencyId);
+                $client['drive_folder_id'] = null;
+            }
+            $this->driveApi->ensureClientFolder($client, $agencyId);
+            $this->withSuccess('Pasta do cliente pronta no Google Drive.');
+        } catch (\Throwable $e) {
+            $this->withError('Falha ao criar a pasta: ' . $e->getMessage());
+        }
+
+        return $this->redirect("/clientes/{$clientId}");
     }
 
     public function accessIndex(Request $request): Response

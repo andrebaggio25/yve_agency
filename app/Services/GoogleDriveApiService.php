@@ -90,6 +90,13 @@ class GoogleDriveApiService
 
         $email = $this->fetchEmail($token['access_token']);
 
+        // Estado anterior (antes do upsert sobrescrever) — detecta troca de conta
+        // e permite REAPROVEITAR a raiz existente em vez de duplicar a cada reconexão.
+        $prev      = $this->integrationRepo->findByAgency($agencyId);
+        $prevEmail = $prev['connected_email'] ?? null;
+        $prevRoot  = $prev['root_folder_id']  ?? null;
+        $accountChanged = $prevEmail !== null && $prevEmail !== '' && $email !== null && $prevEmail !== $email;
+
         $this->integrationRepo->upsert($agencyId, [
             'access_token'     => $token['access_token'],
             'refresh_token'    => $token['refresh_token'],
@@ -97,11 +104,72 @@ class GoogleDriveApiService
             'connected_email'  => $email,
         ]);
 
-        // Cria (ou reaproveita) a pasta raiz no Drive da agência.
-        $rootId = $this->createFolderRaw($token['access_token'], self::ROOT_NAME, null);
+        // Conta diferente => a raiz antiga é de outra conta (inacessível); ignora-a.
+        [$rootId, $reused] = $this->resolveRootFolder($token['access_token'], $accountChanged ? null : $prevRoot);
         $this->integrationRepo->setRootFolder($agencyId, $rootId);
 
-        return ['root_folder_id' => $rootId, 'email' => $email];
+        return [
+            'root_folder_id'  => $rootId,
+            'email'           => $email,
+            'reused'          => $reused,
+            'account_changed' => $accountChanged,
+            'previous_email'  => $prevEmail,
+        ];
+    }
+
+    /**
+     * Resolve a pasta raiz reaproveitando o máximo possível (evita duplicatas):
+     * 1) reusa a raiz salva se ainda acessível; 2) procura uma pasta com o nome
+     * padrão no Drive; 3) só então cria uma nova. Retorna [folderId, reused].
+     *
+     * @return array{0:string,1:bool}
+     */
+    private function resolveRootFolder(string $accessToken, ?string $candidateRoot): array
+    {
+        if ($candidateRoot && $this->folderAccessible($accessToken, $candidateRoot)) {
+            return [$candidateRoot, true];
+        }
+        $found = $this->findFolderByName($accessToken, self::ROOT_NAME, null);
+        if ($found !== null) {
+            return [$found, true];
+        }
+        return [$this->createFolderRaw($accessToken, self::ROOT_NAME, null), false];
+    }
+
+    /** True se o arquivo/pasta existe e não está na lixeira (acessível pela conta atual). */
+    private function folderAccessible(string $accessToken, string $fileId): bool
+    {
+        $resp = (new Client(['timeout' => 15, 'http_errors' => false]))->get(
+            "https://www.googleapis.com/drive/v3/files/{$fileId}",
+            ['headers' => ['Authorization' => 'Bearer ' . $accessToken], 'query' => ['fields' => 'id,trashed']]
+        );
+        if ($resp->getStatusCode() !== 200) {
+            return false;
+        }
+        $data = json_decode((string) $resp->getBody(), true) ?? [];
+        return empty($data['trashed']);
+    }
+
+    /** Procura uma pasta pelo nome (fora da lixeira) sob $parentId (ou em qualquer lugar). Retorna ID ou null. */
+    private function findFolderByName(string $accessToken, string $name, ?string $parentId): ?string
+    {
+        $escaped = str_replace("'", "\\'", $name);
+        $q = "name = '{$escaped}' and mimeType = '" . self::FOLDER_MIME . "' and trashed = false";
+        if ($parentId !== null) {
+            $q .= " and '{$parentId}' in parents";
+        }
+        $resp = (new Client(['timeout' => 20, 'http_errors' => false]))->get(
+            'https://www.googleapis.com/drive/v3/files',
+            [
+                'headers' => ['Authorization' => 'Bearer ' . $accessToken],
+                'query'   => ['q' => $q, 'fields' => 'files(id,name)', 'pageSize' => 1, 'spaces' => 'drive'],
+            ]
+        );
+        if ($resp->getStatusCode() !== 200) {
+            return null;
+        }
+        $data = json_decode((string) $resp->getBody(), true) ?? [];
+        return $data['files'][0]['id'] ?? null;
     }
 
     /** Devolve um access token válido, renovando via refresh_token se expirado. */
@@ -172,7 +240,12 @@ class GoogleDriveApiService
             throw new RuntimeException('Pasta raiz do Drive não configurada. Reconecte a integração.');
         }
 
-        $folderId = $this->createFolder($agencyId, (string) ($client['name'] ?? 'Cliente'), $rootId);
+        $token = $this->accessToken($agencyId);
+        $name  = (string) ($client['name'] ?? 'Cliente');
+        // Reaproveita pasta existente com o mesmo nome sob a raiz (evita duplicar).
+        $folderId = $this->findFolderByName($token, $name, $rootId)
+            ?? $this->createFolderRaw($token, $name, $rootId);
+
         $this->clientRepo->updateById((int) $client['id'], ['drive_folder_id' => $folderId]);
 
         return $folderId;

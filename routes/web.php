@@ -291,6 +291,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/clientes/{clientId}/editar', [ClientController::class, 'edit'], [ClientAccessMiddleware::class]);
     $router->put('/clientes/{clientId}',    [ClientController::class, 'update'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->delete('/clientes/{clientId}', [ClientController::class, 'destroy'],[CsrfMiddleware::class]);
+    $router->post('/clientes/{clientId}/drive/pasta', [ClientController::class, 'createDriveFolder'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
 
     // Conteúdos enviados pelo cliente (Drive) — galeria lado agência
     $router->get('/clientes/{clientId}/conteudos',                  [ClientFilesController::class, 'index'],   [ClientAccessMiddleware::class]);

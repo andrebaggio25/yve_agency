@@ -65,7 +65,17 @@ class GoogleDriveController extends Controller
 
         try {
             $result = $this->drive->exchangeCode((int) Auth::agencyId(), $code);
-            $this->withSuccess('Google Drive conectado' . ($result['email'] ? " ({$result['email']})" : '') . '! Pasta raiz criada.');
+            $email  = $result['email'] ? " ({$result['email']})" : '';
+            if (!empty($result['account_changed'])) {
+                $this->withError(
+                    'Conectado com uma conta diferente' . $email . '. As pastas da conta anterior ('
+                    . ($result['previous_email'] ?? '—') . ') ficaram inacessíveis; o sistema passará a usar a nova conta.'
+                );
+            } elseif (!empty($result['reused'])) {
+                $this->withSuccess('Google Drive reconectado' . $email . ' — pasta existente reaproveitada, nada recriado.');
+            } else {
+                $this->withSuccess('Google Drive conectado' . $email . '! Pasta raiz criada.');
+            }
         } catch (\Throwable $e) {
             $this->withError('Falha ao conectar: ' . $e->getMessage());
         }

@@ -66,6 +66,45 @@
     </div>
   </div>
 
+  <!-- Pasta no Google Drive -->
+  <?php if (\App\Support\Auth::can('clients.edit')): ?>
+  <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-5 mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-center gap-3">
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-300 flex-shrink-0">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+      </span>
+      <div>
+        <p class="text-sm font-semibold text-white">Pasta no Google Drive</p>
+        <?php
+          $hasFolder = !empty($client['drive_folder_id']);
+          $folderOk  = $hasFolder && !empty($driveFolderOk);
+        ?>
+        <?php if (empty($driveConnected)): ?>
+        <p class="text-xs text-amber-400">Google Drive não conectado — conecte em Integrações.</p>
+        <?php elseif ($folderOk): ?>
+        <p class="text-xs text-emerald-400">Pasta criada ✓</p>
+        <?php elseif ($hasFolder): ?>
+        <p class="text-xs text-rose-400">Pasta não encontrada no Drive (apagada?) — recrie ao lado.</p>
+        <?php else: ?>
+        <p class="text-xs text-gray-400">Este cliente ainda não possui pasta criada.</p>
+        <?php endif; ?>
+      </div>
+    </div>
+    <?php if (!empty($driveConnected)): ?>
+    <form action="/clientes/<?= e($client['id']) ?>/drive/pasta" method="POST"
+          <?= $folderOk ? "onsubmit=\"return confirm('Recriar a pasta deste cliente no Drive? O vínculo atual será substituído.')\"" : '' ?>>
+      <?= csrf_field() ?>
+      <?php if ($hasFolder): ?>
+      <input type="hidden" name="force" value="1">
+      <button type="submit" class="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 hover:text-white hover:border-violet-500/40 transition-all">Recriar pasta</button>
+      <?php else: ?>
+      <button type="submit" class="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all">Criar pasta</button>
+      <?php endif; ?>
+    </form>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
+
   <?php if (!empty($recentPlans)): ?>
   <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
     <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500 mb-4"><?= t('content.recent_plans') ?></h2>
