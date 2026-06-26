@@ -238,9 +238,36 @@ class PortalController extends Controller
         $client = PortalAuth::client();
         $token  = PortalAuth::token();
 
-        $connected = $this->driveApi->isConnected((int) $client['agency_id']);
+        $connected     = $this->driveApi->isConnected((int) $client['agency_id']);
+        $maxUploadBytes = $this->maxUploadBytes();
 
-        return $this->view('portal.files', compact('client', 'token', 'connected'));
+        return $this->view('portal.files', compact('client', 'token', 'connected', 'maxUploadBytes'));
+    }
+
+    /** Maior arquivo que o servidor aceita por upload (min de upload_max_filesize/post_max_size). 0 = sem limite conhecido. */
+    private function maxUploadBytes(): int
+    {
+        $toBytes = static function (string $v): int {
+            $v = trim($v);
+            if ($v === '') {
+                return 0;
+            }
+            $num  = (int) $v;
+            $unit = strtolower(substr($v, -1));
+            return match ($unit) {
+                'g'     => $num * 1024 * 1024 * 1024,
+                'm'     => $num * 1024 * 1024,
+                'k'     => $num * 1024,
+                default => (int) $v,
+            };
+        };
+
+        $limits = array_filter([
+            $toBytes((string) ini_get('upload_max_filesize')),
+            $toBytes((string) ini_get('post_max_size')),
+        ], static fn (int $x): bool => $x > 0);
+
+        return $limits ? (int) min($limits) : 0;
     }
 
     /** JSON: lista subpastas + arquivos da pasta atual (folder_id opcional = raiz). */
@@ -399,6 +426,63 @@ class PortalController extends Controller
         }
     }
 
+    /** Exclui um arquivo (Drive + banco). Fallback: se já sumiu do Drive (404), remove do banco mesmo assim. */
+    public function driveDeleteFile(Request $request): Response
+    {
+        $client   = PortalAuth::client();
+        $clientId = (int) $client['id'];
+        $agencyId = (int) $client['agency_id'];
+        $fileId   = (int) $request->param('fileId');
+
+        $row = $this->fileRepo->findForClient($fileId, $clientId);
+        if (!$row) {
+            return Response::json(['error' => t('portal.files.not_found')], 404);
+        }
+
+        try {
+            $this->driveApi->delete($agencyId, (string) $row['drive_file_id']);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => t('portal.files.delete_failed') . ': ' . $e->getMessage()], 500);
+        }
+
+        $this->fileRepo->deleteForClient($fileId, $clientId);
+        return Response::json(['success' => true]);
+    }
+
+    /** Exclui uma pasta e todo o conteúdo (Drive apaga em cascata; banco limpo recursivamente). */
+    public function driveDeleteFolder(Request $request): Response
+    {
+        $client   = PortalAuth::client();
+        $clientId = (int) $client['id'];
+        $agencyId = (int) $client['agency_id'];
+        $folderId = (int) $request->param('folderId');
+
+        $folder = $this->folderRepo->findForClient($folderId, $clientId);
+        if (!$folder) {
+            return Response::json(['error' => t('portal.files.not_found')], 404);
+        }
+
+        try {
+            // No Drive, excluir a pasta remove o conteúdo junto. 404 = já sumiu (ok).
+            $this->driveApi->delete($agencyId, (string) $folder['drive_folder_id']);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => t('portal.files.delete_failed') . ': ' . $e->getMessage()], 500);
+        }
+
+        $this->purgeFolderTree($clientId, $folderId);
+        return Response::json(['success' => true]);
+    }
+
+    /** Remove do banco a pasta e todos os descendentes (subpastas + arquivos). */
+    private function purgeFolderTree(int $clientId, int $folderId): void
+    {
+        foreach ($this->folderRepo->children($clientId, $folderId) as $child) {
+            $this->purgeFolderTree($clientId, (int) $child['id']);
+        }
+        $this->fileRepo->deleteByFolder($clientId, $folderId);
+        $this->folderRepo->deleteForClient($folderId, $clientId);
+    }
+
     /** Proxy de conteúdo (preview/thumbnail) — streama o arquivo do Drive mantendo-o privado. */
     public function driveFileRaw(Request $request): Response
     {
@@ -409,17 +493,23 @@ class PortalController extends Controller
 
         $row = $this->fileRepo->findForClient($fileId, $clientId);
         if (!$row) {
-            return Response::json(['error' => 'Arquivo não encontrado'], 404);
+            return Response::json(['error' => t('portal.files.not_found')], 404);
         }
 
-        return $this->streamDriveFile($agencyId, $row['drive_file_id'], $row['mime_type'] ?? null, $request->server('HTTP_RANGE', null));
+        $resp = $this->driveApi->streamResponse($agencyId, $row['drive_file_id'], $request->server('HTTP_RANGE', null));
+
+        // Órfão: o arquivo foi apagado direto no Drive → limpa o registro e responde 404.
+        if ($resp->getStatusCode() === 404) {
+            $this->fileRepo->deleteForClient($fileId, $clientId);
+            return Response::json(['error' => t('portal.files.gone')], 404);
+        }
+
+        return $this->emitStream($resp, $row['mime_type'] ?? null);
     }
 
-    /** Streama um arquivo do Drive direto pra saída (sem bufferizar na memória). */
-    private function streamDriveFile(int $agencyId, string $driveFileId, ?string $mime, ?string $range): Response
+    /** Streama uma resposta do Drive direto pra saída (sem bufferizar na memória). */
+    private function emitStream(\Psr\Http\Message\ResponseInterface $resp, ?string $mime): Response
     {
-        $resp = $this->driveApi->streamResponse($agencyId, $driveFileId, $range);
-
         http_response_code($resp->getStatusCode());
         foreach (['Content-Type', 'Content-Length', 'Content-Range', 'Accept-Ranges'] as $h) {
             $v = $resp->getHeaderLine($h);

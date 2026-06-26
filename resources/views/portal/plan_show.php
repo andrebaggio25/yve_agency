@@ -2,7 +2,7 @@
 <?php view_start('content'); ?>
 
 <?php
-$statusLabels = ['draft' => 'Rascunho', 'pending_approval' => 'Aguardando aprovação', 'approved' => 'Aprovado', 'in_revision' => 'Em revisão', 'sent' => 'Aguardando aprovação', 'revision' => 'Em revisão', 'published' => 'Publicado'];
+$statusLabels = ['draft' => t('portal.pstatus.draft'), 'pending_approval' => t('portal.pstatus.pending_approval'), 'approved' => t('portal.pstatus.approved'), 'in_revision' => t('portal.pstatus.in_revision'), 'sent' => t('portal.pstatus.sent'), 'revision' => t('portal.pstatus.revision'), 'published' => t('portal.pstatus.published')];
 $statusColors = [
   'draft'            => 'text-gray-400 bg-gray-500/10',
   'pending_approval' => 'text-yellow-300 bg-yellow-500/10',
@@ -13,7 +13,7 @@ $statusColors = [
   'published'        => 'text-violet-300 bg-violet-500/10',
 ];
 $itemStatusColors = ['draft' => 'text-gray-400 bg-gray-500/10', 'approved' => 'text-green-300 bg-green-500/10', 'revision' => 'text-yellow-300 bg-yellow-500/10', 'rejected' => 'text-red-300 bg-red-500/10'];
-$itemStatusLabels = ['draft' => 'Pendente', 'approved' => 'Aprovado', 'revision' => 'Revisão solicitada', 'rejected' => 'Rejeitado'];
+$itemStatusLabels = ['draft' => t('portal.istatus.draft'), 'approved' => t('portal.istatus.approved'), 'revision' => t('portal.istatus.revision'), 'rejected' => t('portal.istatus.rejected')];
 $platformColors   = ['instagram' => '#E1306C', 'tiktok' => '#010101', 'youtube' => '#FF0000', 'linkedin' => '#0A66C2', 'facebook' => '#1877F2', 'pinterest' => '#E60023'];
 $videoTypes       = ['Reels / Vídeo', 'reels', 'Story'];
 $planStatus       = $plan['status'];
@@ -21,7 +21,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
 ?>
 
 <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
-  <a href="/portal/<?= $token ?>/planos" class="hover:text-gray-300">Planos</a>
+  <a href="/portal/<?= $token ?>/planos" class="hover:text-gray-300"><?= t('portal.plan.breadcrumb') ?></a>
   <span>/</span>
   <span class="text-gray-300"><?= e($plan['title']) ?></span>
 </nav>
@@ -53,21 +53,21 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
-        Aprovar plano completo
+        <?= t('portal.plan.approve_full') ?>
       </button>
     </form>
     <button @click="showRevision = !showRevision" class="btn-secondary text-sm px-4 py-2.5">
-      Solicitar revisão
+      <?= t('portal.plan.request_revision') ?>
     </button>
 
     <div x-show="showRevision" x-transition class="w-full mt-2">
       <form method="POST" action="/portal/<?= $token ?>/planos/<?= $plan['id'] ?>/revisao">
         <?= csrf_field() ?>
-        <textarea name="comment" rows="3" placeholder="Descreva o que precisa ser ajustado..."
+        <textarea name="comment" rows="3" placeholder="<?= e(t('portal.plan.revision_placeholder')) ?>"
                   class="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 resize-none"
                   style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);"></textarea>
         <div class="flex justify-end mt-2">
-          <button type="submit" class="btn-primary text-sm px-4 py-2">Enviar revisão</button>
+          <button type="submit" class="btn-primary text-sm px-4 py-2"><?= t('portal.plan.send_revision') ?></button>
         </div>
       </form>
     </div>
@@ -77,7 +77,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
 
 <!-- Posts -->
 <?php if (!empty($items)): ?>
-<h2 class="text-sm font-semibold text-gray-300 mb-3">Posts (<?= count($items) ?>)</h2>
+<h2 class="text-sm font-semibold text-gray-300 mb-3"><?= t('portal.plan.posts') ?> (<?= count($items) ?>)</h2>
 <div class="space-y-4">
   <?php foreach ($items as $idx => $item):
     $parsedDrive = $item['drive_parsed'] ?? null;
@@ -119,7 +119,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
           <?php endif; ?>
         </div>
         <?php $preview = mb_substr($item['caption'] ?? '', 0, 80); ?>
-        <p class="text-sm text-gray-300 truncate"><?= $preview ? e($preview) . (mb_strlen($item['caption'] ?? '') > 80 ? '…' : '') : 'Post sem legenda' ?></p>
+        <p class="text-sm text-gray-300 truncate"><?= $preview ? e($preview) . (mb_strlen($item['caption'] ?? '') > 80 ? '…' : '') : t('portal.plan.no_caption') ?></p>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
         <span :class="statusClass" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" x-text="statusLabel"></span>
@@ -165,9 +165,9 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
             <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span class="text-xs text-gray-400">Vídeo</span>
+            <span class="text-xs text-gray-400"><?= t('portal.plan.video') ?></span>
             <a href="<?= e($parsedDrive['original']) ?>" target="_blank" rel="noopener"
-               class="ml-auto text-xs text-violet-400 hover:text-violet-300">Abrir Drive →</a>
+               class="ml-auto text-xs text-violet-400 hover:text-violet-300"><?= t('portal.plan.open_drive') ?></a>
           </div>
           <div class="aspect-video">
             <iframe src="<?= e($parsedDrive['embed_url']) ?>"
@@ -178,7 +178,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         <a href="<?= e($parsedDrive['original']) ?>" target="_blank" rel="noopener"
            class="inline-flex items-center gap-2 text-xs text-violet-400 hover:text-violet-300">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-          Ver arquivo no Drive →
+          <?= t('portal.plan.see_file_drive') ?>
         </a>
         <?php endif; ?>
 
@@ -201,10 +201,10 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
 
         <!-- ── Feedbacks existentes ───────────────────────────────────────── -->
         <div class="pt-2 border-t border-white/[0.06]">
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Comentários</p>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2"><?= t('portal.plan.comments') ?></p>
           <div class="space-y-2">
             <template x-if="feedbacks.length === 0">
-              <p class="text-xs text-gray-600 italic">Nenhum comentário ainda.</p>
+              <p class="text-xs text-gray-600 italic"><?= t('portal.plan.no_comments') ?></p>
             </template>
             <template x-for="fb in feedbacks" :key="fb.id ?? fb.created_at">
               <div :class="feedbackBgClass(fb)"
@@ -212,7 +212,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
                 <div class="flex items-center justify-between gap-2 mb-1">
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="text-xs font-semibold text-white"
-                          x-text="fb.client_name || fb.user_name || 'Você'"></span>
+                          x-text="fb.client_name || fb.user_name || <?= e(json_encode(t('portal.plan.you'), JSON_UNESCAPED_UNICODE)) ?>"></span>
                     <span :class="feedbackTypeClass(fb)"
                           class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                           x-text="feedbackTypeLabel(fb)"></span>
@@ -234,7 +234,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         <!-- ── Deixar feedback ────────────────────────────────────────────── -->
         <?php if ($canFeedback): ?>
         <div class="pt-2 border-t border-white/[0.06]" x-show="!submitted">
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Deixar feedback</p>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3"><?= t('portal.plan.leave_feedback') ?></p>
 
           <!-- Tipo -->
           <div class="flex flex-wrap gap-2 mb-3">
@@ -243,28 +243,28 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
                     :class="selectedType === 'approved' ? 'bg-emerald-600 border-emerald-500 text-white' : 'border-white/10 text-gray-400 hover:text-white'"
                     class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              Aprovar
+              <?= t('portal.plan.fb_approve') ?>
             </button>
             <button type="button"
                     @click="selectedType = 'changes_requested'"
                     :class="selectedType === 'changes_requested' ? 'bg-amber-600 border-amber-500 text-white' : 'border-white/10 text-gray-400 hover:text-white'"
                     class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              Solicitar alteração
+              <?= t('portal.plan.fb_request_change') ?>
             </button>
             <button type="button"
                     @click="selectedType = 'comment'"
                     :class="selectedType === 'comment' ? 'bg-violet-600 border-violet-500 text-white' : 'border-white/10 text-gray-400 hover:text-white'"
                     class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-              Comentário
+              <?= t('portal.plan.fb_comment') ?>
             </button>
           </div>
 
           <div x-show="selectedType !== null">
             <!-- Textarea -->
             <textarea x-model="comment" rows="2"
-                      :placeholder="selectedType === 'approved' ? 'Observação opcional...' : 'Descreva o que precisa ser alterado...'"
+                      :placeholder="selectedType === 'approved' ? <?= e(json_encode(t('portal.plan.note_optional'), JSON_UNESCAPED_UNICODE)) ?> : <?= e(json_encode(t('portal.plan.describe_change'), JSON_UNESCAPED_UNICODE)) ?>"
                       class="w-full rounded-xl text-sm text-white placeholder-gray-600 px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/50"
                       style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);"></textarea>
 
@@ -272,18 +272,18 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
             <?php if ($isVideo): ?>
             <div class="flex items-center gap-2 mt-2 flex-wrap">
               <svg class="w-4 h-4 text-violet-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <input type="text" x-model="timecode" placeholder="Ex: 1:23"
+              <input type="text" x-model="timecode" placeholder="<?= e(t('portal.plan.timecode_placeholder')) ?>"
                      class="w-24 rounded-lg text-xs text-white placeholder-gray-600 px-2.5 py-1.5 font-mono focus:outline-none focus:ring-1 focus:ring-violet-500/50"
                      style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
               <?php if ($youtubeId): ?>
               <button type="button" @click="captureYtTime()"
-                      title="Capturar momento atual do vídeo"
+                      title="<?= e(t('portal.plan.capture_title')) ?>"
                       class="inline-flex items-center gap-1 rounded-lg bg-red-600/20 border border-red-500/30 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-600/30 transition-colors">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                Capturar
+                <?= t('portal.plan.capture') ?>
               </button>
               <?php else: ?>
-              <span class="text-xs text-gray-600">Trecho do vídeo (opcional)</span>
+              <span class="text-xs text-gray-600"><?= t('portal.plan.video_excerpt') ?></span>
               <?php endif; ?>
             </div>
             <?php endif; ?>
@@ -296,10 +296,10 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                 </svg>
-                <span x-text="sending ? 'Enviando...' : 'Enviar'"></span>
+                <span x-text="sending ? <?= e(json_encode(t('portal.plan.sending'), JSON_UNESCAPED_UNICODE)) ?> : <?= e(json_encode(t('portal.plan.send'), JSON_UNESCAPED_UNICODE)) ?>"></span>
               </button>
               <button type="button" @click="selectedType = null; comment = ''; timecode = ''"
-                      class="text-xs text-gray-500 hover:text-gray-300 transition-colors">Cancelar</button>
+                      class="text-xs text-gray-500 hover:text-gray-300 transition-colors"><?= t('portal.plan.cancel') ?></button>
               <span x-show="errorMsg" class="text-xs text-rose-400" x-text="errorMsg"></span>
             </div>
           </div>
@@ -312,7 +312,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
   <?php endforeach; ?>
 </div>
 <?php else: ?>
-<div class="card p-8 text-center text-gray-500 text-sm">Nenhum post adicionado ainda.</div>
+<div class="card p-8 text-center text-gray-500 text-sm"><?= t('portal.plan.no_posts') ?></div>
 <?php endif; ?>
 
 <script>
@@ -320,10 +320,10 @@ const PORTAL_TOKEN = '<?= e($token) ?>';
 const PLAN_ID      = <?= $plan['id'] ?>;
 
 const STATUS_LABELS = {
-  draft:    'Pendente',
-  approved: 'Aprovado',
-  revision: 'Revisão',
-  rejected: 'Rejeitado',
+  draft:    <?= json_encode(t('portal.istatus.draft'), JSON_UNESCAPED_UNICODE) ?>,
+  approved: <?= json_encode(t('portal.istatus.approved'), JSON_UNESCAPED_UNICODE) ?>,
+  revision: <?= json_encode(t('portal.istatus.revision'), JSON_UNESCAPED_UNICODE) ?>,
+  rejected: <?= json_encode(t('portal.istatus.rejected'), JSON_UNESCAPED_UNICODE) ?>,
 };
 const STATUS_CLASSES = {
   draft:    'text-gray-400 bg-gray-500/10',
@@ -377,7 +377,7 @@ function portalItem(idx, token, planId, itemId, initialFeedbacks, initialStatus,
 
     captureYtTime() {
       if (!this._ytPlayer || typeof this._ytPlayer.getCurrentTime !== 'function') {
-        this.errorMsg = 'Reproduza o vídeo antes de capturar o momento.';
+        this.errorMsg = <?= json_encode(t('portal.plan.play_before_capture'), JSON_UNESCAPED_UNICODE) ?>;
         setTimeout(() => this.errorMsg = '', 3000);
         return;
       }
@@ -398,7 +398,7 @@ function portalItem(idx, token, planId, itemId, initialFeedbacks, initialStatus,
       return map[fb.feedback_type] ?? map.comment;
     },
     feedbackTypeLabel(fb) {
-      const map = { approved: 'Aprovado', changes_requested: 'Alteração', rejected: 'Rejeitado', comment: 'Comentário' };
+      const map = { approved: <?= json_encode(t('portal.ftype.approved'), JSON_UNESCAPED_UNICODE) ?>, changes_requested: <?= json_encode(t('portal.ftype.changes_requested'), JSON_UNESCAPED_UNICODE) ?>, rejected: <?= json_encode(t('portal.ftype.rejected'), JSON_UNESCAPED_UNICODE) ?>, comment: <?= json_encode(t('portal.ftype.comment'), JSON_UNESCAPED_UNICODE) ?> };
       return map[fb.feedback_type] ?? fb.feedback_type;
     },
     feedbackTypeClass(fb) {
@@ -443,9 +443,9 @@ function portalItem(idx, token, planId, itemId, initialFeedbacks, initialStatus,
           this.comment      = '';
           this.timecode     = '';
         } else {
-          this.errorMsg = d.error ?? 'Erro ao enviar.';
+          this.errorMsg = d.error ?? <?= json_encode(t('portal.plan.send_error'), JSON_UNESCAPED_UNICODE) ?>;
         }
-      } catch { this.errorMsg = 'Erro de conexão.'; }
+      } catch { this.errorMsg = <?= json_encode(t('portal.plan.conn_error'), JSON_UNESCAPED_UNICODE) ?>; }
       this.sending = false;
     },
   };

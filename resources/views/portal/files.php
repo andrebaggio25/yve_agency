@@ -1,25 +1,56 @@
-<?php view_layout('portal'); view_start('title'); ?>Enviar conteúdos<?php view_end(); ?>
+<?php view_layout('portal'); view_start('title'); ?><?= t('portal.files.title') ?><?php view_end(); ?>
 <?php view_start('content'); ?>
+<?php
+$maxBytes = (int) ($maxUploadBytes ?? 0);
+$maxLabel = $maxBytes > 0 ? number_format($maxBytes / (1024 * 1024), 0) . ' MB' : '';
+
+// Strings usadas dentro do JS (traduzidas no servidor pelo idioma do cliente).
+$jsI18n = [
+  'loading'              => t('portal.files.loading'),
+  'empty_title'          => t('portal.files.empty_title'),
+  'empty_hint'           => t('portal.files.empty_hint'),
+  'open'                 => t('portal.files.open'),
+  'delete'               => t('portal.files.delete'),
+  'deleting'             => t('portal.files.deleting'),
+  'confirm_delete_file'  => t('portal.files.confirm_delete_file'),
+  'confirm_delete_folder'=> t('portal.files.confirm_delete_folder'),
+  'status_queued'        => t('portal.files.status_queued'),
+  'status_done'          => t('portal.files.status_done'),
+  'status_processing'    => t('portal.files.status_processing'),
+  'status_canceled'      => t('portal.files.status_canceled'),
+  'status_error'         => t('portal.files.status_error'),
+  'err_too_large'        => t('portal.files.err_too_large'),
+  'err_bad_type'         => t('portal.files.err_bad_type'),
+  'err_conn'             => t('portal.files.err_conn'),
+  'err_generic'          => t('portal.files.err_generic'),
+  'err_invalid_response' => t('portal.files.err_invalid_response'),
+  'create_failed'        => t('portal.files.create_failed'),
+  'delete_failed'        => t('portal.files.delete_failed'),
+  'eta_seconds'          => t('portal.files.eta_seconds'),
+  'eta_minutes'          => t('portal.files.eta_minutes'),
+  'max_label'            => $maxLabel,
+];
+?>
 
 <div class="mb-6">
-  <h1 class="text-xl font-bold text-white">Enviar conteúdos</h1>
-  <p class="text-sm text-gray-400 mt-0.5">Organize em pastas e envie seus vídeos e fotos. Tudo vai direto para o nosso acervo.</p>
+  <h1 class="text-xl font-bold text-white"><?= t('portal.files.title') ?></h1>
+  <p class="text-sm text-gray-400 mt-0.5"><?= t('portal.files.subtitle') ?></p>
 </div>
 
 <?php if (!$connected): ?>
 <div class="card p-6 text-center">
-  <p class="text-sm text-gray-300 font-medium mb-1">Envio indisponível no momento</p>
-  <p class="text-xs text-gray-500">A agência ainda não habilitou o envio de arquivos. Fale com a gente.</p>
+  <p class="text-sm text-gray-300 font-medium mb-1"><?= t('portal.files.unavailable_title') ?></p>
+  <p class="text-xs text-gray-500"><?= t('portal.files.unavailable_text') ?></p>
 </div>
 <?php else: ?>
 
-<div x-data="driveManager('<?= e($token) ?>')" x-init="load(null)">
+<div x-data="driveManager('<?= e($token) ?>', <?= e(json_encode($jsI18n, JSON_UNESCAPED_UNICODE)) ?>, <?= $maxBytes ?>)" x-init="load(null)">
 
   <!-- Breadcrumb -->
   <div class="flex items-center gap-1.5 text-sm mb-4 flex-wrap">
     <button @click="goTo(null)" class="text-gray-400 hover:text-white transition-colors flex items-center gap-1">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-      Início
+      <?= t('portal.files.home') ?>
     </button>
     <template x-for="crumb in breadcrumb" :key="crumb.id">
       <span class="flex items-center gap-1.5">
@@ -30,115 +61,127 @@
   </div>
 
   <!-- Toolbar -->
-  <div class="flex items-center gap-2 mb-4 flex-wrap">
+  <div class="flex items-center gap-2 mb-3 flex-wrap">
     <button @click="creatingFolder = true; $nextTick(() => $refs.folderInput?.focus())"
             class="btn-secondary text-sm px-3 py-2 inline-flex items-center gap-1.5">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11v4m-2-2h4"/></svg>
-      Nova pasta
+      <?= t('portal.files.new_folder') ?>
     </button>
 
     <label class="btn-primary text-sm px-3 py-2 inline-flex items-center gap-1.5 cursor-pointer">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-      Enviar arquivos
-      <input type="file" multiple class="hidden" @change="onFiles($event.target.files); $event.target.value=''">
+      <?= t('portal.files.upload_files') ?>
+      <input type="file" multiple accept="image/*,video/*" class="hidden" @change="onFiles($event.target.files); $event.target.value=''">
     </label>
   </div>
 
+  <!-- Dica do que pode enviar -->
+  <p class="text-xs text-gray-500 mb-4">
+    <?= t('portal.files.accepted_hint') ?><?php if ($maxLabel !== ''): ?> · <?= t('portal.files.max_hint', ['max' => $maxLabel]) ?><?php endif; ?>
+  </p>
+
   <!-- Create folder inline -->
   <div x-show="creatingFolder" x-transition class="card p-3 mb-4 flex items-center gap-2" style="display:none">
-    <input x-ref="folderInput" type="text" x-model="newFolderName" placeholder="Nome da pasta (ex: Dia 15, Modelo Ana...)"
+    <input x-ref="folderInput" type="text" x-model="newFolderName" placeholder="<?= e(t('portal.files.folder_name_placeholder')) ?>"
            @keydown.enter="createFolder()" @keydown.escape="creatingFolder=false; newFolderName=''"
            class="flex-1 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50">
     <button @click="createFolder()" :disabled="!newFolderName.trim() || savingFolder"
-            class="btn-primary text-sm px-3 py-2 disabled:opacity-50" x-text="savingFolder ? 'Criando...' : 'Criar'"></button>
-    <button @click="creatingFolder=false; newFolderName=''" class="text-xs text-gray-500 hover:text-gray-300 px-2">Cancelar</button>
+            class="btn-primary text-sm px-3 py-2 disabled:opacity-50" x-text="savingFolder ? '<?= e(t('portal.files.creating')) ?>' : '<?= e(t('portal.files.create')) ?>'"></button>
+    <button @click="creatingFolder=false; newFolderName=''" class="text-xs text-gray-500 hover:text-gray-300 px-2"><?= t('portal.files.cancel') ?></button>
   </div>
 
-  <!-- Drop zone + listing -->
+  <!-- Drop zone + listagem -->
   <div @dragover.prevent="dragging=true" @dragleave.prevent="dragging=false"
        @drop.prevent="dragging=false; onFiles($event.dataTransfer.files)"
-       class="rounded-2xl border-2 border-dashed transition-colors p-4"
+       class="rounded-2xl border-2 border-dashed transition-colors p-2 sm:p-3"
        :class="dragging ? 'border-violet-500 bg-violet-500/5' : 'border-white/10'">
 
     <!-- Loading -->
-    <div x-show="loading" class="py-10 text-center text-sm text-gray-500">Carregando…</div>
+    <div x-show="loading" class="py-10 text-center text-sm text-gray-500" x-text="i18n.loading"></div>
 
     <template x-if="!loading">
       <div>
         <!-- Empty -->
         <div x-show="folders.length === 0 && files.length === 0 && uploads.length === 0" class="py-12 text-center">
           <svg class="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-          <p class="text-sm text-gray-500">Arraste arquivos aqui ou use “Enviar arquivos”.</p>
+          <p class="text-sm text-gray-400" x-text="i18n.empty_title"></p>
+          <p class="text-xs text-gray-600 mt-1" x-text="i18n.empty_hint"></p>
         </div>
 
-        <!-- Folders -->
-        <div x-show="folders.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
-          <template x-for="folder in folders" :key="folder.id">
-            <button @click="goTo(folder.id)"
-                    class="flex items-center gap-2 rounded-xl bg-white/[0.03] border border-white/5 hover:border-violet-500/30 hover:bg-white/[0.06] transition-all px-3 py-3 text-left">
-              <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
-              <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
-            </button>
+        <!-- Lista -->
+        <ul class="divide-y divide-white/5">
+
+          <!-- Pastas -->
+          <template x-for="folder in folders" :key="'f'+folder.id">
+            <li class="flex items-center gap-3 px-2 py-2.5 hover:bg-white/[0.03] rounded-lg group">
+              <button @click="goTo(folder.id)" class="flex items-center gap-3 flex-1 min-w-0 text-left">
+                <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+                <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
+              </button>
+              <button @click="deleteFolder(folder)" :title="i18n.delete"
+                      class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-500 hover:text-rose-400 transition-all p-1.5 flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </li>
           </template>
-        </div>
 
-        <!-- Uploads in progress -->
-        <template x-for="up in uploads" :key="up.uid">
-          <div class="rounded-xl bg-white/[0.03] border border-white/5 px-3 py-2.5 mb-2"
-               :class="up.status==='error' ? 'border-rose-500/30' : ''">
-            <div class="flex items-center justify-between gap-2 mb-1.5">
-              <span class="text-xs text-gray-300 truncate" x-text="up.name"></span>
-              <div class="flex items-center gap-2 flex-shrink-0">
-                <span class="text-[10px]"
-                      :class="up.status==='error' ? 'text-rose-400' : (up.status==='done' ? 'text-emerald-400' : 'text-violet-400')"
-                      x-text="up.status==='error' ? (up.error||'Erro') : (up.status==='done' ? 'Concluído ✓' : (up.status==='processing' ? 'Salvando no Drive…' : (up.status==='canceled' ? 'Cancelado' : up.progress+'%')))"></span>
-                <button x-show="up.status==='uploading' || up.status==='processing'" @click="cancelUpload(up)"
-                        class="text-gray-500 hover:text-rose-400 transition-colors" title="Cancelar">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-                <button x-show="up.status==='error' || up.status==='canceled'" @click="removeUpload(up)"
-                        class="text-gray-500 hover:text-white transition-colors" title="Remover">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-              </div>
-            </div>
-            <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
-              <div class="h-full rounded-full transition-all"
-                   :class="(up.status==='error'||up.status==='canceled' ? 'bg-rose-500' : (up.status==='done' ? 'bg-emerald-500' : 'bg-violet-500')) + (up.status==='processing' ? ' animate-pulse' : '')"
-                   :style="`width: ${(up.status==='done'||up.status==='processing') ? 100 : up.progress}%`"></div>
-            </div>
-            <p x-show="up.status==='uploading' && up.eta" class="text-[10px] text-gray-500 mt-1" x-text="up.eta"></p>
-          </div>
-        </template>
-
-        <!-- Files -->
-        <div x-show="files.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          <template x-for="file in files" :key="file.id">
-            <button @click="openPreview(file)"
-                    class="group rounded-xl overflow-hidden bg-white/[0.03] border border-white/5 hover:border-violet-500/30 transition-all text-left">
-              <div class="aspect-square bg-black/30 flex items-center justify-center relative">
-                <template x-if="file.is_image">
-                  <img :src="rawUrl(file)" loading="lazy" class="w-full h-full object-cover" @error="$el.style.display='none'">
-                </template>
-                <template x-if="file.is_video">
-                  <video :src="rawUrl(file)" preload="metadata" muted class="w-full h-full object-cover"></video>
-                </template>
-                <template x-if="!file.is_image && !file.is_video">
-                  <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                </template>
-                <div x-show="file.is_video" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span class="w-9 h-9 rounded-full bg-black/50 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                  </span>
+          <!-- Uploads em andamento -->
+          <template x-for="up in uploads" :key="'u'+up.uid">
+            <li class="px-2 py-2.5">
+              <div class="flex items-center justify-between gap-2 mb-1.5">
+                <span class="text-sm text-gray-300 truncate" x-text="up.name"></span>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="text-[11px]"
+                        :class="up.status==='error' ? 'text-rose-400' : (up.status==='done' ? 'text-emerald-400' : 'text-violet-400')"
+                        x-text="statusLabel(up)"></span>
+                  <button x-show="up.status==='uploading' || up.status==='processing' || up.status==='queued'" @click="cancelUpload(up)"
+                          class="text-gray-500 hover:text-rose-400 transition-colors" :title="i18n.delete">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                  <button x-show="up.status==='error' || up.status==='canceled'" @click="removeUpload(up)"
+                          class="text-gray-500 hover:text-white transition-colors" :title="i18n.delete">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
                 </div>
               </div>
-              <div class="px-2 py-1.5">
-                <p class="text-[11px] text-gray-300 truncate" x-text="file.name"></p>
-                <p class="text-[10px] text-gray-600" x-text="humanSize(file.size_bytes)"></p>
+              <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div class="h-full rounded-full transition-all"
+                     :class="(up.status==='error'||up.status==='canceled' ? 'bg-rose-500' : (up.status==='done' ? 'bg-emerald-500' : 'bg-violet-500')) + (up.status==='processing' ? ' animate-pulse' : '')"
+                     :style="`width: ${(up.status==='done'||up.status==='processing') ? 100 : up.progress}%`"></div>
               </div>
-            </button>
+              <p x-show="up.status==='error'" class="text-[11px] text-rose-400 mt-1" x-text="up.error"></p>
+              <p x-show="up.status==='uploading' && up.eta" class="text-[10px] text-gray-500 mt-1" x-text="up.eta"></p>
+            </li>
           </template>
-        </div>
+
+          <!-- Arquivos -->
+          <template x-for="file in files" :key="'x'+file.id">
+            <li class="flex items-center gap-3 px-2 py-2.5 hover:bg-white/[0.03] rounded-lg group">
+              <button @click="openPreview(file)" class="flex items-center gap-3 flex-1 min-w-0 text-left">
+                <span class="w-9 h-9 rounded-lg bg-black/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <template x-if="file.is_image">
+                    <img :src="rawUrl(file)" loading="lazy" class="w-full h-full object-cover" @error="$el.style.display='none'">
+                  </template>
+                  <template x-if="!file.is_image">
+                    <svg x-show="file.is_video" class="w-4 h-4 text-violet-300" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                  </template>
+                  <template x-if="!file.is_image && !file.is_video">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  </template>
+                </span>
+                <span class="min-w-0">
+                  <span class="block text-sm text-gray-200 truncate" x-text="file.name"></span>
+                  <span class="block text-[11px] text-gray-600" x-text="humanSize(file.size_bytes)"></span>
+                </span>
+              </button>
+              <button @click="deleteFile(file)" :title="i18n.delete"
+                      class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-500 hover:text-rose-400 transition-all p-1.5 flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </li>
+          </template>
+
+        </ul>
       </div>
     </template>
   </div>
@@ -161,7 +204,7 @@
       <template x-if="preview.file && !preview.file.is_image && !preview.file.is_video">
         <div class="text-center">
           <p class="text-sm text-gray-300 mb-3" x-text="preview.file.name"></p>
-          <a :href="rawUrl(preview.file)" target="_blank" rel="noopener" class="btn-primary px-4 py-2 text-sm inline-flex">Abrir / baixar</a>
+          <a :href="rawUrl(preview.file)" target="_blank" rel="noopener" class="btn-primary px-4 py-2 text-sm inline-flex" x-text="i18n.open"></a>
         </div>
       </template>
       <p class="text-xs text-gray-400 mt-3 text-center" x-text="preview.file ? preview.file.name : ''"></p>
@@ -170,18 +213,22 @@
 </div>
 
 <script>
-// Registry de XHRs fora do estado reativo do Alpine (evita o Alpine tentar
-// "proxyar" o objeto XMLHttpRequest e quebrar).
+// Registry de XHRs fora do estado reativo do Alpine (evita o Alpine "proxyar" o XMLHttpRequest).
 const _driveXhrs = {};
 let _driveUploadSeq = 0;
+const _DRIVE_MAX_CONCURRENT = 2;
 
-function driveManager(token) {
+function driveManager(token, i18n, maxBytes) {
   return {
+    i18n,
+    maxBytes: maxBytes || 0,
     folderId: null,
     breadcrumb: [],
     folders: [],
     files: [],
     uploads: [],
+    queue: [],
+    activeCount: 0,
     loading: false,
     dragging: false,
     creatingFolder: false,
@@ -210,12 +257,24 @@ function driveManager(token) {
 
     goTo(folderId) {
       this.uploads = [];
+      this.queue = [];
       this.creatingFolder = false;
       this.load(folderId);
     },
 
     openPreview(file) { this.preview = { open: true, file }; },
     closePreview() { this.preview = { open: false, file: null }; },
+
+    statusLabel(up) {
+      switch (up.status) {
+        case 'queued':     return this.i18n.status_queued;
+        case 'processing': return this.i18n.status_processing;
+        case 'done':       return this.i18n.status_done;
+        case 'canceled':   return this.i18n.status_canceled;
+        case 'error':      return this.i18n.status_error;
+        default:           return up.progress + '%';
+      }
+    },
 
     async createFolder() {
       const name = this.newFolderName.trim();
@@ -234,21 +293,81 @@ function driveManager(token) {
           this.creatingFolder = false;
           this.newFolderName = '';
         } else {
-          alert(d.error || 'Falha ao criar pasta.');
+          alert(d.error || this.i18n.create_failed);
         }
-      } catch (e) { alert('Erro de conexão.'); }
+      } catch (e) { alert(this.i18n.err_conn); }
       this.savingFolder = false;
     },
 
-    onFiles(fileList) {
-      for (const file of fileList) this.uploadOne(file);
+    async deleteFile(file) {
+      if (!confirm(this.i18n.confirm_delete_file.replace(':name', file.name))) return;
+      try {
+        const r = await fetch(`${this.base()}/drive/file/${file.id}/delete`, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const d = await r.json();
+        if (d.success) {
+          this.files = this.files.filter(f => f.id !== file.id);
+        } else {
+          alert(d.error || this.i18n.delete_failed);
+        }
+      } catch (e) { alert(this.i18n.err_conn); }
     },
 
-    uploadOne(file) {
+    async deleteFolder(folder) {
+      if (!confirm(this.i18n.confirm_delete_folder.replace(':name', folder.name))) return;
+      try {
+        const r = await fetch(`${this.base()}/drive/folder/${folder.id}/delete`, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const d = await r.json();
+        if (d.success) {
+          this.folders = this.folders.filter(f => f.id !== folder.id);
+        } else {
+          alert(d.error || this.i18n.delete_failed);
+        }
+      } catch (e) { alert(this.i18n.err_conn); }
+    },
+
+    onFiles(fileList) {
+      for (const file of fileList) this.enqueue(file);
+    },
+
+    enqueue(file) {
       const uid = ++_driveUploadSeq;
-      this.uploads.push({ uid, name: file.name, progress: 0, status: 'uploading', error: null, eta: '', startedAt: Date.now() });
-      // Referência REATIVA (o elemento dentro do array proxyado), não o objeto cru.
-      const entry = this.uploads.find(u => u.uid === uid);
+      // Validação client-side: tipo e tamanho ANTES de enviar.
+      const typeOk = !file.type || file.type.startsWith('image/') || file.type.startsWith('video/');
+      if (!typeOk) {
+        this.uploads.push({ uid, name: file.name, progress: 0, status: 'error', error: this.i18n.err_bad_type, eta: '' });
+        return;
+      }
+      if (this.maxBytes > 0 && file.size > this.maxBytes) {
+        const msg = this.i18n.err_too_large.replace(':max', this.i18n.max_label || this.humanSize(this.maxBytes));
+        this.uploads.push({ uid, name: file.name, progress: 0, status: 'error', error: msg, eta: '' });
+        return;
+      }
+      this.uploads.push({ uid, name: file.name, progress: 0, status: 'queued', error: null, eta: '', startedAt: 0, file });
+      this.queue.push(uid);
+      this.pumpQueue();
+    },
+
+    pumpQueue() {
+      while (this.activeCount < _DRIVE_MAX_CONCURRENT && this.queue.length > 0) {
+        const uid = this.queue.shift();
+        const entry = this.uploads.find(u => u.uid === uid);
+        if (!entry || entry.status !== 'queued') continue;
+        this.startUpload(entry);
+      }
+    },
+
+    startUpload(entry) {
+      const uid = entry.uid;
+      const file = entry.file;
+      entry.status = 'uploading';
+      entry.startedAt = Date.now();
+      this.activeCount++;
 
       const form = new FormData();
       form.append('folder_id', this.folderId ?? '');
@@ -270,8 +389,10 @@ function driveManager(token) {
       };
       xhr.upload.onload = () => { if (entry.status === 'uploading') { entry.status = 'processing'; entry.eta = ''; } };
 
+      const finish = () => { delete _driveXhrs[uid]; this.activeCount = Math.max(0, this.activeCount - 1); this.pumpQueue(); };
+
       xhr.onload = () => {
-        delete _driveXhrs[uid];
+        finish();
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const d = JSON.parse(xhr.responseText);
@@ -282,27 +403,32 @@ function driveManager(token) {
               setTimeout(() => { this.uploads = this.uploads.filter(u => u.uid !== uid); }, 1500);
             } else {
               entry.status = 'error';
-              entry.error = d.error || 'Erro ao enviar';
+              entry.error = d.error || this.i18n.err_generic;
             }
-          } catch { entry.status = 'error'; entry.error = 'Resposta inválida do servidor'; }
+          } catch { entry.status = 'error'; entry.error = this.i18n.err_invalid_response; }
         } else if (xhr.status === 0) {
-          if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = 'Conexão interrompida'; }
+          if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn; }
         } else {
           entry.status = 'error';
-          entry.error = 'Erro (' + xhr.status + ')';
+          entry.error = this.i18n.err_generic;
           try { const d = JSON.parse(xhr.responseText); if (d.error) entry.error = d.error; } catch {}
         }
       };
-      xhr.onerror = () => { delete _driveXhrs[uid]; if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = 'Falha de conexão'; } };
+      xhr.onerror = () => { finish(); if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn; } };
 
       xhr.send(form);
     },
 
     cancelUpload(entry) {
+      // Ainda na fila: só tira da fila.
+      if (entry.status === 'queued') {
+        this.queue = this.queue.filter(id => id !== entry.uid);
+        entry.status = 'canceled';
+        return;
+      }
       const xhr = _driveXhrs[entry.uid];
       if (xhr && (entry.status === 'uploading' || entry.status === 'processing')) {
         entry.status = 'canceled';
-        entry.error = 'Cancelado';
         xhr.abort();
         delete _driveXhrs[entry.uid];
       }
@@ -314,10 +440,9 @@ function driveManager(token) {
 
     formatEta(sec) {
       if (!isFinite(sec) || sec < 0) return '';
-      if (sec < 60) return Math.ceil(sec) + 's restantes';
+      if (sec < 60) return this.i18n.eta_seconds.replace(':s', Math.ceil(sec));
       const m = Math.floor(sec / 60);
-      const s = Math.ceil(sec % 60);
-      return `${m}min${s ? ' ' + s + 's' : ''} restantes`;
+      return this.i18n.eta_minutes.replace(':m', m);
     },
 
     humanSize(bytes) {

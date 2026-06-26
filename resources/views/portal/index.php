@@ -1,15 +1,15 @@
-<?php view_layout('portal'); view_start('title'); ?>Início<?php view_end(); ?>
+<?php view_layout('portal'); view_start('title'); ?><?= t('portal.nav.home') ?><?php view_end(); ?>
 <?php view_start('content'); ?>
 
 <?php
 $firstName   = explode(' ', $client['name'])[0];
 $hour        = (int) date('H');
-$greeting    = $hour < 12 ? 'Bom dia' : ($hour < 18 ? 'Boa tarde' : 'Boa noite');
+$greeting    = $hour < 12 ? t('portal.home.greeting_morning') : ($hour < 18 ? t('portal.home.greeting_afternoon') : t('portal.home.greeting_evening'));
 $hasPending  = $stats['plans_pending'] > 0;
 $hasOverdue  = count(array_filter($invoices, fn($i) => $i['status'] === 'overdue')) > 0;
 $recentPlans = array_slice($plans, 0, 4);
 $openInvoices = array_filter($invoices, fn($i) => in_array($i['status'], ['sent', 'overdue']));
-$statusLabels = ['draft' => 'Rascunho', 'pending_approval' => 'Aguardando aprovação', 'approved' => 'Aprovado', 'in_revision' => 'Em revisão', 'published' => 'Publicado'];
+$statusLabels = ['draft' => t('portal.pstatus.draft'), 'pending_approval' => t('portal.pstatus.pending_approval'), 'approved' => t('portal.pstatus.approved'), 'in_revision' => t('portal.pstatus.in_revision'), 'published' => t('portal.pstatus.published')];
 $statusColors = [
   'draft'            => 'text-gray-400 bg-gray-500/10',
   'pending_approval' => 'text-amber-300 bg-amber-500/10',
@@ -30,7 +30,7 @@ $statusColors = [
     <div>
       <p class="text-sm text-violet-300/80 mb-1"><?= $greeting ?>,</p>
       <h1 class="text-2xl sm:text-3xl font-bold text-white"><?= e($firstName) ?> 👋</h1>
-      <p class="text-sm text-gray-400 mt-1.5">Aqui está um resumo do seu espaço com a agência.</p>
+      <p class="text-sm text-gray-400 mt-1.5"><?= t('portal.home.summary') ?></p>
     </div>
     <?php if ($hasPending): ?>
     <a href="/portal/<?= $token ?>/planos"
@@ -39,7 +39,7 @@ $statusColors = [
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
       </svg>
-      <?= $stats['plans_pending'] ?> plano<?= $stats['plans_pending'] > 1 ? 's' : '' ?> aguardando
+      <?= t($stats['plans_pending'] === 1 ? 'portal.home.plans_waiting' : 'portal.home.plans_waiting_plural', ['n' => $stats['plans_pending']]) ?>
     </a>
     <?php endif; ?>
   </div>
@@ -48,10 +48,10 @@ $statusColors = [
   <div class="relative grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
     <?php
     $kpis = [
-      ['label' => 'Aguardando aprovação', 'value' => $stats['plans_pending'],  'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.1)', 'border' => 'rgba(245,158,11,0.2)', 'href' => "/portal/{$token}/planos"],
-      ['label' => 'Planos aprovados',     'value' => $stats['plans_approved'], 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',  'color' => '#10b981', 'bg' => 'rgba(16,185,129,0.1)', 'border' => 'rgba(16,185,129,0.2)', 'href' => "/portal/{$token}/planos"],
-      ['label' => 'Faturas em aberto',    'value' => $stats['invoices_open'],  'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2', 'color' => '#ef4444', 'bg' => 'rgba(239,68,68,0.1)', 'border' => 'rgba(239,68,68,0.2)', 'href' => "/portal/{$token}/faturas"],
-      ['label' => 'Faturas pagas',        'value' => $stats['invoices_paid'],  'icon' => 'M5 13l4 4L19 7', 'color' => '#3b82f6', 'bg' => 'rgba(59,130,246,0.1)', 'border' => 'rgba(59,130,246,0.2)', 'href' => "/portal/{$token}/faturas"],
+      ['label' => t('portal.home.kpi_pending'),       'value' => $stats['plans_pending'],  'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.1)', 'border' => 'rgba(245,158,11,0.2)', 'href' => "/portal/{$token}/planos"],
+      ['label' => t('portal.home.kpi_approved'),      'value' => $stats['plans_approved'], 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',  'color' => '#10b981', 'bg' => 'rgba(16,185,129,0.1)', 'border' => 'rgba(16,185,129,0.2)', 'href' => "/portal/{$token}/planos"],
+      ['label' => t('portal.home.kpi_invoices_open'), 'value' => $stats['invoices_open'],  'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2', 'color' => '#ef4444', 'bg' => 'rgba(239,68,68,0.1)', 'border' => 'rgba(239,68,68,0.2)', 'href' => "/portal/{$token}/faturas"],
+      ['label' => t('portal.home.kpi_invoices_paid'), 'value' => $stats['invoices_paid'],  'icon' => 'M5 13l4 4L19 7', 'color' => '#3b82f6', 'bg' => 'rgba(59,130,246,0.1)', 'border' => 'rgba(59,130,246,0.2)', 'href' => "/portal/{$token}/faturas"],
     ];
     foreach ($kpis as $k): ?>
     <a href="<?= $k['href'] ?>" class="rounded-xl p-3.5 transition-all hover:scale-[1.02]"
@@ -77,7 +77,7 @@ $statusColors = [
       <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background:#f59e0b"></span>
       <span class="relative inline-flex rounded-full h-2 w-2" style="background:#f59e0b"></span>
     </span>
-    <h2 class="text-sm font-semibold text-amber-300">Aguardando sua aprovação</h2>
+    <h2 class="text-sm font-semibold text-amber-300"><?= t('portal.home.awaiting_approval') ?></h2>
   </div>
   <div class="space-y-2">
     <?php foreach ($pending as $p): ?>
@@ -99,7 +99,7 @@ $statusColors = [
         </div>
       </div>
       <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-300">
-        Revisar
+        <?= t('portal.home.review') ?>
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
@@ -117,8 +117,8 @@ $statusColors = [
   <div class="lg:col-span-2">
     <?php if (!empty($recentPlans)): ?>
     <div class="flex items-center justify-between mb-3">
-      <h2 class="text-sm font-semibold text-gray-300">Planos de conteúdo</h2>
-      <a href="/portal/<?= $token ?>/planos" class="text-xs text-violet-400 hover:text-violet-300">Ver todos →</a>
+      <h2 class="text-sm font-semibold text-gray-300"><?= t('portal.home.content_plans') ?></h2>
+      <a href="/portal/<?= $token ?>/planos" class="text-xs text-violet-400 hover:text-violet-300"><?= t('portal.home.see_all') ?></a>
     </div>
     <div class="space-y-2 mb-6">
       <?php foreach ($recentPlans as $p):
@@ -148,7 +148,7 @@ $statusColors = [
               <div class="h-full rounded-full transition-all"
                    style="width:<?= $pct ?>%; background:linear-gradient(90deg,#8b5cf6,#3b82f6)"></div>
             </div>
-            <span class="text-[10px] text-gray-500 flex-shrink-0"><?= $approved ?>/<?= $total ?> aprovados</span>
+            <span class="text-[10px] text-gray-500 flex-shrink-0"><?= $approved ?>/<?= $total ?> <?= t('portal.home.approved_count') ?></span>
           </div>
           <?php elseif ($p['period_label'] ?? null): ?>
           <p class="text-xs text-gray-500"><?= e($p['period_label']) ?></p>
@@ -172,17 +172,17 @@ $statusColors = [
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
           </div>
-          <h3 class="text-sm font-semibold text-white">Tráfego Pago</h3>
+          <h3 class="text-sm font-semibold text-white"><?= t('portal.home.paid_traffic') ?></h3>
         </div>
         <span class="text-[10px] text-gray-500"><?= date('d/m', strtotime($since)) ?> – <?= date('d/m', strtotime($until)) ?></span>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <?php
         $adsKpis = [
-          ['label' => 'Impressões', 'value' => number_format((float)($adsSummary['impressions']??0),0,',','.'), 'color'=>'#8b5cf6'],
-          ['label' => 'Cliques',    'value' => number_format((float)($adsSummary['clicks']??0),     0,',','.'), 'color'=>'#3b82f6'],
-          ['label' => 'Investido',  'value' => 'R$ '.number_format((float)($adsSummary['spend']??0),2,',','.'), 'color'=>'#f59e0b'],
-          ['label' => 'Resultados', 'value' => number_format((float)($adsSummary['conversions']??$adsSummary['results']??0),0,',','.'), 'color'=>'#10b981'],
+          ['label' => t('portal.home.ads_impressions'), 'value' => number_format((float)($adsSummary['impressions']??0),0,',','.'), 'color'=>'#8b5cf6'],
+          ['label' => t('portal.home.ads_clicks'),      'value' => number_format((float)($adsSummary['clicks']??0),     0,',','.'), 'color'=>'#3b82f6'],
+          ['label' => t('portal.home.ads_spend'),       'value' => 'R$ '.number_format((float)($adsSummary['spend']??0),2,',','.'), 'color'=>'#f59e0b'],
+          ['label' => t('portal.home.ads_results'),     'value' => number_format((float)($adsSummary['conversions']??$adsSummary['results']??0),0,',','.'), 'color'=>'#10b981'],
         ];
         foreach ($adsKpis as $k): ?>
         <div class="rounded-xl p-3" style="background:rgba(255,255,255,0.03)">
@@ -204,17 +204,17 @@ $statusColors = [
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
             </svg>
           </div>
-          <h3 class="text-sm font-semibold text-white">Redes Sociais</h3>
+          <h3 class="text-sm font-semibold text-white"><?= t('portal.home.social') ?></h3>
         </div>
         <span class="text-[10px] text-gray-500"><?= date('d/m', strtotime($since)) ?> – <?= date('d/m', strtotime($until)) ?></span>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <?php
         $orgKpis = [
-          ['label' => 'Alcance',     'value' => number_format((float)($organicSummary['reach']??0),        0,',','.'), 'color'=>'#10b981'],
-          ['label' => 'Impressões',  'value' => number_format((float)($organicSummary['impressions']??0),  0,',','.'), 'color'=>'#8b5cf6'],
-          ['label' => 'Engajamento', 'value' => number_format((float)($organicSummary['engagement']??0),   0,',','.'), 'color'=>'#3b82f6'],
-          ['label' => 'Seguidores',  'value' => '+'.number_format((float)($organicSummary['followers_gained']??0),0,',','.'), 'color'=>'#ec4899'],
+          ['label' => t('portal.home.org_reach'),       'value' => number_format((float)($organicSummary['reach']??0),        0,',','.'), 'color'=>'#10b981'],
+          ['label' => t('portal.home.org_impressions'), 'value' => number_format((float)($organicSummary['impressions']??0),  0,',','.'), 'color'=>'#8b5cf6'],
+          ['label' => t('portal.home.org_engagement'),  'value' => number_format((float)($organicSummary['engagement']??0),   0,',','.'), 'color'=>'#3b82f6'],
+          ['label' => t('portal.home.org_followers'),   'value' => '+'.number_format((float)($organicSummary['followers_gained']??0),0,',','.'), 'color'=>'#ec4899'],
         ];
         foreach ($orgKpis as $k): ?>
         <div class="rounded-xl p-3" style="background:rgba(255,255,255,0.03)">
@@ -232,13 +232,13 @@ $statusColors = [
 
     <!-- Atalhos de navegação -->
     <div class="rounded-2xl p-4" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-      <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Acesso rápido</h3>
+      <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3"><?= t('portal.home.quick_access') ?></h3>
       <div class="space-y-1.5">
         <?php
         $navLinks = [
-          ['href' => "/portal/{$token}/planos",    'label' => 'Planos de conteúdo', 'icon' => 'M4 6h16M4 10h16M4 14h10',                                                   'color' => '#8b5cf6'],
-          ['href' => "/portal/{$token}/faturas",   'label' => 'Faturas',            'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2', 'color' => '#f59e0b'],
-          ['href' => "/portal/{$token}/contratos", 'label' => 'Contratos',          'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'color' => '#3b82f6'],
+          ['href' => "/portal/{$token}/planos",    'label' => t('portal.home.content_plans'), 'icon' => 'M4 6h16M4 10h16M4 14h10',                                                   'color' => '#8b5cf6'],
+          ['href' => "/portal/{$token}/faturas",   'label' => t('portal.nav.invoices'),       'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2', 'color' => '#f59e0b'],
+          ['href' => "/portal/{$token}/contratos", 'label' => t('portal.nav.contracts'),      'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'color' => '#3b82f6'],
         ];
         foreach ($navLinks as $l): ?>
         <a href="<?= $l['href'] ?>"
@@ -265,14 +265,14 @@ $statusColors = [
         <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <h3 class="text-sm font-semibold text-red-300">Faturas em aberto</h3>
+        <h3 class="text-sm font-semibold text-red-300"><?= t('portal.home.open_invoices') ?></h3>
       </div>
       <div class="space-y-2">
         <?php foreach (array_slice($openInvoices, 0, 3) as $inv): ?>
         <div class="flex items-center justify-between text-sm">
           <div>
             <p class="text-white font-medium"><?= e($inv['invoice_number'] ?? "#$inv[id]") ?></p>
-            <p class="text-[11px] text-gray-500">Vence <?= $inv['due_date'] ? date('d/m/Y', strtotime($inv['due_date'])) : '—' ?></p>
+            <p class="text-[11px] text-gray-500"><?= t('portal.home.due') ?> <?= $inv['due_date'] ? date('d/m/Y', strtotime($inv['due_date'])) : '—' ?></p>
           </div>
           <span class="font-semibold <?= $inv['status'] === 'overdue' ? 'text-red-400' : 'text-white' ?>">
             R$ <?= number_format((float)$inv['total'], 2, ',', '.') ?>
@@ -281,7 +281,7 @@ $statusColors = [
         <?php endforeach; ?>
       </div>
       <a href="/portal/<?= $token ?>/faturas" class="block mt-3 text-center text-xs text-red-400 hover:text-red-300 transition-colors">
-        Ver todas as faturas →
+        <?= t('portal.home.see_all_invoices') ?>
       </a>
     </div>
     <?php endif; ?>
@@ -294,7 +294,7 @@ $statusColors = [
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
         </svg>
       </div>
-      <p class="text-sm text-gray-400">Tudo em dia! Nenhuma ação necessária.</p>
+      <p class="text-sm text-gray-400"><?= t('portal.home.all_clear') ?></p>
     </div>
     <?php endif; ?>
   </div>

@@ -279,6 +279,43 @@ class GoogleDriveApiService
         );
     }
 
+    /**
+     * Exclui um arquivo OU pasta no Drive (no Drive, pasta é um arquivo; excluir
+     * a pasta remove o conteúdo junto). 404/410 = já não existe → tratado como
+     * sucesso, para permitir limpar registros órfãos quando o item foi apagado
+     * direto no Drive.
+     */
+    public function delete(int $agencyId, string $fileId): void
+    {
+        $token = $this->accessToken($agencyId);
+
+        $resp = (new Client(['timeout' => 30, 'http_errors' => false]))->delete(
+            "https://www.googleapis.com/drive/v3/files/{$fileId}?supportsAllDrives=true",
+            ['headers' => ['Authorization' => 'Bearer ' . $token]]
+        );
+
+        $status = $resp->getStatusCode();
+        $ok     = ($status >= 200 && $status < 300) || $status === 404 || $status === 410;
+        if (!$ok) {
+            throw new RuntimeException('O Google Drive recusou a exclusão (HTTP ' . $status . ').');
+        }
+    }
+
+    /** True se o arquivo ainda existe no Drive (usado para detectar órfãos). */
+    public function exists(int $agencyId, string $fileId): bool
+    {
+        $token = $this->accessToken($agencyId);
+        $resp  = (new Client(['timeout' => 15, 'http_errors' => false]))->get(
+            "https://www.googleapis.com/drive/v3/files/{$fileId}",
+            ['headers' => ['Authorization' => 'Bearer ' . $token], 'query' => ['fields' => 'id,trashed']]
+        );
+        if ($resp->getStatusCode() === 404) {
+            return false;
+        }
+        $data = json_decode((string) $resp->getBody(), true) ?? [];
+        return empty($data['trashed']);
+    }
+
     /** Metadados do arquivo após o upload (thumbnail, link de visualização). */
     public function fileMeta(int $agencyId, string $fileId): array
     {

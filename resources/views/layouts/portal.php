@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full">
+<html lang="<?= e(locale()) ?>" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,7 +46,7 @@ $clientLogoUrl = $client['logo_url'] ?? null;
         <img src="<?= e($agencyLogoUrl) ?>" alt="Agência"
              class="h-3.5 w-auto max-w-[80px] object-contain mt-0.5 opacity-60">
         <?php else: ?>
-        <p class="text-[11px] text-gray-500 leading-tight"><?= e($agency['name'] ?? 'Portal do cliente') ?></p>
+        <p class="text-[11px] text-gray-500 leading-tight"><?= e($agency['name'] ?? t('portal.subtitle')) ?></p>
         <?php endif; ?>
       </div>
     </div>
@@ -55,11 +55,11 @@ $clientLogoUrl = $client['logo_url'] ?? null;
     <?php $cpPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH); ?>
     <?php
     $navItems = [
-      "/portal/{$token}"           => ['label' => 'Início',            'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'],
-      "/portal/{$token}/planos"    => ['label' => 'Planos',            'icon' => 'M4 6h16M4 10h16M4 14h10'],
-      "/portal/{$token}/arquivos"  => ['label' => 'Enviar',            'icon' => 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'],
-      "/portal/{$token}/faturas"   => ['label' => 'Faturas',           'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2'],
-      "/portal/{$token}/contratos" => ['label' => 'Contratos',         'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+      "/portal/{$token}"           => ['label' => t('portal.nav.home'),      'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'],
+      "/portal/{$token}/planos"    => ['label' => t('portal.nav.plans'),     'icon' => 'M4 6h16M4 10h16M4 14h10'],
+      "/portal/{$token}/arquivos"  => ['label' => t('portal.nav.upload'),    'icon' => 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'],
+      "/portal/{$token}/faturas"   => ['label' => t('portal.nav.invoices'),  'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2'],
+      "/portal/{$token}/contratos" => ['label' => t('portal.nav.contracts'), 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
     ];
     ?>
     <nav class="hidden sm:flex items-center gap-1 text-sm">

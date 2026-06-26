@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Middlewares;
 
 use App\Core\Database;
+use App\Core\Lang;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repositories\ClientRepository;
@@ -31,6 +32,9 @@ class PortalMiddleware
         $agency = $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
 
         PortalAuth::set($client, $agency ?: null);
+
+        // O portal fala o idioma do cliente (não o da sessão da agência).
+        Lang::setLocale((string) ($client['language'] ?? 'pt'));
 
         return $next($request);
     }

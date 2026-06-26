@@ -49,4 +49,12 @@ class DriveFolderRepository extends Repository
             [':id' => $id, ':c' => $clientId]
         );
     }
+
+    public function deleteForClient(int $id, int $clientId): void
+    {
+        $this->query(
+            "DELETE FROM drive_folders WHERE id = :id AND client_id = :c",
+            [':id' => $id, ':c' => $clientId]
+        );
+    }
 }
