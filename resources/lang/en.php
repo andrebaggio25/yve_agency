@@ -200,6 +200,10 @@ return [
 
     'content.recent_plans'      => 'Recent Plans',
 
+    // ── Google Drive (integration messages) ───────────────────────────────────
+    'drive.expired'        => 'The Google Drive connection has expired. Reconnect it under Integrations → Google Drive.',
+    'drive.refresh_failed' => 'Could not refresh Google Drive access. Reconnect the integration.',
+
     // ── Client portal ─────────────────────────────────────────────────────────
     'portal.subtitle'                  => 'Client portal',
     'portal.nav.home'                  => 'Home',
@@ -370,6 +374,11 @@ return [
     'portal.files.err_invalid_response'=> 'Unexpected server response. Please try again.',
     'portal.files.create_failed'       => 'Could not create the folder.',
     'portal.files.delete_failed'       => 'Could not delete',
+    'portal.files.deleted_file'        => 'File moved to trash',
+    'portal.files.deleted_folder'      => 'Folder moved to trash',
+    'portal.files.undo'                => 'Undo',
+    'portal.files.restored'            => 'Restored',
+    'portal.files.restore_failed'      => 'Could not restore',
     'portal.files.not_found'           => 'Item not found.',
     'portal.files.gone'                => 'This file no longer exists.',
     'portal.files.eta_seconds'         => ':s s left',

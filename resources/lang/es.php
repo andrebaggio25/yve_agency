@@ -200,6 +200,10 @@ return [
 
     'content.recent_plans'      => 'Planes Recientes',
 
+    // ── Google Drive (mensajes de integración) ────────────────────────────────
+    'drive.expired'        => 'La conexión con Google Drive expiró. Reconéctala en Integraciones → Google Drive.',
+    'drive.refresh_failed' => 'No se pudo renovar el acceso a Google Drive. Reconecta la integración.',
+
     // ── Portal del cliente ────────────────────────────────────────────────────
     'portal.subtitle'                  => 'Portal del cliente',
     'portal.nav.home'                  => 'Inicio',
@@ -370,6 +374,11 @@ return [
     'portal.files.err_invalid_response'=> 'Respuesta inesperada del servidor. Inténtalo de nuevo.',
     'portal.files.create_failed'       => 'No se pudo crear la carpeta.',
     'portal.files.delete_failed'       => 'No se pudo eliminar',
+    'portal.files.deleted_file'        => 'Archivo movido a la papelera',
+    'portal.files.deleted_folder'      => 'Carpeta movida a la papelera',
+    'portal.files.undo'                => 'Deshacer',
+    'portal.files.restored'            => 'Restaurado',
+    'portal.files.restore_failed'      => 'No se pudo restaurar',
     'portal.files.not_found'           => 'Elemento no encontrado.',
     'portal.files.gone'                => 'Este archivo ya no existe.',
     'portal.files.eta_seconds'         => ':s s restantes',

@@ -121,7 +121,7 @@ class GoogleDriveApiService
             return $i['access_token'];
         }
 
-        $resp = (new Client(['timeout' => 30]))->post('https://oauth2.googleapis.com/token', [
+        $resp = (new Client(['timeout' => 30, 'http_errors' => false]))->post('https://oauth2.googleapis.com/token', [
             'form_params' => [
                 'client_id'     => env('GOOGLE_CLIENT_ID', ''),
                 'client_secret' => env('GOOGLE_CLIENT_SECRET', ''),
@@ -131,15 +131,25 @@ class GoogleDriveApiService
         ]);
 
         $token = json_decode((string) $resp->getBody(), true) ?? [];
-        if (empty($token['access_token'])) {
-            throw new RuntimeException('Falha ao renovar o token do Google Drive. Reconecte a integração.');
+
+        if ($resp->getStatusCode() !== 200 || empty($token['access_token'])) {
+            // Refresh token morto (expirado/revogado/desconfigurado): desativa a
+            // integração e devolve mensagem limpa pedindo reconexão — evita o erro
+            // cru do Guzzle e o loop de falhas em cada upload.
+            if (($token['error'] ?? '') === 'invalid_grant') {
+                $this->integrationRepo->deactivate($agencyId);
+                throw new RuntimeException(t('drive.expired'));
+            }
+            throw new RuntimeException(t('drive.refresh_failed'));
         }
 
         $newExpires = isset($token['expires_in'])
             ? date('Y-m-d H:i:s', time() + (int) $token['expires_in'])
             : null;
 
-        $this->integrationRepo->updateAccessToken($agencyId, $token['access_token'], $newExpires);
+        // O Google normalmente não rotaciona o refresh token, mas se vier um novo,
+        // persistimos para não perder a conexão.
+        $this->integrationRepo->updateTokens($agencyId, $token['access_token'], $token['refresh_token'] ?? null, $newExpires);
 
         return $token['access_token'];
     }
@@ -280,24 +290,40 @@ class GoogleDriveApiService
     }
 
     /**
-     * Exclui um arquivo OU pasta no Drive (no Drive, pasta é um arquivo; excluir
-     * a pasta remove o conteúdo junto). 404/410 = já não existe → tratado como
-     * sucesso, para permitir limpar registros órfãos quando o item foi apagado
-     * direto no Drive.
+     * Move um arquivo OU pasta para a LIXEIRA do Drive (não apaga em definitivo).
+     * Recuperável por ~30 dias no Google Drive e via restore() abaixo. Excluir a
+     * pasta leva o conteúdo junto. 404/410 = já não existe → tratado como sucesso.
      */
     public function delete(int $agencyId, string $fileId): void
     {
+        $this->setTrashed($agencyId, $fileId, true);
+    }
+
+    /** Restaura um item da lixeira (desfaz a exclusão). */
+    public function restore(int $agencyId, string $fileId): void
+    {
+        $this->setTrashed($agencyId, $fileId, false);
+    }
+
+    private function setTrashed(int $agencyId, string $fileId, bool $trashed): void
+    {
         $token = $this->accessToken($agencyId);
 
-        $resp = (new Client(['timeout' => 30, 'http_errors' => false]))->delete(
+        $resp = (new Client(['timeout' => 30, 'http_errors' => false]))->patch(
             "https://www.googleapis.com/drive/v3/files/{$fileId}?supportsAllDrives=true",
-            ['headers' => ['Authorization' => 'Bearer ' . $token]]
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                    'Content-Type'  => 'application/json',
+                ],
+                'body' => json_encode(['trashed' => $trashed]),
+            ]
         );
 
         $status = $resp->getStatusCode();
         $ok     = ($status >= 200 && $status < 300) || $status === 404 || $status === 410;
         if (!$ok) {
-            throw new RuntimeException('O Google Drive recusou a exclusão (HTTP ' . $status . ').');
+            throw new RuntimeException('O Google Drive recusou a operação (HTTP ' . $status . ').');
         }
     }
 
