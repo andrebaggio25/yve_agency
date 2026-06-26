@@ -15,7 +15,7 @@
   </div>
   <?php endif; ?>
 
-  <form action="/clientes/<?= e($client['id']) ?>" method="POST" class="space-y-6">
+  <form id="client-edit-form" action="/clientes/<?= e($client['id']) ?>" method="POST" class="space-y-6">
     <?= csrf_field() ?>
     <?= method_field('PUT') ?>
 
@@ -170,30 +170,32 @@
       <?php endif; ?>
     </div>
 
-    <div class="flex items-center justify-between">
-      <?php if (\App\Support\Auth::can('clients.delete')): ?>
-      <form action="/clientes/<?= e($client['id']) ?>" method="POST" class="inline"
-            onsubmit="return confirm('<?= t('clients.confirm_delete') ?>')">
-        <?= csrf_field() ?>
-        <?= method_field('DELETE') ?>
-        <button type="submit" class="text-sm text-red-400 hover:text-red-300 transition-colors">
-          <?= t('common.delete') ?>
-        </button>
-      </form>
-      <?php else: ?>
-      <div></div>
-      <?php endif; ?>
-      <div class="flex items-center gap-3">
-        <a href="/clientes/<?= e($client['id']) ?>" class="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-gray-400 hover:text-white transition-colors">
-          <?= t('common.cancel') ?>
-        </a>
-        <button type="submit"
-                class="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all hover:scale-105 active:scale-95">
-          <?= t('common.save') ?>
-        </button>
-      </div>
-    </div>
   </form>
+
+  <!-- Barra de ações (FORA do form de edição: forms aninhados quebram o submit) -->
+  <div class="flex items-center justify-between mt-6">
+    <?php if (\App\Support\Auth::can('clients.delete')): ?>
+    <form action="/clientes/<?= e($client['id']) ?>" method="POST" class="inline"
+          onsubmit="return confirm('<?= t('clients.confirm_delete') ?>')">
+      <?= csrf_field() ?>
+      <?= method_field('DELETE') ?>
+      <button type="submit" class="text-sm text-red-400 hover:text-red-300 transition-colors">
+        <?= t('common.delete') ?>
+      </button>
+    </form>
+    <?php else: ?>
+    <div></div>
+    <?php endif; ?>
+    <div class="flex items-center gap-3">
+      <a href="/clientes/<?= e($client['id']) ?>" class="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-gray-400 hover:text-white transition-colors">
+        <?= t('common.cancel') ?>
+      </a>
+      <button type="submit" form="client-edit-form"
+              class="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all hover:scale-105 active:scale-95">
+        <?= t('common.save') ?>
+      </button>
+    </div>
+  </div>
 </div>
 
 <?php view_end(); ?>

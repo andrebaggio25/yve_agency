@@ -19,15 +19,35 @@
   </div>
 
   <!-- Search -->
-  <form method="GET" class="mb-6">
+  <form method="GET" class="mb-4">
+    <input type="hidden" name="status" value="<?= e($status ?? 'active') ?>">
     <div class="relative w-full max-w-sm">
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
       </svg>
-      <input type="text" name="q" value="<?= e($q) ?>" placeholder="Buscar por nome ou e-mail..."
+      <input type="text" name="q" value="<?= e($q) ?>" placeholder="Buscar por nome..."
              class="w-full rounded-xl border border-white/10 bg-white/[0.03] pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-violet-500 focus:outline-none">
     </div>
   </form>
+
+  <!-- Filtro de status -->
+  <div class="mb-6 flex items-center gap-1.5">
+    <?php
+      $filters = [
+        'active'   => t('clients.filter_active'),
+        'inactive' => t('clients.filter_inactive'),
+        'all'      => t('clients.filter_all'),
+      ];
+      foreach ($filters as $key => $label):
+        $isActive = ($status ?? 'active') === $key;
+        $href = '/clientes?status=' . $key . ($q ? '&q=' . urlencode($q) : '');
+    ?>
+    <a href="<?= $href ?>"
+       class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors <?= $isActive ? 'bg-violet-600 text-white' : 'border border-white/10 text-gray-400 hover:text-white hover:border-violet-500/40' ?>">
+      <?= $label ?>
+    </a>
+    <?php endforeach; ?>
+  </div>
 
   <?php if (empty($clients)): ?>
   <div class="flex flex-col items-center justify-center py-24 text-center">
@@ -84,7 +104,7 @@
   </div>
 
   <?php if ($paginated['pages'] > 1): ?>
-  <?php $base = '/clientes?' . ($q ? 'q=' . urlencode($q) . '&' : ''); ?>
+  <?php $base = '/clientes?status=' . e($status ?? 'active') . ($q ? '&q=' . urlencode($q) : '') . '&'; ?>
   <div class="mt-8 flex items-center justify-center gap-1">
     <?php if ($paginated['page'] > 1): ?>
     <a href="<?= $base ?>page=<?= $paginated['page'] - 1 ?>"

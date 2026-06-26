@@ -18,12 +18,17 @@ class ClientRepository extends Repository
         );
     }
 
-    public function findByAgencyPaginated(int $agencyId, int $page = 1, int $perPage = 20, string $q = ''): array
+    public function findByAgencyPaginated(int $agencyId, int $page = 1, int $perPage = 20, string $q = '', string $status = 'active'): array
     {
         $params = [':agency_id' => $agencyId];
         $where  = 'agency_id = :agency_id';
+        if ($status === 'active') {
+            $where .= " AND status = 'active'";
+        } elseif ($status === 'inactive') {
+            $where .= " AND (status IS NULL OR status <> 'active')";
+        }
         if ($q) {
-            $where .= ' AND (name ILIKE :q OR email ILIKE :q)';
+            $where .= ' AND (name ILIKE :q OR legal_name ILIKE :q)';
             $params[':q'] = "%{$q}%";
         }
         return $this->paginate(

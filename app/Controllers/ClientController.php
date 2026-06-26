@@ -26,17 +26,26 @@ class ClientController extends Controller
 
         $page    = max(1, (int) $request->query('page', '1'));
         $q       = trim((string) $request->query('q', ''));
+        $status  = (string) $request->query('status', 'active');
+        if (!in_array($status, ['active', 'inactive', 'all'], true)) {
+            $status = 'active';
+        }
         $agencyId = (int) Auth::agencyId();
 
         if (Auth::can('clients.view_all')) {
-            $paginated = $this->clientService->listPaginated($agencyId, $page, 20, $q);
+            $paginated = $this->clientService->listPaginated($agencyId, $page, 20, $q, $status);
         } else {
-            $all       = $this->clientService->listForUser(Auth::id(), $agencyId, false);
+            $all = $this->clientService->listForUser(Auth::id(), $agencyId, false);
+            if ($status === 'active') {
+                $all = array_values(array_filter($all, fn($c) => ($c['status'] ?? '') === 'active'));
+            } elseif ($status === 'inactive') {
+                $all = array_values(array_filter($all, fn($c) => ($c['status'] ?? '') !== 'active'));
+            }
             $total     = count($all);
             $paginated = ['items' => $all, 'total' => $total, 'page' => 1, 'per_page' => $total, 'pages' => 1];
         }
 
-        return $this->view('clients.index', ['paginated' => $paginated, 'q' => $q]);
+        return $this->view('clients.index', ['paginated' => $paginated, 'q' => $q, 'status' => $status]);
     }
 
     public function create(Request $request): Response
