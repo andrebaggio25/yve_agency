@@ -71,6 +71,26 @@ class DriveFileRepository extends Repository
         );
     }
 
+    /** Atualiza nome/metadados a partir do que veio do Drive (reconciliação). */
+    public function updateFromDrive(int $id, int $clientId, array $data): void
+    {
+        $this->query(
+            "UPDATE drive_files
+             SET name = :n, mime_type = :m, size_bytes = :s,
+                 thumbnail_link = :t, web_view_link = :w
+             WHERE id = :id AND client_id = :c",
+            [
+                ':n'  => $data['name'] ?? '',
+                ':m'  => $data['mime_type'] ?? null,
+                ':s'  => $data['size_bytes'] ?? null,
+                ':t'  => $data['thumbnail_link'] ?? null,
+                ':w'  => $data['web_view_link'] ?? null,
+                ':id' => $id,
+                ':c'  => $clientId,
+            ]
+        );
+    }
+
     /** Remove todos os arquivos de uma pasta (usado na exclusão recursiva de pasta). */
     public function deleteByFolder(int $clientId, int $folderId): void
     {

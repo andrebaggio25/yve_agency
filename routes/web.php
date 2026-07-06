@@ -296,6 +296,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     // Conteúdos enviados pelo cliente (Drive) — galeria lado agência
     $router->get('/clientes/{clientId}/conteudos',                  [ClientFilesController::class, 'index'],   [ClientAccessMiddleware::class]);
     $router->get('/clientes/{clientId}/conteudos/folders',          [ClientFilesController::class, 'folders'], [ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/conteudos/sync',            [ClientFilesController::class, 'sync'],     [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->get('/clientes/{clientId}/conteudos/file/{fileId}/raw',[ClientFilesController::class, 'raw'],      [ClientAccessMiddleware::class]);
 
     // Acesso de usuários ao cliente
@@ -464,6 +465,8 @@ $router->any('/queue/run',          [QueueController::class, 'run']);
 $router->any('/queue/sync-ads',     [QueueController::class, 'syncAds']);
 // Cron: sincronizar orgânico (token via ?token=)
 $router->any('/queue/sync-organic', [QueueController::class, 'syncOrganic']);
+// Cron: reconciliar galerias de Drive com o Google Drive (token via ?token=)
+$router->any('/queue/sync-drive',   [QueueController::class, 'syncDrive']);
 // Cron: motor de automação — enfileira regras agendadas e processa a fila de jobs
 $router->any('/queue/scheduler',    [QueueController::class, 'scheduler']);
 $router->any('/queue/work',         [QueueController::class, 'work']);

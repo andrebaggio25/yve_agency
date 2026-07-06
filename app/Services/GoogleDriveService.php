@@ -18,6 +18,40 @@ class GoogleDriveService
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
     private const VIDEO_EXTENSIONS  = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv', 'flv'];
 
+    /**
+     * Converte uma URL do Google Drive numa URL que funciona em <img>.
+     * O Google descontinuou `uc?export=view` para imagens embutidas; o endpoint
+     * `thumbnail` serve a imagem (para arquivos com link público). URLs que não
+     * são do Drive (link direto de imagem) passam direto, sem alteração.
+     */
+    public static function imageSrc(?string $url, int $size = 1600): string
+    {
+        $url = trim((string) $url);
+        if ($url === '') {
+            return '';
+        }
+
+        $id = self::extractFileId($url);
+        if ($id !== null) {
+            return "https://drive.google.com/thumbnail?id={$id}&sz=w{$size}";
+        }
+
+        return $url;
+    }
+
+    /** Extrai o file_id de qualquer forma comum de link do Drive; null se não for Drive. */
+    public static function extractFileId(?string $url): ?string
+    {
+        $url = (string) $url;
+        if (preg_match('#/file/d/([a-zA-Z0-9_-]+)#', $url, $m)) {
+            return $m[1];
+        }
+        if (preg_match('#[?&]id=([a-zA-Z0-9_-]+)#', $url, $m)) {
+            return $m[1];
+        }
+        return null;
+    }
+
     public function parse(string $url): array
     {
         $url = trim($url);

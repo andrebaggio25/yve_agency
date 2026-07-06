@@ -175,4 +175,18 @@ class ClientRepository extends Repository
             [':enabled' => $enabled, ':id' => $id],
         );
     }
+
+    /**
+     * Todos os clientes (de todas as agências) que têm pasta no Drive.
+     * Usado pelo cron de sincronização — sem escopo de agência (contexto sem sessão).
+     * @return array<int,array{id:int,agency_id:int}>
+     */
+    public function allWithDriveFolder(): array
+    {
+        return $this->all(
+            "SELECT id, agency_id FROM clients
+             WHERE drive_folder_id IS NOT NULL AND drive_folder_id <> ''
+               AND status = 'active'"
+        );
+    }
 }

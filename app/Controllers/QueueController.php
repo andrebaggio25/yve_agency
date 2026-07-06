@@ -13,6 +13,7 @@ use App\Services\AutomationService;
 use App\Services\NotificationService;
 use App\Services\AdsSyncService;
 use App\Services\OrganicSyncService;
+use App\Services\DriveSyncService;
 
 /**
  * Endpoints chamados pelo cron externo via GET.
@@ -26,6 +27,7 @@ class QueueController extends Controller
         private readonly OrganicSyncService  $organicSync,
         private readonly AutomationRepository $automationRepo,
         private readonly AutomationService    $automations,
+        private readonly DriveSyncService     $driveSync,
     ) {}
 
     public function run(Request $request): Response
@@ -56,6 +58,19 @@ class QueueController extends Controller
 
         try {
             $results = $this->organicSync->syncAll();
+            return Response::json(['success' => true, 'results' => $results, 'timestamp' => date('c')]);
+        } catch (\Throwable $e) {
+            return Response::json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /** Reconcilia as galerias de Drive de todos os clientes com o Google Drive. */
+    public function syncDrive(Request $request): Response
+    {
+        if ($resp = $this->guard($request)) return $resp;
+
+        try {
+            $results = $this->driveSync->syncAll();
             return Response::json(['success' => true, 'results' => $results, 'timestamp' => date('c')]);
         } catch (\Throwable $e) {
             return Response::json(['success' => false, 'error' => $e->getMessage()], 500);

@@ -6,8 +6,22 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       <?= e($client['name']) ?>
     </a>
-    <h1 class="text-2xl font-bold text-white">Conteúdos enviados</h1>
-    <p class="mt-1 text-sm text-gray-400">Arquivos que o cliente enviou pelo portal, no seu Google Drive.</p>
+    <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div>
+        <h1 class="text-2xl font-bold text-white">Conteúdos enviados</h1>
+        <p class="mt-1 text-sm text-gray-400">Arquivos que o cliente enviou pelo portal, no seu Google Drive.</p>
+      </div>
+      <button @click="sync()" :disabled="syncing"
+              class="btn-secondary text-sm px-3 py-2 gap-2 flex-shrink-0 disabled:opacity-50">
+        <svg class="w-4 h-4" :class="{'animate-spin': syncing}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span x-text="syncing ? 'Sincronizando…' : 'Sincronizar'"></span>
+      </button>
+    </div>
+    <p x-show="syncMsg" x-transition x-text="syncMsg"
+       :class="syncOk ? 'text-emerald-400' : 'text-rose-400'"
+       class="mt-2 text-xs" style="display:none"></p>
   </div>
 
   <!-- Breadcrumb -->
@@ -104,6 +118,10 @@ function driveBrowser(clientId) {
     folders: [],
     files: [],
     loading: false,
+    currentFolder: null,
+    syncing: false,
+    syncMsg: '',
+    syncOk: false,
     preview: { open: false, file: null },
 
     base() { return `/clientes/${clientId}/conteudos`; },
@@ -111,6 +129,7 @@ function driveBrowser(clientId) {
 
     async load(folderId) {
       this.loading = true;
+      this.currentFolder = folderId ?? null;
       try {
         const url = `${this.base()}/folders` + (folderId ? `?folder_id=${folderId}` : '');
         const r = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
@@ -125,6 +144,37 @@ function driveBrowser(clientId) {
     },
 
     goTo(folderId) { this.load(folderId); },
+
+    async sync() {
+      if (this.syncing) return;
+      this.syncing = true;
+      this.syncMsg = '';
+      try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const r = await fetch(`${this.base()}/sync`, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-Token': csrf },
+        });
+        const d = await r.json();
+        if (r.ok && d.success) {
+          const parts = [];
+          if (d.added)   parts.push(`${d.added} novo(s)`);
+          if (d.removed) parts.push(`${d.removed} removido(s)`);
+          if (d.renamed) parts.push(`${d.renamed} renomeado(s)`);
+          this.syncOk = true;
+          this.syncMsg = parts.length ? `Sincronizado: ${parts.join(', ')}.` : 'Tudo já estava atualizado.';
+          await this.load(this.currentFolder);
+        } else {
+          this.syncOk = false;
+          this.syncMsg = d.error || 'Não foi possível sincronizar.';
+        }
+      } catch (e) {
+        this.syncOk = false;
+        this.syncMsg = 'Erro de conexão ao sincronizar.';
+      }
+      this.syncing = false;
+      setTimeout(() => { this.syncMsg = ''; }, 6000);
+    },
 
     openPreview(file) { this.preview = { open: true, file }; },
     closePreview() { this.preview = { open: false, file: null }; },

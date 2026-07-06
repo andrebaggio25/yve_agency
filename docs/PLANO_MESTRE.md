@@ -93,7 +93,8 @@ Convenção de esforço: **P** = ≤2h · **M** = meio dia a 1 dia · **G** = v�
 - **Ação:** mover para módulos em `public/js/`; padronizar wrapper `fetch` com checagem de `response.ok`, estado de loading e erro.
 - **Pronto quando:** views grandes < 400 linhas; um helper único de fetch trata erro/loading.
 
-### DRIVE-01 · Preview de imagem do Drive na aprovação do cliente — `M` 🟠
+### DRIVE-01 · Preview de imagem do Drive na aprovação do cliente — `M` 🟠 · ✅ FEITO (2026-07-06)
+> Helper `GoogleDriveService::imageSrc()` converte links do Drive para o endpoint `thumbnail` (funciona em `<img>`); aplicado em `portal/plan_show.php` (capa, carrossel e imagem do Drive agora com preview inline) e na função JS `driveImageUrl()` de `content/show.php`. Coberto por `tests/Unit/DriveImageSrcTest.php`. Pré-requisito operacional: o arquivo do Drive precisa estar compartilhado "qualquer um com o link".
 - **Problema (confirmado):** na página que o cliente usa para aprovar a planificação (`portal/plan_show.php`) e na edição do item (`content/show.php`), as imagens (`cover_url`, `images[]`) são hotlinkadas do Google via `https://drive.google.com/uc?export=view&id=…` (montado por `driveImageUrl()` em `content/show.php:719-724`). **O Google descontinuou esse endpoint para `<img>`** — devolve uma página HTML de aviso/consentimento em vez dos bytes, então o `onerror` esconde a imagem e o preview fica em branco. Imagem do Drive em `drive_url` ainda cai no ramo "ver arquivo no Drive" (só link, sem preview inline — `plan_show.php:177`).
 - **Causa raiz secundária:** o app usa escopo OAuth `drive.file` — só enxerga arquivos que ele mesmo criou. Link colado manualmente pela equipe aponta para arquivo que o app não lê pela API; só renderiza se estiver compartilhado "qualquer um com o link".
 - **Correção:**
@@ -102,7 +103,8 @@ Convenção de esforço: **P** = ≤2h · **M** = meio dia a 1 dia · **G** = v�
   3. Renderizar imagem do Drive (`file_type === 'image'`) com preview inline no `plan_show.php`, não só link.
 - **Pronto quando:** item com imagem enviada pelo portal mostra o preview no card de aprovação (desktop e mobile); imagem via link público renderiza; nenhum `<img>` quebrado.
 
-### DRIVE-02 · Sincronizar alterações feitas direto no Drive → sistema — `G` 🟠
+### DRIVE-02 · Sincronizar alterações feitas direto no Drive → sistema — `G` 🟠 · ✅ FASE 1 FEITA (2026-07-06)
+> Reconciliação implementada: `DriveSyncService` (recursivo) + `GoogleDriveApiService::listFolder()` + botão "Sincronizar" na galeria da agência (`/clientes/{id}/conteudos/sync`) + cron `/queue/sync-drive`. Reflete delete/rename/move de arquivos **criados pelo app**. **Ainda pendente** (fase 2, decisão de produto): detectar arquivos adicionados **manualmente** no Drive exige escopo `drive.readonly` + verificação do Google — ver abaixo.
 - **Problema:** o sistema grava metadados em `drive_files`/`drive_folders` no upload. Se alguém **mexe direto no Google Drive** (adiciona, apaga, renomeia, move), o banco não sabe — galeria dessincroniza (arquivo fantasma ou novo invisível). Hoje só há limpeza reativa de órfão no 404 do proxy (`PortalController::driveFileRaw`).
 - **Restrição de arquitetura decisiva:** o escopo `drive.file` **só expõe arquivos criados pelo próprio app**. Arquivos que o cliente **adiciona manualmente na interface do Drive são invisíveis** para a API. Logo: detectar delete/rename/move do que o app enviou → viável com `drive.file`; detectar adição manual → exige escopo `drive.readonly`/`drive` + verificação/CASA do Google (custo/prazo — decisão de produto).
 - **Solução recomendada (faseada):**

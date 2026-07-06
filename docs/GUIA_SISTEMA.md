@@ -482,12 +482,16 @@ Os endpoints de cron são **públicos** mas protegidos por token secreto (`QUEUE
 | `GET /queue/run?token={QUEUE_SECRET}` | Processa fila de notificações pendentes | A cada 1–5 minutos |
 | `GET /queue/sync-ads?token={QUEUE_SECRET}` | Sincroniza métricas de todas as contas de anúncio ativas | 1× por dia (madrugada) |
 | `GET /queue/sync-organic?token={QUEUE_SECRET}` | Sincroniza métricas orgânicas de todas as contas ativas | 1× por dia (madrugada) |
+| `GET /queue/sync-drive?token={QUEUE_SECRET}` | Reconcilia as galerias de conteúdo com o Google Drive (reflete arquivos apagados/renomeados direto no Drive) | 1× por dia ou a cada poucas horas |
+
+> **Sobre o sync do Drive:** o escopo OAuth usado é `drive.file`, que só enxerga arquivos criados pelo próprio sistema. A sincronização reflete exclusões/renomeações desses arquivos; arquivos adicionados **manualmente** na interface do Google Drive não aparecem (exigiria escopo mais amplo com verificação do Google). Há também um botão **"Sincronizar"** na galeria de cada cliente (`/clientes/{id}/conteudos`) para reconciliação sob demanda.
 
 Exemplo de crontab:
 ```cron
 */5 * * * * curl -s "http://localhost:8000/queue/run?token=SEU_TOKEN" > /dev/null
 0 3 * * * curl -s "http://localhost:8000/queue/sync-ads?token=SEU_TOKEN" > /dev/null
 0 4 * * * curl -s "http://localhost:8000/queue/sync-organic?token=SEU_TOKEN" > /dev/null
+0 */6 * * * curl -s "http://localhost:8000/queue/sync-drive?token=SEU_TOKEN" > /dev/null
 ```
 
 > O `QUEUE_SECRET` está no `.env`. Nunca exponha esse valor publicamente. Consulte `docs/CRON.md` para detalhes adicionais.

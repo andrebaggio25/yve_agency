@@ -713,15 +713,14 @@ const emptyModal = () => ({
   cover_url: '', caption: '', drive_url: '', assigned_to: '', images: []
 });
 
-// Convert Google Drive share/view URLs to direct image URLs
+// Converte URLs de compartilhamento do Drive numa URL que funciona em <img>.
+// O endpoint uc?export=view foi descontinuado pelo Google para imagens; o
+// endpoint thumbnail serve a imagem (arquivo precisa ter link público).
 function driveImageUrl(url) {
   if (!url) return url;
-  // https://drive.google.com/file/d/FILE_ID/view...
-  const m1 = url.match(/drive\.google\.com\/file\/d\/([^/?\s]+)/);
-  if (m1) return `https://drive.google.com/uc?export=view&id=${m1[1]}`;
-  // https://drive.google.com/open?id=FILE_ID
-  const m2 = url.match(/drive\.google\.com\/open\?id=([^&\s]+)/);
-  if (m2) return `https://drive.google.com/uc?export=view&id=${m2[1]}`;
+  // /file/d/FILE_ID/... ou qualquer ?id=FILE_ID / &id=FILE_ID (open, uc, etc.)
+  const m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1600`;
   return url;
 }
 

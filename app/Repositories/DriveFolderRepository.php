@@ -57,4 +57,13 @@ class DriveFolderRepository extends Repository
             [':id' => $id, ':c' => $clientId]
         );
     }
+
+    /** Renomeia uma pasta a partir do Drive (reconciliação). */
+    public function updateName(int $id, int $clientId, string $name): void
+    {
+        $this->query(
+            "UPDATE drive_folders SET name = :n WHERE id = :id AND client_id = :c",
+            [':n' => $name, ':id' => $id, ':c' => $clientId]
+        );
+    }
 }

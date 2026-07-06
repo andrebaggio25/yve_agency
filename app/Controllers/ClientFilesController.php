@@ -11,6 +11,7 @@ use App\Repositories\ClientRepository;
 use App\Repositories\DriveFolderRepository;
 use App\Repositories\DriveFileRepository;
 use App\Services\GoogleDriveApiService;
+use App\Services\DriveSyncService;
 use App\Support\Auth;
 
 /**
@@ -24,6 +25,7 @@ class ClientFilesController extends Controller
         private readonly DriveFolderRepository $folderRepo,
         private readonly DriveFileRepository   $fileRepo,
         private readonly GoogleDriveApiService $driveApi,
+        private readonly DriveSyncService      $driveSync,
     ) {}
 
     public function index(Request $request): Response
@@ -80,6 +82,45 @@ class ClientFilesController extends Controller
                 'is_image'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'image/'),
                 'is_video'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'video/'),
             ], $this->fileRepo->forFolder($clientId, $folderId)),
+        ]);
+    }
+
+    /**
+     * Reconcilia a galeria com o Google Drive (sob demanda, via botão).
+     * Reflete no sistema o que foi apagado/renomeado direto no Drive.
+     */
+    public function sync(Request $request): Response
+    {
+        Auth::requirePermission('clients.view');
+
+        $clientId = (int) $request->param('clientId');
+        $agencyId = (int) Auth::agencyId();
+        $client   = $this->clientRepo->findByIdAndAgency($clientId, $agencyId);
+        if (!$client) {
+            return Response::json(['error' => 'Cliente não encontrado'], 404);
+        }
+
+        try {
+            $result = $this->driveSync->syncClient($clientId, $agencyId);
+        } catch (\Throwable $e) {
+            return Response::json(['success' => false, 'error' => 'Falha ao sincronizar: ' . $e->getMessage()], 500);
+        }
+
+        if (!($result['synced'] ?? false)) {
+            $reason = $result['reason'] ?? 'unknown';
+            $msg = match ($reason) {
+                'no_folder'     => 'Este cliente ainda não tem pasta no Drive.',
+                'not_connected' => 'Google Drive não está conectado para esta agência.',
+                default         => 'Não foi possível sincronizar.',
+            };
+            return Response::json(['success' => false, 'error' => $msg], 422);
+        }
+
+        return Response::json([
+            'success' => true,
+            'added'   => $result['added']   ?? 0,
+            'removed' => $result['removed'] ?? 0,
+            'renamed' => $result['renamed'] ?? 0,
         ]);
     }
 

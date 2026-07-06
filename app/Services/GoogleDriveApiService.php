@@ -256,6 +256,55 @@ class GoogleDriveApiService
         return $this->createFolderRaw($this->accessToken($agencyId), $name, $parentDriveId);
     }
 
+    /**
+     * Lista o conteúdo direto (arquivos + subpastas) de uma pasta do Drive.
+     * Escopo drive.file: só retorna itens que o próprio app criou — suficiente
+     * para reconciliar exclusões/renomeações do que foi enviado pelo sistema.
+     * @return array<int,array{id:string,name:string,mimeType:string,size?:string,thumbnailLink?:string,webViewLink?:string}>
+     */
+    public function listFolder(int $agencyId, string $parentDriveId): array
+    {
+        $token     = $this->accessToken($agencyId);
+        $items     = [];
+        $pageToken = null;
+
+        do {
+            $query = [
+                'q'        => "'{$parentDriveId}' in parents and trashed = false",
+                'fields'   => 'nextPageToken, files(id,name,mimeType,size,thumbnailLink,webViewLink)',
+                'pageSize' => 200,
+                'spaces'   => 'drive',
+                'supportsAllDrives'         => 'true',
+                'includeItemsFromAllDrives' => 'true',
+            ];
+            if ($pageToken !== null) {
+                $query['pageToken'] = $pageToken;
+            }
+
+            $resp = (new Client(['timeout' => 30, 'http_errors' => false]))->get(
+                'https://www.googleapis.com/drive/v3/files',
+                ['headers' => ['Authorization' => 'Bearer ' . $token], 'query' => $query]
+            );
+
+            if ($resp->getStatusCode() !== 200) {
+                break;
+            }
+
+            $data = json_decode((string) $resp->getBody(), true) ?? [];
+            foreach ($data['files'] ?? [] as $f) {
+                $items[] = $f;
+            }
+            $pageToken = $data['nextPageToken'] ?? null;
+        } while ($pageToken !== null);
+
+        return $items;
+    }
+
+    public function isFolderMime(?string $mime): bool
+    {
+        return $mime === self::FOLDER_MIME;
+    }
+
     // ── Upload resumável ─────────────────────────────────────────────────────
 
     /**

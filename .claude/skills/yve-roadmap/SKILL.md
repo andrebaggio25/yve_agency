@@ -56,9 +56,9 @@ Este é o backlog operacional derivado da auditoria. Fonte canônica e detalhada
 
 **PERF-02 — extrair JS inline** · `M` · `content/show.php` (1130 l.), `portal/files.php` (566 l.). Mover para `public/js/`; wrapper `fetch` com `response.ok`+loading+erro.
 
-**DRIVE-01 — preview de imagem do Drive na aprovação** · `M` · `portal/plan_show.php`, `content/show.php:719-724`. As imagens usam `drive.google.com/uc?export=view&id=` (`driveImageUrl()`), endpoint que o Google descontinuou para `<img>` → preview em branco. Corrigir: imagens enviadas pelo app → servir pelo proxy próprio (`/portal/{token}/drive/file/{id}/raw`); links colados → `thumbnail?id=ID&sz=w1000` + fallback iframe `/preview`; renderizar imagem do Drive inline (hoje só vira link). Lembrar: escopo `drive.file` só lê o que o app criou.
+**DRIVE-01 — preview de imagem do Drive na aprovação** · ✅ FEITO · `GoogleDriveService::imageSrc()` (estático) converte link do Drive → `thumbnail?id=ID&sz=w1600`; aplicado em `portal/plan_show.php` e no JS `driveImageUrl()` de `content/show.php`. Teste: `DriveImageSrcTest`. Requisito: arquivo compartilhado "qualquer um com o link".
 
-**DRIVE-02 — sincronizar Drive→sistema** · `G` · metadados em `drive_files`/`drive_folders` não refletem mudanças feitas direto no Drive. **Restrição chave:** escopo `drive.file` só vê arquivos criados pelo app (adição manual no Drive é invisível — exigiria `drive.readonly` + verificação Google). Solução faseada: reconciliação sob demanda + cron via `files.list`/`changes.list` (delta com `startPageToken`); marcar ausente como "removido" na listagem; `changes.watch` só se precisar tempo real. Ver DRIVE-02 no `PLANO_MESTRE.md`.
+**DRIVE-02 — sincronizar Drive→sistema** · ✅ FASE 1 FEITA · `DriveSyncService` (reconciliação recursiva) + `GoogleDriveApiService::listFolder()` + botão na galeria (`/clientes/{id}/conteudos/sync`) + cron `/queue/sync-drive`. Reflete delete/rename/move de arquivos criados pelo app. **Fase 2 pendente (decisão de produto):** detectar adição manual no Drive exige escopo `drive.readonly` + verificação Google. Opcional real-time: `changes.watch`.
 
 ## Marco 3 — Robustez
 

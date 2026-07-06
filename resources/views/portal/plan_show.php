@@ -139,7 +139,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         <!-- Capa -->
         <?php if (!empty($item['cover_url'])): ?>
         <div class="rounded-xl overflow-hidden">
-          <img src="<?= e($item['cover_url']) ?>" alt="Capa"
+          <img src="<?= e(\App\Services\GoogleDriveService::imageSrc($item['cover_url'])) ?>" alt="Capa"
                class="w-full object-cover max-h-80"
                onerror="this.parentElement.style.display='none'">
         </div>
@@ -174,6 +174,13 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
                     class="w-full h-full border-0" loading="lazy" allowfullscreen></iframe>
           </div>
         </div>
+        <?php elseif ($parsedDrive && $parsedDrive['valid'] && $parsedDrive['file_type'] === 'image'): ?>
+        <!-- Imagem do Drive — preview inline (antes só mostrava link) -->
+        <div class="rounded-xl overflow-hidden">
+          <img src="<?= e(\App\Services\GoogleDriveService::imageSrc($parsedDrive['original'])) ?>" alt="Imagem"
+               class="w-full object-cover max-h-80"
+               onerror="this.parentElement.style.display='none'">
+        </div>
         <?php elseif ($parsedDrive && $parsedDrive['valid']): ?>
         <a href="<?= e($parsedDrive['original']) ?>" target="_blank" rel="noopener"
            class="inline-flex items-center gap-2 text-xs text-violet-400 hover:text-violet-300">
@@ -187,7 +194,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         <div class="space-y-2">
           <?php foreach ($imagesList as $imgUrl): if (empty($imgUrl)) continue; ?>
           <div class="rounded-xl overflow-hidden">
-            <img src="<?= e($imgUrl) ?>" alt="Slide" class="w-full object-cover max-h-80"
+            <img src="<?= e(\App\Services\GoogleDriveService::imageSrc($imgUrl)) ?>" alt="Slide" class="w-full object-cover max-h-80"
                  onerror="this.parentElement.style.display='none'">
           </div>
           <?php endforeach; ?>
