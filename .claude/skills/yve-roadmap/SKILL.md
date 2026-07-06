@@ -32,19 +32,19 @@ Este é o backlog operacional derivado da auditoria. Fonte canônica e detalhada
 `app/Services/NotificationService.php:89`: `compact()` com nomes snake_case, mas variáveis são camelCase → `action_url` nunca salvo.
 → Montar array explícito (`'action_url' => $actionUrl`, `'agency_id' => $agencyId`, …). **Pronto:** clicar na notificação leva ao destino; PHPStan sem "undefined variable".
 
-## Marco 1 — Hardening
+## Marco 1 — Hardening (✅ concluído em 2026-07-06)
 
-**SEC-03 — CSP + HSTS** · `M` · `app/Core/Response.php:99-104`. Adicionar `Content-Security-Policy` (allowlist dos CDNs ou self-host) e `Strict-Transport-Security`. Coordenar com PERF-01/02 para permitir CSP estrita.
+**SEC-03 — CSP + HSTS** · ✅ FEITO · `Response::send()` envia `Content-Security-Policy` (allowlist dos CDNs; ainda com `unsafe-inline`/`unsafe-eval` por causa do Tailwind/Alpine CDN) e `Strict-Transport-Security` sob HTTPS. Endurecer para nonce após self-host (PERF-01). Validar no navegador com `visual-validation`.
 
-**SEC-05 — cifrar credenciais globais** · `M` · `PlatformSettingsRepository` + `GlobalSettingsController`. Cifrar `mail_password`, `meta_app_secret`, `openai_api_key`, `anthropic_api_key`, `evolution_api_key` com `Secret`; migration para cifrar valores existentes.
+**SEC-05 — cifrar credenciais globais** · ✅ FEITO · `PlatformSettingsRepository` cifra/decifra transparente as chaves sensíveis via `Secret`; migration `20260706000024` cifra valores existentes (idempotente).
 
-**SEC-06 — CSRF uniforme** · `M` · `routes/web.php` (portal drive + `itemFeedback`) e `/api/comentarios/*` mudam estado sem CSRF. Aplicar CSRF/`X-CSRF-Token`. Corrigir `except` do `CsrfMiddleware` (`/webhooks/` não bate com a rota real `/webhook/`).
+**SEC-06 — CSRF uniforme** · ✅ PARCIAL · `/api/comentarios` POST agora exige `X-CSRF-Token` (gap real de cookie de sessão); `CsrfMiddleware::except` esvaziado. **Follow-up:** endpoints do portal (`itemFeedback`, `drive/*`) seguem só com o token da URL — CSRF no portal fica pendente.
 
-**SEC-04 — sanitizar Markdown IA + pin CDN** · `P` · `resources/views/ia/show.php:80`. DOMPurify após `marked.parse` (ou texto); fixar versão do `marked` com SRI.
+**SEC-04 — sanitizar Markdown IA** · ✅ FEITO · `ia/show.php` usa DOMPurify após `marked.parse`; versões dos CDNs fixadas; `json_encode` com flags `JSON_HEX_*`. (SRI ainda não — precisa dos hashes.)
 
-**SEC-07 — posse de entidade nos comentários** · `P` · `InternalCommentService::add`. Validar que `entity_id` pertence à agência antes de gravar.
+**SEC-07 — posse de entidade nos comentários** · ✅ FEITO · `InternalCommentRepository::entityBelongsToAgency()` valida tenant antes de ler/gravar comentário.
 
-**SCHEMA-01 — FKs faltantes Drive/ClickUp** · `M` · nova migration. `drive_files/drive_folders/google_drive_integrations/clickup_*` têm `agency_id`/`client_id` sem FK. Adicionar FKs `ON DELETE CASCADE`; limpar órfãos antes.
+**SCHEMA-01 — FKs faltantes Drive/ClickUp** · ✅ FEITO · migration `20260706000025` limpa órfãos e adiciona FKs `ON DELETE CASCADE` (drive_folders/drive_files agency+client, google_drive_integrations e clickup_integrations agency). Rodar `composer migrate` em produção.
 
 ## Marco 2 — Qualidade
 

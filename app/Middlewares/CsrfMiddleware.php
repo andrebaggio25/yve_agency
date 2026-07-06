@@ -13,11 +13,14 @@ class CsrfMiddleware implements Middleware
     /** Methods that require CSRF validation */
     private const PROTECTED = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
-    /** Routes exempt from CSRF (webhooks, APIs) */
-    private array $except = [
-        '/api/',
-        '/webhooks/',
-    ];
+    /**
+     * Rotas isentas de CSRF por prefixo de caminho.
+     * A isenção real é NÃO adicionar este middleware à rota (webhooks usam HMAC/
+     * token próprio; crons usam QUEUE_SECRET). Mantido vazio de propósito: quando
+     * o middleware está no pipeline, ele SEMPRE valida — inclusive em APIs JSON,
+     * que devem enviar o header X-CSRF-Token.
+     */
+    private array $except = [];
 
     public function handle(Request $request, \Closure $next): Response
     {

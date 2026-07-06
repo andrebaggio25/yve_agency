@@ -35,7 +35,9 @@ Convenção de esforço: **P** = ≤2h · **M** = meio dia a 1 dia · **G** = v�
 
 ## Marco 1 — Hardening de produção
 
-### SEC-03 · Content-Security-Policy + HSTS — `M` 🟠
+> **✅ CONCLUÍDO em 2026-07-06** — SEC-03, SEC-04, SEC-05, SEC-06 e SEC-07 e SCHEMA-01 implementados e validados (48 testes verdes, PHPStan sem regressão). Ressalvas: (a) a CSP mantém `unsafe-inline`/`unsafe-eval` pois o app usa Tailwind/Alpine por CDN — endurecer para nonce após PERF-01; validar em navegador com `visual-validation`. (b) SEC-06 cobriu a API interna `/api/comentarios` (gap real de cookie de sessão); os endpoints do portal seguem protegidos pelo token na URL — CSRF uniforme no portal fica como follow-up. (c) as 2 migrations novas precisam rodar em produção (`composer migrate`). Detalhes de cada item abaixo.
+
+### SEC-03 · Content-Security-Policy + HSTS — `M` 🟠 · ✅ FEITO
 - **Arquivos:** `app/Core/Response.php:91-104`.
 - **Ação:** header CSP com allowlist (ou self-host, ver PERF-01); `Strict-Transport-Security` quando HTTPS. Bloquear `unsafe-inline` gradualmente (há inline scripts hoje — coordenar com PERF-02).
 - **Pronto quando:** resposta traz CSP e HSTS; o app funciona sem violações no console.

@@ -471,10 +471,11 @@ $router->any('/queue/sync-drive',   [QueueController::class, 'syncDrive']);
 $router->any('/queue/scheduler',    [QueueController::class, 'scheduler']);
 $router->any('/queue/work',         [QueueController::class, 'work']);
 
-// API: comentários internos (equipe) — autenticado por sessão, sem CSRF (JSON API)
+// API: comentários internos (equipe) — autenticado por sessão. O POST valida
+// CSRF via header X-CSRF-Token (SEC-06); o GET é leitura e não precisa.
 $router->group([AuthMiddleware::class], function ($router) {
     $router->get( '/api/comentarios/{type}/{entityId}', [InternalCommentController::class, 'index']);
-    $router->post('/api/comentarios/{type}/{entityId}', [InternalCommentController::class, 'store']);
+    $router->post('/api/comentarios/{type}/{entityId}', [InternalCommentController::class, 'store'], [CsrfMiddleware::class]);
 });
 
 // Webhook Evolution API (token único por instância)

@@ -17,6 +17,7 @@ class InternalCommentService
     public function get(string $type, int $entityId, int $agencyId): array
     {
         if (!in_array($type, self::ALLOWED_TYPES, true)) return [];
+        if (!$this->repo->entityBelongsToAgency($type, $entityId, $agencyId)) return [];
         return $this->repo->getForEntity($type, $entityId, $agencyId);
     }
 
@@ -24,6 +25,11 @@ class InternalCommentService
     {
         if (!in_array($type, self::ALLOWED_TYPES, true)) {
             throw new \InvalidArgumentException("Tipo inválido: {$type}");
+        }
+
+        // SEC-07: a entidade precisa pertencer à agência do usuário.
+        if (!$this->repo->entityBelongsToAgency($type, $entityId, $agencyId)) {
+            throw new \InvalidArgumentException('Entidade não encontrada.');
         }
 
         $message = trim($message);
