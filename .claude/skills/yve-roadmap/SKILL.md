@@ -48,9 +48,9 @@ Este é o backlog operacional derivado da auditoria. Fonte canônica e detalhada
 
 ## Marco 2 — Qualidade
 
-**QA-01 — zerar PHPStan nível 6** · `M` · `Core/Response.php`+`Controller.php` (`new static()`), `Core/View.php`, `Container.php`, `Request.php`. 22 erros hoje (cosméticos).
+**QA-01 — zerar PHPStan nível 6** · ✅ FEITO · `Container`/`Request`/`Response` `final`; `View::render` via acessores tipados; bug real `Response::withError()` no `ReportController` corrigido; código morto removido; `phpstan.neon` migrado. `composer analyse` = [OK].
 
-**QA-02 — testes de autorização/multi-tenancy** · `G` · `tests/Feature/`. Positivo+negativo por módulo: sem permissão → 403; agência A não lê B; `client_ids` limita visão; portal token inválido/desabilitado.
+**QA-02 — testes de autorização/multi-tenancy** · ✅ FEITO · `MiddlewareAuthorizationTest` (Auth/Permission/ClientAccess/PlatformAdmin, positivo+negativo) + `RepositoryScopeTest` (`agencyScope` por tenant / `1=1` platform admin / throw sem agência). 62 testes verdes. Follow-up: HTTP ponta a ponta exige schema em banco de teste (migrations são PG-only).
 
 **PERF-01 — build de assets** · `M` · sair do `cdn.tailwindcss.com`; Tailwind CLI purgado em `public/css`; self-host Alpine/Chart com SRI.
 

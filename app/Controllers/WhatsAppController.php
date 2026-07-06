@@ -7,7 +7,6 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
-use App\Repositories\PlatformSettingsRepository;
 use App\Repositories\WhatsAppInstanceRepository;
 use App\Services\EvolutionApiService;
 use App\Support\Auth;
@@ -17,7 +16,6 @@ class WhatsAppController extends Controller
     public function __construct(
         private readonly WhatsAppInstanceRepository $instanceRepo,
         private readonly EvolutionApiService        $evolution,
-        private readonly PlatformSettingsRepository $settings,
     ) {}
 
     // ── Settings page ─────────────────────────────────────────────────────────

@@ -11,7 +11,6 @@ use App\Support\Auth;
 use App\Repositories\AdAccountRepository;
 use App\Repositories\CampaignRepository;
 use App\Repositories\AdSetRepository;
-use App\Repositories\AdRepository;
 use App\Repositories\AdMetricsRepository;
 
 class TrafficController extends Controller
@@ -20,7 +19,6 @@ class TrafficController extends Controller
         private readonly AdAccountRepository $accountRepo,
         private readonly CampaignRepository  $campaignRepo,
         private readonly AdSetRepository     $adSetRepo,
-        private readonly AdRepository        $adRepo,
         private readonly AdMetricsRepository $metricsRepo,
     ) {}
 

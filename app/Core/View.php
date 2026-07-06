@@ -35,17 +35,33 @@ class View
         // Render the view file; sections are captured inside it
         $defaultContent = self::include($view, $data);
 
+        // Nota: self::include() executa o arquivo de view, que pode chamar
+        // View::start/stop/layout e mutar $sections/$layout. PHPStan não rastreia
+        // esse efeito colateral (include de arquivo), então lemos via acessores
+        // tipados para preservar a análise correta.
+
         // If the view didn't define a 'content' section but echoed directly,
         // treat that output as the content section
-        if (!isset(self::$sections['content']) && $defaultContent !== '') {
+        if (!isset(self::sections()['content']) && $defaultContent !== '') {
             self::$sections['content'] = $defaultContent;
         }
 
-        if (self::$layout !== null) {
-            return self::include('layouts/' . self::$layout, $data);
+        if (self::currentLayout() !== null) {
+            return self::include('layouts/' . self::currentLayout(), $data);
         }
 
         return $defaultContent;
+    }
+
+    /** @return array<string,string> */
+    private static function sections(): array
+    {
+        return self::$sections;
+    }
+
+    private static function currentLayout(): ?string
+    {
+        return self::$layout;
     }
 
     public static function partial(string $name, array $data = []): string

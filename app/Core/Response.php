@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core;
 
-class Response
+final class Response
 {
     private int    $status  = 200;
     private array  $headers = [];

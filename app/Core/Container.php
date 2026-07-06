@@ -9,7 +9,7 @@ use ReflectionClass;
 use ReflectionNamedType;
 use RuntimeException;
 
-class Container implements ContainerInterface
+final class Container implements ContainerInterface
 {
     private static ?self $instance = null;
 
@@ -22,14 +22,14 @@ class Container implements ContainerInterface
     /** @var array<string, mixed> */
     private array $instances = [];
 
-    public static function getInstance(): static
+    public static function getInstance(): self
     {
-        return static::$instance ??= new static();
+        return self::$instance ??= new self();
     }
 
     public static function setInstance(self $instance): void
     {
-        static::$instance = $instance;
+        self::$instance = $instance;
     }
 
     public function bind(string $abstract, callable $factory, bool $singleton = false): void

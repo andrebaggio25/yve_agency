@@ -8,14 +8,12 @@ use App\Core\Controller;
 use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
-use App\Repositories\NotificationRepository;
 use App\Services\NotificationService;
 use App\Support\Auth;
 
 class SettingsController extends Controller
 {
     public function __construct(
-        private readonly NotificationRepository $notifRepo,
         private readonly NotificationService    $notifications,
     ) {}
 

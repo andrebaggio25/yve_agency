@@ -4,5 +4,8 @@ parameters:
         - app
     excludePaths:
         - app/Support/helpers.php
-    checkMissingIterableValueType: false
     treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # Ainda não anotamos os value-types de todo array (substitui a opção
+        # deprecada checkMissingIterableValueType). Meta futura: tipar e remover.
+        - identifier: missingType.iterableValue

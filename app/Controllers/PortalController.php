@@ -41,12 +41,6 @@ class PortalController extends Controller
         private readonly GoogleDriveApiService   $driveApi,
     ) {}
 
-    // Returns true if status badge should change color
-    private static function videoTypes(): array
-    {
-        return ['Reels / Vídeo', 'reels', 'Story'];
-    }
-
     // ---------------------------------------------------------------- dashboard
 
     public function index(Request $request): Response
@@ -403,7 +397,7 @@ class PortalController extends Controller
                 'drive_file_id'  => $uploaded['id'],
                 'name'           => $name,
                 'mime_type'      => $mime ?: null,
-                'size_bytes'     => $size ?: null,
+                'size_bytes'     => $size, // já garantido > 0 pela validação acima
                 'thumbnail_link' => $thumb,
                 'web_view_link'  => $webView,
                 'uploaded_via'   => 'portal',

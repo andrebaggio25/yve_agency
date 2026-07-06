@@ -11,9 +11,7 @@ use App\Core\Response;
 use App\Support\Auth;
 use App\Repositories\ClientRepository;
 use App\Repositories\InvoiceRepository;
-use App\Repositories\ContractRepository;
 use App\Repositories\TaskRepository;
-use App\Repositories\ContentPlanRepository;
 use App\Repositories\AdMetricsRepository;
 
 class ReportController extends Controller
@@ -21,9 +19,7 @@ class ReportController extends Controller
     public function __construct(
         private ClientRepository        $clientRepo,
         private InvoiceRepository       $invoiceRepo,
-        private ContractRepository      $contractRepo,
         private TaskRepository          $taskRepo,
-        private ContentPlanRepository   $planRepo,
         private AdMetricsRepository     $adMetrics,
     ) {}
 
@@ -158,7 +154,8 @@ class ReportController extends Controller
 
         $client = $this->clientRepo->findByIdAndAgency($clientId, $agencyId);
         if (!$client) {
-            return $this->redirect('/relatorio-executivo')->withError('Cliente não encontrado.');
+            $this->withError('Cliente não encontrado.');
+            return $this->redirect('/relatorio-executivo');
         }
 
         $rawSince2 = (string) $request->input('since', '');
