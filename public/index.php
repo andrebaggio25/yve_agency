@@ -23,8 +23,11 @@ if (env('APP_ENV', 'production') === 'development') {
     error_reporting(E_ALL);
     ini_set('display_errors', '1');
 } else {
-    error_reporting(0);
+    // Produção: NUNCA exibir erro ao usuário (vaza stack trace, SQL, caminhos).
+    // Mas continuar registrando no log para diagnóstico.
+    error_reporting(E_ALL);
     ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

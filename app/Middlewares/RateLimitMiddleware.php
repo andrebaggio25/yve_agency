@@ -15,7 +15,7 @@ use App\Core\Response;
 class RateLimitMiddleware implements Middleware
 {
     public function __construct(
-        private readonly int    $maxAttempts = 10,
+        private readonly int    $maxAttempts = 5,
         private readonly int    $decaySeconds = 60,
     ) {}
 
@@ -24,11 +24,27 @@ class RateLimitMiddleware implements Middleware
         $key  = 'rate_limit_' . md5($request->ip() . $request->path());
         $file = storage_path('framework/' . $key . '.json');
 
-        $data = $this->load($file);
+        // Abre com lock exclusivo para tornar o read-modify-write atômico —
+        // sem isso, requisições concorrentes subcontam as tentativas (race).
+        $fp = @fopen($file, 'c+');
+        if ($fp === false) {
+            // Não conseguiu abrir o arquivo de estado: falha aberto para não
+            // bloquear login legítimo por problema de I/O.
+            return $next($request);
+        }
+        flock($fp, LOCK_EX);
 
-        if ($data['attempts'] >= $this->maxAttempts) {
-            $remaining = $data['reset_at'] - time();
+        $raw  = stream_get_contents($fp) ?: '';
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            $data = ['attempts' => 0, 'reset_at' => 0];
+        }
+
+        if (($data['attempts'] ?? 0) >= $this->maxAttempts) {
+            $remaining = (int) ($data['reset_at'] ?? 0) - time();
             if ($remaining > 0) {
+                flock($fp, LOCK_UN);
+                fclose($fp);
                 if ($request->wantsJson()) {
                     return Response::json([
                         'error'       => 'Too many requests',
@@ -37,27 +53,22 @@ class RateLimitMiddleware implements Middleware
                 }
                 return Response::view('errors.429', ['retry_after' => $remaining], 429);
             }
-            // Decay window passed — reset
+            // Janela de decaimento passou — zera.
             $data = ['attempts' => 0, 'reset_at' => time() + $this->decaySeconds];
         }
 
-        $data['attempts']++;
-        if ($data['reset_at'] === 0) {
+        $data['attempts'] = (int) ($data['attempts'] ?? 0) + 1;
+        if (($data['reset_at'] ?? 0) === 0) {
             $data['reset_at'] = time() + $this->decaySeconds;
         }
 
-        file_put_contents($file, json_encode($data));
+        ftruncate($fp, 0);
+        rewind($fp);
+        fwrite($fp, json_encode($data));
+        fflush($fp);
+        flock($fp, LOCK_UN);
+        fclose($fp);
 
         return $next($request);
-    }
-
-    private function load(string $file): array
-    {
-        if (!file_exists($file)) {
-            return ['attempts' => 0, 'reset_at' => 0];
-        }
-
-        $data = json_decode(file_get_contents($file), true);
-        return is_array($data) ? $data : ['attempts' => 0, 'reset_at' => 0];
     }
 }

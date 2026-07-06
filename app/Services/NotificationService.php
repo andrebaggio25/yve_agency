@@ -86,9 +86,13 @@ class NotificationService
 
     public function createInApp(int $agencyId, int $userId, string $type, string $title, ?string $body = null, ?string $actionUrl = null): void
     {
-        $this->repo->createNotification(compact('agency_id', 'user_id', 'type', 'title', 'body', 'action_url') + [
+        $this->repo->createNotification([
             'agency_id'  => $agencyId,
             'user_id'    => $userId,
+            'type'       => $type,
+            'title'      => $title,
+            'body'       => $body,
+            'action_url' => $actionUrl,
         ]);
     }
 

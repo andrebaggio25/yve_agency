@@ -140,9 +140,25 @@ class Request
 
     public function ip(): string
     {
-        return $this->server['HTTP_X_FORWARDED_FOR']
-            ?? $this->server['REMOTE_ADDR']
-            ?? '0.0.0.0';
+        $remote = $this->server['REMOTE_ADDR'] ?? '0.0.0.0';
+
+        // X-Forwarded-For é forjável pelo cliente. Só o honramos quando a conexão
+        // vem de um proxy confiável declarado em TRUSTED_PROXIES (lista separada
+        // por vírgula). Sem isso, um atacante contornaria rate limit/decisões de
+        // segurança rotacionando o header. Fonte de verdade padrão: REMOTE_ADDR.
+        $trusted = array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))));
+        if ($trusted && in_array($remote, $trusted, true)) {
+            $forwarded = (string) ($this->server['HTTP_X_FORWARDED_FOR'] ?? '');
+            if ($forwarded !== '') {
+                // Formato "client, proxy1, proxy2" — o primeiro é o cliente original.
+                $first = trim(explode(',', $forwarded)[0]);
+                if ($first !== '') {
+                    return $first;
+                }
+            }
+        }
+
+        return $remote;
     }
 
     public function userAgent(): string
