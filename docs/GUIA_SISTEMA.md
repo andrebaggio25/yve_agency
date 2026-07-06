@@ -459,6 +459,7 @@ Acessível apenas com `platform@yveagency.com` (ou qualquer user com `is_platfor
 | `/admin/planos/novo` | Criar plano com limites por recurso |
 | `/admin/assinaturas` | Atribuir planos às agências |
 | `/admin/configuracoes` | Configurações globais (veja abaixo) |
+| `/admin/migrations` | Rodar migrations do banco pelo painel (sem CLI) — veja abaixo |
 
 ### Configurações globais (`/admin/configuracoes`)
 
@@ -469,7 +470,17 @@ Acessível apenas com `platform@yveagency.com` (ou qualquer user com `is_platfor
 | **Meta Ads (Facebook)** | App ID, App Secret |
 | **IA** | Provedor (openai/anthropic), Modelo, API Keys |
 
-> Os campos de API Key são mascarados (`••••••••`) após salvar. Para alterar, basta digitar o novo valor. Deixar em branco mantém o valor atual.
+> Os campos de API Key são mascarados (`••••••••`) após salvar. Para alterar, basta digitar o novo valor. Deixar em branco mantém o valor atual. As chaves são **cifradas em repouso** no banco (SEC-05).
+
+### Migrations do banco (`/admin/migrations`)
+
+Permite rodar o schema **direto pelo painel**, sem acesso a CLI — útil no Supabase/Hostinger. O sistema conecta no mesmo banco que a aplicação usa (via `phinx.php`), então é equivalente a rodar `vendor/bin/phinx migrate` remotamente.
+
+- A tela lista todas as migrations com o estado (**Executada** / **Pendente**) e a data de execução.
+- **Rodar pendentes:** aplica todas as migrations que ainda não rodaram. A saída (log) aparece na tela.
+- **Reverter última:** faz rollback de 1 passo. **Operação sensível — pode remover dados.**
+
+> **Recomendado:** faça um backup do banco (o Supabase tem backups automáticos no painel dele) antes de rodar em produção. Só o Platform Admin acessa esta tela; toda execução é registrada em `activity_logs`.
 
 ---
 

@@ -32,6 +32,7 @@ use App\Controllers\Admin\TenantController;
 use App\Controllers\Admin\PlatformUserController;
 use App\Controllers\Admin\GlobalSettingsController;
 use App\Controllers\Admin\SubscriptionPlanController;
+use App\Controllers\Admin\MigrationController;
 use App\Controllers\BillingController;
 use App\Controllers\ReportController;
 use App\Controllers\ClickUpController;
@@ -88,6 +89,11 @@ $router->group([PlatformAdminMiddleware::class], function ($router) {
     $router->get('/admin/configuracoes',                [GlobalSettingsController::class, 'index']);
     $router->post('/admin/configuracoes',               [GlobalSettingsController::class, 'save'],         [CsrfMiddleware::class]);
     $router->get('/admin/configuracoes/test-evolution', [GlobalSettingsController::class, 'testEvolution']);
+
+    // ── Migrations (rodar o schema pelo painel, sem CLI) ──────────────────────
+    $router->get('/admin/migrations',           [MigrationController::class, 'index']);
+    $router->post('/admin/migrations/run',      [MigrationController::class, 'run'],      [CsrfMiddleware::class]);
+    $router->post('/admin/migrations/rollback', [MigrationController::class, 'rollback'], [CsrfMiddleware::class]);
 
     // ── Planos & Assinaturas (admin) ──────────────────────────────────────────
     $router->get('/admin/planos',                       [SubscriptionPlanController::class, 'plans']);
