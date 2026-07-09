@@ -9,6 +9,8 @@
   <style>
     body { background: #09090f; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; }
     .card { background: #16161f; border: 1px solid rgba(255,255,255,0.07); border-radius: 1rem; }
+    select { color-scheme: dark; }
+    select option, select optgroup { background-color: #16161f; color: #e2e8f0; }
     .btn-primary { background: #7c3aed; color: #fff; border-radius: .625rem; font-weight: 500; display: inline-flex; align-items: center; transition: opacity .15s; }
     .btn-primary:hover { opacity: .85; }
     .btn-secondary { background: rgba(255,255,255,.06); color: #d1d5db; border: 1px solid rgba(255,255,255,.07); border-radius: .625rem; font-weight: 500; display: inline-flex; align-items: center; transition: background .15s; }

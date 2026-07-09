@@ -32,11 +32,20 @@ class ContentPlanController extends Controller
         ];
 
         $plans      = $this->service->list((int) $agencyId, $filters);
-        $clientList = Auth::can('clients.view_all')
-            ? $this->clients->findByAgency((int) $agencyId)
-            : $this->clients->findByUserAccess((int) Auth::id(), (int) $agencyId);
+        $clientList = $this->accessibleClients((int) $agencyId);
 
         return $this->view('content.index', compact('plans', 'clientList', 'filters'));
+    }
+
+    /**
+     * Clientes que o usuário pode escolher. Quem tem clients.view_all enxerga a
+     * agência inteira; os demais, só os clientes com acesso explícito.
+     */
+    private function accessibleClients(int $agencyId): array
+    {
+        return Auth::can('clients.view_all')
+            ? $this->clients->findByAgency($agencyId)
+            : $this->clients->findByUserAccess((int) Auth::id(), $agencyId);
     }
 
     public function show(Request $request): Response
@@ -59,7 +68,7 @@ class ContentPlanController extends Controller
         Auth::requirePermission('content.create');
 
         $agencyId   = (int) Auth::agencyId();
-        $clientList = $this->clients->findByUserAccess((int) Auth::id(), $agencyId);
+        $clientList = $this->accessibleClients($agencyId);
 
         return $this->view('content.create', compact('clientList'));
     }
@@ -73,6 +82,12 @@ class ContentPlanController extends Controller
 
         if (empty($input['client_id']) || empty($input['title']) || empty($input['week_start'])) {
             $this->withError('Preencha os campos obrigatórios.');
+            return $this->redirect('/conteudo/criar');
+        }
+
+        $allowedIds = array_map(fn($c) => (int) $c['id'], $this->accessibleClients($agencyId));
+        if (!in_array((int) $input['client_id'], $allowedIds, true)) {
+            $this->withError('Cliente inválido.');
             return $this->redirect('/conteudo/criar');
         }
 
@@ -91,7 +106,7 @@ class ContentPlanController extends Controller
 
         if (!$plan) return $this->view('errors.404', [], 404);
 
-        $clientList = $this->clients->findByUserAccess((int) Auth::id(), $agencyId);
+        $clientList = $this->accessibleClients($agencyId);
         return $this->view('content.edit', compact('plan', 'clientList'));
     }
 
@@ -211,6 +226,10 @@ class ContentPlanController extends Controller
         $planId = (int) $request->param('planId');
         $ids    = $request->json('ids', []);
         if (!is_array($ids)) return Response::json(['success' => false], 422);
+
+        if (!$this->service->get($planId, (int) Auth::agencyId())) {
+            return Response::json(['success' => false, 'error' => 'Plano não encontrado.'], 404);
+        }
 
         $this->service->reorderItems($planId, $ids);
         return Response::json(['success' => true]);

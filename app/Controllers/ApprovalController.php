@@ -67,7 +67,10 @@ class ApprovalController extends Controller
 
         $items = $this->repo->getItems($planId);
         foreach ($items as &$item) {
-            $item['feedbacks'] = $this->repo->getFeedbacks((int) $item['id']);
+            $item['feedbacks']   = $this->repo->getFeedbacks((int) $item['id']);
+            $item['images_list'] = is_string($item['images'] ?? null)
+                ? (json_decode($item['images'], true) ?? [])
+                : ($item['images'] ?? []);
         }
         unset($item);
 
@@ -94,6 +97,11 @@ class ApprovalController extends Controller
 
         if (!$clientId) {
             return Response::json(['success' => false, 'error' => 'Acesso negado.'], 403);
+        }
+
+        $item = $this->repo->findItemForClient($itemId, $clientId);
+        if (!$item || (int) $item['content_plan_id'] !== $planId) {
+            return Response::json(['success' => false, 'error' => 'Item não encontrado.'], 404);
         }
 
         $type    = $request->input('feedback_type', 'comment');

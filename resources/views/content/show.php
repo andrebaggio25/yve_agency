@@ -201,6 +201,8 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
       $pColor = $platformColors[$item['platform'] ?? ''] ?? null;
       $captionPreview = $item['caption'] ?? $item['title'] ?? '';
       if (mb_strlen($captionPreview) > 90) $captionPreview = mb_substr($captionPreview, 0, 90) . '…';
+      $frameClass = ContentPlanService::previewFrameClass($item['content_type'] ?? null);
+      $isVertical = ContentPlanService::previewRatio($item['content_type'] ?? null) === '9/16';
     ?>
     <div class="item-card group rounded-2xl border border-white/5 bg-white/[0.03] transition-all duration-200 hover:border-violet-500/20 hover:bg-white/[0.05]"
          x-data="itemCard(<?= htmlspecialchars(json_encode($item), ENT_QUOTES) ?>)"
@@ -296,10 +298,42 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
 
         <!-- Cover image -->
         <?php if (!empty($item['cover_url'])): ?>
-        <div class="rounded-xl overflow-hidden border border-white/5">
-          <img src="<?= e($item['cover_url']) ?>" alt="Capa"
-               class="w-full object-cover max-h-64"
-               onerror="this.parentElement.style.display='none'">
+        <div>
+          <p class="text-xs font-medium text-gray-400 mb-1.5">
+            <?= $isVertical ? 'Capa (9:16)' : 'Foto (3:4)' ?>
+          </p>
+          <div class="relative overflow-hidden rounded-xl border border-white/5 bg-black/30 w-full <?= $frameClass ?>">
+            <img src="<?= e(GoogleDriveService::imageSrc($item['cover_url'])) ?>" alt="Capa"
+                 class="absolute inset-0 w-full h-full object-cover"
+                 loading="lazy"
+                 onerror="this.closest('div').parentElement.style.display='none'">
+          </div>
+          <a href="<?= e($item['cover_url']) ?>" target="_blank" rel="noopener"
+             class="mt-1.5 inline-block text-xs text-violet-400 hover:text-violet-300 transition-colors">
+            Ver em tamanho real ↗
+          </a>
+        </div>
+        <?php endif; ?>
+
+        <!-- Carousel slides -->
+        <?php if (!empty($item['images_list'])): ?>
+        <div>
+          <p class="text-xs font-medium text-gray-400 mb-1.5">
+            Carrossel (<?= count($item['images_list']) ?> <?= count($item['images_list']) === 1 ? 'foto' : 'fotos' ?>)
+          </p>
+          <div class="flex gap-3 overflow-x-auto pb-2">
+            <?php foreach ($item['images_list'] as $slideIdx => $imgUrl): if (empty($imgUrl)) continue; ?>
+            <div class="relative flex-shrink-0 w-40 aspect-[3/4] overflow-hidden rounded-xl border border-white/5 bg-black/30">
+              <img src="<?= e(GoogleDriveService::imageSrc($imgUrl)) ?>" alt="Slide <?= $slideIdx + 1 ?>"
+                   class="absolute inset-0 w-full h-full object-cover"
+                   loading="lazy"
+                   onerror="this.parentElement.style.display='none'">
+              <span class="absolute top-1.5 right-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                <?= $slideIdx + 1 ?>
+              </span>
+            </div>
+            <?php endforeach; ?>
+          </div>
         </div>
         <?php endif; ?>
 
@@ -351,7 +385,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <div class="flex items-center gap-2 flex-wrap" x-data>
           <span class="text-xs text-gray-500">Simular:</span>
           <button type="button"
-                  @click="$dispatch('open-insta-feed', {item: <?= htmlspecialchars(json_encode(['id'=>$item['id'],'cover_url'=>$item['cover_url'],'caption'=>$item['caption']??'','platform'=>$item['platform']??'']), ENT_QUOTES) ?>})"
+                  @click="$dispatch('open-insta-feed', {item: <?= htmlspecialchars(json_encode(['id'=>$item['id'],'cover_url'=>$item['cover_url'],'caption'=>$item['caption']??'','platform'=>$item['platform']??'','content_type'=>$item['content_type']??'']), ENT_QUOTES) ?>})"
                   class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-pink-500/20 px-3 py-1.5 text-xs font-medium text-pink-300 hover:from-purple-500/30 hover:to-pink-500/30 transition-all">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm0 8a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm8-8a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zm0 8a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
@@ -359,7 +393,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
             Feed
           </button>
           <button type="button"
-                  @click="$dispatch('open-insta-profile', {item: <?= htmlspecialchars(json_encode(['id'=>$item['id'],'cover_url'=>$item['cover_url'],'caption'=>$item['caption']??'','platform'=>$item['platform']??'']), ENT_QUOTES) ?>})"
+                  @click="$dispatch('open-insta-profile', {item: <?= htmlspecialchars(json_encode(['id'=>$item['id'],'cover_url'=>$item['cover_url'],'caption'=>$item['caption']??'','platform'=>$item['platform']??'','content_type'=>$item['content_type']??'']), ENT_QUOTES) ?>})"
                   class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-pink-500/20 px-3 py-1.5 text-xs font-medium text-pink-300 hover:from-purple-500/30 hover:to-pink-500/30 transition-all">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -552,18 +586,19 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <!-- Cover / Photo -->
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1.5">
-            <span x-text="itemModal.content_type === 'Reels / Vídeo' || itemModal.content_type === 'Story' ? 'Foto de capa' : 'Foto'"></span>
+            <span x-text="isVertical() ? 'Foto de capa (9:16)' : 'Foto (3:4)'"></span>
           </label>
           <input type="url" x-model="itemModal.cover_url"
                  @input="imgErr = false"
                  placeholder="https://..."
                  class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50">
           <p class="text-xs text-gray-600 mt-1">URL da imagem (Drive, CDN ou outro host público)</p>
-          <!-- Preview -->
+          <!-- Preview: enquadrado na proporção real do Instagram -->
           <template x-if="itemModal.cover_url && !imgErr">
-            <div class="mt-2 rounded-xl overflow-hidden border border-white/10">
+            <div class="relative mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-black/30"
+                 :class="frameClass()">
               <img :src="driveImageUrl(itemModal.cover_url)" alt="Preview"
-                   class="w-full object-cover max-h-52"
+                   class="absolute inset-0 w-full h-full object-cover"
                    @error="imgErr = true">
             </div>
           </template>
@@ -724,6 +759,17 @@ function driveImageUrl(url) {
   return url;
 }
 
+// Espelha ContentPlanService::previewRatio() — capa de Reels/Story é 9:16, o resto 3:4.
+const VERTICAL_TYPES = ['Reels / Vídeo', 'Story'];
+function isVerticalType(contentType) {
+  return VERTICAL_TYPES.includes(contentType);
+}
+function previewFrameClass(contentType) {
+  return isVerticalType(contentType)
+    ? 'aspect-[9/16] max-w-[15rem]'
+    : 'aspect-[3/4] max-w-[20rem]';
+}
+
 function contentShow(planId) {
   return {
     itemModal: emptyModal(),
@@ -731,6 +777,9 @@ function contentShow(planId) {
     sending: false,
     submitting: false,
     toast: { show: false, msg: '', ok: true },
+
+    isVertical() { return isVerticalType(this.itemModal.content_type); },
+    frameClass() { return previewFrameClass(this.itemModal.content_type); },
 
     openAddPost() {
       this.itemModal = emptyModal();
@@ -954,6 +1003,11 @@ function instaPreview() {
     },
     close() { this.show = false; this.item = null; },
 
+    // Reels e Story ocupam a tela inteira (9:16); post de feed é 3:4.
+    feedAspect() {
+      return isVerticalType(this.item?.content_type) ? 'aspect-[9/16]' : 'aspect-[3/4]';
+    },
+
     // Generate 8 filler grid images (grey squares + 1 real)
     gridImages() {
       const imgs = [];
@@ -1027,7 +1081,7 @@ function instaPreview() {
             <svg class="w-5 h-5 text-gray-500 ml-auto" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
           </div>
           <!-- Image -->
-          <div class="w-full aspect-square bg-gray-200 relative overflow-hidden">
+          <div class="w-full bg-gray-200 relative overflow-hidden" :class="feedAspect()">
             <img x-show="item && item._img" :src="item && item._img"
                  class="w-full h-full object-cover"
                  @error="this.style.display='none'">

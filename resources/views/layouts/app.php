@@ -46,6 +46,11 @@
       html { background: #09090f; }
       body { background: #09090f; color: #e5e7eb; }
 
+      /* Selects: o <option> herda o texto branco do <select>, mas o fundo do
+         dropdown nativo é branco. Sem isto, a lista fica branco no branco. */
+      select { color-scheme: dark; }
+      select option, select optgroup { background-color: #12121a; color: #e5e7eb; }
+
       /* Custom scrollbar */
       ::-webkit-scrollbar { width: 4px; height: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }

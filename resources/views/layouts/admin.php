@@ -34,7 +34,8 @@
       .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; }
       .input-field { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); border-radius: 0.75rem; color: #fff; padding: 0.5rem 0.875rem; font-size: 0.875rem; transition: border-color .15s; outline: none; }
       .input-field:focus { border-color: rgba(239,68,68,0.5); box-shadow: 0 0 0 2px rgba(239,68,68,0.15); }
-      .input-field option { background: #1a1a2e; }
+      select { color-scheme: dark; }
+      select option, select optgroup { background-color: #1a1a2e; color: #e5e7eb; }
       .label-field { display: block; font-size: 0.75rem; font-weight: 500; color: #9ca3af; margin-bottom: 0.375rem; }
       .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; background: linear-gradient(135deg,#dc2626,#b91c1c); color: #fff; font-size: 0.875rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.75rem; transition: all .15s; border: none; cursor: pointer; }
       .btn-primary:hover { background: linear-gradient(135deg,#ef4444,#dc2626); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,.25); }

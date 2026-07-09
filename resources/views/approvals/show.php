@@ -91,6 +91,8 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
       $isc    = $statusColors[$item['status']] ?? $statusColors['draft'];
       $iLabel = ContentPlanService::itemStatusLabel($item['status']);
       $parsed = $item['drive_parsed'] ?? ($item['drive_url'] ? $drive->parse($item['drive_url']) : null);
+      $frameClass = ContentPlanService::previewFrameClass($item['content_type'] ?? null);
+      $imagesList = $item['images_list'] ?? [];
     ?>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] overflow-hidden"
          x-data="approvalItem(<?= $item['id'] ?>, '<?= $item['status'] ?>')" id="item-<?= $item['id'] ?>">
@@ -145,6 +147,35 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
           <button @click="showFull = !showFull" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">
             <span x-text="showFull ? 'Ver menos ↑' : 'Ver mais ↓'"></span>
           </button>
+        </div>
+        <?php endif; ?>
+
+        <!-- Capa do criativo -->
+        <?php if (!empty($item['cover_url'])): ?>
+        <div class="mb-4">
+          <div class="relative w-full <?= $frameClass ?> overflow-hidden rounded-xl border border-white/5 bg-black/30">
+            <img src="<?= e(GoogleDriveService::imageSrc($item['cover_url'])) ?>" alt="Capa"
+                 class="absolute inset-0 w-full h-full object-cover"
+                 loading="lazy"
+                 onerror="this.parentElement.style.display='none'">
+          </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Carrossel -->
+        <?php if (!empty($imagesList)): ?>
+        <div class="flex gap-3 overflow-x-auto pb-2 mb-4">
+          <?php foreach ($imagesList as $slideIdx => $imgUrl): if (empty($imgUrl)) continue; ?>
+          <div class="relative flex-shrink-0 w-40 aspect-[3/4] overflow-hidden rounded-xl border border-white/5 bg-black/30">
+            <img src="<?= e(GoogleDriveService::imageSrc($imgUrl)) ?>" alt="Slide <?= $slideIdx + 1 ?>"
+                 class="absolute inset-0 w-full h-full object-cover"
+                 loading="lazy"
+                 onerror="this.parentElement.style.display='none'">
+            <span class="absolute top-1.5 right-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+              <?= $slideIdx + 1 ?>
+            </span>
+          </div>
+          <?php endforeach; ?>
         </div>
         <?php endif; ?>
 

@@ -86,6 +86,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
     $feedbacks   = $item['feedbacks'] ?? [];
     $itemStatus  = $item['status'] ?? 'draft';
     $imagesList  = $item['images_list'] ?? [];
+    $frameClass  = \App\Services\ContentPlanService::previewFrameClass($item['content_type'] ?? null);
     // Detect YouTube URL for timecode auto-capture
     $youtubeId = null;
     if (!empty($item['drive_url'])) {
@@ -95,7 +96,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
   ?>
   <div class="card overflow-hidden"
        x-data="portalItem(<?= $idx ?>, '<?= $token ?>', <?= $plan['id'] ?>, <?= $item['id'] ?>, <?= htmlspecialchars(json_encode($feedbacks), ENT_QUOTES) ?>, '<?= htmlspecialchars($itemStatus, ENT_QUOTES) ?>', <?= $youtubeId ? "'" . e($youtubeId) . "'" : 'null' ?>)"
-       x-init="initYt()"
+       x-init="initYt()">
 
     <!-- Card header — sempre visível -->
     <div class="flex items-start gap-3 p-4 cursor-pointer" @click="expanded = !expanded">
@@ -138,9 +139,10 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
       <div class="p-4 space-y-4">
         <!-- Capa -->
         <?php if (!empty($item['cover_url'])): ?>
-        <div class="rounded-xl overflow-hidden">
+        <div class="relative w-full <?= $frameClass ?> overflow-hidden rounded-xl bg-black/30">
           <img src="<?= e(\App\Services\GoogleDriveService::imageSrc($item['cover_url'])) ?>" alt="Capa"
-               class="w-full object-cover max-h-80"
+               class="absolute inset-0 w-full h-full object-cover"
+               loading="lazy"
                onerror="this.parentElement.style.display='none'">
         </div>
         <?php endif; ?>
@@ -176,9 +178,10 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         </div>
         <?php elseif ($parsedDrive && $parsedDrive['valid'] && $parsedDrive['file_type'] === 'image'): ?>
         <!-- Imagem do Drive — preview inline (antes só mostrava link) -->
-        <div class="rounded-xl overflow-hidden">
+        <div class="relative w-full <?= $frameClass ?> overflow-hidden rounded-xl bg-black/30">
           <img src="<?= e(\App\Services\GoogleDriveService::imageSrc($parsedDrive['original'])) ?>" alt="Imagem"
-               class="w-full object-cover max-h-80"
+               class="absolute inset-0 w-full h-full object-cover"
+               loading="lazy"
                onerror="this.parentElement.style.display='none'">
         </div>
         <?php elseif ($parsedDrive && $parsedDrive['valid']): ?>
@@ -191,11 +194,16 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
 
         <!-- Carrossel -->
         <?php if (!empty($imagesList)): ?>
-        <div class="space-y-2">
-          <?php foreach ($imagesList as $imgUrl): if (empty($imgUrl)) continue; ?>
-          <div class="rounded-xl overflow-hidden">
-            <img src="<?= e(\App\Services\GoogleDriveService::imageSrc($imgUrl)) ?>" alt="Slide" class="w-full object-cover max-h-80"
+        <div class="flex gap-3 overflow-x-auto pb-2">
+          <?php foreach ($imagesList as $slideIdx => $imgUrl): if (empty($imgUrl)) continue; ?>
+          <div class="relative flex-shrink-0 w-40 aspect-[3/4] overflow-hidden rounded-xl bg-black/30">
+            <img src="<?= e(\App\Services\GoogleDriveService::imageSrc($imgUrl)) ?>" alt="Slide <?= $slideIdx + 1 ?>"
+                 class="absolute inset-0 w-full h-full object-cover"
+                 loading="lazy"
                  onerror="this.parentElement.style.display='none'">
+            <span class="absolute top-1.5 right-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+              <?= $slideIdx + 1 ?>
+            </span>
           </div>
           <?php endforeach; ?>
         </div>

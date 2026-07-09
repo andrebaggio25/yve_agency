@@ -12,6 +12,9 @@ use App\Support\Auth;
 
 class ContentPlanService
 {
+    /** Status válidos de um criativo. */
+    public const ITEM_STATUSES = ['draft', 'revision', 'approved', 'rejected'];
+
     public function __construct(
         private readonly ContentPlanRepository $repo,
         private readonly GoogleDriveService    $drive,
@@ -70,12 +73,21 @@ class ContentPlanService
 
     public function update(int $id, int $agencyId, array $input): bool
     {
-        $fields = array_filter([
-            'title'      => $input['title']      ?? null,
-            'week_start' => $input['week_start']  ?? null,
-            'week_end'   => $input['week_end']    ?? null,
-            'notes'      => $input['notes']       ?? null,
-        ], fn($v) => $v !== null);
+        $fields = [];
+
+        // Obrigatórios: só gravam se vierem preenchidos.
+        foreach (['title', 'week_start'] as $key) {
+            if (!empty($input[$key])) $fields[$key] = trim((string) $input[$key]);
+        }
+
+        // Opcionais: chave presente e vazia limpa o campo.
+        foreach (['week_end', 'notes'] as $key) {
+            if (!array_key_exists($key, $input)) continue;
+            $value        = trim((string) $input[$key]);
+            $fields[$key] = $value === '' ? null : $value;
+        }
+
+        if (!$fields) return false;
 
         $affected = $this->repo->updatePlan($id, $agencyId, $fields);
         ActivityLogger::log('content_plan.updated', 'content', null, null, ['plan_id' => $id]);
@@ -180,23 +192,37 @@ class ContentPlanService
             }
         }
 
-        $fields = array_filter(array_merge([
-            'publish_date'  => $input['publish_date']  ?? null,
-            'publish_time'  => $input['publish_time']  ?? null,
-            'content_type'  => $input['content_type']  ?? null,
-            'platform'      => $input['platform']      ?? null,
-            'title'         => $input['title']         ?? null,
-            'theme'         => $input['theme']         ?? null,
-            'caption'       => $input['caption']       ?? null,
-            'script'        => $input['script']        ?? null,
-            'cta'           => $input['cta']           ?? null,
-            'drive_url'     => $input['drive_url']     ?? null,
-            'cover_url'     => $input['cover_url']     ?? null,
-            'images'        => isset($input['images']) ? json_encode(array_values(array_filter((array) $input['images']))) : null,
-            'assigned_to'   => !empty($input['assigned_to']) ? (int) $input['assigned_to'] : null,
-            'status'        => $input['status']        ?? null,
-            'sort_order'    => isset($input['sort_order']) ? (int) $input['sort_order'] : null,
-        ], $driveData), fn($v) => $v !== null);
+        // Chave presente = intenção de gravar; string vazia = limpar o campo.
+        // Só as chaves enviadas são tocadas, então um form parcial não apaga o resto.
+        $fields = [];
+
+        foreach (['publish_date', 'publish_time', 'content_type', 'platform', 'title',
+                  'theme', 'caption', 'script', 'cta', 'drive_url', 'cover_url'] as $key) {
+            if (!array_key_exists($key, $input)) continue;
+            $value         = trim((string) $input[$key]);
+            $fields[$key]  = $value === '' ? null : $value;
+        }
+
+        if (array_key_exists('images', $input)) {
+            $images           = array_values(array_filter(array_map('trim', (array) $input['images'])));
+            $fields['images'] = $images ? json_encode($images) : null;
+        }
+
+        if (array_key_exists('assigned_to', $input)) {
+            $fields['assigned_to'] = empty($input['assigned_to']) ? null : (int) $input['assigned_to'];
+        }
+
+        if (array_key_exists('sort_order', $input)) {
+            $fields['sort_order'] = (int) $input['sort_order'];
+        }
+
+        // O status do item é dirigido pelo fluxo de aprovação, não por edição livre.
+        if (!empty($input['status']) && in_array($input['status'], self::ITEM_STATUSES, true)) {
+            $fields['status'] = $input['status'];
+        }
+
+        $fields = array_merge($fields, $driveData);
+        if (!$fields) return false;
 
         $affected = $this->repo->updateItem($itemId, $fields);
         ActivityLogger::log('content_item.updated', 'content', null, null, ['item_id' => $itemId]);
@@ -241,7 +267,28 @@ class ContentPlanService
 
         ActivityLogger::log('approval.feedback_added', 'approvals', null, $clientId, ['item_id' => $itemId, 'type' => $type]);
 
+        if ($type === 'approved') {
+            $this->maybeApprovePlanFromItems($planId, $clientId);
+        }
+
         return $id;
+    }
+
+    /**
+     * Quando o último criativo pendente é aprovado, o plano inteiro passa a
+     * aprovado — sem exigir que o cliente clique também em "Aprovar Tudo".
+     */
+    private function maybeApprovePlanFromItems(int $planId, int $clientId): void
+    {
+        $summary = $this->repo->getItemStatusSummary($planId);
+        $total   = array_sum($summary);
+
+        if ($total === 0 || ($summary['approved'] ?? 0) !== $total) return;
+
+        $plan = $this->repo->findByIdForClient($planId, $clientId);
+        if (!$plan || $plan['status'] === 'approved') return;
+
+        $this->approvePlan($planId, $clientId);
     }
 
     public function approvePlan(int $planId, int $clientId): bool
@@ -379,5 +426,25 @@ class ContentPlanService
             'rejected' => 'Rejeitado',
             default    => ucfirst($status),
         };
+    }
+
+    /** Proporção nativa do Instagram para o criativo: capa de Reels/Story é 9:16, o resto é 3:4. */
+    public static function previewRatio(?string $contentType): string
+    {
+        return match ($contentType) {
+            'Reels / Vídeo', 'Story' => '9/16',
+            default                  => '3/4',
+        };
+    }
+
+    /**
+     * Classes do quadro de preview. As larguras máximas são escolhidas para as
+     * duas proporções renderizarem com a mesma altura (~427px) no desktop.
+     */
+    public static function previewFrameClass(?string $contentType): string
+    {
+        return self::previewRatio($contentType) === '9/16'
+            ? 'aspect-[9/16] max-w-[15rem]'
+            : 'aspect-[3/4] max-w-[20rem]';
     }
 }
