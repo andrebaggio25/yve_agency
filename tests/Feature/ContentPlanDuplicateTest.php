@@ -64,7 +64,9 @@ class ContentPlanDuplicateTest extends FeatureTestCase
         $this->assertSame('draft', $new['status']);
         $this->assertNull($new['approved_at'], 'A cópia não pode nascer aprovada — a cliente nunca viu este plano.');
         $this->assertNull($new['sent_at']);
-        $this->assertStringContainsString('cópia', $new['title']);
+        // O nome nasce do NOVO período (seg–dom da semana seguinte), não do
+        // título antigo com "(cópia)" — a semana é a identidade do plano.
+        $this->assertStringContainsString('13/07 – 19/07', $new['title']);
 
         // Os itens vêm juntos, também em rascunho.
         $items = $this->pdo->query(

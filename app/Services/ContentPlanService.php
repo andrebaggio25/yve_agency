@@ -25,6 +25,35 @@ class ContentPlanService
         return rtrim((string) env('APP_URL', ''), '/') . "/portal/{$portalToken}/planos/{$planId}";
     }
 
+    // ── Semana seg–dom ─────────────────────────────────────────────────────────
+    //
+    // A agência envia planificação SEMPRE por semana fechada, de segunda a
+    // domingo. Qualquer data escolhida "encaixa" na segunda-feira daquela
+    // semana; o domingo é derivado — nunca editado.
+
+    /** Segunda-feira da semana em que a data cai (a própria, se já for segunda). */
+    public static function mondayOf(string $date): string
+    {
+        $ts = strtotime($date) ?: time();
+        return date('Y-m-d', strtotime('-' . ((int) date('N', $ts) - 1) . ' days', $ts));
+    }
+
+    /** Domingo da mesma semana (segunda + 6). */
+    public static function sundayOf(string $date): string
+    {
+        return date('Y-m-d', strtotime(self::mondayOf($date) . ' +6 days'));
+    }
+
+    /** Nome padrão do plano: "CLIENTE X | 12/01 – 18/01" (seg–dom). */
+    public static function defaultTitle(string $clientName, string $weekStart): string
+    {
+        $monday = self::mondayOf($weekStart);
+        $period = date('d/m', (int) strtotime($monday)) . ' – ' . date('d/m', (int) strtotime($monday . ' +6 days'));
+        $name   = trim($clientName);
+
+        return mb_substr($name === '' ? "Semana {$period}" : mb_strtoupper($name) . " | {$period}", 0, 255);
+    }
+
     public function __construct(
         private readonly ContentPlanRepository $repo,
         private readonly GoogleDriveService    $drive,
@@ -72,18 +101,27 @@ class ContentPlanService
 
     public function create(array $input, int $agencyId, int $userId): int
     {
+        $clientId  = (int) $input['client_id'];
+        $weekStart = self::mondayOf((string) ($input['week_start'] ?: date('Y-m-d')));
+
+        $title = trim((string) ($input['title'] ?? ''));
+        if ($title === '') {
+            $client = $this->clientRepo?->findByIdAndAgency($clientId, $agencyId);
+            $title  = self::defaultTitle((string) ($client['name'] ?? ''), $weekStart);
+        }
+
         $id = $this->repo->createPlan([
             'agency_id'  => $agencyId,
-            'client_id'  => (int) $input['client_id'],
-            'title'      => $input['title'],
-            'week_start' => $input['week_start'],
-            'week_end'   => $input['week_end'] ?? $this->endOfWeek($input['week_start']),
+            'client_id'  => $clientId,
+            'title'      => $title,
+            'week_start' => $weekStart,
+            'week_end'   => self::sundayOf($weekStart),
             'status'     => 'draft',
             'created_by' => $userId,
             'notes'      => $input['notes'] ?? null,
         ]);
 
-        ActivityLogger::log('content_plan.created', 'content', null, (int) $input['client_id'], ['plan_id' => $id]);
+        ActivityLogger::log('content_plan.created', 'content', null, $clientId, ['plan_id' => $id]);
         return $id;
     }
 
@@ -92,15 +130,20 @@ class ContentPlanService
         $fields = [];
 
         // Obrigatórios: só gravam se vierem preenchidos.
-        foreach (['title', 'week_start'] as $key) {
-            if (!empty($input[$key])) $fields[$key] = trim((string) $input[$key]);
+        if (!empty($input['title'])) {
+            $fields['title'] = trim((string) $input['title']);
+        }
+
+        // A semana encaixa na segunda; o domingo é sempre derivado.
+        if (!empty($input['week_start'])) {
+            $fields['week_start'] = self::mondayOf(trim((string) $input['week_start']));
+            $fields['week_end']   = self::sundayOf($fields['week_start']);
         }
 
         // Opcionais: chave presente e vazia limpa o campo.
-        foreach (['week_end', 'notes'] as $key) {
-            if (!array_key_exists($key, $input)) continue;
-            $value        = trim((string) $input[$key]);
-            $fields[$key] = $value === '' ? null : $value;
+        if (array_key_exists('notes', $input)) {
+            $value           = trim((string) $input['notes']);
+            $fields['notes'] = $value === '' ? null : $value;
         }
 
         if (!$fields) return false;
@@ -162,19 +205,21 @@ class ContentPlanService
             return ['success' => false, 'error' => 'Plano não encontrado.'];
         }
 
-        $weekStart = $input['week_start'] ?? $this->nextWeek((string) $plan['week_start']);
-        $title     = trim((string) ($input['title'] ?? '')) ?: $this->copyTitle((string) $plan['title']);
+        $weekStart = self::mondayOf((string) ($input['week_start'] ?? $this->nextWeek((string) $plan['week_start'])));
+        $weekEnd   = self::sundayOf($weekStart);
+        $title     = trim((string) ($input['title'] ?? ''))
+            ?: self::defaultTitle((string) ($plan['client_name'] ?? ''), $weekStart);
 
-        // Deslocamento aplicado a cada item, preservando a distribuição original
-        // (se o post caía na quarta, continua caindo na quarta).
-        $shiftDays = $this->daysBetween((string) $plan['week_start'], $weekStart);
+        // Deslocamento entre SEGUNDAS (múltiplo de 7): o post que caía na
+        // quarta continua caindo na quarta da nova semana.
+        $shiftDays = $this->daysBetween(self::mondayOf((string) $plan['week_start']), $weekStart);
 
         $newId = $this->repo->createPlan([
             'agency_id'  => $agencyId,
             'client_id'  => (int) $plan['client_id'],
             'title'      => $title,
             'week_start' => $weekStart,
-            'week_end'   => $this->endOfWeek($weekStart),
+            'week_end'   => $weekEnd,
             'status'     => 'draft',   // nunca herda aprovação
             'created_by' => $userId,
             'notes'      => $plan['notes'] ?? null,
@@ -191,10 +236,17 @@ class ContentPlanService
         // do post anterior só criaria material errado esperando para ser
         // publicado por engano.
         foreach ($plan['items'] ?? [] as $item) {
+            // O clamp protege itens legados que estavam fora da semana do
+            // plano de origem — na cópia, todos caem dentro de seg–dom.
+            $newDate = $this->shiftDate($item['publish_date'] ?? null, $shiftDays);
+            if ($newDate !== null) {
+                $newDate = max($weekStart, min($weekEnd, $newDate));
+            }
+
             $this->repo->createItem([
                 'content_plan_id' => $newId,
                 'client_id'       => (int) $plan['client_id'],
-                'publish_date'    => $this->shiftDate($item['publish_date'] ?? null, $shiftDays),
+                'publish_date'    => $newDate,
                 'publish_time'    => $item['publish_time'] ?? null,
                 'platform'        => $item['platform'] ?? null,
                 'content_type'    => $item['content_type'] ?? null,
@@ -218,12 +270,6 @@ class ContentPlanService
     {
         $base = $weekStart ?: date('Y-m-d');
         return date('Y-m-d', strtotime($base . ' +7 days'));
-    }
-
-    /** "Plano de Julho" → "Plano de Julho (cópia)". */
-    private function copyTitle(string $title): string
-    {
-        return mb_substr($title . ' (cópia)', 0, 255);
     }
 
     private function daysBetween(?string $from, string $to): int
@@ -258,6 +304,8 @@ class ContentPlanService
     {
         $plan = $this->get($planId, $agencyId);
         if (!$plan) throw new \InvalidArgumentException('Plano não encontrado.');
+
+        $this->assertDateInPlanWeek($input['publish_date'] ?? null, $plan);
 
         $driveData = [];
         if (!empty($input['drive_url'])) {
@@ -296,6 +344,13 @@ class ContentPlanService
     {
         $item = $this->repo->findItem($itemId, $agencyId);
         if (!$item) return false;
+
+        if (!empty($input['publish_date'])) {
+            $plan = $this->get((int) $item['content_plan_id'], $agencyId);
+            if ($plan) {
+                $this->assertDateInPlanWeek((string) $input['publish_date'], $plan);
+            }
+        }
 
         $driveData = [];
         if (array_key_exists('drive_url', $input)) {
@@ -345,6 +400,24 @@ class ContentPlanService
         $affected = $this->repo->updateItem($itemId, $fields);
         ActivityLogger::log('content_item.updated', 'content', null, null, ['item_id' => $itemId]);
         return $affected > 0;
+    }
+
+    /**
+     * O post tem de cair dentro da semana do plano. Compara com os bounds
+     * ARMAZENADOS (não normalizados): plano legado com semana fora do padrão
+     * seg–dom continua editável dentro do próprio intervalo.
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function assertDateInPlanWeek(?string $date, array $plan): void
+    {
+        if (!$date || empty($plan['week_start']) || empty($plan['week_end'])) return;
+
+        if ($date < $plan['week_start'] || $date > $plan['week_end']) {
+            $from = date('d/m', (int) strtotime((string) $plan['week_start']));
+            $to   = date('d/m', (int) strtotime((string) $plan['week_end']));
+            throw new \InvalidArgumentException("A data precisa estar dentro da semana do plano ({$from} a {$to}).");
+        }
     }
 
     public function deleteItem(int $itemId, int $agencyId): bool
@@ -505,11 +578,6 @@ class ContentPlanService
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
-
-    private function endOfWeek(string $weekStart): string
-    {
-        return date('Y-m-d', strtotime($weekStart . ' +6 days'));
-    }
 
     public static function statusLabel(string $status): string
     {

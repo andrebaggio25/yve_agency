@@ -129,9 +129,10 @@ class ContentPlanController extends Controller
         Auth::requirePermission('content.create');
 
         $agencyId = (int) Auth::agencyId();
-        $input    = $request->only(['client_id', 'title', 'week_start', 'week_end', 'notes']);
+        // Título vazio ganha o nome padrão "CLIENTE | dd/mm – dd/mm" no service.
+        $input    = $request->only(['client_id', 'title', 'week_start', 'notes']);
 
-        if (empty($input['client_id']) || empty($input['title']) || empty($input['week_start'])) {
+        if (empty($input['client_id']) || empty($input['week_start'])) {
             $this->withError('Preencha os campos obrigatórios.');
             return $this->redirect('/conteudo/criar');
         }
@@ -167,7 +168,7 @@ class ContentPlanController extends Controller
 
         $planId   = (int) $request->param('planId');
         $agencyId = (int) Auth::agencyId();
-        $input    = $request->only(['title', 'week_start', 'week_end', 'notes']);
+        $input    = $request->only(['title', 'week_start', 'notes']);
         $this->service->update($planId, $agencyId, $input);
 
         $this->withSuccess('Plano atualizado.');
@@ -279,7 +280,11 @@ class ContentPlanController extends Controller
             'caption', 'script', 'cta', 'drive_url', 'cover_url', 'images', 'assigned_to', 'status', 'sort_order',
         ]);
 
-        $ok = $this->service->updateItem($itemId, $agencyId, $input);
+        try {
+            $ok = $this->service->updateItem($itemId, $agencyId, $input);
+        } catch (\InvalidArgumentException $e) {
+            return Response::json(['success' => false, 'error' => $e->getMessage()], 422);
+        }
 
         return Response::json(['success' => $ok]);
     }
