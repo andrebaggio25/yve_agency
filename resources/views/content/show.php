@@ -128,7 +128,9 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
           · criado por <?= e($plan['created_by_name']) ?>
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
+      <!-- flex-1 dos dois lados: com 5+ ações, os botões quebram linha em vez
+           de esmagar o título a uma palavra por linha. -->
+      <div class="flex flex-wrap items-center gap-2 sm:flex-1 sm:justify-end">
         <?php if ($canSend && in_array($plan['status'], ['draft', 'revision'])): ?>
         <button @click="sendPlan()"
                 :disabled="sending"

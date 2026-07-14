@@ -47,10 +47,12 @@ async function check(page, name, url, expectAlpine = true) {
   // Alpine vivo? Se o CSP ou a ordem de scripts quebrar, isto falha.
   if (expectAlpine) {
     const alpineOk = await page.evaluate(() => {
+      // Tela sem componente (ex.: /login, layout guest) não carrega Alpine
+      // de propósito — só é erro faltar Alpine onde existe [x-data].
+      const roots = document.querySelectorAll('[x-data]');
+      if (roots.length === 0) return null;
       if (!window.Alpine) return 'Alpine não carregou';
       // x-data inicializado deixa o elemento com a marca do Alpine.
-      const roots = document.querySelectorAll('[x-data]');
-      if (roots.length === 0) return null; // tela sem componente: ok
       const initialized = [...roots].some((el) => el._x_dataStack || el.__x);
       return initialized ? null : 'nenhum componente [x-data] inicializou';
     });

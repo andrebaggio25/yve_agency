@@ -1,5 +1,0 @@
-- generic [ref=e2]:
-  - generic [ref=e4]:
-    - button "Lista" [ref=e5]
-    - button "Cards" [active] [ref=e6]
-  - paragraph [ref=e10]: VISAO_CARDS
