@@ -81,6 +81,15 @@ class ContentPlanRepository extends Repository
         );
     }
 
+    /** Já existe plano do cliente para a semana? (guarda da auto-criação) */
+    public function existsForClientWeek(int $clientId, string $weekStart): bool
+    {
+        return (bool) $this->first(
+            'SELECT 1 AS found FROM content_plans WHERE client_id = :client_id AND week_start = :week_start LIMIT 1',
+            [':client_id' => $clientId, ':week_start' => $weekStart]
+        );
+    }
+
     // ── Modelo semanal por cliente ─────────────────────────────────────────────
 
     /** Modelo semanal do cliente (um por cliente), com os itens já decodificados. */

@@ -92,6 +92,13 @@ return [
         'applies_to'  => 'agency',
         'channels'    => ['inapp'],
     ],
+    'content.approved_create_next_plan' => [
+        'label'       => 'Criar plano da próxima semana ao aprovar',
+        'description' => 'Quando o cliente aprova o plano, cria o rascunho da semana seguinte — pelo modelo semanal do cliente, ou pela estrutura do plano aprovado. Se a semana já tiver plano (criado manualmente), não duplica.',
+        'trigger'     => 'event',
+        'applies_to'  => 'client',
+        'channels'    => ['inapp'],
+    ],
 
     // ── Contratos / tarefas / clientes ──────────────────────────────────────
     'contract.expiring' => [

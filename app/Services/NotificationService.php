@@ -39,6 +39,7 @@ class NotificationService
         match ($event) {
             'plan.sent_for_approval'  => $this->onPlanSent($agencyId, $context),
             'plan.approved'           => $this->onPlanApproved($agencyId, $context),
+            'plan.auto_created'       => $this->onPlanAutoCreated($agencyId, $context),
             'plan.revision_requested' => $this->onPlanRevision($agencyId, $context),
             'item.feedback_added'     => $this->onItemFeedback($agencyId, $context),
             'task.assigned'           => $this->onTaskAssigned($agencyId, $context),
@@ -221,6 +222,29 @@ class NotificationService
                     'action_url' => "/conteudo/{$planId}",
                 ]);
             }
+        }
+    }
+
+    /**
+     * Rascunho da próxima semana criado pela automação
+     * content.approved_create_next_plan — automação que ninguém vê acontecer
+     * parece que não existe (OBS-02), então a equipe é avisada in-app.
+     */
+    private function onPlanAutoCreated(int $agencyId, array $ctx): void
+    {
+        $planId    = $ctx['plan_id'] ?? null;
+        $planTitle = $ctx['plan_title'] ?? 'Plano';
+
+        $agencyUsers = $this->users->findByAgencyAndPermission($agencyId, 'content.view');
+        foreach ($agencyUsers as $u) {
+            $this->repo->createNotification([
+                'agency_id'  => $agencyId,
+                'user_id'    => (int) $u['id'],
+                'type'       => 'plan.auto_created',
+                'title'      => "Rascunho criado: {$planTitle}",
+                'body'       => 'O plano da próxima semana foi criado automaticamente após a aprovação.',
+                'action_url' => "/conteudo/{$planId}",
+            ]);
         }
     }
 

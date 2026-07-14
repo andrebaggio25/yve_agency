@@ -576,9 +576,65 @@ class ContentPlanService
                 'responsible_user_id' => $plan['created_by'] ?? null,
             ]);
             $this->maybeCreateProductionTasks($agencyId, $clientId, $planId, $plan);
+            $this->maybeCreateNextPlan($agencyId, $clientId, $planId, $plan);
         }
 
         return $affected > 0;
+    }
+
+    /**
+     * Automação content.approved_create_next_plan: aprovou a semana, nasce o
+     * rascunho da seguinte — pelo modelo semanal do cliente ou, sem modelo,
+     * pela estrutura do plano aprovado. Idempotente por plano, e a criação
+     * manual antecipada vence: semana ocupada não ganha duplicata.
+     */
+    private function maybeCreateNextPlan(int $agencyId, int $clientId, int $planId, array $plan): void
+    {
+        if (!$this->automations || empty($plan['week_start'])) return;
+        if (!$this->automations->isEnabledForClient($agencyId, $clientId, 'content.approved_create_next_plan')) return;
+
+        $key    = 'content.approved_create_next_plan';
+        $dedupe = "plan:{$planId}:next";
+        if (!$this->automations->shouldRun($key, $dedupe)) return;
+
+        $nextMonday = self::mondayOf(date('Y-m-d', (int) strtotime($plan['week_start'] . ' +7 days')));
+
+        if ($this->repo->existsForClientWeek($clientId, $nextMonday)) {
+            $this->automations->markRan($agencyId, $clientId, $key, $dedupe, 'skipped', null, 'Semana seguinte já tem plano');
+            return;
+        }
+
+        $createdBy = (int) ($plan['created_by'] ?? 0);
+        $template  = $this->repo->findTemplateByClient($clientId, $agencyId);
+
+        if ($template && !empty($template['items'])) {
+            $newId = $this->repo->createPlan([
+                'agency_id'  => $agencyId,
+                'client_id'  => $clientId,
+                'title'      => self::defaultTitle((string) ($plan['client_name'] ?? ''), $nextMonday),
+                'week_start' => $nextMonday,
+                'week_end'   => self::sundayOf($nextMonday),
+                'status'     => 'draft',
+                'created_by' => $createdBy ?: null,
+            ]);
+            $this->applyTemplateItems($newId, $clientId, $nextMonday, $template['items']);
+        } else {
+            $result = $this->duplicate($planId, $agencyId, $createdBy, ['week_start' => $nextMonday]);
+            $newId  = (int) ($result['id'] ?? 0);
+            if (!$newId) return;
+        }
+
+        $this->automations->markRan($agencyId, $clientId, $key, $dedupe, 'done', 'inapp', "Plano {$newId} criado");
+        ActivityLogger::log('content_plan.auto_created', 'content', null, $clientId, [
+            'source_plan_id' => $planId,
+            'new_plan_id'    => $newId,
+        ]);
+
+        $this->notifications?->notifyEvent('plan.auto_created', $agencyId, [
+            'plan_id'     => $newId,
+            'plan_title'  => self::defaultTitle((string) ($plan['client_name'] ?? ''), $nextMonday),
+            'client_name' => $plan['client_name'] ?? '',
+        ]);
     }
 
     /**
