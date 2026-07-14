@@ -86,6 +86,18 @@ $jsI18n = [
     <?= t('portal.files.accepted_hint') ?>
   </p>
 
+  <!-- Dica iOS/iCloud (só iPhone/iPad, dispensável): o seletor de fotos do iOS
+       trava ao preparar lotes com itens no iCloud — antes do site receber algo.
+       Nada a fazer no código; a saída é orientar o cliente. -->
+  <div x-show="iosTip" x-transition class="flex items-start gap-2.5 rounded-xl bg-violet-500/[0.07] border border-violet-500/20 px-3.5 py-3 mb-4" style="display:none">
+    <svg class="w-4 h-4 text-violet-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div class="min-w-0 text-xs text-gray-300 leading-relaxed">
+      <span class="font-semibold text-violet-200"><?= t('portal.files.ios_tip_title') ?></span>
+      <?= t('portal.files.ios_tip_text') ?>
+    </div>
+    <button @click="dismissIosTip()" class="text-[11px] text-violet-300 hover:text-white font-medium flex-shrink-0 mt-0.5"><?= t('portal.files.ios_tip_ok') ?></button>
+  </div>
+
   <!-- Create folder inline -->
   <div x-show="creatingFolder" x-transition class="card p-3 mb-4 flex items-center gap-2" style="display:none">
     <input x-ref="folderInput" type="text" x-model="newFolderName" placeholder="<?= e(t('portal.files.folder_name_placeholder')) ?>"
@@ -283,6 +295,7 @@ function driveManager(token, i18n, maxBytes) {
     newFolderName: '',
     savingFolder: false,
     preview: { open: false, file: null },
+    iosTip: false,
     toast: { show: false, msg: '', restore: null, busy: false },
     _toastTimer: null,
     confirmBox: { open: false, message: '' },
@@ -293,6 +306,12 @@ function driveManager(token, i18n, maxBytes) {
 
     // Alpine chama init() automaticamente ao montar o componente.
     init() {
+      // Dica de iCloud só em iPhone/iPad (iPadOS se identifica como Mac + touch).
+      try {
+        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent)
+          || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        this.iosTip = isIos && localStorage.getItem('yve_ios_tip') !== '1';
+      } catch {}
       // iOS: ao voltar pra página com envio ativo, readquire o wake lock
       // (ele é liberado pelo sistema quando a aba sai de foco).
       document.addEventListener('visibilitychange', () => {
@@ -315,6 +334,11 @@ function driveManager(token, i18n, maxBytes) {
     releaseWakeLock() {
       try { _driveWakeLock && _driveWakeLock.release(); } catch {}
       _driveWakeLock = null;
+    },
+
+    dismissIosTip() {
+      this.iosTip = false;
+      try { localStorage.setItem('yve_ios_tip', '1'); } catch {}
     },
 
     /**
