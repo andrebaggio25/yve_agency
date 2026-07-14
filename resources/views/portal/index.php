@@ -23,23 +23,22 @@ $statusColors = [
 ];
 ?>
 
-<!-- Hero -->
-<div class="relative overflow-hidden rounded-2xl mb-6 p-6 sm:p-8"
-     style="background: linear-gradient(135deg, rgba(198,161,91,0.25) 0%, rgba(59,130,246,0.15) 50%, rgba(16,185,129,0.1) 100%); border: 1px solid rgba(198,161,91,0.2);">
+<!-- Hero — um acento só (var --accent, white-label): o degradê multicolorido
+     dourado/azul/verde virava um arco-íris que brigava com a marca. -->
+<div class="relative overflow-hidden rounded-2xl mb-6 p-6 sm:p-8 border border-white/[0.08]"
+     style="background: linear-gradient(135deg, rgb(var(--accent) / 0.10) 0%, rgba(255,255,255,0.02) 55%);">
   <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10" style="background:radial-gradient(circle, #c6a15b, transparent)"></div>
-    <div class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-10" style="background:radial-gradient(circle, #3b82f6, transparent)"></div>
+    <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-[0.08]"
+         style="background:radial-gradient(circle, rgb(var(--accent)), transparent 70%)"></div>
   </div>
   <div class="relative flex items-start justify-between gap-4 flex-wrap">
     <div>
-      <p class="text-sm text-brand-300/80 mb-1"><?= $greeting ?>,</p>
+      <p class="text-sm mb-1" style="color: rgb(var(--accent) / 0.9)"><?= $greeting ?>,</p>
       <h1 class="text-2xl sm:text-3xl font-bold text-white"><?= e($firstName) ?> 👋</h1>
       <p class="text-sm text-gray-400 mt-1.5"><?= t('portal.home.summary') ?></p>
     </div>
     <?php if ($hasPending): ?>
-    <a href="/portal/<?= $token ?>/planos"
-       class="flex-shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all"
-       style="background:linear-gradient(135deg,#c6a15b,#4f46e5)">
+    <a href="/portal/<?= $token ?>/planos" class="btn-primary flex-shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:scale-[1.02]">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
       </svg>
@@ -48,25 +47,25 @@ $statusColors = [
     <?php endif; ?>
   </div>
 
-  <!-- KPIs inline no hero -->
+  <!-- KPIs: superfície neutra, a cor de estado fica SÓ no ícone e no valor -->
   <div class="relative grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
     <?php
     $kpis = [
-      ['label' => t('portal.home.kpi_pending'),       'value' => $stats['plans_pending'],  'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.1)', 'border' => 'rgba(245,158,11,0.2)', 'href' => "/portal/{$token}/planos"],
-      ['label' => t('portal.home.kpi_approved'),      'value' => $stats['plans_approved'], 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',  'color' => '#10b981', 'bg' => 'rgba(16,185,129,0.1)', 'border' => 'rgba(16,185,129,0.2)', 'href' => "/portal/{$token}/planos"],
-      ['label' => t('portal.home.kpi_invoices_open'), 'value' => $stats['invoices_open'],  'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2', 'color' => '#ef4444', 'bg' => 'rgba(239,68,68,0.1)', 'border' => 'rgba(239,68,68,0.2)', 'href' => "/portal/{$token}/faturas"],
-      ['label' => t('portal.home.kpi_invoices_paid'), 'value' => $stats['invoices_paid'],  'icon' => 'M5 13l4 4L19 7', 'color' => '#3b82f6', 'bg' => 'rgba(59,130,246,0.1)', 'border' => 'rgba(59,130,246,0.2)', 'href' => "/portal/{$token}/faturas"],
+      ['label' => t('portal.home.kpi_pending'),       'value' => $stats['plans_pending'],  'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'cls' => 'text-amber-300',   'href' => "/portal/{$token}/planos"],
+      ['label' => t('portal.home.kpi_approved'),      'value' => $stats['plans_approved'], 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',  'cls' => 'text-emerald-300', 'href' => "/portal/{$token}/planos"],
+      ['label' => t('portal.home.kpi_invoices_open'), 'value' => $stats['invoices_open'],  'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2', 'cls' => 'text-rose-300', 'href' => "/portal/{$token}/faturas"],
+      ['label' => t('portal.home.kpi_invoices_paid'), 'value' => $stats['invoices_paid'],  'icon' => 'M5 13l4 4L19 7', 'cls' => 'text-blue-300', 'href' => "/portal/{$token}/faturas"],
     ];
     foreach ($kpis as $k): ?>
-    <a href="<?= $k['href'] ?>" class="rounded-xl p-3.5 transition-all hover:scale-[1.02]"
-       style="background:<?= $k['bg'] ?>; border:1px solid <?= $k['border'] ?>">
+    <a href="<?= $k['href'] ?>"
+       class="rounded-xl p-3.5 bg-white/[0.04] border border-white/[0.08] transition-all hover:bg-white/[0.06] hover:border-white/[0.14]">
       <div class="flex items-center gap-2 mb-2">
-        <svg class="w-4 h-4" style="color:<?= $k['color'] ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 flex-shrink-0 <?= $k['cls'] ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $k['icon'] ?>"/>
         </svg>
         <p class="text-[11px] text-gray-400 leading-tight"><?= $k['label'] ?></p>
       </div>
-      <p class="text-2xl font-bold text-white"><?= $k['value'] ?></p>
+      <p class="text-2xl font-bold <?= $k['value'] > 0 ? 'text-white' : 'text-gray-500' ?>"><?= $k['value'] ?></p>
     </a>
     <?php endforeach; ?>
   </div>
@@ -191,7 +190,7 @@ foreach ($weekItems as $wi) {
          class="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-white/[0.04]"
          style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
         <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-             style="background:rgba(198,161,91,0.12); border:1px solid rgba(198,161,91,0.15)">
+             style="background: rgb(var(--accent) / 0.12); border:1px solid rgb(var(--accent) / 0.15)">
           <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"/>
           </svg>
@@ -204,8 +203,9 @@ foreach ($weekItems as $wi) {
           <?php if ($total > 0): ?>
           <div class="flex items-center gap-2">
             <div class="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+              <!-- Progresso na cor da marca (var --accent) — dourado→azul era ruído. -->
               <div class="h-full rounded-full transition-all"
-                   style="width:<?= $pct ?>%; background:linear-gradient(90deg,#c6a15b,#3b82f6)"></div>
+                   style="width:<?= $pct ?>%; background: rgb(var(--accent))"></div>
             </div>
             <span class="text-[10px] text-gray-400 flex-shrink-0"><?= $approved ?>/<?= $total ?> <?= t('portal.home.approved_count') ?></span>
           </div>
@@ -238,7 +238,7 @@ foreach ($weekItems as $wi) {
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <?php
         $adsKpis = [
-          ['label' => t('portal.home.ads_impressions'), 'value' => number_format((float)($adsSummary['impressions']??0),0,',','.'), 'color'=>'#c6a15b'],
+          ['label' => t('portal.home.ads_impressions'), 'value' => number_format((float)($adsSummary['impressions']??0),0,',','.'), 'color'=>'rgb(var(--accent))'],
           ['label' => t('portal.home.ads_clicks'),      'value' => number_format((float)($adsSummary['clicks']??0),     0,',','.'), 'color'=>'#3b82f6'],
           ['label' => t('portal.home.ads_spend'),       'value' => 'R$ '.number_format((float)($adsSummary['spend']??0),2,',','.'), 'color'=>'#f59e0b'],
           ['label' => t('portal.home.ads_results'),     'value' => number_format((float)($adsSummary['conversions']??$adsSummary['results']??0),0,',','.'), 'color'=>'#10b981'],
@@ -271,7 +271,7 @@ foreach ($weekItems as $wi) {
         <?php
         $orgKpis = [
           ['label' => t('portal.home.org_reach'),       'value' => number_format((float)($organicSummary['reach']??0),        0,',','.'), 'color'=>'#10b981'],
-          ['label' => t('portal.home.org_impressions'), 'value' => number_format((float)($organicSummary['impressions']??0),  0,',','.'), 'color'=>'#c6a15b'],
+          ['label' => t('portal.home.org_impressions'), 'value' => number_format((float)($organicSummary['impressions']??0),  0,',','.'), 'color'=>'rgb(var(--accent))'],
           ['label' => t('portal.home.org_engagement'),  'value' => number_format((float)($organicSummary['engagement']??0),   0,',','.'), 'color'=>'#3b82f6'],
           ['label' => t('portal.home.org_followers'),   'value' => '+'.number_format((float)($organicSummary['followers_gained']??0),0,',','.'), 'color'=>'#ec4899'],
         ];
@@ -295,7 +295,7 @@ foreach ($weekItems as $wi) {
       <div class="space-y-1.5">
         <?php
         $navLinks = [
-          ['href' => "/portal/{$token}/planos",    'label' => t('portal.home.content_plans'), 'icon' => 'M4 6h16M4 10h16M4 14h10',                                                   'color' => '#c6a15b'],
+          ['href' => "/portal/{$token}/planos",    'label' => t('portal.home.content_plans'), 'icon' => 'M4 6h16M4 10h16M4 14h10',                                                   'color' => 'rgb(var(--accent))'],
           ['href' => "/portal/{$token}/faturas",   'label' => t('portal.nav.invoices'),       'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2', 'color' => '#f59e0b'],
           ['href' => "/portal/{$token}/contratos", 'label' => t('portal.nav.contracts'),      'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'color' => '#3b82f6'],
         ];
@@ -348,7 +348,7 @@ foreach ($weekItems as $wi) {
     <!-- Mensagem vazia amigável -->
     <?php if (empty($plans) && empty($openInvoices)): ?>
     <div class="rounded-2xl p-6 text-center" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-      <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style="background:rgba(198,161,91,0.1)">
+      <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style="background: rgb(var(--accent) / 0.10)">
         <svg class="w-6 h-6 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
         </svg>
