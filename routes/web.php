@@ -149,12 +149,15 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/content/calendar',         [ContentPlanController::class, 'calendar']);
     $router->get('/content/new',              [ContentPlanController::class, 'create']);
     $router->post('/content',                 [ContentPlanController::class, 'store'],          [CsrfMiddleware::class]);
+    // Antes de /content/{planId}: "template" não pode virar planId.
+    $router->get('/content/template/{clientId}', [ContentPlanController::class, 'clientTemplate']);
     $router->get('/content/{planId}',         [ContentPlanController::class, 'show']);
     $router->get('/content/{planId}/edit',    [ContentPlanController::class, 'edit']);
     $router->put('/content/{planId}',         [ContentPlanController::class, 'update'],         [CsrfMiddleware::class]);
     $router->delete('/content/{planId}',      [ContentPlanController::class, 'destroy'],        [CsrfMiddleware::class]);
     $router->post('/content/{planId}/send',      [ContentPlanController::class, 'sendToApproval'], [CsrfMiddleware::class]);
     $router->post('/content/{planId}/duplicate', [ContentPlanController::class, 'duplicate'],     [CsrfMiddleware::class]);
+    $router->post('/content/{planId}/save-template', [ContentPlanController::class, 'saveTemplate'], [CsrfMiddleware::class]);
     $router->post('/content/{planId}/items',             [ContentPlanController::class, 'storeItem'],   [CsrfMiddleware::class]);
     $router->put('/content/{planId}/items/{itemId}',     [ContentPlanController::class, 'updateItem'],  [CsrfMiddleware::class]);
     $router->delete('/content/{planId}/items/{itemId}',  [ContentPlanController::class, 'destroyItem'], [CsrfMiddleware::class]);
@@ -324,12 +327,15 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/conteudo/novo',              [ContentPlanController::class, 'create']);
     $router->get('/conteudo/criar',             [ContentPlanController::class, 'create']);
     $router->post('/conteudo',                  [ContentPlanController::class, 'store'],          [CsrfMiddleware::class]);
+    // Antes de /conteudo/{planId}: "modelo" não pode virar planId.
+    $router->get('/conteudo/modelo/{clientId}', [ContentPlanController::class, 'clientTemplate']);
     $router->get('/conteudo/{planId}',          [ContentPlanController::class, 'show']);
     $router->get('/conteudo/{planId}/editar',   [ContentPlanController::class, 'edit']);
     $router->put('/conteudo/{planId}',          [ContentPlanController::class, 'update'],         [CsrfMiddleware::class]);
     $router->delete('/conteudo/{planId}',       [ContentPlanController::class, 'destroy'],        [CsrfMiddleware::class]);
     $router->post('/conteudo/{planId}/enviar',   [ContentPlanController::class, 'sendToApproval'], [CsrfMiddleware::class]);
     $router->post('/conteudo/{planId}/duplicar', [ContentPlanController::class, 'duplicate'],     [CsrfMiddleware::class]);
+    $router->post('/conteudo/{planId}/salvar-modelo', [ContentPlanController::class, 'saveTemplate'], [CsrfMiddleware::class]);
 
     // Itens do plano
     $router->post('/conteudo/{planId}/items',              [ContentPlanController::class, 'storeItem'],   [CsrfMiddleware::class]);

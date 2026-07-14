@@ -130,7 +130,7 @@ class ContentPlanController extends Controller
 
         $agencyId = (int) Auth::agencyId();
         // Título vazio ganha o nome padrão "CLIENTE | dd/mm – dd/mm" no service.
-        $input    = $request->only(['client_id', 'title', 'week_start', 'notes']);
+        $input    = $request->only(['client_id', 'title', 'week_start', 'notes', 'apply_template']);
 
         if (empty($input['client_id']) || empty($input['week_start'])) {
             $this->withError('Preencha os campos obrigatórios.');
@@ -218,6 +218,42 @@ class ContentPlanController extends Controller
 
         $this->withSuccess('Plano duplicado. Ajuste as datas e o conteúdo antes de enviar.');
         return $this->redirect('/conteudo/' . $result['id']);
+    }
+
+    /**
+     * "Salvar como modelo do cliente": captura a estrutura do plano atual
+     * (dia da semana, hora, plataforma, formato, responsável) como padrão —
+     * substitui o modelo anterior, se houver.
+     */
+    public function saveTemplate(Request $request): Response
+    {
+        Auth::requirePermission('content.edit');
+
+        $planId   = (int) $request->param('planId');
+        $agencyId = (int) Auth::agencyId();
+        $ok       = $this->service->saveTemplateFromPlan($planId, $agencyId, (int) Auth::id());
+
+        if ($ok) {
+            $this->withSuccess('Modelo semanal do cliente salvo. Novos planos deste cliente já nascem com esta grade.');
+        } else {
+            $this->withError('Não foi possível salvar o modelo — o plano precisa ter posts.');
+        }
+        return $this->redirect("/conteudo/{$planId}");
+    }
+
+    /** Consulta leve para o form de criação: o cliente tem modelo? Quantos posts? */
+    public function clientTemplate(Request $request): Response
+    {
+        Auth::requirePermission('content.view');
+
+        $clientId = (int) $request->param('clientId');
+        $agencyId = (int) Auth::agencyId();
+        $template = $this->service->getTemplateForClient($clientId, $agencyId);
+
+        return Response::json([
+            'exists' => $template !== null,
+            'count'  => $template ? count($template['items']) : 0,
+        ]);
     }
 
     public function destroy(Request $request): Response

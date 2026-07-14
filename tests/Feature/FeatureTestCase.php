@@ -34,7 +34,7 @@ abstract class FeatureTestCase extends TestCase
         'activity_logs', 'jobs', 'notification_jobs', 'notifications',
         'drive_files', 'drive_folders', 'google_drive_integrations',
         'payments', 'invoices', 'contracts',
-        'content_plan_items', 'content_plans',
+        'content_plan_items', 'content_plans', 'content_plan_templates',
         'tasks', 'client_user_access', 'clients',
         'user_roles', 'users', 'agencies',
         // platform_settings guarda o heartbeat do cron e o throttle de alerta

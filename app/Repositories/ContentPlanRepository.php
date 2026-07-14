@@ -81,6 +81,38 @@ class ContentPlanRepository extends Repository
         );
     }
 
+    // ── Modelo semanal por cliente ─────────────────────────────────────────────
+
+    /** Modelo semanal do cliente (um por cliente), com os itens já decodificados. */
+    public function findTemplateByClient(int $clientId, int $agencyId): ?array
+    {
+        $row = $this->first(
+            'SELECT * FROM content_plan_templates WHERE client_id = :client_id AND agency_id = :agency_id',
+            [':client_id' => $clientId, ':agency_id' => $agencyId]
+        );
+        if (!$row) return null;
+
+        $row['items'] = is_string($row['items']) ? (json_decode($row['items'], true) ?? []) : ($row['items'] ?? []);
+        return $row;
+    }
+
+    /** Grava (ou substitui) o modelo do cliente — upsert pela unique de client_id. */
+    public function saveTemplate(int $clientId, int $agencyId, array $items, ?int $userId): void
+    {
+        $this->query(
+            "INSERT INTO content_plan_templates (agency_id, client_id, items, created_by, created_at, updated_at)
+             VALUES (:agency_id, :client_id, :items, :created_by, NOW(), NOW())
+             ON CONFLICT (client_id) DO UPDATE
+                SET items = EXCLUDED.items, created_by = EXCLUDED.created_by, updated_at = NOW()",
+            [
+                ':agency_id'  => $agencyId,
+                ':client_id'  => $clientId,
+                ':items'      => json_encode($items),
+                ':created_by' => $userId,
+            ]
+        );
+    }
+
     /**
      * Itens do cliente no intervalo — só de planos que já chegaram a ele.
      * Rascunho NUNCA aparece no portal: o cliente não pode ver (nem aprovar)

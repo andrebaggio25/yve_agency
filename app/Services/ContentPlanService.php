@@ -121,8 +121,81 @@ class ContentPlanService
             'notes'      => $input['notes'] ?? null,
         ]);
 
+        // O modelo semanal do cliente pré-monta a grade (dias, horários,
+        // plataformas, formatos, responsáveis) — o conteúdo nasce vazio.
+        if (!empty($input['apply_template'])) {
+            $template = $this->repo->findTemplateByClient($clientId, $agencyId);
+            if ($template && !empty($template['items'])) {
+                $this->applyTemplateItems($id, $clientId, $weekStart, $template['items']);
+            }
+        }
+
         ActivityLogger::log('content_plan.created', 'content', null, $clientId, ['plan_id' => $id]);
         return $id;
+    }
+
+    // ── Modelo semanal por cliente ─────────────────────────────────────────────
+
+    /**
+     * Captura a ESTRUTURA do plano como modelo do cliente: dia da semana
+     * (relativo à data real do post), hora, plataforma, formato e responsável.
+     * Conteúdo (legenda, mídia, títulos) fica de fora por definição — modelo
+     * é grade, não post.
+     */
+    public function saveTemplateFromPlan(int $planId, int $agencyId, ?int $userId): bool
+    {
+        $plan = $this->get($planId, $agencyId);
+        if (!$plan) return false;
+
+        $items = [];
+        foreach ($this->repo->getItems($planId) as $item) {
+            $items[] = [
+                'weekday'      => !empty($item['publish_date']) ? (int) date('N', (int) strtotime((string) $item['publish_date'])) : null,
+                'publish_time' => $item['publish_time'] ? substr((string) $item['publish_time'], 0, 5) : null,
+                'platform'     => $item['platform'] ?? null,
+                'content_type' => $item['content_type'] ?? null,
+                'assigned_to'  => !empty($item['assigned_to']) ? (int) $item['assigned_to'] : null,
+                'sort_order'   => (int) ($item['sort_order'] ?? 0),
+            ];
+        }
+        if (!$items) return false;
+
+        $this->repo->saveTemplate((int) $plan['client_id'], $agencyId, $items, $userId);
+        ActivityLogger::log('content_template.saved', 'content', $userId, (int) $plan['client_id'], [
+            'plan_id' => $planId,
+            'items'   => count($items),
+        ]);
+
+        return true;
+    }
+
+    /** Modelo do cliente (ou null), com itens decodificados. */
+    public function getTemplateForClient(int $clientId, int $agencyId): ?array
+    {
+        return $this->repo->findTemplateByClient($clientId, $agencyId);
+    }
+
+    /** Cria os itens do modelo dentro do plano: weekday 1..7 → data da semana. */
+    private function applyTemplateItems(int $planId, int $clientId, string $weekStart, array $templateItems): void
+    {
+        foreach ($templateItems as $tpl) {
+            $weekday = isset($tpl['weekday']) ? (int) $tpl['weekday'] : 0;
+            $date    = ($weekday >= 1 && $weekday <= 7)
+                ? date('Y-m-d', (int) strtotime($weekStart . ' +' . ($weekday - 1) . ' days'))
+                : null;
+
+            $this->repo->createItem([
+                'content_plan_id' => $planId,
+                'client_id'       => $clientId,
+                'publish_date'    => $date,
+                'publish_time'    => $tpl['publish_time'] ?? null,
+                'platform'        => $tpl['platform'] ?? null,
+                'content_type'    => $tpl['content_type'] ?? null,
+                'assigned_to'     => !empty($tpl['assigned_to']) ? (int) $tpl['assigned_to'] : null,
+                'sort_order'      => (int) ($tpl['sort_order'] ?? 0),
+                'status'          => 'draft',
+            ]);
+        }
     }
 
     public function update(int $id, int $agencyId, array $input): bool

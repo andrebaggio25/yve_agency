@@ -34,7 +34,7 @@ $defaultWeekStart = \App\Services\ContentPlanService::mondayOf((string) old('wee
         <label class="block text-sm font-medium text-gray-300 mb-2">
           Cliente <span class="text-rose-400">*</span>
         </label>
-        <select aria-label="Cliente" name="client_id" required x-ref="client" @change="syncTitle()"
+        <select aria-label="Cliente" name="client_id" required x-ref="client" @change="syncTitle(); checkTemplate()"
                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
           <option value="">Selecione um cliente...</option>
           <?php foreach ($clientList as $c): ?>
@@ -43,6 +43,17 @@ $defaultWeekStart = \App\Services\ContentPlanService::mondayOf((string) old('wee
             </option>
           <?php endforeach; ?>
         </select>
+
+        <!-- Modelo semanal do cliente (salvo a partir de um plano bem montado) -->
+        <div x-show="template.exists" x-cloak
+             class="mt-2 rounded-xl border border-brand-500/20 bg-brand-500/5 px-3 py-2.5">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="apply_template" value="1" x-model="template.apply"
+                   class="w-4 h-4 rounded accent-brand-500">
+            <span class="text-xs text-brand-300"
+                  x-text="'Aplicar modelo semanal do cliente (' + template.count + (template.count === 1 ? ' post' : ' posts') + ') — dias, horários e formatos já preenchidos'"></span>
+          </label>
+        </div>
       </div>
 
       <div>
@@ -101,8 +112,20 @@ function createPlan() {
     weekStart: '<?= e($defaultWeekStart) ?>',
     title: <?= json_encode((string) old('title'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
     titleTouched: <?= old('title') ? 'true' : 'false' ?>,
+    template: { exists: false, count: 0, apply: true },
 
-    init() { this.syncTitle(); },
+    init() { this.syncTitle(); this.checkTemplate(); },
+
+    // O cliente tem modelo semanal salvo? (grade padrão de posts)
+    async checkTemplate() {
+      const sel = this.$refs.client;
+      this.template = { exists: false, count: 0, apply: true };
+      if (!sel || !sel.value) return;
+      try {
+        const d = await api.get(`/conteudo/modelo/${sel.value}`);
+        this.template = { exists: !!d.exists, count: d.count || 0, apply: true };
+      } catch (e) { /* sem modelo ou falha de rede: o form segue sem o bloco */ }
+    },
 
     get weekEnd() {
       if (!this.weekStart) return '';
