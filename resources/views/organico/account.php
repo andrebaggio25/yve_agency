@@ -2,7 +2,7 @@
 <?php view_start('content'); ?>
 
 <!-- Breadcrumb -->
-<nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+<nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
   <a href="/organico" class="hover:text-gray-300">Orgânico</a>
   <span>/</span>
   <span class="text-gray-300"><?= e($account['name']) ?></span>
@@ -34,15 +34,15 @@
     <p class="text-sm text-gray-400">@<?= e($account['username']) ?></p>
     <?php endif; ?>
     <?php if ($account['biography']): ?>
-    <p class="text-xs text-gray-500 mt-1 line-clamp-2"><?= e($account['biography']) ?></p>
+    <p class="text-xs text-gray-400 mt-1 line-clamp-2"><?= e($account['biography']) ?></p>
     <?php endif; ?>
     <div class="flex items-center gap-5 mt-3 text-sm">
-      <div><span class="font-semibold text-white"><?= number_format($account['followers_count'], 0, ',', '.') ?></span> <span class="text-gray-500">seguidores</span></div>
-      <div><span class="font-semibold text-white"><?= number_format($account['following_count'], 0, ',', '.') ?></span> <span class="text-gray-500">seguindo</span></div>
-      <div><span class="font-semibold text-white"><?= number_format($account['media_count'], 0, ',', '.') ?></span> <span class="text-gray-500">posts</span></div>
+      <div><span class="font-semibold text-white"><?= number_format($account['followers_count'], 0, ',', '.') ?></span> <span class="text-gray-400">seguidores</span></div>
+      <div><span class="font-semibold text-white"><?= number_format($account['following_count'], 0, ',', '.') ?></span> <span class="text-gray-400">seguindo</span></div>
+      <div><span class="font-semibold text-white"><?= number_format($account['media_count'], 0, ',', '.') ?></span> <span class="text-gray-400">posts</span></div>
     </div>
   </div>
-  <div class="text-right flex-shrink-0 text-xs text-gray-500">
+  <div class="text-right flex-shrink-0 text-xs text-gray-400">
     <?php if ($account['last_synced_at']): ?>
     <p>Último sync: <?= date('d/m/Y H:i', strtotime($account['last_synced_at'])) ?></p>
     <?php endif; ?>
@@ -55,10 +55,10 @@
 
 <!-- Filtros -->
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">
-  <input type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
-  <span class="text-gray-500 text-sm">até</span>
-  <input type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
-  <select name="sort" class="input-field text-sm py-1.5 px-3 w-44">
+  <input aria-label="Data inicial" type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+  <span class="text-gray-400 text-sm">até</span>
+  <input aria-label="Data final" type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+  <select aria-label="Ordenar por" name="sort" class="input-field text-sm py-1.5 px-3 w-44">
     <option value="date"        <?= $sortBy === 'date'        ? 'selected' : '' ?>>Mais recentes</option>
     <option value="reach"       <?= $sortBy === 'reach'       ? 'selected' : '' ?>>Maior alcance</option>
     <option value="likes"       <?= $sortBy === 'likes'       ? 'selected' : '' ?>>Mais curtidas</option>
@@ -83,7 +83,7 @@
   ];
   foreach ($kpis as $k): ?>
   <div class="card p-3.5">
-    <p class="text-xs text-gray-500 mb-1"><?= $k['label'] ?></p>
+    <p class="text-xs text-gray-400 mb-1"><?= $k['label'] ?></p>
     <p class="text-base font-bold <?= $k['color'] ?>"><?= $k['value'] ?></p>
   </div>
   <?php endforeach; ?>
@@ -110,7 +110,7 @@ $totalTyped = array_sum($typeCounts);
       <div class="text-lg font-bold text-white"><?= $count ?></div>
       <div>
         <p class="text-xs text-gray-400"><?= $label ?></p>
-        <p class="text-xs text-gray-600"><?= $totalTyped > 0 ? round($count / $totalTyped * 100, 0) : 0 ?>%</p>
+        <p class="text-xs text-gray-400"><?= $totalTyped > 0 ? round($count / $totalTyped * 100, 0) : 0 ?>%</p>
       </div>
     </div>
     <?php endif; ?>
@@ -121,7 +121,7 @@ $totalTyped = array_sum($typeCounts);
 
 <!-- Gráfico de crescimento de seguidores -->
 <?php if (!empty($dailyChart)): ?>
-<div class="card p-5 mb-6" x-data="organicChart(<?= json_encode($dailyChart) ?>)">
+<div class="card p-5 mb-6" x-data="organicChart(<?= e(json_encode($dailyChart)) ?>)">
   <h2 class="text-sm font-medium text-gray-300 mb-4">Alcance diário</h2>
   <canvas id="organicReachChart" height="80"></canvas>
 </div>
@@ -154,7 +154,7 @@ $totalTyped = array_sum($typeCounts);
       <?php endif; ?>
       <?php else: ?>
       <div class="w-full h-full flex items-center justify-center">
-        <svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
       </div>
@@ -179,42 +179,42 @@ $totalTyped = array_sum($typeCounts);
         <?= e(mb_substr($post['caption'], 0, 120)) ?>
       </p>
       <?php endif; ?>
-      <p class="text-xs text-gray-600 mb-3">
+      <p class="text-xs text-gray-400 mb-3">
         <?= $post['posted_at'] ? date('d/m/Y', strtotime($post['posted_at'])) : '—' ?>
       </p>
 
       <!-- Métricas -->
       <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs mt-auto">
         <div class="flex items-center justify-between">
-          <span class="text-gray-500">Alcance</span>
+          <span class="text-gray-400">Alcance</span>
           <span class="font-medium text-blue-300"><?= number_format((int)$post['reach'], 0, ',', '.') ?></span>
         </div>
         <div class="flex items-center justify-between">
-          <span class="text-gray-500">Impr.</span>
+          <span class="text-gray-400">Impr.</span>
           <span class="font-medium text-cyan-300"><?= number_format((int)$post['impressions'], 0, ',', '.') ?></span>
         </div>
         <div class="flex items-center justify-between">
-          <span class="text-gray-500">Curtidas</span>
+          <span class="text-gray-400">Curtidas</span>
           <span class="font-medium text-red-300"><?= number_format((int)$post['likes'], 0, ',', '.') ?></span>
         </div>
         <div class="flex items-center justify-between">
-          <span class="text-gray-500">Coment.</span>
+          <span class="text-gray-400">Coment.</span>
           <span class="font-medium text-yellow-300"><?= number_format((int)$post['comments'], 0, ',', '.') ?></span>
         </div>
         <?php if ($post['saves'] > 0): ?>
         <div class="flex items-center justify-between">
-          <span class="text-gray-500">Salvos</span>
+          <span class="text-gray-400">Salvos</span>
           <span class="font-medium text-green-300"><?= number_format((int)$post['saves'], 0, ',', '.') ?></span>
         </div>
         <?php endif; ?>
         <?php if ($post['video_views'] > 0): ?>
         <div class="flex items-center justify-between">
-          <span class="text-gray-500">Views</span>
+          <span class="text-gray-400">Views</span>
           <span class="font-medium text-purple-300"><?= number_format((int)$post['video_views'], 0, ',', '.') ?></span>
         </div>
         <?php endif; ?>
         <div class="col-span-2 pt-1 border-t border-white/[0.06] flex items-center justify-between">
-          <span class="text-gray-500">Engajamento</span>
+          <span class="text-gray-400">Engajamento</span>
           <span class="font-semibold <?= (float)$post['engagement_rate'] >= 3 ? 'text-green-400' : 'text-gray-300' ?>">
             <?= number_format((float)$post['engagement_rate'], 2, ',', '.') ?>%
           </span>

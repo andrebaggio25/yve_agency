@@ -4,7 +4,7 @@ $method = 'PUT';
 ?>
 <div class="max-w-3xl mx-auto">
   <div class="mb-8">
-    <a href="/contratos/<?= $contract['id'] ?>" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Contrato</a>
+    <a href="/contratos/<?= $contract['id'] ?>" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">← Contrato</a>
     <h1 class="text-2xl font-bold text-white mt-2">Editar Contrato</h1>
     <p class="text-sm text-gray-400 mt-1"><?= e($contract['title']) ?></p>
   </div>

@@ -13,7 +13,7 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label class="label-field">Nome *</label>
-        <input type="text" name="name" required value="<?= e($plan['name'] ?? '') ?>" class="input-field w-full">
+        <input aria-label="Nome" type="text" name="name" required value="<?= e($plan['name'] ?? '') ?>" class="input-field w-full">
       </div>
       <div>
         <label class="label-field">Slug *</label>
@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Limites (vazio = ilimitado)</p>
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Limites (vazio = ilimitado)</p>
 
     <div class="grid grid-cols-2 gap-4">
       <div>
@@ -68,7 +68,7 @@
 
     <div>
       <label class="label-field">Features (uma por linha)</label>
-      <textarea name="features" rows="5" class="input-field w-full font-mono text-xs resize-none"
+      <textarea aria-label="content_plans&#10;approvals&#10;financial&#10;tasks&#10;portal&#10;ads&#10;organic&#10;ai_insights" name="features" rows="5" class="input-field w-full font-mono text-xs resize-none"
                 placeholder="content_plans&#10;approvals&#10;financial&#10;tasks&#10;portal&#10;ads&#10;organic&#10;ai_insights"><?= e(implode("\n", $plan['features'] ?? [])) ?></textarea>
     </div>
 

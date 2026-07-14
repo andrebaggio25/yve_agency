@@ -8,7 +8,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
 
 <div class="max-w-xl mx-auto">
   <div class="mb-6">
-    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-3">
+    <nav class="flex items-center gap-2 text-sm text-gray-400 mb-3">
       <a href="/tarefas" class="hover:text-gray-300">Tarefas</a>
       <span>/</span>
       <span class="text-gray-300">Nova</span>
@@ -21,20 +21,20 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
 
     <div>
       <label class="label-field">Título *</label>
-      <input type="text" name="title" required autofocus placeholder="Descreva a tarefa..."
+      <input aria-label="Descreva a tarefa..." type="text" name="title" required autofocus placeholder="Descreva a tarefa..."
              class="input-field w-full">
     </div>
 
     <div>
       <label class="label-field">Descrição</label>
-      <textarea name="description" rows="4" placeholder="Detalhes, contexto, links..."
+      <textarea aria-label="Detalhes, contexto, links..." name="description" rows="4" placeholder="Detalhes, contexto, links..."
                 class="input-field w-full resize-none"></textarea>
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label class="label-field">Status</label>
-        <select name="status" class="input-field w-full">
+        <select aria-label="Situação" name="status" class="input-field w-full">
           <?php foreach ($statusLabels as $v => $l): ?>
           <option value="<?= $v ?>" <?= ($prefill['status'] ?? 'todo') === $v ? 'selected' : '' ?>><?= $l ?></option>
           <?php endforeach; ?>
@@ -42,7 +42,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
       </div>
       <div>
         <label class="label-field">Prioridade</label>
-        <select name="priority" class="input-field w-full">
+        <select aria-label="Prioridade" name="priority" class="input-field w-full">
           <?php foreach ($priorityLabels as $v => $l): ?>
           <option value="<?= $v ?>" <?= $v === 'medium' ? 'selected' : '' ?>><?= $l ?></option>
           <?php endforeach; ?>
@@ -53,7 +53,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label class="label-field">Cliente</label>
-        <select name="client_id" class="input-field w-full">
+        <select aria-label="Cliente" name="client_id" class="input-field w-full">
           <option value="">— Sem cliente —</option>
           <?php foreach ($clients as $c): ?>
           <option value="<?= $c['id'] ?>" <?= ($prefill['client_id'] ?? '') === $c['id'] ? 'selected' : '' ?>><?= e($c['name']) ?></option>
@@ -62,7 +62,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
       </div>
       <div>
         <label class="label-field">Responsável</label>
-        <select name="assigned_to" class="input-field w-full">
+        <select aria-label="Responsável" name="assigned_to" class="input-field w-full">
           <option value="">— Sem responsável —</option>
           <?php foreach ($users as $u): ?>
           <option value="<?= $u['id'] ?>" <?= ($prefill['assigned_to'] ?? '') === $u['id'] ? 'selected' : '' ?>><?= e($u['name']) ?></option>

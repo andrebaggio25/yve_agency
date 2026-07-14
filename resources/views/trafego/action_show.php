@@ -1,7 +1,7 @@
 <?php view_layout('app'); view_start('title'); ?>Ação #<?= $action['id'] ?><?php view_end(); ?>
 <?php view_start('content'); ?>
 
-<nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+<nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
   <a href="/trafego/acoes" class="hover:text-gray-300">Ações</a>
   <span>/</span>
   <span class="text-gray-300">Ação #<?= $action['id'] ?></span>
@@ -34,14 +34,14 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold <?= $sc['bg'] ?> <?= $sc['text'] ?>">
           <?= $sc['label'] ?>
         </span>
-        <span class="text-xs text-gray-500 bg-white/[0.05] px-2 py-1 rounded-full">
+        <span class="text-xs text-gray-400 bg-white/[0.05] px-2 py-1 rounded-full">
           <?= $actionLabels[$action['action_type']] ?? $action['action_type'] ?>
         </span>
         <?php if ($action['ai_generated']): ?>
         <span class="text-xs text-brand-400 bg-brand-500/10 px-2 py-1 rounded-full">Gerado por IA</span>
         <?php endif; ?>
       </div>
-      <span class="text-xs text-gray-500 flex-shrink-0">
+      <span class="text-xs text-gray-400 flex-shrink-0">
         <?= date('d/m/Y H:i', strtotime($action['created_at'])) ?>
       </span>
     </div>
@@ -54,24 +54,24 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
     <!-- Alvo -->
     <div class="mt-4 pt-4 border-t border-white/[0.06] grid grid-cols-2 gap-3 text-sm">
       <div>
-        <p class="text-xs text-gray-500 mb-0.5">Conta</p>
+        <p class="text-xs text-gray-400 mb-0.5">Conta</p>
         <p class="text-gray-300"><?= e($action['account_name']) ?></p>
       </div>
       <?php if ($action['campaign_name']): ?>
       <div>
-        <p class="text-xs text-gray-500 mb-0.5">Campanha</p>
+        <p class="text-xs text-gray-400 mb-0.5">Campanha</p>
         <p class="text-gray-300"><?= e($action['campaign_name']) ?></p>
       </div>
       <?php endif; ?>
       <?php if ($action['ad_set_name']): ?>
       <div>
-        <p class="text-xs text-gray-500 mb-0.5">Conjunto de anúncio</p>
+        <p class="text-xs text-gray-400 mb-0.5">Conjunto de anúncio</p>
         <p class="text-gray-300"><?= e($action['ad_set_name']) ?></p>
       </div>
       <?php endif; ?>
       <?php if ($action['ad_name']): ?>
       <div>
-        <p class="text-xs text-gray-500 mb-0.5">Anúncio</p>
+        <p class="text-xs text-gray-400 mb-0.5">Anúncio</p>
         <p class="text-gray-300"><?= e($action['ad_name']) ?></p>
       </div>
       <?php endif; ?>
@@ -82,14 +82,14 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
     <div class="mt-4 pt-4 border-t border-white/[0.06] flex items-center gap-6 text-sm">
       <?php if ($action['current_value']): ?>
       <div>
-        <p class="text-xs text-gray-500 mb-0.5">Valor atual</p>
+        <p class="text-xs text-gray-400 mb-0.5">Valor atual</p>
         <p class="text-gray-300 font-medium"><?= e($action['current_value']) ?></p>
       </div>
       <?php endif; ?>
       <?php if ($action['proposed_value']): ?>
-      <span class="text-gray-600 text-lg">→</span>
+      <span class="text-gray-400 text-lg">→</span>
       <div>
-        <p class="text-xs text-gray-500 mb-0.5">Valor proposto</p>
+        <p class="text-xs text-gray-400 mb-0.5">Valor proposto</p>
         <p class="text-green-400 font-semibold"><?= e($action['proposed_value']) ?></p>
       </div>
       <?php endif; ?>
@@ -106,9 +106,9 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
         <div>
           <span class="text-gray-400">Criado</span>
           <?php if ($action['requested_by_name']): ?>
-          <span class="text-gray-500"> por <?= e($action['requested_by_name']) ?></span>
+          <span class="text-gray-400"> por <?= e($action['requested_by_name']) ?></span>
           <?php endif; ?>
-          <span class="text-gray-600 ml-2 text-xs"><?= date('d/m/Y H:i', strtotime($action['created_at'])) ?></span>
+          <span class="text-gray-400 ml-2 text-xs"><?= date('d/m/Y H:i', strtotime($action['created_at'])) ?></span>
         </div>
       </div>
       <?php if ($action['approved_at']): ?>
@@ -117,9 +117,9 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
         <div>
           <span class="text-gray-400"><?= $action['status'] === 'rejected' ? 'Rejeitado' : 'Aprovado' ?></span>
           <?php if ($action['approved_by_name']): ?>
-          <span class="text-gray-500"> por <?= e($action['approved_by_name'] ?? '') ?></span>
+          <span class="text-gray-400"> por <?= e($action['approved_by_name'] ?? '') ?></span>
           <?php endif; ?>
-          <span class="text-gray-600 ml-2 text-xs"><?= date('d/m/Y H:i', strtotime($action['approved_at'])) ?></span>
+          <span class="text-gray-400 ml-2 text-xs"><?= date('d/m/Y H:i', strtotime($action['approved_at'])) ?></span>
         </div>
       </div>
       <?php endif; ?>
@@ -128,7 +128,7 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
         <div class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0 mt-0.5"></div>
         <div>
           <span class="text-gray-400">Executado via Meta Ads API</span>
-          <span class="text-gray-600 ml-2 text-xs"><?= date('d/m/Y H:i', strtotime($action['executed_at'])) ?></span>
+          <span class="text-gray-400 ml-2 text-xs"><?= date('d/m/Y H:i', strtotime($action['executed_at'])) ?></span>
         </div>
       </div>
       <?php endif; ?>

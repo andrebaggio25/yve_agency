@@ -42,7 +42,7 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
         <span class="w-1.5 h-1.5 rounded-full <?= $sc['dot'] ?> <?= $plan['status'] === 'sent' ? 'animate-pulse' : '' ?>"></span>
         <?= $statusLabel ?>
       </span>
-      <span class="text-xs text-gray-500"><?= e($plan['client_name']) ?></span>
+      <span class="text-xs text-gray-400"><?= e($plan['client_name']) ?></span>
     </div>
 
     <h1 class="text-xl font-bold text-white mb-1"><?= e($plan['title']) ?></h1>
@@ -103,7 +103,7 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
         <div class="flex items-start justify-between gap-3 mb-3">
           <div class="flex-1 min-w-0">
             <?php if (!empty($item['publish_date'])): ?>
-            <p class="text-xs text-gray-500 mb-1">
+            <p class="text-xs text-gray-400 mb-1">
               <?= date('D, d/m', strtotime($item['publish_date'])) ?>
               <?= !empty($item['publish_time']) ? ' · ' . substr($item['publish_time'], 0, 5) : '' ?>
               <?= !empty($item['content_type']) ? ' · ' . e($item['content_type']) : '' ?>
@@ -127,14 +127,14 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
         <div class="space-y-3 mb-4" x-data="{showFull: false}">
           <?php if (!empty($item['caption'])): ?>
           <div>
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Legenda</p>
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Legenda</p>
             <p class="text-sm text-gray-200 leading-relaxed whitespace-pre-line"
                :class="showFull ? '' : 'line-clamp-3'"><?= e($item['caption']) ?></p>
           </div>
           <?php endif; ?>
           <?php if (!empty($item['script'])): ?>
           <div>
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Roteiro</p>
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Roteiro</p>
             <p class="text-sm text-gray-200 leading-relaxed whitespace-pre-line"
                :class="showFull ? '' : 'line-clamp-3'"><?= e($item['script']) ?></p>
           </div>
@@ -265,7 +265,7 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
 
             <textarea x-model="comment" rows="3"
                       :placeholder="type === 'comment' ? 'Escreva seu comentário...' : 'Opcional: explique o motivo'"
-                      class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
+                      class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
 
             <button @click="submitFeedback(<?= $item['id'] ?>, type, comment)"
                     :disabled="submitting"
@@ -297,7 +297,7 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
       <h3 class="text-base font-semibold text-white mb-4">Solicitar Revisão</h3>
       <textarea x-model="revisionNote" rows="4"
                 placeholder="Descreva o que precisa ser revisado..."
-                class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none mb-4"></textarea>
+                class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none mb-4"></textarea>
       <div class="flex gap-3">
         <button @click="requestRevision()" :disabled="acting"
                 class="flex-1 rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-amber-500 disabled:opacity-50">

@@ -13,19 +13,19 @@
 </div>
 
 <?php if (empty($accounts)): ?>
-<div class="card p-12 text-center text-gray-500">Nenhuma conta conectada.</div>
+<div class="card p-12 text-center text-gray-400">Nenhuma conta conectada.</div>
 <?php else: ?>
 <div class="card overflow-hidden">
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-white/[0.06]">
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Conta</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Plataforma</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cliente</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Seguidores</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Posts</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Último sync</th>
-        <th class="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Conta</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Plataforma</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Cliente</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Seguidores</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Posts</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Último sync</th>
+        <th class="text-center px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
         <th class="px-5 py-3"></th>
       </tr>
     </thead>
@@ -46,7 +46,7 @@
             <div>
               <p class="font-medium text-white"><?= e($a['name']) ?></p>
               <?php if ($a['username']): ?>
-              <p class="text-xs text-gray-500">@<?= e($a['username']) ?></p>
+              <p class="text-xs text-gray-400">@<?= e($a['username']) ?></p>
               <?php endif; ?>
             </div>
           </div>

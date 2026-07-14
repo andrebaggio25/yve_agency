@@ -15,7 +15,7 @@ $statusColors = [
   'sent'      => 'text-blue-300 bg-blue-500/10',
   'paid'      => 'text-green-300 bg-green-500/10',
   'overdue'   => 'text-red-300 bg-red-500/10',
-  'cancelled' => 'text-gray-500 bg-gray-700/30',
+  'cancelled' => 'text-gray-400 bg-gray-700/30',
   'partial'   => 'text-yellow-300 bg-yellow-500/10',
 ];
 ?>
@@ -26,17 +26,17 @@ $statusColors = [
 </div>
 
 <?php if (empty($invoices)): ?>
-<div class="card p-12 text-center text-gray-500"><?= t('portal.invoices.empty') ?></div>
+<div class="card p-12 text-center text-gray-400"><?= t('portal.invoices.empty') ?></div>
 <?php else: ?>
 <div class="card overflow-hidden">
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-white/[0.06]">
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide"><?= t('portal.invoices.col_invoice') ?></th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell"><?= t('portal.invoices.col_issue') ?></th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell"><?= t('portal.invoices.col_due') ?></th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide"><?= t('portal.invoices.col_amount') ?></th>
-        <th class="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide"><?= t('portal.invoices.col_status') ?></th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide"><?= t('portal.invoices.col_invoice') ?></th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide hidden sm:table-cell"><?= t('portal.invoices.col_issue') ?></th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide hidden sm:table-cell"><?= t('portal.invoices.col_due') ?></th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide"><?= t('portal.invoices.col_amount') ?></th>
+        <th class="text-center px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide"><?= t('portal.invoices.col_status') ?></th>
       </tr>
     </thead>
     <tbody class="divide-y divide-white/[0.04]">
@@ -45,7 +45,7 @@ $statusColors = [
         <td class="px-5 py-4">
           <p class="font-medium text-white"><?= e($inv['invoice_number'] ?? "#$inv[id]") ?></p>
           <?php if ($inv['description'] ?? null): ?>
-          <p class="text-xs text-gray-500 mt-0.5 line-clamp-1"><?= e($inv['description']) ?></p>
+          <p class="text-xs text-gray-400 mt-0.5 line-clamp-1"><?= e($inv['description']) ?></p>
           <?php endif; ?>
         </td>
         <td class="px-5 py-4 text-gray-400 hidden sm:table-cell">

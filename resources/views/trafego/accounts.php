@@ -22,12 +22,12 @@
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-white/[0.06]">
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Conta</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Plataforma</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cliente</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Moeda</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Última sync</th>
-        <th class="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Conta</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Plataforma</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Cliente</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Moeda</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Última sync</th>
+        <th class="text-center px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
         <th class="px-5 py-3"></th>
       </tr>
     </thead>
@@ -36,7 +36,7 @@
       <tr class="hover:bg-white/[0.02] transition-colors">
         <td class="px-5 py-3">
           <p class="font-medium text-white"><?= e($a['name']) ?></p>
-          <p class="text-xs text-gray-500"><?= e($a['platform_account_id']) ?></p>
+          <p class="text-xs text-gray-400"><?= e($a['platform_account_id']) ?></p>
         </td>
         <td class="px-5 py-3">
           <span class="inline-flex items-center gap-1.5 text-gray-300 text-xs">

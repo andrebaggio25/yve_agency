@@ -17,7 +17,7 @@ $statusLabels = [
       <p class="mt-1 text-sm text-gray-400"><?= count($contracts) ?> contrato<?= count($contracts) !== 1 ? 's' : '' ?></p>
     </div>
     <?php if (\App\Support\Auth::can('contracts.create')): ?>
-    <a href="/contratos/novo" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 hover:scale-105 active:scale-95 transition-all">
+    <a href="/contratos/novo" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 hover:scale-105 active:scale-95 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Novo Contrato
     </a>
@@ -26,15 +26,15 @@ $statusLabels = [
 
   <!-- Filtros -->
   <form method="GET" class="mb-6 flex flex-wrap gap-3 items-end">
-    <input type="text" name="q" value="<?= e($filters['q'] ?? '') ?>" placeholder="Buscar título..."
+    <input aria-label="Buscar" type="text" name="q" value="<?= e($filters['q'] ?? '') ?>" placeholder="Buscar título..."
       class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none w-56">
-    <select name="client_id" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
+    <select aria-label="Cliente" name="client_id" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
       <option value="">Todos os clientes</option>
       <?php foreach ($clients as $cl): ?>
       <option value="<?= $cl['id'] ?>" <?= ($filters['client_id'] ?? '') == $cl['id'] ? 'selected' : '' ?>><?= e($cl['name']) ?></option>
       <?php endforeach; ?>
     </select>
-    <select name="status" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
+    <select aria-label="Situação" name="status" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
       <option value="">Todos os status</option>
       <?php foreach ($statusLabels as $v => [$l, $_]): ?>
       <option value="<?= $v ?>" <?= ($filters['status'] ?? '') === $v ? 'selected' : '' ?>><?= $l ?></option>
@@ -63,11 +63,11 @@ $statusLabels = [
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/5 bg-white/[0.02]">
-          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Título</th>
-          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Cliente</th>
-          <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Valor</th>
-          <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
-          <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">Validade</th>
+          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Título</th>
+          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cliente</th>
+          <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Valor</th>
+          <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Status</th>
+          <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Validade</th>
           <th class="px-5 py-3.5"></th>
         </tr>
       </thead>

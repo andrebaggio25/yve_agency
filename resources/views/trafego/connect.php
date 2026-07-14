@@ -56,7 +56,7 @@
       </div>
       <div class="flex-1">
         <p class="text-sm font-semibold text-white mb-1">Conectar via Facebook Login <span class="text-xs text-brand-400 font-medium">(recomendado)</span></p>
-        <p class="text-xs text-gray-500 mb-3">Autorize automaticamente. Mais seguro e sem precisar copiar tokens.</p>
+        <p class="text-xs text-gray-400 mb-3">Autorize automaticamente. Mais seguro e sem precisar copiar tokens.</p>
         <?php if ($metaAppConfigured ?? false): ?>
         <a href="/trafego/contas/oauth?client_id=<?= (int)($clients[0]['id'] ?? 0) ?>"
            class="inline-flex items-center gap-2 bg-[#1877f2] hover:bg-[#166fe5] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
@@ -72,7 +72,7 @@
 
   <div class="flex items-center gap-3 mb-5">
     <div class="flex-1 h-px bg-white/[0.06]"></div>
-    <span class="text-xs text-gray-500 font-medium">ou insira manualmente</span>
+    <span class="text-xs text-gray-400 font-medium">ou insira manualmente</span>
     <div class="flex-1 h-px bg-white/[0.06]"></div>
   </div>
 
@@ -91,17 +91,17 @@
 
     <div>
       <label class="label-field">Token de acesso *</label>
-      <input type="text" name="access_token" required
+      <input aria-label="EAABsbCS..." type="text" name="access_token" required
              placeholder="EAABsbCS..."
              class="input-field w-full font-mono text-xs">
-      <p class="text-xs text-gray-500 mt-1">O token será trocado por um de longa duração automaticamente.</p>
+      <p class="text-xs text-gray-400 mt-1">O token será trocado por um de longa duração automaticamente.</p>
     </div>
 
     <div>
       <label class="label-field">ID da conta de anúncios *</label>
       <div class="flex items-center gap-2">
         <span class="text-gray-400 text-sm">act_</span>
-        <input type="text" name="platform_account_id" required
+        <input aria-label="123456789" type="text" name="platform_account_id" required
                placeholder="123456789"
                class="input-field flex-1">
       </div>
@@ -109,7 +109,7 @@
 
     <div>
       <label class="label-field">Cliente (opcional)</label>
-      <select name="client_id" class="input-field w-full">
+      <select aria-label="Cliente" name="client_id" class="input-field w-full">
         <option value="">— Sem cliente —</option>
         <?php foreach ($clients as $c): ?>
         <option value="<?= $c['id'] ?>"><?= e($c['name']) ?></option>
@@ -121,7 +121,7 @@
       <label class="label-field">Dias de sincronização retroativa</label>
       <input type="number" name="sync_days_back" value="30" min="1" max="365"
              class="input-field w-32">
-      <p class="text-xs text-gray-500 mt-1">Quantos dias de histórico buscar na primeira sincronização.</p>
+      <p class="text-xs text-gray-400 mt-1">Quantos dias de histórico buscar na primeira sincronização.</p>
     </div>
 
     <div class="flex items-center justify-end gap-3 pt-2">

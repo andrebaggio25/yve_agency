@@ -2,7 +2,7 @@
 <?php view_start('content'); ?>
 
 <div class="max-w-lg mx-auto">
-  <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+  <nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
     <a href="/trafego/acoes" class="hover:text-gray-300">Ações</a>
     <span>/</span>
     <span class="text-gray-300">Nova ação</span>
@@ -52,14 +52,14 @@
 
     <div>
       <label class="label-field">Descrição *</label>
-      <input type="text" name="description" required
+      <input aria-label="Descreva a ação a ser realizada" type="text" name="description" required
              placeholder="Descreva a ação a ser realizada"
              class="input-field w-full">
     </div>
 
     <div>
       <label class="label-field">Justificativa</label>
-      <textarea name="justification" rows="3"
+      <textarea aria-label="Por que esta ação deve ser realizada?" name="justification" rows="3"
                 placeholder="Por que esta ação deve ser realizada?"
                 class="input-field w-full resize-none"></textarea>
     </div>
@@ -67,11 +67,11 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label class="label-field">Valor atual</label>
-        <input type="text" name="current_value" placeholder="Ex: R$ 50/dia" class="input-field w-full">
+        <input aria-label="Ex: R$ 50/dia" type="text" name="current_value" placeholder="Ex: R$ 50/dia" class="input-field w-full">
       </div>
       <div>
         <label class="label-field">Valor proposto</label>
-        <input type="text" name="proposed_value" placeholder="Ex: R$ 35/dia" class="input-field w-full">
+        <input aria-label="Ex: R$ 35/dia" type="text" name="proposed_value" placeholder="Ex: R$ 35/dia" class="input-field w-full">
       </div>
     </div>
 

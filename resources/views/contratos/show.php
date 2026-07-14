@@ -11,7 +11,7 @@ $statusLabels = [
 <div class="max-w-3xl mx-auto space-y-6">
   <div class="flex items-start justify-between">
     <div>
-      <a href="/contratos" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Contratos</a>
+      <a href="/contratos" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">← Contratos</a>
       <h1 class="text-2xl font-bold text-white mt-2"><?= e($contract['title']) ?></h1>
       <div class="mt-2 flex items-center gap-3">
         <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 <?= $scls ?>"><?= $slabel ?></span>
@@ -46,21 +46,21 @@ $statusLabels = [
     ];
     foreach ($rows as $k => $val): ?>
     <div>
-      <p class="text-xs text-gray-500 mb-0.5"><?= $k ?></p>
+      <p class="text-xs text-gray-400 mb-0.5"><?= $k ?></p>
       <p class="text-sm font-medium text-white"><?= e($val) ?></p>
     </div>
     <?php endforeach; ?>
 
     <?php if ($contract['description']): ?>
     <div class="sm:col-span-2">
-      <p class="text-xs text-gray-500 mb-0.5">Descrição</p>
+      <p class="text-xs text-gray-400 mb-0.5">Descrição</p>
       <p class="text-sm text-gray-300 whitespace-pre-line"><?= e($contract['description']) ?></p>
     </div>
     <?php endif; ?>
 
     <?php if ($contract['notes']): ?>
     <div class="sm:col-span-2">
-      <p class="text-xs text-gray-500 mb-0.5">Notas internas</p>
+      <p class="text-xs text-gray-400 mb-0.5">Notas internas</p>
       <p class="text-sm text-gray-300 whitespace-pre-line"><?= e($contract['notes']) ?></p>
     </div>
     <?php endif; ?>
@@ -69,7 +69,7 @@ $statusLabels = [
   <?php if (\App\Support\Auth::can('invoices.create')): ?>
   <div class="flex justify-end">
     <a href="/faturas/nova?client_id=<?= $contract['client_id'] ?>&contract_id=<?= $contract['id'] ?>"
-       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Gerar Fatura
     </a>

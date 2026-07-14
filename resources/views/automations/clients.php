@@ -9,9 +9,9 @@
 </div>
 
 <?php if (empty($clients)): ?>
-<div class="card p-12 text-center text-gray-500">Nenhum cliente cadastrado.</div>
+<div class="card p-12 text-center text-gray-400">Nenhum cliente cadastrado.</div>
 <?php elseif (empty($clientAutomations)): ?>
-<div class="card p-12 text-center text-gray-500">Nenhuma automação por cliente disponível.</div>
+<div class="card p-12 text-center text-gray-400">Nenhuma automação por cliente disponível.</div>
 <?php else: ?>
 <form method="POST" action="/automations/clients">
   <?= csrf_field() ?>
@@ -19,9 +19,9 @@
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/[0.06]">
-          <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide sticky left-0 bg-[#0d0d14]">Cliente</th>
+          <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide sticky left-0 bg-[#0d0d14]">Cliente</th>
           <?php foreach ($clientAutomations as $key => $def): ?>
-          <th class="px-4 py-3 text-xs font-medium text-gray-500 text-center whitespace-nowrap" title="<?= e($def['description'] ?? '') ?>">
+          <th class="px-4 py-3 text-xs font-medium text-gray-400 text-center whitespace-nowrap" title="<?= e($def['description'] ?? '') ?>">
             <?= e($def['label'] ?? $key) ?>
           </th>
           <?php endforeach; ?>
@@ -41,7 +41,10 @@
           </td>
           <?php foreach ($clientAutomations as $key => $def): ?>
           <td class="px-4 py-3 text-center">
+            <!-- Nome acessível: sem ele, o leitor de tela anuncia só "caixa de
+                 seleção" — numa matriz de N clientes × N automações, é inútil. -->
             <input type="checkbox" name="enabled[<?= $cid ?>][<?= e($key) ?>]" value="1"
+                   aria-label="<?= e(($def['label'] ?? $key) . ' — ' . $c['name']) ?>"
                    <?= !empty($row[$key]) ? 'checked' : '' ?>
                    class="w-4 h-4 rounded accent-brand-500">
           </td>

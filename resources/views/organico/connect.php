@@ -31,20 +31,20 @@
 
     <div>
       <label class="label-field">ID da página Facebook *</label>
-      <input type="text" name="platform_page_id" required placeholder="123456789012345"
+      <input aria-label="123456789012345" type="text" name="platform_page_id" required placeholder="123456789012345"
              class="input-field w-full">
-      <p class="text-xs text-gray-500 mt-1">Necessário mesmo para Instagram (a conta IG deve estar vinculada à página).</p>
+      <p class="text-xs text-gray-400 mt-1">Necessário mesmo para Instagram (a conta IG deve estar vinculada à página).</p>
     </div>
 
     <div>
       <label class="label-field">User Access Token *</label>
-      <input type="text" name="access_token" required placeholder="EAABsbCS..."
+      <input aria-label="EAABsbCS..." type="text" name="access_token" required placeholder="EAABsbCS..."
              class="input-field w-full font-mono text-xs">
     </div>
 
     <div>
       <label class="label-field">Cliente (opcional)</label>
-      <select name="client_id" class="input-field w-full">
+      <select aria-label="Cliente" name="client_id" class="input-field w-full">
         <option value="">— Sem cliente —</option>
         <?php foreach ($clients as $c): ?>
         <option value="<?= $c['id'] ?>"><?= e($c['name']) ?></option>

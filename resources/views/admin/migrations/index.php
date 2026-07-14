@@ -53,7 +53,7 @@ $total      = count($migrations);
     <form method="POST" action="/admin/migrations/rollback" class="flex items-center gap-2"
           onsubmit="return confirm('Reverter a ÚLTIMA migration aplicada? Isso pode APAGAR DADOS e não tem desfazer. Você tem backup?');">
       <?= csrf_field() ?>
-      <input type="text" name="confirmation" placeholder="Digite REVERTER"
+      <input aria-label="Digite REVERTER" type="text" name="confirmation" placeholder="Digite REVERTER"
              autocomplete="off" spellcheck="false"
              class="input-field w-40 text-sm py-2 uppercase placeholder:normal-case">
       <button type="submit" class="btn-secondary text-sm px-4 py-2.5 gap-2 text-rose-300 hover:text-rose-200">
@@ -77,12 +77,12 @@ $total      = count($migrations);
       <p class="text-sm font-semibold text-white">Migrations (<?= (int) $total ?>)</p>
     </div>
     <?php if (empty($migrations)): ?>
-      <p class="px-4 py-8 text-center text-sm text-gray-500">Nenhuma migration encontrada.</p>
+      <p class="px-4 py-8 text-center text-sm text-gray-400">Nenhuma migration encontrada.</p>
     <?php else: ?>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
-          <tr class="text-left text-xs text-gray-500 border-b border-white/[0.06]">
+          <tr class="text-left text-xs text-gray-400 border-b border-white/[0.06]">
             <th class="px-4 py-2 font-medium">Versão</th>
             <th class="px-4 py-2 font-medium">Migration</th>
             <th class="px-4 py-2 font-medium">Estado</th>
@@ -92,7 +92,7 @@ $total      = count($migrations);
         <tbody>
           <?php foreach ($migrations as $mig): ?>
           <tr class="border-b border-white/[0.03] last:border-0">
-            <td class="px-4 py-2.5 font-mono text-xs text-gray-500"><?= e($mig['version']) ?></td>
+            <td class="px-4 py-2.5 font-mono text-xs text-gray-400"><?= e($mig['version']) ?></td>
             <td class="px-4 py-2.5 text-gray-200"><?= e($mig['name']) ?></td>
             <td class="px-4 py-2.5">
               <?php if ($mig['executed']): ?>
@@ -101,7 +101,7 @@ $total      = count($migrations);
                 <span class="badge bg-amber-500/15 text-amber-300">Pendente</span>
               <?php endif; ?>
             </td>
-            <td class="px-4 py-2.5 text-xs text-gray-500"><?= $mig['executed_at'] ? e((string) $mig['executed_at']) : '—' ?></td>
+            <td class="px-4 py-2.5 text-xs text-gray-400"><?= $mig['executed_at'] ? e((string) $mig['executed_at']) : '—' ?></td>
           </tr>
           <?php endforeach; ?>
         </tbody>

@@ -24,21 +24,21 @@
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-2">Cliente</label>
-        <select name="client_id" disabled
+        <select aria-label="Cliente" name="client_id" disabled
                 class="w-full rounded-xl bg-white/[0.02] border border-white/5 text-gray-400 px-4 py-3 text-sm cursor-not-allowed">
           <?php foreach ($clientList as $c): ?>
           <option value="<?= e($c['id']) ?>" <?= $c['id'] == $plan['client_id'] ? 'selected' : '' ?>><?= e($c['name']) ?></option>
           <?php endforeach; ?>
         </select>
-        <p class="mt-1 text-xs text-gray-600">O cliente não pode ser alterado após a criação.</p>
+        <p class="mt-1 text-xs text-gray-400">O cliente não pode ser alterado após a criação.</p>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-2">
           Título do Plano <span class="text-rose-400">*</span>
         </label>
-        <input type="text" name="title" value="<?= e($plan['title']) ?>" required
-               class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
+        <input aria-label="Título" type="text" name="title" value="<?= e($plan['title']) ?>" required
+               class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
       </div>
 
       <div class="grid grid-cols-2 gap-4">
@@ -46,7 +46,7 @@
           <label class="block text-sm font-medium text-gray-300 mb-2">
             Início da Semana <span class="text-rose-400">*</span>
           </label>
-          <input type="date" name="week_start" value="<?= e($plan['week_start'] ?? '') ?>" required
+          <input aria-label="A partir de" type="date" name="week_start" value="<?= e($plan['week_start'] ?? '') ?>" required
                  class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
         </div>
         <div>
@@ -58,15 +58,15 @@
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-2">Notas Internas</label>
-        <textarea name="notes" rows="3"
+        <textarea aria-label="Observações para a equipe..." name="notes" rows="3"
                   placeholder="Observações para a equipe..."
-                  class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors resize-none"><?= e($plan['notes'] ?? '') ?></textarea>
+                  class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors resize-none"><?= e($plan['notes'] ?? '') ?></textarea>
       </div>
     </div>
 
     <div class="flex items-center gap-3">
       <button type="submit"
-              class="flex-1 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-[1.01] active:scale-95">
+              class="flex-1 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-[1.01] active:scale-95">
         Salvar alterações
       </button>
       <a href="/conteudo/<?= e($plan['id']) ?>"

@@ -12,12 +12,12 @@
 
   <!-- Dados da agência -->
   <div class="card p-6 space-y-4">
-    <p class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1">Dados da agência</p>
+    <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">Dados da agência</p>
 
     <div>
       <label class="label-field">Nome <span class="text-red-400">*</span></label>
-      <input type="text" name="name" value="<?= e(old('name')) ?>" required autofocus class="input-field w-full">
-      <p class="text-xs text-gray-600 mt-1">O slug será gerado automaticamente.</p>
+      <input aria-label="Nome" type="text" name="name" value="<?= e(old('name')) ?>" required autofocus class="input-field w-full">
+      <p class="text-xs text-gray-400 mt-1">O slug será gerado automaticamente.</p>
     </div>
 
     <div class="grid grid-cols-2 gap-4">
@@ -43,7 +43,7 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label class="label-field">Fuso horário</label>
-        <select name="timezone" class="input-field w-full">
+        <select aria-label="Fuso horário" name="timezone" class="input-field w-full">
           <option value="America/Sao_Paulo">America/Sao_Paulo</option>
           <option value="America/Manaus">America/Manaus</option>
           <option value="America/New_York">America/New_York</option>
@@ -54,7 +54,7 @@
       </div>
       <div>
         <label class="label-field">Status</label>
-        <select name="status" class="input-field w-full">
+        <select aria-label="Situação" name="status" class="input-field w-full">
           <option value="active">Ativo</option>
           <option value="inactive">Inativo</option>
         </select>
@@ -64,8 +64,8 @@
 
   <!-- Super admin do tenant -->
   <div class="card p-6 space-y-4">
-    <p class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1">Administrador do tenant</p>
-    <p class="text-xs text-gray-500">Será criado automaticamente com o perfil <strong class="text-gray-300">super_admin</strong>.</p>
+    <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">Administrador do tenant</p>
+    <p class="text-xs text-gray-400">Será criado automaticamente com o perfil <strong class="text-gray-300">super_admin</strong>.</p>
 
     <div class="grid grid-cols-2 gap-4">
       <div>
@@ -80,14 +80,14 @@
 
     <div>
       <label class="label-field">Senha (opcional)</label>
-      <input type="text" name="admin_password" value="" placeholder="Deixe em branco para gerar automaticamente" class="input-field w-full font-mono text-sm">
-      <p class="text-xs text-gray-600 mt-1">Se vazio, uma senha segura será gerada e exibida após a criação.</p>
+      <input aria-label="Deixe em branco para gerar automaticamente" type="text" name="admin_password" value="" placeholder="Deixe em branco para gerar automaticamente" class="input-field w-full font-mono text-sm">
+      <p class="text-xs text-gray-400 mt-1">Se vazio, uma senha segura será gerada e exibida após a criação.</p>
     </div>
   </div>
 
   <!-- Assinatura inicial -->
   <div class="card p-6 space-y-4">
-    <p class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1">Assinatura inicial <span class="text-gray-600">(opcional)</span></p>
+    <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">Assinatura inicial <span class="text-gray-400">(opcional)</span></p>
 
     <div class="grid grid-cols-3 gap-4">
       <div class="col-span-1">

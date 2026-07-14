@@ -94,7 +94,7 @@ $statusColors = [
         <div>
           <p class="text-sm font-medium text-white"><?= e($p['title']) ?></p>
           <?php if ($p['period_label'] ?? null): ?>
-          <p class="text-xs text-gray-500"><?= e($p['period_label']) ?></p>
+          <p class="text-xs text-gray-400"><?= e($p['period_label']) ?></p>
           <?php endif; ?>
         </div>
       </div>
@@ -148,13 +148,13 @@ $statusColors = [
               <div class="h-full rounded-full transition-all"
                    style="width:<?= $pct ?>%; background:linear-gradient(90deg,#c6a15b,#3b82f6)"></div>
             </div>
-            <span class="text-[10px] text-gray-500 flex-shrink-0"><?= $approved ?>/<?= $total ?> <?= t('portal.home.approved_count') ?></span>
+            <span class="text-[10px] text-gray-400 flex-shrink-0"><?= $approved ?>/<?= $total ?> <?= t('portal.home.approved_count') ?></span>
           </div>
           <?php elseif ($p['period_label'] ?? null): ?>
-          <p class="text-xs text-gray-500"><?= e($p['period_label']) ?></p>
+          <p class="text-xs text-gray-400"><?= e($p['period_label']) ?></p>
           <?php endif; ?>
         </div>
-        <svg class="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
       </a>
@@ -174,7 +174,7 @@ $statusColors = [
           </div>
           <h3 class="text-sm font-semibold text-white"><?= t('portal.home.paid_traffic') ?></h3>
         </div>
-        <span class="text-[10px] text-gray-500"><?= date('d/m', strtotime($since)) ?> – <?= date('d/m', strtotime($until)) ?></span>
+        <span class="text-[10px] text-gray-400"><?= date('d/m', strtotime($since)) ?> – <?= date('d/m', strtotime($until)) ?></span>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <?php
@@ -186,7 +186,7 @@ $statusColors = [
         ];
         foreach ($adsKpis as $k): ?>
         <div class="rounded-xl p-3" style="background:rgba(255,255,255,0.03)">
-          <p class="text-[10px] text-gray-500 mb-1"><?= $k['label'] ?></p>
+          <p class="text-[10px] text-gray-400 mb-1"><?= $k['label'] ?></p>
           <p class="text-lg font-bold" style="color:<?= $k['color'] ?>"><?= $k['value'] ?></p>
         </div>
         <?php endforeach; ?>
@@ -206,7 +206,7 @@ $statusColors = [
           </div>
           <h3 class="text-sm font-semibold text-white"><?= t('portal.home.social') ?></h3>
         </div>
-        <span class="text-[10px] text-gray-500"><?= date('d/m', strtotime($since)) ?> – <?= date('d/m', strtotime($until)) ?></span>
+        <span class="text-[10px] text-gray-400"><?= date('d/m', strtotime($since)) ?> – <?= date('d/m', strtotime($until)) ?></span>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <?php
@@ -218,7 +218,7 @@ $statusColors = [
         ];
         foreach ($orgKpis as $k): ?>
         <div class="rounded-xl p-3" style="background:rgba(255,255,255,0.03)">
-          <p class="text-[10px] text-gray-500 mb-1"><?= $k['label'] ?></p>
+          <p class="text-[10px] text-gray-400 mb-1"><?= $k['label'] ?></p>
           <p class="text-lg font-bold" style="color:<?= $k['color'] ?>"><?= $k['value'] ?></p>
         </div>
         <?php endforeach; ?>
@@ -232,7 +232,7 @@ $statusColors = [
 
     <!-- Atalhos de navegação -->
     <div class="rounded-2xl p-4" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-      <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3"><?= t('portal.home.quick_access') ?></h3>
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3"><?= t('portal.home.quick_access') ?></h3>
       <div class="space-y-1.5">
         <?php
         $navLinks = [
@@ -250,7 +250,7 @@ $statusColors = [
             </svg>
           </div>
           <span class="text-sm text-gray-300 group-hover:text-white transition-colors"><?= $l['label'] ?></span>
-          <svg class="w-3.5 h-3.5 text-gray-700 group-hover:text-gray-400 ml-auto transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-400 ml-auto transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
         </a>
@@ -272,7 +272,7 @@ $statusColors = [
         <div class="flex items-center justify-between text-sm">
           <div>
             <p class="text-white font-medium"><?= e($inv['invoice_number'] ?? "#$inv[id]") ?></p>
-            <p class="text-[11px] text-gray-500"><?= t('portal.home.due') ?> <?= $inv['due_date'] ? date('d/m/Y', strtotime($inv['due_date'])) : '—' ?></p>
+            <p class="text-[11px] text-gray-400"><?= t('portal.home.due') ?> <?= $inv['due_date'] ? date('d/m/Y', strtotime($inv['due_date'])) : '—' ?></p>
           </div>
           <span class="font-semibold <?= $inv['status'] === 'overdue' ? 'text-red-400' : 'text-white' ?>">
             R$ <?= number_format((float)$inv['total'], 2, ',', '.') ?>

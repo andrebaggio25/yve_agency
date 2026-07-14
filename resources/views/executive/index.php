@@ -1,6 +1,5 @@
 <?php view_layout('app'); view_start('title'); ?>Relatório Executivo<?php view_end(); ?>
 <?php view_start('head'); ?>
-<script defer src="<?= asset('/js/vendor/chart.umd.min.js') ?>"></script>
 <?php view_end(); ?>
 <?php view_start('content'); ?>
 
@@ -18,9 +17,9 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
   </div>
   <!-- Period filter -->
   <form method="GET" class="flex items-center gap-2">
-    <input type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
-    <span class="text-gray-500 text-sm">até</span>
-    <input type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+    <input aria-label="Data inicial" type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+    <span class="text-gray-400 text-sm">até</span>
+    <input aria-label="Data final" type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
     <button type="submit" class="btn-secondary text-sm px-4 py-1.5">Aplicar</button>
   </form>
 </div>
@@ -39,9 +38,9 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
   foreach ($kpis as [$label, $value, $sub, $color]):
   ?>
   <div class="card p-4">
-    <p class="text-xs text-gray-500 mb-1"><?= $label ?></p>
+    <p class="text-xs text-gray-400 mb-1"><?= $label ?></p>
     <p class="text-xl font-bold <?= $color ?>"><?= $value ?></p>
-    <?php if ($sub): ?><p class="text-xs text-gray-600 mt-0.5"><?= $sub ?></p><?php endif; ?>
+    <?php if ($sub): ?><p class="text-xs text-gray-400 mt-0.5"><?= $sub ?></p><?php endif; ?>
   </div>
   <?php endforeach; ?>
 </div>
@@ -56,17 +55,17 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
       new Chart($el.querySelector('canvas'), {
         type: 'bar',
         data: {
-          labels: <?= json_encode(array_column($revenueTrend, 'month')) ?>,
+          labels: <?= e(json_encode(array_column($revenueTrend, 'month'))) ?>,
           datasets: [
             {
               label: 'Recebido',
-              data: <?= json_encode(array_map(fn($r) => (float)$r['received'], $revenueTrend)) ?>,
+              data: <?= e(json_encode(array_map(fn($r) => (float)$r['received'], $revenueTrend))) ?>,
               backgroundColor: 'rgba(198,161,91,0.7)',
               borderRadius: 4,
             },
             {
               label: 'Faturado',
-              data: <?= json_encode(array_map(fn($r) => (float)$r['billed'], $revenueTrend)) ?>,
+              data: <?= e(json_encode(array_map(fn($r) => (float)$r['billed'], $revenueTrend))) ?>,
               backgroundColor: 'rgba(255,255,255,0.07)',
               borderRadius: 4,
             }
@@ -114,12 +113,12 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
 
     <!-- Organic summary -->
     <div class="card p-5">
-      <h2 class="text-sm font-semibold text-gray-300 mb-3">Orgânico <span class="text-gray-600 font-normal text-xs ml-1">período</span></h2>
+      <h2 class="text-sm font-semibold text-gray-300 mb-3">Orgânico <span class="text-gray-400 font-normal text-xs ml-1">período</span></h2>
       <dl class="space-y-1.5 text-sm">
-        <div class="flex justify-between"><dt class="text-gray-500">Alcance</dt><dd class="text-gray-300 font-medium"><?= $fmtInt($organicKpis['total_reach'] ?? 0) ?></dd></div>
-        <div class="flex justify-between"><dt class="text-gray-500">Impressões</dt><dd class="text-gray-300 font-medium"><?= $fmtInt($organicKpis['total_impressions'] ?? 0) ?></dd></div>
-        <div class="flex justify-between"><dt class="text-gray-500">Engajamentos</dt><dd class="text-gray-300 font-medium"><?= $fmtInt($organicKpis['total_engagement'] ?? 0) ?></dd></div>
-        <div class="flex justify-between"><dt class="text-gray-500">Publicações</dt><dd class="text-gray-300 font-medium"><?= $fmtInt($organicKpis['total_posts'] ?? 0) ?></dd></div>
+        <div class="flex justify-between"><dt class="text-gray-400">Alcance</dt><dd class="text-gray-300 font-medium"><?= $fmtInt($organicKpis['total_reach'] ?? 0) ?></dd></div>
+        <div class="flex justify-between"><dt class="text-gray-400">Impressões</dt><dd class="text-gray-300 font-medium"><?= $fmtInt($organicKpis['total_impressions'] ?? 0) ?></dd></div>
+        <div class="flex justify-between"><dt class="text-gray-400">Engajamentos</dt><dd class="text-gray-300 font-medium"><?= $fmtInt($organicKpis['total_engagement'] ?? 0) ?></dd></div>
+        <div class="flex justify-between"><dt class="text-gray-400">Publicações</dt><dd class="text-gray-300 font-medium"><?= $fmtInt($organicKpis['total_posts'] ?? 0) ?></dd></div>
       </dl>
     </div>
   </div>
@@ -139,7 +138,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
   foreach ($adsCards as [$l, $v]):
   ?>
   <div class="card p-4">
-    <p class="text-xs text-gray-500"><?= $l ?></p>
+    <p class="text-xs text-gray-400"><?= $l ?></p>
     <p class="text-lg font-bold text-white mt-1"><?= $v ?></p>
   </div>
   <?php endforeach; ?>
@@ -153,25 +152,25 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-white/[0.06]">
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cliente</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Faturado</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Recebido</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Pendente</th>
-        <th class="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Planos Aguard.</th>
-        <th class="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Tarefas Abertas</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Cliente</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Faturado</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Recebido</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Pendente</th>
+        <th class="text-center px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Planos Aguard.</th>
+        <th class="text-center px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Tarefas Abertas</th>
         <th class="px-5 py-3"></th>
       </tr>
     </thead>
     <tbody class="divide-y divide-white/[0.03]">
       <?php if (empty($clientSummary)): ?>
-      <tr><td colspan="7" class="px-5 py-10 text-center text-gray-500">Nenhum cliente ativo.</td></tr>
+      <tr><td colspan="7" class="px-5 py-10 text-center text-gray-400">Nenhum cliente ativo.</td></tr>
       <?php endif; ?>
       <?php foreach ($clientSummary as $cs): ?>
       <tr class="hover:bg-white/[0.02] transition-colors">
         <td class="px-5 py-3 font-medium text-white"><?= e($cs['name']) ?></td>
         <td class="px-5 py-3 text-right text-gray-300"><?= $fmtMoney($cs['invoiced']) ?></td>
         <td class="px-5 py-3 text-right text-emerald-400"><?= $fmtMoney($cs['paid']) ?></td>
-        <td class="px-5 py-3 text-right <?= $cs['pending'] > 0 ? 'text-yellow-400' : 'text-gray-500' ?>">
+        <td class="px-5 py-3 text-right <?= $cs['pending'] > 0 ? 'text-yellow-400' : 'text-gray-400' ?>">
           <?= $fmtMoney($cs['pending']) ?>
         </td>
         <td class="px-5 py-3 text-center">
@@ -180,7 +179,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
             <?= $cs['plans_awaiting'] ?>
           </span>
           <?php else: ?>
-          <span class="text-gray-600">—</span>
+          <span class="text-gray-400">—</span>
           <?php endif; ?>
         </td>
         <td class="px-5 py-3 text-center">
@@ -189,7 +188,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
             <?= $cs['open_tasks'] ?>
           </span>
           <?php else: ?>
-          <span class="text-gray-600">0</span>
+          <span class="text-gray-400">0</span>
           <?php endif; ?>
         </td>
         <td class="px-5 py-3 text-right">
@@ -214,12 +213,12 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-white/[0.06]">
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Campanha</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cliente</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Investimento</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Impressões</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cliques</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">ROAS</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Campanha</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Cliente</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Investimento</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Impressões</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Cliques</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">ROAS</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-white/[0.03]">

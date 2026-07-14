@@ -9,7 +9,7 @@
     </div>
     <?php if (\App\Support\Auth::can('users.create')): ?>
     <a href="/usuarios/novo"
-       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95">
+       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       <?= t('users.new') ?>
     </a>
@@ -35,10 +35,10 @@
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/5">
-          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"><?= t('users.name') ?></th>
-          <th class="hidden sm:table-cell px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"><?= t('users.role') ?></th>
-          <th class="hidden md:table-cell px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"><?= t('users.status') ?></th>
-          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"><?= t('users.language') ?></th>
+          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400"><?= t('users.name') ?></th>
+          <th class="hidden sm:table-cell px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400"><?= t('users.role') ?></th>
+          <th class="hidden md:table-cell px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400"><?= t('users.status') ?></th>
+          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400"><?= t('users.language') ?></th>
           <th class="px-5 py-3"></th>
         </tr>
       </thead>
@@ -52,7 +52,7 @@
               </div>
               <div>
                 <p class="font-medium text-white"><?= e($user['name']) ?></p>
-                <p class="text-xs text-gray-500"><?= e($user['email']) ?></p>
+                <p class="text-xs text-gray-400"><?= e($user['email']) ?></p>
               </div>
             </div>
           </td>
@@ -65,7 +65,7 @@
               <?= $user['status'] === 'active' ? t('status.active') : t('status.inactive') ?>
             </span>
           </td>
-          <td class="px-5 py-4 text-xs text-gray-500 uppercase"><?= e($user['language'] ?? 'pt') ?></td>
+          <td class="px-5 py-4 text-xs text-gray-400 uppercase"><?= e($user['language'] ?? 'pt') ?></td>
           <td class="px-5 py-4 text-right">
             <?php if (\App\Support\Auth::can('users.edit')): ?>
             <a href="/usuarios/<?= e($user['id']) ?>/editar" class="text-xs text-gray-400 hover:text-brand-300 transition-colors">

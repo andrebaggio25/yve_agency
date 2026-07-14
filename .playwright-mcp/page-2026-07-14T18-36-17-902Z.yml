@@ -1,0 +1,141 @@
+- generic [ref=f2e2]:
+  - complementary [ref=f2e3]:
+    - link [ref=f2e4] [cursor=pointer]:
+      - /url: /dashboard
+      - generic [ref=f2e5]:
+        - paragraph [ref=f2e6]: YVE Beauty
+        - paragraph [ref=f2e7]: André Baggio
+    - navigation [ref=f2e8]:
+      - link "Dashboard" [ref=f2e9] [cursor=pointer]:
+        - /url: /
+      - link "Clientes" [ref=f2e12] [cursor=pointer]:
+        - /url: /clients
+      - paragraph [ref=f2e15]: Conteúdo
+      - link "Planos" [ref=f2e16] [cursor=pointer]:
+        - /url: /content
+      - link "Calendário" [ref=f2e19] [cursor=pointer]:
+        - /url: /conteudo/calendario
+      - link "Aprovações" [ref=f2e22] [cursor=pointer]:
+        - /url: /approvals
+      - link "Tarefas" [ref=f2e25] [cursor=pointer]:
+        - /url: /tasks
+      - paragraph [ref=f2e28]: Marketing
+      - link "Tráfego Pago" [ref=f2e29] [cursor=pointer]:
+        - /url: /traffic
+      - link "Ações" [ref=f2e32] [cursor=pointer]:
+        - /url: /traffic/actions
+      - link "IA Insights" [ref=f2e35] [cursor=pointer]:
+        - /url: /ai
+      - link "Orgânico" [ref=f2e38] [cursor=pointer]:
+        - /url: /organic
+      - paragraph [ref=f2e41]: Financeiro
+      - link "Visão Geral" [ref=f2e42] [cursor=pointer]:
+        - /url: /financial
+      - link "Contratos" [ref=f2e45] [cursor=pointer]:
+        - /url: /contracts
+      - link "Faturas" [ref=f2e48] [cursor=pointer]:
+        - /url: /invoices
+      - link "Pagamentos" [ref=f2e51] [cursor=pointer]:
+        - /url: /payments
+      - link "Relatórios" [ref=f2e54] [cursor=pointer]:
+        - /url: /financial/reports
+      - paragraph [ref=f2e57]: Admin
+      - link "Usuários" [ref=f2e58] [cursor=pointer]:
+        - /url: /users
+      - link "Automações" [ref=f2e61] [cursor=pointer]:
+        - /url: /automations
+      - link "Relatório Exec." [ref=f2e64] [cursor=pointer]:
+        - /url: /executive-report
+      - link "Assinatura" [ref=f2e67] [cursor=pointer]:
+        - /url: /subscription
+      - link "ClickUp" [ref=f2e70] [cursor=pointer]:
+        - /url: /integrations/clickup
+      - link "Google Drive" [ref=f2e73] [cursor=pointer]:
+        - /url: /integrations/google-drive
+      - link "Configurações" [ref=f2e76] [cursor=pointer]:
+        - /url: /settings
+    - button "Sair" [ref=f2e81] [cursor=pointer]
+  - generic [ref=f2e84]:
+    - banner [ref=f2e85]:
+      - button [ref=f2e87] [cursor=pointer]
+      - generic [ref=f2e90]:
+        - generic [ref=f2e91]: A
+        - generic [ref=f2e92]: André Baggio
+    - main [ref=f2e93]:
+      - generic [ref=f2e95]:
+        - generic [ref=f2e96]:
+          - paragraph [ref=f2e97]: Dashboard
+          - heading "Olá, André" [level=1] [ref=f2e98]
+          - paragraph [ref=f2e99]: Tuesday, 14 de July de 2026
+        - generic [ref=f2e100]:
+          - link [ref=f2e101] [cursor=pointer]:
+            - /url: /clientes
+            - generic [ref=f2e105]:
+              - paragraph [ref=f2e106]: "3"
+              - paragraph [ref=f2e107]: Clientes ativos
+          - link [ref=f2e108] [cursor=pointer]:
+            - /url: /conteudo
+            - generic [ref=f2e112]:
+              - paragraph [ref=f2e113]: "2"
+              - paragraph [ref=f2e114]: Planos em andamento
+          - link [ref=f2e115] [cursor=pointer]:
+            - /url: /aprovacoes
+            - generic [ref=f2e119]:
+              - paragraph [ref=f2e120]: "1"
+              - paragraph [ref=f2e121]: Aguardando aprovação
+        - generic [ref=f2e122]:
+          - generic [ref=f2e123]:
+            - heading "Financeiro" [level=2] [ref=f2e124]
+            - link "Ver mais →" [ref=f2e125] [cursor=pointer]:
+              - /url: /financeiro
+          - generic [ref=f2e126]:
+            - generic [ref=f2e127]:
+              - paragraph [ref=f2e128]: Faturado
+              - paragraph [ref=f2e129]: R$ 7.500,00
+            - generic [ref=f2e130]:
+              - paragraph [ref=f2e131]: Recebido
+              - paragraph [ref=f2e132]: R$ 2.500,00
+            - generic [ref=f2e133]:
+              - paragraph [ref=f2e134]: A Receber
+              - paragraph [ref=f2e135]: R$ 5.000,00
+            - generic [ref=f2e136]:
+              - paragraph [ref=f2e137]: Vencidas
+              - paragraph [ref=f2e138]: 1 fatura
+        - generic [ref=f2e139]:
+          - generic [ref=f2e140]:
+            - heading "Planos recentes" [level=2] [ref=f2e141]
+            - link "Ver todos →" [ref=f2e142] [cursor=pointer]:
+              - /url: /conteudo
+          - generic [ref=f2e143]:
+            - link "CL Plano semana 27/07 Clínica Bella · 27/07/2026 Revisão" [ref=f2e144] [cursor=pointer]:
+              - /url: /conteudo/4
+              - generic [ref=f2e145]:
+                - generic [ref=f2e146]: CL
+                - generic [ref=f2e147]:
+                  - paragraph [ref=f2e148]: Plano semana 27/07
+                  - paragraph [ref=f2e149]: Clínica Bella · 27/07/2026
+              - generic [ref=f2e150]: Revisão
+            - link "ES Plano semana 20/07 Espaço Zen · 20/07/2026 Aprovado" [ref=f2e151] [cursor=pointer]:
+              - /url: /conteudo/3
+              - generic [ref=f2e152]:
+                - generic [ref=f2e153]: ES
+                - generic [ref=f2e154]:
+                  - paragraph [ref=f2e155]: Plano semana 20/07
+                  - paragraph [ref=f2e156]: Espaço Zen · 20/07/2026
+              - generic [ref=f2e157]: Aprovado
+            - link "ST Plano semana 13/07 Studio Ana Paula · 13/07/2026 Enviado" [ref=f2e158] [cursor=pointer]:
+              - /url: /conteudo/2
+              - generic [ref=f2e159]:
+                - generic [ref=f2e160]: ST
+                - generic [ref=f2e161]:
+                  - paragraph [ref=f2e162]: Plano semana 13/07
+                  - paragraph [ref=f2e163]: Studio Ana Paula · 13/07/2026
+              - generic [ref=f2e164]: Enviado
+            - link "CL Plano semana 06/07 Clínica Bella · 06/07/2026 Rascunho" [ref=f2e165] [cursor=pointer]:
+              - /url: /conteudo/1
+              - generic [ref=f2e166]:
+                - generic [ref=f2e167]: CL
+                - generic [ref=f2e168]:
+                  - paragraph [ref=f2e169]: Plano semana 06/07
+                  - paragraph [ref=f2e170]: Clínica Bella · 06/07/2026
+              - generic [ref=f2e171]: Rascunho

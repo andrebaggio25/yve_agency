@@ -16,7 +16,7 @@
 
 <!-- Filtros -->
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-5">
-  <select name="account_id" class="input-field text-sm py-1.5 px-3 w-56">
+  <select aria-label="Conta" name="account_id" class="input-field text-sm py-1.5 px-3 w-56">
     <option value="">Todas as contas</option>
     <?php foreach ($accounts as $a): ?>
     <option value="<?= $a['id'] ?>" <?= $filters['ad_account_id'] == $a['id'] ? 'selected' : '' ?>>
@@ -24,7 +24,7 @@
     </option>
     <?php endforeach; ?>
   </select>
-  <select name="type" class="input-field text-sm py-1.5 px-3 w-56">
+  <select aria-label="Tipo" name="type" class="input-field text-sm py-1.5 px-3 w-56">
     <option value="">Todos os tipos</option>
     <?php foreach (['performance_summary' => 'Resumo de performance', 'alert' => 'Alertas', 'recommendation' => 'Recomendações', 'report' => 'Relatório'] as $v => $l): ?>
     <option value="<?= $v ?>" <?= $filters['type'] === $v ? 'selected' : '' ?>><?= $l ?></option>
@@ -41,7 +41,7 @@
     </svg>
   </div>
   <p class="text-gray-400 mb-2">Nenhum insight gerado ainda.</p>
-  <p class="text-sm text-gray-500 mb-5">Conecte uma conta de anúncios e gere seu primeiro insight.</p>
+  <p class="text-sm text-gray-400 mb-5">Conecte uma conta de anúncios e gere seu primeiro insight.</p>
   <a href="/ia/gerar" class="btn-primary px-6 py-2.5 text-sm">Gerar primeiro insight</a>
 </div>
 <?php else: ?>
@@ -64,21 +64,21 @@
             <?= $tc['label'] ?>
           </span>
           <?php if ($i['account_name']): ?>
-          <span class="text-xs text-gray-500"><?= e($i['account_name']) ?></span>
+          <span class="text-xs text-gray-400"><?= e($i['account_name']) ?></span>
           <?php endif; ?>
           <?php if ($i['period_start']): ?>
-          <span class="text-xs text-gray-600">
+          <span class="text-xs text-gray-400">
             <?= date('d/m/Y', strtotime($i['period_start'])) ?> – <?= date('d/m/Y', strtotime($i['period_end'])) ?>
           </span>
           <?php endif; ?>
-          <span class="text-xs text-gray-600 ml-auto"><?= date('d/m/Y H:i', strtotime($i['created_at'])) ?></span>
+          <span class="text-xs text-gray-400 ml-auto"><?= date('d/m/Y H:i', strtotime($i['created_at'])) ?></span>
         </div>
         <p class="text-sm text-gray-300 line-clamp-2 leading-relaxed">
           <?= e(mb_substr(strip_tags($i['content']), 0, 200)) ?>…
         </p>
         <div class="mt-2 flex items-center gap-3">
           <?php if ($i['ai_provider']): ?>
-          <span class="text-xs text-gray-600">
+          <span class="text-xs text-gray-400">
             <?= $i['ai_provider'] === 'openai' ? 'OpenAI' : 'Claude' ?> · <?= e($i['model'] ?? '') ?>
           </span>
           <?php endif; ?>

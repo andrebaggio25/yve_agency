@@ -1,0 +1,141 @@
+- generic [ref=f4e2]:
+  - complementary [ref=f4e3]:
+    - link [ref=f4e4] [cursor=pointer]:
+      - /url: /dashboard
+      - generic [ref=f4e5]:
+        - paragraph [ref=f4e6]: YVE Beauty
+        - paragraph [ref=f4e7]: André Baggio
+    - navigation [ref=f4e8]:
+      - link "Dashboard" [ref=f4e9] [cursor=pointer]:
+        - /url: /
+      - link "Clientes" [ref=f4e12] [cursor=pointer]:
+        - /url: /clients
+      - paragraph [ref=f4e15]: Conteúdo
+      - link "Planos" [ref=f4e16] [cursor=pointer]:
+        - /url: /content
+      - link "Calendário" [ref=f4e19] [cursor=pointer]:
+        - /url: /conteudo/calendario
+      - link "Aprovações" [ref=f4e22] [cursor=pointer]:
+        - /url: /approvals
+      - link "Tarefas" [ref=f4e25] [cursor=pointer]:
+        - /url: /tasks
+      - paragraph [ref=f4e28]: Marketing
+      - link "Tráfego Pago" [ref=f4e29] [cursor=pointer]:
+        - /url: /traffic
+      - link "Ações" [ref=f4e32] [cursor=pointer]:
+        - /url: /traffic/actions
+      - link "IA Insights" [ref=f4e35] [cursor=pointer]:
+        - /url: /ai
+      - link "Orgânico" [ref=f4e38] [cursor=pointer]:
+        - /url: /organic
+      - paragraph [ref=f4e41]: Financeiro
+      - link "Visão Geral" [ref=f4e42] [cursor=pointer]:
+        - /url: /financial
+      - link "Contratos" [ref=f4e45] [cursor=pointer]:
+        - /url: /contracts
+      - link "Faturas" [ref=f4e48] [cursor=pointer]:
+        - /url: /invoices
+      - link "Pagamentos" [ref=f4e51] [cursor=pointer]:
+        - /url: /payments
+      - link "Relatórios" [ref=f4e54] [cursor=pointer]:
+        - /url: /financial/reports
+      - paragraph [ref=f4e57]: Admin
+      - link "Usuários" [ref=f4e58] [cursor=pointer]:
+        - /url: /users
+      - link "Automações" [ref=f4e61] [cursor=pointer]:
+        - /url: /automations
+      - link "Relatório Exec." [ref=f4e64] [cursor=pointer]:
+        - /url: /executive-report
+      - link "Assinatura" [ref=f4e67] [cursor=pointer]:
+        - /url: /subscription
+      - link "ClickUp" [ref=f4e70] [cursor=pointer]:
+        - /url: /integrations/clickup
+      - link "Google Drive" [ref=f4e73] [cursor=pointer]:
+        - /url: /integrations/google-drive
+      - link "Configurações" [ref=f4e76] [cursor=pointer]:
+        - /url: /settings
+    - button "Sair" [ref=f4e81] [cursor=pointer]
+  - generic [ref=f4e84]:
+    - banner [ref=f4e85]:
+      - button [ref=f4e87] [cursor=pointer]
+      - generic [ref=f4e90]:
+        - generic [ref=f4e91]: A
+        - generic [ref=f4e92]: André Baggio
+    - main [ref=f4e93]:
+      - generic [ref=f4e95]:
+        - generic [ref=f4e96]:
+          - generic [ref=f4e97]:
+            - paragraph [ref=f4e98]: Conteúdo
+            - heading "Planos de Conteúdo" [level=1] [ref=f4e99]
+            - paragraph [ref=f4e100]: 4 planos encontrados
+          - link "Calendário" [ref=f4e101] [cursor=pointer]:
+            - /url: /conteudo/calendario
+          - link "Novo Plano" [ref=f4e104] [cursor=pointer]:
+            - /url: /conteudo/criar
+        - generic [ref=f4e108]:
+          - generic [ref=f4e109]:
+            - generic [ref=f4e110]: Cliente
+            - combobox [ref=f4e111]:
+              - option "Todos" [selected]
+              - option "Clínica Bella"
+              - option "Espaço Zen"
+              - option "Studio Ana Paula"
+          - generic [ref=f4e112]:
+            - generic [ref=f4e113]: Status
+            - combobox [ref=f4e114]:
+              - option "Todos" [selected]
+              - option "Rascunho"
+              - option "Enviado"
+              - option "Em Revisão"
+              - option "Aprovado"
+          - generic [ref=f4e115]:
+            - generic [ref=f4e116]: A partir de
+            - textbox [ref=f4e117]
+          - button "Filtrar" [ref=f4e118] [cursor=pointer]
+          - link "Limpar" [ref=f4e119] [cursor=pointer]:
+            - /url: /conteudo
+        - generic [ref=f4e120]:
+          - generic [ref=f4e122]:
+            - button "Ver em lista" [ref=f4e123] [cursor=pointer]: Lista
+            - button "Ver em cards" [ref=f4e124] [cursor=pointer]: Cards
+          - table [ref=f4e127]:
+            - rowgroup [ref=f4e128]:
+              - row [ref=f4e129]:
+                - columnheader "Plano" [ref=f4e130]
+                - columnheader "Cliente" [ref=f4e131]
+                - columnheader "Período" [ref=f4e132]
+                - columnheader "Progresso" [ref=f4e133]
+                - columnheader "Situação" [ref=f4e134]
+            - rowgroup [ref=f4e135]:
+              - row [ref=f4e136] [cursor=pointer]:
+                - cell [ref=f4e137]:
+                  - link "Plano semana 27/07" [ref=f4e138]:
+                    - /url: /conteudo/4
+                - cell "Clínica Bella" [ref=f4e139]
+                - cell "27/07 – 02/08/2026" [ref=f4e140]
+                - cell "0/3" [ref=f4e141]
+                - cell [ref=f4e145]
+              - row [ref=f4e148] [cursor=pointer]:
+                - cell [ref=f4e149]:
+                  - link "Plano semana 20/07" [ref=f4e150]:
+                    - /url: /conteudo/3
+                - cell "Espaço Zen" [ref=f4e151]
+                - cell "20/07 – 26/07/2026" [ref=f4e152]
+                - cell "3/3" [ref=f4e153]
+                - cell [ref=f4e158]
+              - row [ref=f4e161] [cursor=pointer]:
+                - cell [ref=f4e162]:
+                  - link "Plano semana 13/07" [ref=f4e163]:
+                    - /url: /conteudo/2
+                - cell "Studio Ana Paula" [ref=f4e164]
+                - cell "13/07 – 19/07/2026" [ref=f4e165]
+                - cell "0/3" [ref=f4e166]
+                - cell [ref=f4e170]
+              - row [ref=f4e173] [cursor=pointer]:
+                - cell [ref=f4e174]:
+                  - link "Plano semana 06/07" [ref=f4e175]:
+                    - /url: /conteudo/1
+                - cell "Clínica Bella" [ref=f4e176]
+                - cell "06/07 – 12/07/2026" [ref=f4e177]
+                - cell "0/3" [ref=f4e178]
+                - cell [ref=f4e182]

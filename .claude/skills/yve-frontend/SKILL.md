@@ -67,6 +67,17 @@ Regras:
 - Objetos não-reativos (XHR, Chart) ficam **fora** do estado do Alpine (registry externo — o Alpine "proxyar" um XHR quebra; já aconteceu).
 - View passando de ~400 linhas por causa de JS → extrair módulo para `public/js/` (FE-02).
 
+## 3.1. Ordem de scripts (dois bugs reais, um atrás do outro)
+
+O Alpine **chama `Alpine.start()` assim que executa**, e scripts `defer` rodam na ordem do documento. Consequências que já nos morderam:
+
+- **Módulo de componente com `defer`** → executa DEPOIS do `Alpine.start()` e o componente morre com `ReferenceError`. Módulos em `public/js/*.js` vão **sem `defer`**, no body (travado por `ScriptLoadOrderTest`).
+- **Biblioteca depois do Alpine** → `x-init="new Chart(...)"` morre com "Chart is not defined" e **o gráfico simplesmente não aparece**. Toda lib usada dentro de expressão Alpine (Chart.js…) carrega **antes** do Alpine no `<head>`.
+
+## 3.2. `json_encode` dentro de atributo HTML
+
+`x-data="grafico(<?= json_encode($dados) ?>)"` **quebra a tela**: o JSON tem aspas duplas, elas fecham o atributo, e o resto vira lixo (`SyntaxError` no console; o componente não roda). Sempre `e(json_encode(...))` — ou `htmlspecialchars(..., ENT_QUOTES)`. Isso derrubou os gráficos de tráfego, orgânico e do relatório executivo sem ninguém notar.
+
 ## 4. Erros que este projeto JÁ cometeu — não repita
 
 - **Select branco no branco:** `<option>` herda texto claro, mas o dropdown nativo tem fundo branco. Todo `<select>` precisa de `color-scheme: dark` + fundo de option escuro (já global no layout — não sobrescreva).
@@ -75,6 +86,10 @@ Regras:
 - **Flash de conteúdo Alpine:** elementos interativos levam `x-cloak`.
 - **Form aninhado** engole o submit (bug real do form de clientes): nunca `<form>` dentro de `<form>`.
 - **Permissão só na view:** esconder botão não protege nada — a guarda é no controller (ver `yve-seguranca`).
+- **`<template x-if>` dentro de `<svg>`:** HTML inválido — o parser tira o `<template>` do namespace SVG e o Alpine estoura (`cloneNode of undefined`). Use um `<path>` com `:d` reativo.
+- **Texto claro sobre o dourado:** branco sobre `brand-500` dá **2,43:1** (reprovado). O botão dourado leva texto **escuro** (`text-gray-950` / `--accent-fg`) — 7,97:1. Vale para e-mails também.
+- **Trocar cor em massa sem olhar o fundo:** o simulador do Instagram tem fundo **branco**; elevar o texto para `gray-400` lá **piorou** o contraste. Cor de texto depende do fundo daquele bloco, não do tema.
+- **`text-gray-500`/`600` para texto:** 4,00:1 e 2,56:1 sobre o fundo escuro — **reprovam**. Texto secundário é `gray-400` (7,63:1); `gray-500`+ só para contexto desabilitado.
 
 ## 5. Sair do genérico (cara de produto validado)
 

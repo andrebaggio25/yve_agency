@@ -79,7 +79,7 @@ if (preg_match('/^#([0-9a-f]{6})$/i', $hex, $m)) {
         <img src="<?= e($agencyLogoUrl) ?>" alt="Agência"
              class="h-3.5 w-auto max-w-[80px] object-contain mt-0.5 opacity-60">
         <?php else: ?>
-        <p class="text-[11px] text-gray-500 leading-tight"><?= e($agency['name'] ?? t('portal.subtitle')) ?></p>
+        <p class="text-[11px] text-gray-400 leading-tight"><?= e($agency['name'] ?? t('portal.subtitle')) ?></p>
         <?php endif; ?>
       </div>
     </div>
@@ -145,7 +145,7 @@ if (preg_match('/^#([0-9a-f]{6})$/i', $hex, $m)) {
       $isActive = ($href === "/portal/{$token}")
         ? ($cpPath === $href)
         : str_starts_with($cpPath, $href);
-      $cls = $isActive ? 'text-accent' : 'text-gray-600';
+      $cls = $isActive ? 'text-accent' : 'text-gray-400';
     ?>
     <a href="<?= $href ?>" class="flex-1 flex flex-col items-center py-3 gap-1 <?= $cls ?> transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

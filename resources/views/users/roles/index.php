@@ -9,7 +9,7 @@
     </div>
     <?php if (\App\Support\Auth::can('roles.create')): ?>
     <a href="/usuarios/perfis/novo"
-       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95">
+       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       <?= t('roles.new') ?>
     </a>
@@ -41,14 +41,14 @@
           </svg>
         </div>
         <?php if (!\App\Support\Auth::can('roles.edit')): ?>
-        <span class="text-xs text-gray-600"><?= t('roles.system') ?></span>
+        <span class="text-xs text-gray-400"><?= t('roles.system') ?></span>
         <?php endif; ?>
       </div>
       <h3 class="font-semibold text-white mb-1"><?= e($role['name']) ?></h3>
       <?php if (!empty($role['description'])): ?>
       <p class="text-sm text-gray-400 mb-3"><?= e($role['description']) ?></p>
       <?php endif; ?>
-      <p class="text-xs text-gray-600"><?= count($role['permissions'] ?? []) ?> <?= t('roles.permissions') ?></p>
+      <p class="text-xs text-gray-400"><?= count($role['permissions'] ?? []) ?> <?= t('roles.permissions') ?></p>
       <?php if (\App\Support\Auth::can('roles.edit')): ?>
       <div class="mt-4 flex gap-2">
         <a href="/usuarios/perfis/<?= e($role['id']) ?>" class="flex-1 text-center rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors">

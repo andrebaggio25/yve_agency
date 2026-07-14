@@ -17,7 +17,7 @@
     <div class="flex items-center justify-between mb-5">
       <div>
         <h2 class="text-sm font-semibold text-white">Evolution API — WhatsApp</h2>
-        <p class="text-xs text-gray-500 mt-0.5">Credenciais globais. Cada tenant terá sua própria instância.</p>
+        <p class="text-xs text-gray-400 mt-0.5">Credenciais globais. Cada tenant terá sua própria instância.</p>
       </div>
       <button type="button" id="btnTestEvo"
               class="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors">
@@ -41,15 +41,15 @@
         <input type="url" name="evolution_api_url"
                value="<?= e($allSettings['evolution_api_url'] ?? '') ?>"
                placeholder="https://sua-evolution-api.com"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors">
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">API Key Global</label>
         <input type="password" name="evolution_api_key"
                value=""
                placeholder="<?= !empty($allSettings['evolution_api_key']) ? '••••••••' : 'Cole a chave aqui' ?>"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors">
-        <p class="text-xs text-gray-600 mt-1">Deixe em branco para manter a chave atual.</p>
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors">
+        <p class="text-xs text-gray-400 mt-1">Deixe em branco para manter a chave atual.</p>
       </div>
     </div>
   </div>
@@ -62,7 +62,7 @@
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Host SMTP</label>
         <input type="text" name="mail_host" value="<?= e($allSettings['mail_host'] ?? '') ?>"
                placeholder="smtp.exemplo.com"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Porta</label>
@@ -72,7 +72,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Usuário SMTP</label>
         <input type="text" name="mail_username" value="<?= e($allSettings['mail_username'] ?? '') ?>"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Criptografia</label>
@@ -86,13 +86,13 @@
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Remetente (e-mail)</label>
         <input type="email" name="mail_from_address" value="<?= e($allSettings['mail_from_address'] ?? '') ?>"
                placeholder="no-reply@yveagency.com"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Remetente (nome)</label>
         <input type="text" name="mail_from_name" value="<?= e($allSettings['mail_from_name'] ?? '') ?>"
                placeholder="YVE Agency"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
       </div>
     </div>
   </div>
@@ -105,7 +105,7 @@
       </span>
       <div>
         <h2 class="text-base font-semibold text-white">Alertas operacionais</h2>
-        <p class="text-xs text-gray-500">Quem recebe o aviso quando algo falha em silêncio</p>
+        <p class="text-xs text-gray-400">Quem recebe o aviso quando algo falha em silêncio</p>
       </div>
     </div>
 
@@ -122,15 +122,15 @@
         <label class="block text-sm font-medium text-gray-300 mb-1.5">E-mail para alertas</label>
         <input type="email" name="alert_email" value="<?= e($allSettings['alert_email'] ?? '') ?>"
                placeholder="voce@suaagencia.com"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
-        <p class="text-xs text-gray-600 mt-1.5">Exige o SMTP acima configurado e funcionando.</p>
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
+        <p class="text-xs text-gray-400 mt-1.5">Exige o SMTP acima configurado e funcionando.</p>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Monitor externo (UptimeRobot etc.)</label>
         <div class="rounded-xl border border-white/10 bg-black/30 px-4 py-2.5">
           <code class="text-xs text-gray-400 break-all"><?= e(rtrim((string) env('APP_URL', ''), '/')) ?>/api/health</code>
         </div>
-        <p class="text-xs text-gray-600 mt-1.5">Aponte um monitor para esta URL a cada 5 min. Detalhes: docs/OPERACAO.md.</p>
+        <p class="text-xs text-gray-400 mt-1.5">Aponte um monitor para esta URL a cada 5 min. Detalhes: docs/OPERACAO.md.</p>
       </div>
     </div>
   </div>
@@ -138,20 +138,20 @@
   <!-- Meta Ads API -->
   <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
     <h2 class="text-sm font-semibold text-white mb-1">Meta Ads API</h2>
-    <p class="text-xs text-gray-500 mb-5">Credenciais do aplicativo Meta usadas para trocar tokens de usuário por tokens de longa duração.</p>
+    <p class="text-xs text-gray-400 mb-5">Credenciais do aplicativo Meta usadas para trocar tokens de usuário por tokens de longa duração.</p>
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">App ID</label>
         <input type="text" name="meta_app_id" value="<?= e($allSettings['meta_app_id'] ?? '') ?>"
                placeholder="123456789"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">App Secret</label>
         <input type="password" name="meta_app_secret" value=""
                placeholder="<?= !empty($allSettings['meta_app_secret']) ? '••••••••' : 'Cole o secret aqui' ?>"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
-        <p class="text-xs text-gray-600 mt-1">Deixe em branco para manter o valor atual.</p>
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
+        <p class="text-xs text-gray-400 mt-1">Deixe em branco para manter o valor atual.</p>
       </div>
     </div>
   </div>
@@ -159,7 +159,7 @@
   <!-- IA / LLM -->
   <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
     <h2 class="text-sm font-semibold text-white mb-1">Inteligência Artificial</h2>
-    <p class="text-xs text-gray-500 mb-5">Provedor e chave de API para geração de insights e recomendações de tráfego.</p>
+    <p class="text-xs text-gray-400 mb-5">Provedor e chave de API para geração de insights e recomendações de tráfego.</p>
     <div class="space-y-4">
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -173,22 +173,22 @@
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Modelo</label>
           <input type="text" name="ai_model" value="<?= e($allSettings['ai_model'] ?? '') ?>"
                  placeholder="gpt-4o ou claude-sonnet-4-6"
-                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
+                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
         </div>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">OpenAI API Key</label>
         <input type="password" name="openai_api_key" value=""
                placeholder="<?= !empty($allSettings['openai_api_key']) ? '••••••••' : 'sk-...' ?>"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
-        <p class="text-xs text-gray-600 mt-1">Deixe em branco para manter o valor atual.</p>
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
+        <p class="text-xs text-gray-400 mt-1">Deixe em branco para manter o valor atual.</p>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Anthropic API Key</label>
         <input type="password" name="anthropic_api_key" value=""
                placeholder="<?= !empty($allSettings['anthropic_api_key']) ? '••••••••' : 'sk-ant-...' ?>"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
-        <p class="text-xs text-gray-600 mt-1">Deixe em branco para manter o valor atual.</p>
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors">
+        <p class="text-xs text-gray-400 mt-1">Deixe em branco para manter o valor atual.</p>
       </div>
     </div>
   </div>
@@ -202,7 +202,7 @@
       <div class="flex items-center justify-between rounded-xl px-4 py-2.5 bg-white/[0.02]">
         <div>
           <p class="text-sm text-white"><?= e($inst['agency_name']) ?></p>
-          <code class="text-xs text-gray-500"><?= e($inst['instance_name']) ?></code>
+          <code class="text-xs text-gray-400"><?= e($inst['instance_name']) ?></code>
         </div>
         <span class="text-xs px-2.5 py-1 rounded-full <?= $inst['status'] === 'connected' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400' ?>">
           <?= $inst['status'] === 'connected' ? 'Conectado' : 'Desconectado' ?>

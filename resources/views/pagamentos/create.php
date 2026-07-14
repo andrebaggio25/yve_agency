@@ -3,9 +3,9 @@
 <div class="max-w-xl mx-auto">
   <div class="mb-8">
     <?php if ($invoice): ?>
-    <a href="/faturas/<?= $invoice['id'] ?>" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Fatura <?= e($invoice['invoice_number']) ?></a>
+    <a href="/faturas/<?= $invoice['id'] ?>" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">← Fatura <?= e($invoice['invoice_number']) ?></a>
     <?php else: ?>
-    <a href="/pagamentos" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Pagamentos</a>
+    <a href="/pagamentos" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">← Pagamentos</a>
     <?php endif; ?>
     <h1 class="text-2xl font-bold text-white mt-2">Registrar Pagamento</h1>
     <?php if ($invoice): ?>
@@ -28,7 +28,7 @@
       <!-- Valor -->
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Valor (R$) <span class="text-red-400">*</span></label>
-        <input type="number" name="amount" value="<?= $invoice ? number_format(max(0, (float)$invoice['total'] - (float)$invoice['amount_paid']), 2, '.', '') : '' ?>"
+        <input aria-label="Valor" type="number" name="amount" value="<?= $invoice ? number_format(max(0, (float)$invoice['total'] - (float)$invoice['amount_paid']), 2, '.', '') : '' ?>"
           step="0.01" min="0.01" required
           class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
       </div>
@@ -36,7 +36,7 @@
       <!-- Data -->
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Data do Pagamento <span class="text-red-400">*</span></label>
-        <input type="date" name="payment_date" value="<?= date('Y-m-d') ?>" required
+        <input aria-label="Data do pagamento" type="date" name="payment_date" value="<?= date('Y-m-d') ?>" required
           class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
       </div>
 
@@ -58,14 +58,14 @@
       <!-- Referência -->
       <div class="sm:col-span-2">
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Referência / Comprovante</label>
-        <input type="text" name="reference" placeholder="Ex: txid do PIX, número do boleto..."
+        <input aria-label="Ex: txid do PIX, número do boleto..." type="text" name="reference" placeholder="Ex: txid do PIX, número do boleto..."
           class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none transition-colors">
       </div>
 
       <!-- Notas -->
       <div class="sm:col-span-2">
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Notas</label>
-        <textarea name="notes" rows="2"
+        <textarea aria-label="Observações" name="notes" rows="2"
           class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none transition-colors resize-none"></textarea>
       </div>
     </div>

@@ -21,26 +21,26 @@
       <div>
         <span class="text-xs font-semibold uppercase tracking-wider <?= $tc ?>"><?= e($plan['name']) ?></span>
         <?php if (!$plan['is_active']): ?>
-        <span class="ml-2 text-xs text-gray-600">(inativo)</span>
+        <span class="ml-2 text-xs text-gray-400">(inativo)</span>
         <?php endif; ?>
       </div>
-      <span class="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded-full"><?= $subs ?> agência<?= $subs !== 1 ? 's' : '' ?></span>
+      <span class="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-full"><?= $subs ?> agência<?= $subs !== 1 ? 's' : '' ?></span>
     </div>
 
     <div class="mb-4">
       <p class="text-2xl font-bold text-white">
         <?= $plan['price_monthly'] > 0 ? 'R$ ' . number_format($plan['price_monthly'], 0, ',', '.') : 'Grátis' ?>
         <?php if ($plan['price_monthly'] > 0): ?>
-        <span class="text-sm font-normal text-gray-500">/mês</span>
+        <span class="text-sm font-normal text-gray-400">/mês</span>
         <?php endif; ?>
       </p>
       <?php if ($plan['price_yearly'] > 0): ?>
-      <p class="text-xs text-gray-500">R$ <?= number_format($plan['price_yearly'], 0, ',', '.') ?>/ano</p>
+      <p class="text-xs text-gray-400">R$ <?= number_format($plan['price_yearly'], 0, ',', '.') ?>/ano</p>
       <?php endif; ?>
     </div>
 
     <?php if ($plan['description']): ?>
-    <p class="text-xs text-gray-500 mb-4"><?= e($plan['description']) ?></p>
+    <p class="text-xs text-gray-400 mb-4"><?= e($plan['description']) ?></p>
     <?php endif; ?>
 
     <!-- Limites -->
@@ -54,7 +54,7 @@
       ];
       foreach ($limits as $label => $val): ?>
       <div class="flex items-center justify-between text-xs">
-        <span class="text-gray-500"><?= $label ?></span>
+        <span class="text-gray-400"><?= $label ?></span>
         <span class="text-gray-300 font-medium"><?= $val ?? '∞' ?></span>
       </div>
       <?php endforeach; ?>

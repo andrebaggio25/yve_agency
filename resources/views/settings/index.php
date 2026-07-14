@@ -19,12 +19,12 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div class="sm:col-span-2">
             <label class="label-field">Nome da agência *</label>
-            <input type="text" name="name" required value="<?= e($agency['name'] ?? '') ?>"
+            <input aria-label="Nome" type="text" name="name" required value="<?= e($agency['name'] ?? '') ?>"
                    class="input-field w-full">
           </div>
           <div>
             <label class="label-field">Razão social</label>
-            <input type="text" name="legal_name" value="<?= e($agency['legal_name'] ?? '') ?>"
+            <input type="text" aria-label="Razão social" name="legal_name" value="<?= e($agency['legal_name'] ?? '') ?>"
                    class="input-field w-full">
           </div>
           <div>
@@ -34,7 +34,7 @@
           </div>
           <div>
             <label class="label-field">E-mail</label>
-            <input type="email" name="email" value="<?= e($agency['email'] ?? '') ?>"
+            <input aria-label="E-mail" type="email" name="email" value="<?= e($agency['email'] ?? '') ?>"
                    placeholder="contato@agencia.com.br" class="input-field w-full">
           </div>
           <div>
@@ -64,15 +64,15 @@
                 <input type="file" id="logo_file" name="logo_file" accept="image/png,image/jpeg,image/webp,image/gif"
                        class="block w-full text-sm text-gray-400
                               file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
-                              file:text-sm file:font-medium file:bg-brand-600 file:text-white
+                              file:text-sm file:font-medium file:bg-brand-600 file:text-gray-950
                               hover:file:bg-brand-500 file:cursor-pointer cursor-pointer">
-                <p class="text-xs text-gray-500 mt-1.5">PNG, JPG, WEBP ou GIF · até 2 MB. Aparece no portal do cliente.</p>
+                <p class="text-xs text-gray-400 mt-1.5">PNG, JPG, WEBP ou GIF · até 2 MB. Aparece no portal do cliente.</p>
               </div>
             </div>
 
             <?php if (!empty($agency['logo_url'])): ?>
-              <label class="mt-2 inline-flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
-                <input type="checkbox" name="remove_logo" value="1" class="rounded border-white/20 bg-white/5">
+              <label class="mt-2 inline-flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                <input aria-label="Remover logotipo" type="checkbox" name="remove_logo" value="1" class="rounded border-white/20 bg-white/5">
                 Remover o logotipo atual
               </label>
             <?php endif; ?>
@@ -86,7 +86,7 @@
                      value="<?= e($agency['brand_color'] ?? '#c6a15b') ?>"
                      class="h-10 w-14 rounded-lg bg-white/5 border border-white/10 cursor-pointer p-1">
               <div class="min-w-0">
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-gray-400">
                   Usada nos botões e destaques do <strong class="text-gray-400">portal do cliente</strong>.
                   Deixe no padrão se preferir o tema do sistema.
                 </p>
@@ -102,7 +102,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label class="label-field">Idioma padrão</label>
-            <select name="language" class="input-field w-full">
+            <select aria-label="Idioma" name="language" class="input-field w-full">
               <option value="pt" <?= ($agency['language'] ?? 'pt') === 'pt' ? 'selected' : '' ?>>Português (BR)</option>
               <option value="en" <?= ($agency['language'] ?? '') === 'en' ? 'selected' : '' ?>>English</option>
               <option value="es" <?= ($agency['language'] ?? '') === 'es' ? 'selected' : '' ?>>Español</option>
@@ -110,7 +110,7 @@
           </div>
           <div>
             <label class="label-field">Fuso horário</label>
-            <select name="timezone" class="input-field w-full">
+            <select aria-label="Fuso horário" name="timezone" class="input-field w-full">
               <?php
               $tzs = [
                 'America/Sao_Paulo'   => 'Brasil — São Paulo (GMT-3)',
@@ -152,7 +152,7 @@
     <!-- WhatsApp -->
     <div class="card p-5">
       <h3 class="text-sm font-semibold text-gray-300 mb-3">WhatsApp</h3>
-      <p class="text-xs text-gray-500 mb-4">Configure a instância do WhatsApp para notificações aos clientes.</p>
+      <p class="text-xs text-gray-400 mb-4">Configure a instância do WhatsApp para notificações aos clientes.</p>
       <a href="/configuracoes/whatsapp" class="btn-secondary text-sm px-4 py-2 w-full block text-center">
         Gerenciar WhatsApp
       </a>

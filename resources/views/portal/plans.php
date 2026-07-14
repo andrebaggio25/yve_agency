@@ -24,7 +24,7 @@ $statusColors = [
 </div>
 
 <?php if (empty($plans)): ?>
-<div class="card p-12 text-center text-gray-500"><?= t('portal.plans.empty') ?></div>
+<div class="card p-12 text-center text-gray-400"><?= t('portal.plans.empty') ?></div>
 <?php else: ?>
 <div class="space-y-3">
   <?php foreach ($plans as $p): ?>
@@ -32,7 +32,7 @@ $statusColors = [
      class="card p-5 flex items-center justify-between hover:bg-white/[0.03] transition-colors block">
     <div>
       <p class="font-medium text-white mb-1"><?= e($p['title']) ?></p>
-      <div class="flex items-center gap-3 text-xs text-gray-500">
+      <div class="flex items-center gap-3 text-xs text-gray-400">
         <?php if ($p['period_label'] ?? null): ?>
         <span><?= e($p['period_label']) ?></span>
         <?php endif; ?>
@@ -46,7 +46,7 @@ $statusColors = [
       <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium <?= $statusColors[$p['status']] ?? 'text-gray-400' ?>">
         <?= $statusLabels[$p['status']] ?? $p['status'] ?>
       </span>
-      <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
       </svg>
     </div>

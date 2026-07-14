@@ -18,14 +18,14 @@ $v = fn(string $k, mixed $def = '') => $old[$k] ?? $contract[$k] ?? $def;
     <!-- Título -->
     <div class="sm:col-span-2">
       <label class="block text-sm font-medium text-gray-300 mb-1.5">Título <span class="text-red-400">*</span></label>
-      <input type="text" name="title" value="<?= e($v('title')) ?>" required
+      <input aria-label="Título" type="text" name="title" value="<?= e($v('title')) ?>" required
         class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none transition-colors">
     </div>
 
     <!-- Cliente -->
     <div>
       <label class="block text-sm font-medium text-gray-300 mb-1.5">Cliente <span class="text-red-400">*</span></label>
-      <select name="client_id" required
+      <select aria-label="Cliente" name="client_id" required
         class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
         <option value="">Selecione...</option>
         <?php foreach ($clients as $cl): ?>
@@ -37,7 +37,7 @@ $v = fn(string $k, mixed $def = '') => $old[$k] ?? $contract[$k] ?? $def;
     <!-- Status -->
     <div>
       <label class="block text-sm font-medium text-gray-300 mb-1.5">Status</label>
-      <select name="status" class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
+      <select aria-label="Situação" name="status" class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
         <?php foreach (['draft'=>'Rascunho','active'=>'Ativo','expired'=>'Expirado','cancelled'=>'Cancelado'] as $val => $lbl): ?>
         <option value="<?= $val ?>" <?= $v('status','draft') === $val ? 'selected' : '' ?>><?= $lbl ?></option>
         <?php endforeach; ?>
@@ -110,14 +110,14 @@ $v = fn(string $k, mixed $def = '') => $old[$k] ?? $contract[$k] ?? $def;
     <!-- Notas -->
     <div class="sm:col-span-2">
       <label class="block text-sm font-medium text-gray-300 mb-1.5">Notas internas</label>
-      <textarea name="notes" rows="2"
+      <textarea aria-label="Observações" name="notes" rows="2"
         class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none transition-colors resize-none"><?= e($v('notes')) ?></textarea>
     </div>
   </div>
 
   <div class="flex items-center justify-end gap-3 pt-2">
     <a href="/contratos" class="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-medium text-gray-300 hover:text-white hover:border-white/20 transition-all">Cancelar</a>
-    <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
+    <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
       Salvar Contrato
     </button>
   </div>

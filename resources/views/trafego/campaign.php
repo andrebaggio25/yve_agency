@@ -2,7 +2,7 @@
 <?php view_start('content'); ?>
 
 <!-- Breadcrumb -->
-<nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+<nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
   <a href="/trafego" class="hover:text-gray-300">Tráfego Pago</a>
   <span>/</span>
   <span class="text-gray-300"><?= e($campaign['name']) ?></span>
@@ -14,8 +14,8 @@
     <p class="text-sm text-gray-400 mt-1">
       <?= e($campaign['account_name']) ?>
       <?php if ($campaign['objective']): ?>
-        <span class="mx-1 text-gray-600">·</span>
-        <span class="text-gray-500">Objetivo: <?= e($campaign['objective']) ?></span>
+        <span class="mx-1 text-gray-400">·</span>
+        <span class="text-gray-400">Objetivo: <?= e($campaign['objective']) ?></span>
       <?php endif; ?>
     </p>
   </div>
@@ -27,9 +27,9 @@
 
 <!-- Filtro período -->
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">
-  <input type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
-  <span class="text-gray-500 text-sm">até</span>
-  <input type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+  <input aria-label="Data inicial" type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+  <span class="text-gray-400 text-sm">até</span>
+  <input aria-label="Data final" type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
   <button type="submit" class="btn-secondary text-sm px-4 py-1.5">Filtrar</button>
 </form>
 
@@ -46,7 +46,7 @@
   ];
   foreach ($kpis as $k): ?>
   <div class="card p-4">
-    <p class="text-xs text-gray-500 mb-1"><?= $k['label'] ?></p>
+    <p class="text-xs text-gray-400 mb-1"><?= $k['label'] ?></p>
     <p class="text-lg font-bold <?= $k['color'] ?>"><?= $k['value'] ?></p>
   </div>
   <?php endforeach; ?>
@@ -61,16 +61,16 @@
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/[0.04]">
-          <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Conjunto</th>
-          <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Objetivo</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Orçamento/dia</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Investido</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Impressões</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cliques</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">CPC</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Conv.</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">ROAS</th>
-          <th class="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+          <th class="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Conjunto</th>
+          <th class="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Objetivo</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Orçamento/dia</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Investido</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Impressões</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Cliques</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">CPC</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Conv.</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">ROAS</th>
+          <th class="text-center px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
           <th class="px-4 py-3"></th>
         </tr>
       </thead>
@@ -112,7 +112,7 @@
         </tr>
         <?php endforeach; ?>
         <?php if (empty($adSets)): ?>
-        <tr><td colspan="11" class="px-4 py-10 text-center text-gray-500">Nenhum conjunto no período.</td></tr>
+        <tr><td colspan="11" class="px-4 py-10 text-center text-gray-400">Nenhum conjunto no período.</td></tr>
         <?php endif; ?>
       </tbody>
     </table>

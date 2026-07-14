@@ -26,9 +26,9 @@
 
 <!-- Filtros -->
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">
-  <input type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
-  <span class="text-gray-500 text-sm">até</span>
-  <input type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+  <input aria-label="Data inicial" type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+  <span class="text-gray-400 text-sm">até</span>
+  <input aria-label="Data final" type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
   <button type="submit" class="btn-secondary text-sm px-4 py-1.5">Filtrar</button>
 </form>
 
@@ -45,7 +45,7 @@
   ];
   foreach ($kpis as $k): ?>
   <div class="card p-4">
-    <p class="text-xs text-gray-500 mb-1"><?= $k['label'] ?></p>
+    <p class="text-xs text-gray-400 mb-1"><?= $k['label'] ?></p>
     <p class="text-lg font-bold <?= $k['color'] ?>"><?= $k['value'] ?></p>
   </div>
   <?php endforeach; ?>
@@ -55,20 +55,20 @@
 <div class="card overflow-hidden">
   <div class="p-4 border-b border-white/[0.06] flex items-center justify-between">
     <h2 class="text-sm font-medium text-gray-300">Contas conectadas</h2>
-    <span class="text-xs text-gray-500"><?= count($accounts) ?> conta<?= count($accounts) !== 1 ? 's' : '' ?></span>
+    <span class="text-xs text-gray-400"><?= count($accounts) ?> conta<?= count($accounts) !== 1 ? 's' : '' ?></span>
   </div>
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/[0.04]">
-          <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Conta</th>
-          <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cliente</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Seguidores</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Posts</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Alcance</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Impressões</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Curtidas</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Eng. médio</th>
+          <th class="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Conta</th>
+          <th class="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Cliente</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Seguidores</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Posts</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Alcance</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Impressões</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Curtidas</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Eng. médio</th>
           <th class="px-4 py-3"></th>
         </tr>
       </thead>
@@ -89,7 +89,7 @@
                    class="w-8 h-8 rounded-full object-cover bg-white/5"
                    onerror="this.style.display='none'">
               <?php else: ?>
-              <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs text-gray-500">
+              <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs text-gray-400">
                 <?= mb_strtoupper(mb_substr($a['name'], 0, 1)) ?>
               </div>
               <?php endif; ?>

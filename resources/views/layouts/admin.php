@@ -70,7 +70,7 @@
     <div class="p-3 border-t border-white/[0.06] space-y-1">
       <div class="px-3 py-2">
         <p class="text-xs font-medium text-white truncate"><?= e(\App\Support\Auth::user()['name'] ?? 'Admin') ?></p>
-        <p class="text-xs text-gray-500 truncate"><?= e(\App\Support\Auth::user()['email'] ?? '') ?></p>
+        <p class="text-xs text-gray-400 truncate"><?= e(\App\Support\Auth::user()['email'] ?? '') ?></p>
       </div>
       <form method="POST" action="/logout">
         <?= csrf_field() ?>

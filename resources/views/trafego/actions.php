@@ -21,13 +21,13 @@
 
 <!-- Filtros -->
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-5">
-  <select name="status" class="input-field text-sm py-1.5 px-3 w-44">
+  <select aria-label="Situação" name="status" class="input-field text-sm py-1.5 px-3 w-44">
     <option value="">Todos os status</option>
     <?php foreach (['pending' => 'Pendente', 'approved' => 'Aprovada', 'rejected' => 'Rejeitada', 'executed' => 'Executada', 'failed' => 'Falhou'] as $v => $l): ?>
     <option value="<?= $v ?>" <?= $filters['status'] === $v ? 'selected' : '' ?>><?= $l ?></option>
     <?php endforeach; ?>
   </select>
-  <select name="account_id" class="input-field text-sm py-1.5 px-3 w-56">
+  <select aria-label="Conta" name="account_id" class="input-field text-sm py-1.5 px-3 w-56">
     <option value="">Todas as contas</option>
     <?php foreach ($accounts as $a): ?>
     <option value="<?= $a['id'] ?>" <?= $filters['ad_account_id'] == $a['id'] ? 'selected' : '' ?>>
@@ -39,7 +39,7 @@
 </form>
 
 <?php if (empty($actions)): ?>
-<div class="card p-12 text-center text-gray-500">
+<div class="card p-12 text-center text-gray-400">
   Nenhuma ação encontrada com os filtros selecionados.
 </div>
 <?php else: ?>
@@ -70,16 +70,16 @@
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $sc['bg'] ?> <?= $sc['text'] ?>">
             <?= $sc['label'] ?>
           </span>
-          <span class="text-xs text-gray-500 bg-white/[0.05] px-2 py-0.5 rounded-full">
+          <span class="text-xs text-gray-400 bg-white/[0.05] px-2 py-0.5 rounded-full">
             <?= $actionLabels[$a['action_type']] ?? $a['action_type'] ?>
           </span>
           <?php if ($a['ai_generated']): ?>
           <span class="text-xs text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full">IA</span>
           <?php endif; ?>
-          <span class="text-xs text-gray-600 ml-auto"><?= date('d/m/Y H:i', strtotime($a['created_at'])) ?></span>
+          <span class="text-xs text-gray-400 ml-auto"><?= date('d/m/Y H:i', strtotime($a['created_at'])) ?></span>
         </div>
         <p class="text-sm font-medium text-white"><?= e($a['description']) ?></p>
-        <p class="text-xs text-gray-500 mt-1">
+        <p class="text-xs text-gray-400 mt-1">
           <?= e($a['account_name']) ?>
           <?php if ($a['campaign_name']): ?>
           <span class="mx-1">·</span><?= e($a['campaign_name']) ?>
@@ -91,11 +91,11 @@
         <?php if ($a['current_value'] || $a['proposed_value']): ?>
         <div class="flex items-center gap-2 mt-2 text-xs">
           <?php if ($a['current_value']): ?>
-          <span class="text-gray-500">Atual: <span class="text-gray-300"><?= e($a['current_value']) ?></span></span>
+          <span class="text-gray-400">Atual: <span class="text-gray-300"><?= e($a['current_value']) ?></span></span>
           <?php endif; ?>
           <?php if ($a['proposed_value']): ?>
-          <span class="text-gray-600">→</span>
-          <span class="text-gray-500">Proposto: <span class="text-green-400"><?= e($a['proposed_value']) ?></span></span>
+          <span class="text-gray-400">→</span>
+          <span class="text-gray-400">Proposto: <span class="text-green-400"><?= e($a['proposed_value']) ?></span></span>
           <?php endif; ?>
         </div>
         <?php endif; ?>

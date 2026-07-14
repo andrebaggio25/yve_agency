@@ -1,0 +1,21 @@
+- generic [ref=e2]:
+  - img "YVE Beauty" [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - heading "Bem-vindo de volta" [level=2] [ref=e7]
+      - paragraph [ref=e8]: Entre na sua conta
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - generic [ref=e11]: E-mail
+          - textbox "E-mail" [ref=e12]
+        - generic [ref=e13]:
+          - generic [ref=e14]: Senha
+          - textbox "Senha" [ref=e15]
+        - generic [ref=e16]:
+          - generic [ref=e17] [cursor=pointer]:
+            - checkbox "Lembrar-me" [ref=e18]
+            - text: Lembrar-me
+          - link "Esqueci a senha" [ref=e19] [cursor=pointer]:
+            - /url: /esqueci-senha
+        - button "Entrar" [ref=e20] [cursor=pointer]
+    - paragraph [ref=e21]: © 2026 YVE Beauty. Todos os direitos reservados.

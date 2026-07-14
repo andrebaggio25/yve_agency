@@ -28,10 +28,10 @@
     <div class="flex-1 min-w-0">
       <p class="text-sm font-semibold text-emerald-300">Conectado</p>
       <?php if (!empty($integration['connected_email'])): ?>
-      <p class="text-xs text-gray-500 mt-0.5">Conta: <span class="text-gray-300"><?= e($integration['connected_email']) ?></span></p>
+      <p class="text-xs text-gray-400 mt-0.5">Conta: <span class="text-gray-300"><?= e($integration['connected_email']) ?></span></p>
       <?php endif; ?>
       <?php if (!empty($integration['root_folder_id'])): ?>
-      <p class="text-xs text-gray-600 mt-0.5">Pasta raiz criada no Drive ✓</p>
+      <p class="text-xs text-gray-400 mt-0.5">Pasta raiz criada no Drive ✓</p>
       <?php endif; ?>
     </div>
     <form action="/integrations/google-drive/disconnect" method="POST" onsubmit="return confirm('Desconectar o Google Drive? Os arquivos já enviados permanecem no Drive.')">
@@ -41,7 +41,7 @@
   </div>
 
   <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
-    <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500 mb-3">Como funciona</h2>
+    <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-3">Como funciona</h2>
     <ul class="space-y-2 text-sm text-gray-400">
       <li class="flex gap-2"><span class="text-brand-400">1.</span> Cada cliente ganha uma pasta própria sob a raiz da agência.</li>
       <li class="flex gap-2"><span class="text-brand-400">2.</span> No portal, o cliente cria subpastas (por dia, modelo etc.) e envia vídeos/fotos.</li>
@@ -69,7 +69,7 @@
       </div>
       <div>
         <p class="text-sm font-semibold text-white mb-1">Drive não conectado</p>
-        <p class="text-xs text-gray-500">Conecte a conta Google da agência. Você autoriza uma vez; o sistema cria e gerencia as pastas dos clientes automaticamente.</p>
+        <p class="text-xs text-gray-400">Conecte a conta Google da agência. Você autoriza uma vez; o sistema cria e gerencia as pastas dos clientes automaticamente.</p>
       </div>
     </div>
 
@@ -80,7 +80,7 @@
       Conectar Google Drive
     </a>
     <?php else: ?>
-    <button disabled class="inline-flex items-center gap-2 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-semibold text-gray-500 cursor-not-allowed">
+    <button disabled class="inline-flex items-center gap-2 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
       Configure as credenciais primeiro
     </button>
     <?php endif; ?>

@@ -12,7 +12,7 @@ $statusColors = [
   'draft'     => 'text-gray-400 bg-gray-500/10',
   'active'    => 'text-green-300 bg-green-500/10',
   'expired'   => 'text-yellow-300 bg-yellow-500/10',
-  'cancelled' => 'text-gray-500 bg-gray-700/30',
+  'cancelled' => 'text-gray-400 bg-gray-700/30',
 ];
 ?>
 
@@ -22,14 +22,14 @@ $statusColors = [
 </div>
 
 <?php if (empty($contracts)): ?>
-<div class="card p-12 text-center text-gray-500"><?= t('portal.contracts.empty') ?></div>
+<div class="card p-12 text-center text-gray-400"><?= t('portal.contracts.empty') ?></div>
 <?php else: ?>
 <div class="space-y-3">
   <?php foreach ($contracts as $ct): ?>
   <div class="card p-5 flex items-start justify-between gap-4">
     <div class="flex-1 min-w-0">
       <p class="font-medium text-white mb-1"><?= e($ct['title']) ?></p>
-      <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+      <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400">
         <?php if ($ct['start_date'] ?? null): ?>
         <span><?= t('portal.contracts.start') ?>: <?= date('d/m/Y', strtotime($ct['start_date'])) ?></span>
         <?php endif; ?>

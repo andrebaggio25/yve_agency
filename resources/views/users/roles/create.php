@@ -23,13 +23,13 @@
         <label class="block text-sm font-medium text-gray-300 mb-1.5">
           <?= t('roles.name') ?> <span class="text-red-400">*</span>
         </label>
-        <input type="text" name="name" value="<?= old('name') ?>" required
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
+        <input aria-label="Nome" type="text" name="name" value="<?= old('name') ?>" required
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('roles.description') ?></label>
         <input type="text" name="description" value="<?= old('description') ?>"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
     </div>
 
@@ -43,11 +43,11 @@
       }
     ?>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
-      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500 mb-4"><?= t('roles.permissions') ?></h2>
+      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4"><?= t('roles.permissions') ?></h2>
       <div class="space-y-4">
         <?php foreach ($permGroups as $group => $perms): ?>
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2"><?= e(ucfirst($group)) ?></p>
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2"><?= e(ucfirst($group)) ?></p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <?php foreach ($perms as $perm): ?>
             <label class="flex items-center gap-3 rounded-xl border border-white/5 px-3 py-2.5 cursor-pointer hover:border-brand-500/20 transition-colors">
@@ -68,7 +68,7 @@
         <?= t('common.cancel') ?>
       </a>
       <button type="submit"
-              class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95">
+              class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95">
         <?= t('common.save') ?>
       </button>
     </div>

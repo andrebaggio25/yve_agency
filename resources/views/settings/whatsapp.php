@@ -14,7 +14,7 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
     </svg>
     <p class="text-sm font-semibold text-amber-300 mb-1">WhatsApp não disponível</p>
-    <p class="text-sm text-gray-500">A Evolution API ainda não foi configurada pelo administrador da plataforma. Entre em contato para habilitação.</p>
+    <p class="text-sm text-gray-400">A Evolution API ainda não foi configurada pelo administrador da plataforma. Entre em contato para habilitação.</p>
   </div>
 
   <?php elseif (!$instance): ?>
@@ -26,11 +26,11 @@
       </svg>
     </div>
     <h2 class="text-base font-semibold text-white mb-2">Ative o WhatsApp</h2>
-    <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
+    <p class="text-sm text-gray-400 mb-6 max-w-sm mx-auto">
       Nenhuma instância configurada. Clique em "Ativar WhatsApp" para criar sua instância e conectar seu número.
     </p>
     <button @click="activate()" :disabled="loading"
-            class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95 disabled:opacity-50">
+            class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95 disabled:opacity-50">
       <svg class="w-4 h-4" :class="{'animate-spin': loading}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
@@ -81,7 +81,7 @@
           <div class="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0"></div>
           <div class="flex-1">
             <p class="text-sm font-medium text-amber-300" x-text="status === 'disconnected' ? 'Desconectado' : 'Aguardando conexão'"></p>
-            <p class="text-xs text-gray-500">Escaneie o QR Code para conectar.</p>
+            <p class="text-xs text-gray-400">Escaneie o QR Code para conectar.</p>
           </div>
           <button @click="startQr()" :disabled="loading"
                   class="inline-flex items-center gap-1.5 rounded-xl bg-brand-600/20 border border-brand-500/30 px-3 py-1.5 text-xs text-brand-300 hover:bg-brand-600/30 transition-colors disabled:opacity-50">
@@ -95,29 +95,29 @@
     <!-- QR Code display -->
     <div x-show="showQr" x-transition class="mt-4 rounded-xl border border-white/10 bg-white/5 p-5 text-center">
       <p class="text-sm text-gray-300 mb-3 font-medium">Escaneie com o WhatsApp</p>
-      <p class="text-xs text-gray-500 mb-4">Abra o WhatsApp → Dispositivos vinculados → Vincular dispositivo</p>
+      <p class="text-xs text-gray-400 mb-4">Abra o WhatsApp → Dispositivos vinculados → Vincular dispositivo</p>
 
-      <div x-show="qrLoading" class="text-gray-500 text-sm py-8">
+      <div x-show="qrLoading" class="text-gray-400 text-sm py-8">
         <svg class="w-6 h-6 animate-spin mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         Carregando QR Code...
       </div>
 
       <div x-show="qrImage">
         <img :src="qrImage" alt="QR Code" class="mx-auto rounded-xl max-w-[200px] bg-white p-2">
-        <p class="text-xs text-gray-500 mt-3">O QR Code expira em ~30s. Clique em "Atualizar QR" se necessário.</p>
+        <p class="text-xs text-gray-400 mt-3">O QR Code expira em ~30s. Clique em "Atualizar QR" se necessário.</p>
         <button @click="loadQr()" class="mt-2 text-xs text-brand-400 hover:text-brand-300 transition-colors">
           Atualizar QR
         </button>
       </div>
 
       <div x-show="pairingCode" class="mt-4">
-        <p class="text-xs text-gray-500 mb-1">Ou use o código de pareamento:</p>
+        <p class="text-xs text-gray-400 mb-1">Ou use o código de pareamento:</p>
         <code class="text-lg font-mono font-bold tracking-widest text-white" x-text="pairingCode"></code>
       </div>
 
       <p x-show="qrError" class="text-red-400 text-sm mt-3" x-text="qrError"></p>
 
-      <div x-show="pollingActive" class="mt-3 flex items-center justify-center gap-2 text-xs text-gray-500">
+      <div x-show="pollingActive" class="mt-3 flex items-center justify-center gap-2 text-xs text-gray-400">
         <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         Aguardando escaneamento...
       </div>
@@ -125,7 +125,7 @@
   </div>
 
   <!-- Instance info -->
-  <div class="rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 text-xs text-gray-500">
+  <div class="rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 text-xs text-gray-400">
     <div class="flex items-center justify-between">
       <span>Instância: <code class="text-gray-400"><?= e($instance['instance_name']) ?></code></span>
       <button @click="configureWebhook()" class="text-brand-400 hover:text-brand-300 transition-colors">

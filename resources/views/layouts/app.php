@@ -19,9 +19,13 @@
 
     <link rel="stylesheet" href="<?= asset('/css/app.css') ?>">
     <script src="<?= asset('/js/api.js') ?>"></script>
-    <script defer src="<?= asset('/js/vendor/alpine.min.js') ?>"></script>
-    <!-- defer: Chart.js só executa depois do HTML parseado, sem travar o 1º render -->
+    <!-- Chart.js ANTES do Alpine, de propósito: o bundle do Alpine chama
+         Alpine.start() assim que executa, e os `defer` rodam em ordem de
+         documento. Com o Alpine primeiro, todo x-init que usa `new Chart(...)`
+         morria com "Chart is not defined" — os gráficos simplesmente não
+         apareciam. -->
     <script defer src="<?= asset('/js/vendor/chart.umd.min.js') ?>"></script>
+    <script defer src="<?= asset('/js/vendor/alpine.min.js') ?>"></script>
 
     <?= view_slot('head') ?>
 </head>
@@ -49,7 +53,7 @@
            class="h-9 w-9 object-contain flex-shrink-0" width="36" height="36">
       <div class="min-w-0">
         <p class="text-sm font-bold truncate gradient-text"><?= e(env('APP_NAME', 'YVE Beauty')) ?></p>
-        <p class="text-xs text-gray-500 truncate"><?= e(\App\Support\Auth::user()['name'] ?? 'Usuário') ?></p>
+        <p class="text-xs text-gray-400 truncate"><?= e(\App\Support\Auth::user()['name'] ?? 'Usuário') ?></p>
       </div>
     </a>
 
@@ -80,7 +84,7 @@
     <header class="flex-shrink-0 flex items-center justify-between gap-4 px-4 sm:px-6 py-3.5
                    border-b border-white/[0.06] bg-[#0d0d14]/80 backdrop-blur-sm sticky top-0 z-30">
       <!-- Mobile hamburger -->
-      <button @click="mobileSidebarOpen = !mobileSidebarOpen" class="lg:hidden -ml-1 flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+      <button @click="mobileSidebarOpen = !mobileSidebarOpen" aria-label="Abrir menu" class="lg:hidden -ml-1 flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
@@ -93,12 +97,12 @@
 
       <!-- Notifications bell -->
       <div class="flex-shrink-0 relative" x-data="notifBell()" x-init="init()">
-        <button @click="toggle()" class="relative flex items-center justify-center w-9 h-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+        <button @click="toggle()" aria-label="Notificações" :aria-expanded="open" class="relative flex items-center justify-center w-9 h-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
           </svg>
           <span x-show="count > 0"
-                class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-brand-500 text-[10px] font-bold text-white px-1"
+                class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-brand-500 text-[10px] font-bold text-gray-950 px-1"
                 x-text="count > 9 ? '9+' : count"></span>
         </button>
         <!-- Dropdown -->
@@ -113,7 +117,7 @@
           </div>
           <div class="max-h-72 overflow-y-auto">
             <template x-if="notifications.length === 0">
-              <p class="px-4 py-6 text-center text-sm text-gray-500">Nenhuma notificação.</p>
+              <p class="px-4 py-6 text-center text-sm text-gray-400">Nenhuma notificação.</p>
             </template>
             <template x-for="n in notifications" :key="n.id">
               <a :href="n.action_url || '#'" @click="markRead(n.id)"
@@ -121,7 +125,7 @@
                 <div class="mt-0.5 w-2 h-2 rounded-full bg-brand-500 flex-shrink-0"></div>
                 <div class="min-w-0">
                   <p class="text-sm font-medium text-white truncate" x-text="n.title"></p>
-                  <p class="text-xs text-gray-500 mt-0.5 line-clamp-2" x-text="n.body"></p>
+                  <p class="text-xs text-gray-400 mt-0.5 line-clamp-2" x-text="n.body"></p>
                 </div>
               </a>
             </template>
@@ -131,7 +135,7 @@
 
       <!-- User pill -->
       <div class="flex-shrink-0 flex items-center gap-2">
-        <div class="hidden sm:flex h-8 w-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 items-center justify-center text-xs font-bold text-white shadow-lg shadow-brand-500/20">
+        <div class="hidden sm:flex h-8 w-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 items-center justify-center text-xs font-bold text-gray-950 shadow-lg shadow-brand-500/20">
           <?= strtoupper(substr(\App\Support\Auth::user()['name'] ?? 'U', 0, 1)) ?>
         </div>
         <span class="text-sm text-gray-300 hidden sm:block max-w-[120px] truncate"><?= e(\App\Support\Auth::user()['name'] ?? '') ?></span>

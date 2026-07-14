@@ -19,22 +19,22 @@
     <?= csrf_field() ?>
 
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-5">
-      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500"><?= t('common.basic_info') ?></h2>
+      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400"><?= t('common.basic_info') ?></h2>
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">
           <?= t('users.name') ?> <span class="text-red-400">*</span>
         </label>
-        <input type="text" name="name" value="<?= old('name') ?>" required
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
+        <input aria-label="Nome" type="text" name="name" value="<?= old('name') ?>" required
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">
           <?= t('users.email') ?> <span class="text-red-400">*</span>
         </label>
-        <input type="email" name="email" value="<?= old('email') ?>" required
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
+        <input aria-label="E-mail" type="email" name="email" value="<?= old('email') ?>" required
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -42,15 +42,15 @@
           <label class="block text-sm font-medium text-gray-300 mb-1.5">
             <?= t('users.password') ?> <span class="text-red-400">*</span>
           </label>
-          <input type="password" name="password" required minlength="8"
-                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
+          <input aria-label="Senha" type="password" name="password" required minlength="8"
+                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">
             Confirmar senha <span class="text-red-400">*</span>
           </label>
           <input type="password" name="password_confirmation" required minlength="8"
-                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
+                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
         </div>
       </div>
 
@@ -71,7 +71,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('users.status') ?></label>
-          <select name="status"
+          <select aria-label="Situação" name="status"
                   class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
             <option value="active" selected><?= t('status.active') ?></option>
             <option value="inactive"><?= t('status.inactive') ?></option>
@@ -81,7 +81,7 @@
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('users.language') ?></label>
-        <select name="language"
+        <select aria-label="Idioma" name="language"
                 class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
           <?php foreach (\App\Core\Lang::supportedLocales() as $code => $label): ?>
           <option value="<?= e($code) ?>" <?= old('language', 'pt') === $code ? 'selected' : '' ?>>
@@ -89,7 +89,7 @@
           </option>
           <?php endforeach; ?>
         </select>
-        <p class="mt-1 text-xs text-gray-500"><?= t('users.language_hint') ?></p>
+        <p class="mt-1 text-xs text-gray-400"><?= t('users.language_hint') ?></p>
       </div>
     </div>
 
@@ -98,7 +98,7 @@
         <?= t('common.cancel') ?>
       </a>
       <button type="submit"
-              class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95">
+              class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95">
         <?= t('common.save') ?>
       </button>
     </div>

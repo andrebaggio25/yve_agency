@@ -14,7 +14,7 @@
 
 <?php if (empty($accounts)): ?>
 <div class="card p-12 text-center">
-  <svg class="w-12 h-12 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
   </svg>
   <p class="text-gray-400 mb-4">Nenhuma conta de anúncios conectada ainda.</p>
@@ -26,12 +26,12 @@
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">
   <div class="flex items-center gap-2">
     <label class="text-sm text-gray-400">De</label>
-    <input type="date" name="since" value="<?= e($since) ?>"
+    <input aria-label="Data inicial" type="date" name="since" value="<?= e($since) ?>"
            class="input-field text-sm py-1.5 px-3 w-40">
   </div>
   <div class="flex items-center gap-2">
     <label class="text-sm text-gray-400">Até</label>
-    <input type="date" name="until" value="<?= e($until) ?>"
+    <input aria-label="Data final" type="date" name="until" value="<?= e($until) ?>"
            class="input-field text-sm py-1.5 px-3 w-40">
   </div>
   <button type="submit" class="btn-secondary text-sm px-4 py-1.5">Filtrar</button>
@@ -51,7 +51,7 @@
   ];
   foreach ($kpis as $k): ?>
   <div class="card p-4">
-    <p class="text-xs text-gray-500 mb-1"><?= $k['label'] ?></p>
+    <p class="text-xs text-gray-400 mb-1"><?= $k['label'] ?></p>
     <p class="text-lg font-bold <?= $k['color'] ?>"><?= $k['value'] ?></p>
   </div>
   <?php endforeach; ?>
@@ -59,7 +59,7 @@
 
 <!-- Gráfico de gasto diário -->
 <?php if (!empty($dailyChart)): ?>
-<div class="card p-5 mb-6" x-data="trafficChart(<?= json_encode($dailyChart) ?>)">
+<div class="card p-5 mb-6" x-data="trafficChart(<?= e(json_encode($dailyChart)) ?>)">
   <h2 class="text-sm font-medium text-gray-300 mb-4">Investimento diário (primeira conta)</h2>
   <canvas id="trafficSpendChart" height="80"></canvas>
 </div>
@@ -69,22 +69,22 @@
 <div class="card overflow-hidden">
   <div class="p-4 border-b border-white/[0.06] flex items-center justify-between">
     <h2 class="text-sm font-medium text-gray-300">Campanhas</h2>
-    <span class="text-xs text-gray-500"><?= count($campaigns) ?> campanha<?= count($campaigns) !== 1 ? 's' : '' ?></span>
+    <span class="text-xs text-gray-400"><?= count($campaigns) ?> campanha<?= count($campaigns) !== 1 ? 's' : '' ?></span>
   </div>
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/[0.04]">
-          <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Campanha</th>
-          <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Conta / Cliente</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Investido</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Impressões</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cliques</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">CPC</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">CPM</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Conv.</th>
-          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">ROAS</th>
-          <th class="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+          <th class="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Campanha</th>
+          <th class="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Conta / Cliente</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Investido</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Impressões</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Cliques</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">CPC</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">CPM</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Conv.</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">ROAS</th>
+          <th class="text-center px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
           <th class="px-4 py-3"></th>
         </tr>
       </thead>
@@ -109,8 +109,8 @@
           <td class="px-4 py-3 text-gray-400">
             <?= e($c['account_name']) ?>
             <?php if ($c['client_name']): ?>
-              <span class="text-gray-600 mx-1">·</span>
-              <span class="text-gray-500 text-xs"><?= e($c['client_name']) ?></span>
+              <span class="text-gray-400 mx-1">·</span>
+              <span class="text-gray-400 text-xs"><?= e($c['client_name']) ?></span>
             <?php endif; ?>
           </td>
           <td class="px-4 py-3 text-right font-medium text-white">
@@ -146,7 +146,7 @@
         </tr>
         <?php endforeach; ?>
         <?php if (empty($campaigns)): ?>
-        <tr><td colspan="11" class="px-4 py-10 text-center text-gray-500">
+        <tr><td colspan="11" class="px-4 py-10 text-center text-gray-400">
           Nenhuma campanha no período. <a href="/trafego/contas" class="text-brand-400 hover:underline">Sincronize uma conta</a>.
         </td></tr>
         <?php endif; ?>

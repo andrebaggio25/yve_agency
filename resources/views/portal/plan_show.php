@@ -20,7 +20,7 @@ $planStatus       = $plan['status'];
 $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision', 'in_revision'], true);
 ?>
 
-<nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+<nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
   <a href="/portal/<?= $token ?>/planos" class="hover:text-gray-300"><?= t('portal.plan.breadcrumb') ?></a>
   <span>/</span>
   <span class="text-gray-300"><?= e($plan['title']) ?></span>
@@ -63,7 +63,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
     <div x-show="showRevision" x-transition class="w-full mt-2">
       <form method="POST" action="/portal/<?= $token ?>/planos/<?= $plan['id'] ?>/revisao">
         <?= csrf_field() ?>
-        <textarea name="comment" rows="3" placeholder="<?= e(t('portal.plan.revision_placeholder')) ?>"
+        <textarea aria-label="Comentário" name="comment" rows="3" placeholder="<?= e(t('portal.plan.revision_placeholder')) ?>"
                   class="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 resize-none"
                   style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);"></textarea>
         <div class="flex justify-end mt-2">
@@ -113,7 +113,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
           </span>
           <?php endif; ?>
           <?php if (!empty($item['publish_date'])): ?>
-          <span class="text-xs text-gray-500">
+          <span class="text-xs text-gray-400">
             <?= date('d/m/Y', strtotime($item['publish_date'])) ?>
             <?= !empty($item['publish_time']) ? ' · ' . substr($item['publish_time'], 0, 5) : '' ?>
           </span>
@@ -124,7 +124,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
         <span :class="statusClass" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" x-text="statusLabel"></span>
-        <svg class="w-4 h-4 text-gray-500 transition-transform duration-200" :class="{'rotate-90': expanded}"
+        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{'rotate-90': expanded}"
              fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
@@ -219,7 +219,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2"><?= t('portal.plan.comments') ?></p>
           <div class="space-y-2">
             <template x-if="feedbacks.length === 0">
-              <p class="text-xs text-gray-600 italic"><?= t('portal.plan.no_comments') ?></p>
+              <p class="text-xs text-gray-400 italic"><?= t('portal.plan.no_comments') ?></p>
             </template>
             <template x-for="fb in feedbacks" :key="fb.id ?? fb.created_at">
               <div :class="feedbackBgClass(fb)"
@@ -238,7 +238,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
                       </span>
                     </template>
                   </div>
-                  <span class="text-[10px] text-gray-600 flex-shrink-0" x-text="formatDate(fb.created_at)"></span>
+                  <span class="text-[10px] text-gray-400 flex-shrink-0" x-text="formatDate(fb.created_at)"></span>
                 </div>
                 <p x-show="fb.comment" class="text-sm text-gray-300 leading-relaxed" x-text="fb.comment"></p>
               </div>
@@ -269,7 +269,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
             </button>
             <button type="button"
                     @click="selectedType = 'comment'"
-                    :class="selectedType === 'comment' ? 'bg-brand-600 border-brand-500 text-white' : 'border-white/10 text-gray-400 hover:text-white'"
+                    :class="selectedType === 'comment' ? 'bg-brand-600 border-brand-500 text-gray-950' : 'border-white/10 text-gray-400 hover:text-gray-950'"
                     class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
               <?= t('portal.plan.fb_comment') ?>
@@ -280,7 +280,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
             <!-- Textarea -->
             <textarea x-model="comment" rows="2"
                       :placeholder="selectedType === 'approved' ? <?= e(json_encode(t('portal.plan.note_optional'), JSON_UNESCAPED_UNICODE)) ?> : <?= e(json_encode(t('portal.plan.describe_change'), JSON_UNESCAPED_UNICODE)) ?>"
-                      class="w-full rounded-xl text-sm text-white placeholder-gray-600 px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                      class="w-full rounded-xl text-sm text-white placeholder-gray-500 px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500/50"
                       style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);"></textarea>
 
             <!-- Timecode (só para vídeos) -->
@@ -288,7 +288,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
             <div class="flex items-center gap-2 mt-2 flex-wrap">
               <svg class="w-4 h-4 text-brand-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               <input type="text" x-model="timecode" placeholder="<?= e(t('portal.plan.timecode_placeholder')) ?>"
-                     class="w-24 rounded-lg text-xs text-white placeholder-gray-600 px-2.5 py-1.5 font-mono focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+                     class="w-24 rounded-lg text-xs text-white placeholder-gray-500 px-2.5 py-1.5 font-mono focus:outline-none focus:ring-1 focus:ring-brand-500/50"
                      style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
               <?php if ($youtubeId): ?>
               <button type="button" @click="captureYtTime()"
@@ -298,7 +298,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
                 <?= t('portal.plan.capture') ?>
               </button>
               <?php else: ?>
-              <span class="text-xs text-gray-600"><?= t('portal.plan.video_excerpt') ?></span>
+              <span class="text-xs text-gray-400"><?= t('portal.plan.video_excerpt') ?></span>
               <?php endif; ?>
             </div>
             <?php endif; ?>
@@ -306,7 +306,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
             <div class="flex items-center gap-2 mt-3">
               <button type="button" @click="submitFeedback()"
                       :disabled="sending"
-                      class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-50">
+                      class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-gray-950 transition-all hover:bg-brand-500 disabled:opacity-50">
                 <svg x-show="sending" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -314,7 +314,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
                 <span x-text="sending ? <?= e(json_encode(t('portal.plan.sending'), JSON_UNESCAPED_UNICODE)) ?> : <?= e(json_encode(t('portal.plan.send'), JSON_UNESCAPED_UNICODE)) ?>"></span>
               </button>
               <button type="button" @click="selectedType = null; comment = ''; timecode = ''"
-                      class="text-xs text-gray-500 hover:text-gray-300 transition-colors"><?= t('portal.plan.cancel') ?></button>
+                      class="text-xs text-gray-400 hover:text-gray-300 transition-colors"><?= t('portal.plan.cancel') ?></button>
               <span x-show="errorMsg" class="text-xs text-rose-400" x-text="errorMsg"></span>
             </div>
           </div>
@@ -327,7 +327,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
   <?php endforeach; ?>
 </div>
 <?php else: ?>
-<div class="card p-8 text-center text-gray-500 text-sm"><?= t('portal.plan.no_posts') ?></div>
+<div class="card p-8 text-center text-gray-400 text-sm"><?= t('portal.plan.no_posts') ?></div>
 <?php endif; ?>
 
 <script>

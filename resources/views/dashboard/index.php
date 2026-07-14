@@ -9,7 +9,7 @@
     <h1 class="text-2xl font-bold text-white">
       Olá, <?= e(explode(' ', $user['name'] ?? 'usuário')[0]) ?>
     </h1>
-    <p class="text-sm text-gray-400 mt-1"><?= date('l, d \d\e F \d\e Y') ?></p>
+    <p class="text-sm text-gray-400 mt-1"><?= e(date_long()) ?></p>
   </div>
 
   <!-- Stats -->
@@ -58,7 +58,7 @@
   <?php $fs = $financialSummary; ?>
   <div>
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Financeiro</h2>
+      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400">Financeiro</h2>
       <a href="/financeiro" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">Ver mais →</a>
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -71,7 +71,7 @@
       ];
       foreach ($fw as [$lbl,$val,$cls]): ?>
       <div class="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
-        <p class="text-xs text-gray-500 mb-0.5"><?= $lbl ?></p>
+        <p class="text-xs text-gray-400 mb-0.5"><?= $lbl ?></p>
         <p class="font-semibold text-sm <?= $cls ?>"><?= $val ?></p>
       </div>
       <?php endforeach; ?>
@@ -83,7 +83,7 @@
   <?php if (!empty($recent_plans)): ?>
   <div>
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Planos recentes</h2>
+      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400">Planos recentes</h2>
       <a href="/conteudo" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">Ver todos →</a>
     </div>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] overflow-hidden">
@@ -96,7 +96,7 @@
           </div>
           <div>
             <p class="text-sm font-medium text-white"><?= e($plan['title']) ?></p>
-            <p class="text-xs text-gray-500"><?= e($plan['client_name']) ?> · <?= date_fmt($plan['week_start'], 'd/m/Y') ?></p>
+            <p class="text-xs text-gray-400"><?= e($plan['client_name']) ?> · <?= date_fmt($plan['week_start'], 'd/m/Y') ?></p>
           </div>
         </div>
         <?php
@@ -115,7 +115,7 @@
   </div>
   <?php else: ?>
   <div class="rounded-2xl border border-dashed border-white/10 p-10 text-center">
-    <p class="text-gray-500 text-sm">Nenhum plano criado ainda.</p>
+    <p class="text-gray-400 text-sm">Nenhum plano criado ainda.</p>
     <a href="/conteudo/novo" class="mt-3 inline-block text-sm text-brand-400 hover:text-brand-300 transition-colors">
       Criar primeiro plano →
     </a>

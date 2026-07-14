@@ -36,7 +36,7 @@
     </div>
     <div>
       <label class="label-field">Status</label>
-      <select name="status" class="input-field w-full">
+      <select aria-label="Situação" name="status" class="input-field w-full">
         <?php
         $statuses = ['active' => 'Ativa', 'trialing' => 'Trial', 'suspended' => 'Suspensa', 'cancelled' => 'Cancelada', 'past_due' => 'Atrasada'];
         foreach ($statuses as $val => $label):
@@ -49,14 +49,14 @@
 
   <?php if ($existing): ?>
   <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-1.5">
-    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Informações atuais</p>
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Informações atuais</p>
     <div class="flex justify-between text-xs">
-      <span class="text-gray-500">Assinatura ID</span>
+      <span class="text-gray-400">Assinatura ID</span>
       <span class="text-gray-300">#<?= $existing['id'] ?></span>
     </div>
     <?php if ($existing['current_period_start']): ?>
     <div class="flex justify-between text-xs">
-      <span class="text-gray-500">Período atual</span>
+      <span class="text-gray-400">Período atual</span>
       <span class="text-gray-300">
         <?= date('d/m/Y', strtotime($existing['current_period_start'])) ?>
         <?php if ($existing['current_period_end']): ?>
@@ -67,7 +67,7 @@
     <?php endif; ?>
     <?php if ($existing['created_at']): ?>
     <div class="flex justify-between text-xs">
-      <span class="text-gray-500">Criada em</span>
+      <span class="text-gray-400">Criada em</span>
       <span class="text-gray-300"><?= date('d/m/Y', strtotime($existing['created_at'])) ?></span>
     </div>
     <?php endif; ?>

@@ -72,7 +72,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
             <span class="inline-block w-1.5 h-1.5 rounded-full <?= $sc['dot'] ?>"></span>
             <?= $statusLabel ?>
           </span>
-          <span class="text-xs text-gray-500"><?= e($plan['client_name']) ?></span>
+          <span class="text-xs text-gray-400"><?= e($plan['client_name']) ?></span>
         </div>
         <h1 class="text-xl font-bold text-white sm:text-2xl"><?= e($plan['title']) ?></h1>
         <p class="mt-1 text-sm text-gray-400">
@@ -84,7 +84,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <?php if ($canSend && in_array($plan['status'], ['draft', 'revision'])): ?>
         <button @click="sendPlan()"
                 :disabled="sending"
-                class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
           <svg class="w-4 h-4" :class="{'animate-spin': sending}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
           </svg>
@@ -96,9 +96,14 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
                 @click="navigator.clipboard.writeText('<?= e($approvalUrl) ?>').then(() => { copied=true; setTimeout(()=>copied=false,2000) })"
                 :class="copied ? 'border-emerald-500/40 text-emerald-300' : 'border-white/10 text-gray-300 hover:text-white hover:border-white/20'"
                 class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all">
+          <!-- Um <path> com `d` reativo. <template x-if> DENTRO de <svg> é HTML
+               inválido: o parser tira o template do namespace SVG e o Alpine
+               estoura com "cloneNode of undefined" — o ícone nunca alternava. -->
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <template x-if="!copied"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></template>
-            <template x-if="copied"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></template>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  :d="copied
+                        ? 'M5 13l4 4L19 7'
+                        : 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z'"/>
           </svg>
           <span x-text="copied ? 'Copiado!' : 'Link de Aprovação'"></span>
         </button>
@@ -156,7 +161,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
       ?>
       <div class="rounded-xl bg-white/[0.03] border border-white/5 p-3 text-center">
         <div class="text-xl font-bold <?= $st['color'] ?>"><?= $count ?></div>
-        <div class="text-xs text-gray-500 mt-0.5"><?= $st['label'] ?></div>
+        <div class="text-xs text-gray-400 mt-0.5"><?= $st['label'] ?></div>
       </div>
       <?php endforeach; ?>
     </div>
@@ -269,7 +274,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
                 </span>
                 <?php endif; ?>
                 <?php if (!empty($item['publish_date'])): ?>
-                <span class="text-xs text-gray-500">
+                <span class="text-xs text-gray-400">
                   <?= date('d/m (D)', strtotime($item['publish_date'])) ?>
                   <?= !empty($item['publish_time']) ? ' · ' . substr($item['publish_time'], 0, 5) : '' ?>
                 </span>
@@ -286,12 +291,12 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
             <div class="flex items-center gap-2 flex-shrink-0">
               <?php if ($canEdit): ?>
               <button @click.stop="openEdit()"
-                      class="opacity-0 group-hover:opacity-100 rounded-lg p-1.5 text-gray-500 hover:text-white hover:bg-white/10 transition-all"
+                      class="opacity-0 group-hover:opacity-100 rounded-lg p-1.5 text-gray-400 hover:text-white hover:bg-white/10 transition-all"
                       title="Editar">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
               </button>
               <button @click.stop="deleteItem()"
-                      class="opacity-0 group-hover:opacity-100 rounded-lg p-1.5 text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                      class="opacity-0 group-hover:opacity-100 rounded-lg p-1.5 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                       title="Excluir">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               </button>
@@ -315,7 +320,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
               </span>
               <?php endif; ?>
 
-              <svg class="w-4 h-4 text-gray-600 transition-transform duration-200"
+              <svg class="w-4 h-4 text-gray-400 transition-transform duration-200"
                    :class="{'rotate-90': expanded}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
@@ -416,7 +421,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <!-- Instagram preview buttons -->
         <?php if (!empty($item['cover_url'])): ?>
         <div class="flex items-center gap-2 flex-wrap" x-data>
-          <span class="text-xs text-gray-500">Simular:</span>
+          <span class="text-xs text-gray-400">Simular:</span>
           <button type="button"
                   @click="$dispatch('open-insta-feed', {item: <?= htmlspecialchars(json_encode(['id'=>$item['id'],'cover_url'=>$item['cover_url'],'caption'=>$item['caption']??'','platform'=>$item['platform']??'','content_type'=>$item['content_type']??'']), ENT_QUOTES) ?>})"
                   class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-pink-500/20 px-3 py-1.5 text-xs font-medium text-pink-300 hover:from-purple-500/30 hover:to-pink-500/30 transition-all">
@@ -483,7 +488,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <div x-data="itemNote(<?= $item['id'] ?>)" class="pt-1">
           <div x-show="!writing">
             <button @click="writing = true"
-                    class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-brand-400 transition-colors">
+                    class="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-brand-400 transition-colors">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
               Adicionar nota interna
             </button>
@@ -491,13 +496,13 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
           <div x-show="writing" x-transition>
             <textarea x-model="note" rows="2" placeholder="Nota visível apenas para a equipe..."
                       @keydown.escape="writing = false; note = ''"
-                      class="w-full rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none mt-1"></textarea>
+                      class="w-full rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none mt-1"></textarea>
             <div class="flex items-center gap-2 mt-1.5">
               <button @click="submitNote()" :disabled="sending"
                       class="rounded-lg bg-white/10 border border-white/10 px-3 py-1 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/20 transition-all disabled:opacity-50">
                 <span x-text="sending ? 'Salvando...' : 'Salvar nota'"></span>
               </button>
-              <button @click="writing = false; note = ''" class="text-xs text-gray-600 hover:text-gray-400 transition-colors">Cancelar</button>
+              <button @click="writing = false; note = ''" class="text-xs text-gray-400 hover:text-gray-400 transition-colors">Cancelar</button>
               <span x-show="saved" class="text-xs text-emerald-400">✓ Salvo</span>
             </div>
           </div>
@@ -592,7 +597,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
             <button type="button"
                     @click="itemModal.content_type = '<?= $pt ?>'"
                     :class="itemModal.content_type === '<?= $pt ?>'
-                      ? 'bg-brand-600 border-brand-500 text-white'
+                      ? 'bg-brand-600 border-brand-500 text-gray-950'
                       : 'border-white/10 bg-white/[0.04] text-gray-400 hover:text-white hover:bg-white/10'"
                     class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all">
               <?= $pt ?>
@@ -605,13 +610,13 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Data de Publicação</label>
-            <input type="date" x-model="itemModal.publish_date"
+            <input type="date" aria-label="Data de publicação" x-model="itemModal.publish_date"
                    class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
-            <p class="text-xs text-gray-600 mt-1">Fuso: <?= e($clientTz) ?></p>
+            <p class="text-xs text-gray-400 mt-1">Fuso: <?= e($clientTz) ?></p>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Horário</label>
-            <input type="time" x-model="itemModal.publish_time"
+            <input type="time" aria-label="Horário de publicação" x-model="itemModal.publish_time"
                    class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
           </div>
         </div>
@@ -624,8 +629,8 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
           <input type="url" x-model="itemModal.cover_url"
                  @input="imgErr = false"
                  placeholder="https://..."
-                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
-          <p class="text-xs text-gray-600 mt-1">URL da imagem (Drive, CDN ou outro host público)</p>
+                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+          <p class="text-xs text-gray-400 mt-1">URL da imagem (Drive, CDN ou outro host público)</p>
           <!-- Preview: enquadrado na proporção real do Instagram -->
           <template x-if="itemModal.cover_url && !imgErr">
             <div class="relative mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-black/30"
@@ -648,9 +653,9 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
               <div class="flex items-center gap-2">
                 <input type="url" x-model="itemModal.images[idx]"
                        placeholder="https://..."
-                       class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+                       class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
                 <button type="button" @click="itemModal.images.splice(idx, 1)"
-                        class="p-2 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+                        class="p-2 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               </div>
@@ -667,7 +672,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1.5">Legenda</label>
           <textarea x-model="itemModal.caption" rows="4" placeholder="Texto da publicação..."
-                    class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
+                    class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
         </div>
 
         <!-- Drive link -->
@@ -677,11 +682,11 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
           </label>
           <input type="url" x-model="itemModal.drive_url"
                  placeholder="https://drive.google.com/..."
-                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
           <p x-show="itemModal.content_type === 'Reels / Vídeo'" class="text-xs text-brand-400 mt-1">
             O vídeo será exibido com player integrado na tela de aprovação do cliente.
           </p>
-          <p x-show="itemModal.content_type !== 'Reels / Vídeo'" class="text-xs text-gray-600 mt-1">
+          <p x-show="itemModal.content_type !== 'Reels / Vídeo'" class="text-xs text-gray-400 mt-1">
             Suporta arquivos, pastas, Docs, Sheets e Slides
           </p>
         </div>
@@ -689,7 +694,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <!-- Assigned to -->
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1.5">Responsável</label>
-          <select x-model="itemModal.assigned_to"
+          <select aria-label="Responsável" x-model="itemModal.assigned_to"
                   class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
             <option value="">Sem responsável</option>
             <?php foreach ($teamMembers as $member): ?>
@@ -700,7 +705,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
 
         <div class="flex gap-3 pt-1">
           <button type="submit" :disabled="submitting"
-                  class="flex-1 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                  class="flex-1 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-gray-950 transition-all hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed">
             <span x-text="submitting ? 'Salvando...' : (itemModal.mode === 'edit' ? 'Salvar alterações' : 'Adicionar Post')"></span>
           </button>
           <button type="button" @click="itemModal.show = false"
@@ -722,9 +727,9 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
         Chat do Plano
-        <span class="text-xs font-normal text-gray-500">· visível apenas para a equipe</span>
+        <span class="text-xs font-normal text-gray-400">· visível apenas para a equipe</span>
       </h2>
-      <button @click="loadComments()" class="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+      <button @click="loadComments()" class="text-xs text-gray-400 hover:text-gray-400 transition-colors">
         <svg class="w-3.5 h-3.5" :class="{'animate-spin': loading}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
@@ -734,7 +739,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
     <!-- Mensagens -->
     <div class="px-5 py-4 space-y-3 max-h-80 overflow-y-auto" x-ref="chatMessages">
       <template x-if="comments.length === 0 && !loading">
-        <p class="text-xs text-gray-600 text-center py-4">Nenhuma mensagem ainda. Inicie a conversa!</p>
+        <p class="text-xs text-gray-400 text-center py-4">Nenhuma mensagem ainda. Inicie a conversa!</p>
       </template>
       <template x-for="c in comments" :key="c.id">
         <div class="flex items-start gap-2.5">
@@ -743,7 +748,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
           <div class="flex-1 min-w-0">
             <div class="flex items-baseline gap-2 mb-0.5">
               <span class="text-xs font-semibold text-white" x-text="c.user_name"></span>
-              <span class="text-[10px] text-gray-600" x-text="chatDate(c.created_at)"></span>
+              <span class="text-[10px] text-gray-400" x-text="chatDate(c.created_at)"></span>
             </div>
             <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap" x-text="c.message"></p>
           </div>
@@ -757,15 +762,15 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <textarea x-model="newMessage" rows="2"
                   placeholder="Escreva uma mensagem para a equipe..."
                   @keydown.ctrl.enter.prevent="sendComment()"
-                  class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
+                  class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
         <button @click="sendComment()" :disabled="sending || !newMessage.trim()"
-                class="self-end rounded-xl bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed">
+                class="self-end rounded-xl bg-brand-600 px-3 py-2 text-sm font-semibold text-gray-950 transition-all hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed">
           <svg class="w-4 h-4" :class="{'animate-pulse': sending}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
           </svg>
         </button>
       </div>
-      <p class="text-[10px] text-gray-700 mt-1">Ctrl+Enter para enviar</p>
+      <p class="text-[10px] text-gray-400 mt-1">Ctrl+Enter para enviar</p>
     </div>
   </div>
 
@@ -790,7 +795,10 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
        style="background:rgba(0,0,0,0.85); display:none">
 
     <!-- Phone shell -->
-    <div class="relative w-[360px] max-h-[85vh] overflow-hidden rounded-[2.5rem] border-2 border-gray-700 bg-white shadow-2xl flex flex-col"
+    <!-- Simulador do Instagram: é uma RÉPLICA visual (logotipo, ícones de curtir/
+         comentar são enfeite). aria-hidden para o leitor de tela não anunciar
+         controles que não existem; o conteúdo real do post está na tela por trás. -->
+    <div aria-hidden="true" class="relative w-[360px] max-h-[85vh] overflow-hidden rounded-[2.5rem] border-2 border-gray-700 bg-white shadow-2xl flex flex-col"
          style="min-height:600px">
 
       <!-- Status bar -->
@@ -830,12 +838,12 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
           <div class="flex items-center gap-3 px-3 py-2.5">
             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-yellow-400 p-0.5">
               <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                <span class="text-xs font-bold text-gray-700" x-text="username.charAt(0).toUpperCase()"></span>
+                <span class="text-xs font-bold text-gray-500" x-text="username.charAt(0).toUpperCase()"></span>
               </div>
             </div>
             <div>
               <p class="text-xs font-semibold text-gray-800" x-text="username"></p>
-              <p class="text-[10px] text-gray-400">Publicidade</p>
+              <p class="text-[10px] text-gray-500">Publicidade</p>
             </div>
             <svg class="w-5 h-5 text-gray-500 ml-auto" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
           </div>
@@ -857,11 +865,11 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
               <svg class="w-6 h-6 text-gray-800 ml-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
             </div>
             <p class="text-xs font-semibold text-gray-800 mb-0.5">2.847 curtidas</p>
-            <div class="text-xs text-gray-700">
+            <div class="text-xs text-gray-500">
               <span class="font-semibold" x-text="username"></span>
               <span x-text="' ' + (item && item.caption ? item.caption.substring(0,80) : 'Legenda do post...')"></span>
             </div>
-            <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wide">Há 1 hora</p>
+            <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Há 1 hora</p>
           </div>
         </div>
       </div>
@@ -873,7 +881,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
           <div class="flex items-center gap-5 mb-4">
             <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-yellow-400 p-0.5 flex-shrink-0">
               <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                <span class="text-xl font-bold text-gray-700" x-text="username.charAt(0).toUpperCase()"></span>
+                <span class="text-xl font-bold text-gray-500" x-text="username.charAt(0).toUpperCase()"></span>
               </div>
             </div>
             <div class="flex gap-5 text-center flex-1">
@@ -888,7 +896,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
             <button class="flex-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-800 py-1.5">Seguir</button>
             <button class="flex-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-800 py-1.5">Mensagem</button>
             <button class="w-8 rounded-lg bg-gray-100 flex items-center justify-center">
-              <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
           </div>
         </div>
@@ -919,21 +927,21 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
                  :class="idx === 4 ? 'ring-2 ring-brand-500 ring-inset' : ''">
               <img x-show="img" :src="img" class="w-full h-full object-cover" @error="this.style.display='none'">
               <div x-show="!img" class="w-full h-full bg-gray-100"></div>
-              <div x-show="idx === 4" class="absolute top-1 right-1 bg-brand-500 text-white text-[8px] font-bold px-1 rounded">NOVO</div>
+              <div x-show="idx === 4" class="absolute top-1 right-1 bg-brand-500 text-gray-950 text-[8px] font-bold px-1 rounded">NOVO</div>
             </div>
           </template>
         </div>
       </div>
 
       <!-- Close button -->
-      <button @click="close()"
+      <button @click="close()" aria-label="Fechar"
               class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
 
       <!-- Label -->
       <div class="absolute bottom-0 left-0 right-0 text-center py-2 bg-white border-t border-gray-100">
-        <p class="text-[10px] text-gray-400">Simulação — não representa o Instagram real</p>
+        <p class="text-[10px] text-gray-500">Simulação — não representa o Instagram real</p>
       </div>
     </div>
   </div>

@@ -3,7 +3,7 @@
 
 <?php
 $statusLabels = ['trialing' => 'Trial', 'active' => 'Ativa', 'past_due' => 'Atrasada', 'cancelled' => 'Cancelada', 'suspended' => 'Suspensa', 'none' => 'Sem plano'];
-$statusColors = ['trialing' => 'text-blue-300 bg-blue-500/10', 'active' => 'text-green-300 bg-green-500/10', 'past_due' => 'text-red-300 bg-red-500/10', 'cancelled' => 'text-gray-500 bg-gray-700/20', 'suspended' => 'text-orange-300 bg-orange-500/10', 'none' => 'text-gray-400 bg-gray-500/10'];
+$statusColors = ['trialing' => 'text-blue-300 bg-blue-500/10', 'active' => 'text-green-300 bg-green-500/10', 'past_due' => 'text-red-300 bg-red-500/10', 'cancelled' => 'text-gray-400 bg-gray-700/20', 'suspended' => 'text-orange-300 bg-orange-500/10', 'none' => 'text-gray-400 bg-gray-500/10'];
 $tierColors   = ['free' => 'text-gray-300', 'starter' => 'text-blue-300', 'pro' => 'text-brand-300', 'enterprise' => 'text-yellow-300'];
 $tc           = $tierColors[$subscription['plan_slug'] ?? ''] ?? 'text-gray-300';
 
@@ -33,15 +33,15 @@ $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accoun
         ? 'R$ ' . number_format($subscription['price_monthly'], 0, ',', '.')
         : 'Grátis' ?>
       <?php if (($subscription['price_monthly'] ?? 0) > 0): ?>
-      <span class="text-base font-normal text-gray-500">/mês</span>
+      <span class="text-base font-normal text-gray-400">/mês</span>
       <?php endif; ?>
     </p>
     <?php if ($subscription['description'] ?? null): ?>
-    <p class="text-sm text-gray-500"><?= e($subscription['description']) ?></p>
+    <p class="text-sm text-gray-400"><?= e($subscription['description']) ?></p>
     <?php endif; ?>
 
     <?php if ($subscription['current_period_end'] ?? null): ?>
-    <p class="text-xs text-gray-600 mt-4">
+    <p class="text-xs text-gray-400 mt-4">
       Próxima renovação: <?= date('d/m/Y', strtotime($subscription['current_period_end'])) ?>
     </p>
     <?php endif; ?>
@@ -67,9 +67,9 @@ $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accoun
           <span class="text-sm font-medium <?= $data['over'] ? 'text-red-400' : 'text-gray-300' ?>">
             <?= $data['current'] ?>
             <?php if ($data['limit'] !== null): ?>
-            <span class="text-gray-600">/ <?= $data['limit'] ?></span>
+            <span class="text-gray-400">/ <?= $data['limit'] ?></span>
             <?php else: ?>
-            <span class="text-gray-600">/ ∞</span>
+            <span class="text-gray-400">/ ∞</span>
             <?php endif; ?>
           </span>
         </div>
@@ -121,10 +121,10 @@ $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accoun
 
     <p class="text-2xl font-bold text-white mb-0.5">
       <?= $p['price_monthly'] > 0 ? 'R$ ' . number_format($p['price_monthly'], 0, ',', '.') : 'Grátis' ?>
-      <?php if ($p['price_monthly'] > 0): ?><span class="text-sm font-normal text-gray-500">/mês</span><?php endif; ?>
+      <?php if ($p['price_monthly'] > 0): ?><span class="text-sm font-normal text-gray-400">/mês</span><?php endif; ?>
     </p>
     <?php if ($p['price_yearly'] > 0): ?>
-    <p class="text-xs text-gray-500 mb-3">R$ <?= number_format($p['price_yearly'], 0, ',', '.') ?>/ano</p>
+    <p class="text-xs text-gray-400 mb-3">R$ <?= number_format($p['price_yearly'], 0, ',', '.') ?>/ano</p>
     <?php else: ?><div class="mb-3"></div><?php endif; ?>
 
     <!-- Limites -->
@@ -133,7 +133,7 @@ $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accoun
       $limits = ['Clientes' => $p['max_clients'], 'Usuários' => $p['max_users'], 'Meta Ads' => $p['max_meta_accounts'], 'Orgânico' => $p['max_organic_accounts']];
       foreach ($limits as $lbl => $val): ?>
       <div class="flex justify-between">
-        <span class="text-gray-600"><?= $lbl ?></span>
+        <span class="text-gray-400"><?= $lbl ?></span>
         <span class="text-gray-400"><?= $val ?? '∞' ?></span>
       </div>
       <?php endforeach; ?>
@@ -154,7 +154,7 @@ $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accoun
 
     <?php if (!$isCurrent): ?>
     <div class="mt-auto">
-      <p class="text-xs text-gray-500 text-center">
+      <p class="text-xs text-gray-400 text-center">
         Entre em contato com o suporte para fazer upgrade.
       </p>
     </div>
@@ -170,18 +170,18 @@ $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accoun
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-white/[0.06]">
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Data</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Evento</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Plano</th>
-        <th class="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Valor</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Data</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Evento</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Plano</th>
+        <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Valor</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-white/[0.03]">
       <?php foreach ($events as $ev): ?>
       <tr class="hover:bg-white/[0.02]">
-        <td class="px-5 py-3 text-gray-500 text-xs"><?= date('d/m/Y H:i', strtotime($ev['created_at'])) ?></td>
+        <td class="px-5 py-3 text-gray-400 text-xs"><?= date('d/m/Y H:i', strtotime($ev['created_at'])) ?></td>
         <td class="px-5 py-3 text-gray-300"><?= e($ev['description']) ?></td>
-        <td class="px-5 py-3 text-gray-500 text-xs"><?= e($ev['plan_name'] ?? '—') ?></td>
+        <td class="px-5 py-3 text-gray-400 text-xs"><?= e($ev['plan_name'] ?? '—') ?></td>
         <td class="px-5 py-3 text-right font-medium text-gray-300">
           <?= $ev['amount'] > 0 ? 'R$ ' . number_format($ev['amount'], 2, ',', '.') : '—' ?>
         </td>

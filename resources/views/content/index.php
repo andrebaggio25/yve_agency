@@ -16,7 +16,7 @@
       Calendário
     </a>
     <a href="/conteudo/criar"
-       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95">
+       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Novo Plano
     </a>
@@ -28,7 +28,7 @@
     <form method="GET" action="/conteudo" class="flex flex-wrap gap-3 items-end">
       <div class="flex-1 min-w-[140px]">
         <label class="block text-xs font-medium text-gray-400 mb-1">Cliente</label>
-        <select name="client_id"
+        <select aria-label="Cliente" name="client_id"
                 class="w-full rounded-lg bg-white/5 border border-white/10 text-sm text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/50">
           <option value="">Todos</option>
           <?php foreach ($clientList as $c): ?>
@@ -40,7 +40,7 @@
       </div>
       <div class="flex-1 min-w-[120px]">
         <label class="block text-xs font-medium text-gray-400 mb-1">Status</label>
-        <select name="status"
+        <select aria-label="Situação" name="status"
                 class="w-full rounded-lg bg-white/5 border border-white/10 text-sm text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/50">
           <option value="">Todos</option>
           <option value="draft"    <?= ($filters['status'] ?? '') === 'draft'    ? 'selected' : '' ?>>Rascunho</option>
@@ -51,11 +51,11 @@
       </div>
       <div class="flex-1 min-w-[140px]">
         <label class="block text-xs font-medium text-gray-400 mb-1">A partir de</label>
-        <input type="date" name="week_start" value="<?= e($filters['week_start'] ?? '') ?>"
+        <input aria-label="A partir de" type="date" name="week_start" value="<?= e($filters['week_start'] ?? '') ?>"
                class="w-full rounded-lg bg-white/5 border border-white/10 text-sm text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/50">
       </div>
       <button type="submit"
-              class="rounded-lg bg-brand-600/80 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 transition-colors">
+              class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-gray-950 hover:bg-brand-500 transition-colors">
         Filtrar
       </button>
       <a href="/conteudo" class="rounded-lg border border-white/10 px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
@@ -76,7 +76,7 @@
     <p class="text-gray-400 text-sm mb-6">Crie seu primeiro plano de conteúdo semanal.</p>
     <?php if (\App\Support\Auth::can('content.create')): ?>
     <a href="/conteudo/criar"
-       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 hover:bg-brand-500 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Criar Plano
     </a>
@@ -105,12 +105,12 @@
     <div class="flex justify-end mb-3">
       <div class="inline-flex rounded-lg border border-white/10 overflow-hidden">
         <button type="button" @click="setView('list')"
-                :class="view === 'list' ? 'bg-white/[0.08] text-white' : 'text-gray-500 hover:text-gray-300'"
+                :class="view === 'list' ? 'bg-white/[0.08] text-white' : 'text-gray-400 hover:text-gray-300'"
                 class="px-3 py-1.5 text-xs font-medium transition-colors" aria-label="Ver em lista">
           Lista
         </button>
         <button type="button" @click="setView('cards')"
-                :class="view === 'cards' ? 'bg-white/[0.08] text-white' : 'text-gray-500 hover:text-gray-300'"
+                :class="view === 'cards' ? 'bg-white/[0.08] text-white' : 'text-gray-400 hover:text-gray-300'"
                 class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-white/10" aria-label="Ver em cards">
           Cards
         </button>
@@ -122,7 +122,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-xs uppercase tracking-wide text-gray-500 border-b border-white/[0.06]">
+            <tr class="text-xs uppercase tracking-wide text-gray-400 border-b border-white/[0.06]">
               <th class="text-left font-medium px-4 py-3">Plano</th>
               <th class="text-left font-medium px-4 py-3">Cliente</th>
               <th class="text-left font-medium px-4 py-3">Período</th>
@@ -146,7 +146,7 @@
                 </a>
               </td>
               <td class="px-4 py-3 text-gray-400"><?= e($plan['client_name']) ?></td>
-              <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
+              <td class="px-4 py-3 text-gray-400 whitespace-nowrap">
                 <?= date('d/m', strtotime($plan['week_start'])) ?> – <?= date('d/m/Y', strtotime($plan['week_end'])) ?>
               </td>
               <td class="px-4 py-3">
@@ -155,10 +155,10 @@
                     <div class="h-1.5 flex-1 rounded-full bg-white/5 overflow-hidden">
                       <div class="h-full rounded-full bg-brand-500" style="width: <?= $pct ?>%"></div>
                     </div>
-                    <span class="text-xs text-gray-500 tabular-nums whitespace-nowrap"><?= $approved ?>/<?= $total ?></span>
+                    <span class="text-xs text-gray-400 tabular-nums whitespace-nowrap"><?= $approved ?>/<?= $total ?></span>
                   </div>
                 <?php else: ?>
-                  <span class="text-xs text-gray-600">Sem itens</span>
+                  <span class="text-xs text-gray-400">Sem itens</span>
                 <?php endif; ?>
               </td>
               <td class="px-4 py-3">
@@ -192,7 +192,7 @@
           <span class="inline-block w-1.5 h-1.5 rounded-full <?= $sc['dot'] ?>"></span>
           <?= $statusLabel ?>
         </span>
-        <svg class="w-4 h-4 text-gray-600 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-gray-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
       </div>
@@ -209,7 +209,7 @@
       </p>
 
       <!-- Date range -->
-      <div class="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
+      <div class="flex items-center gap-1.5 text-xs text-gray-400 mb-4">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
@@ -230,7 +230,7 @@
       </div>
       <?php else: ?>
       <div class="mt-auto">
-        <p class="text-xs text-gray-600">Sem itens ainda</p>
+        <p class="text-xs text-gray-400">Sem itens ainda</p>
       </div>
       <?php endif; ?>
     </a>

@@ -26,11 +26,11 @@ $methodLabels = ['pix'=>'PIX','boleto'=>'Boleto','credit_card'=>'Cartão de Cré
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/5 bg-white/[0.02]">
-          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Data</th>
-          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Fatura</th>
-          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Cliente</th>
-          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Método</th>
-          <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Valor</th>
+          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Data</th>
+          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Fatura</th>
+          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cliente</th>
+          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Método</th>
+          <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Valor</th>
           <th class="px-5 py-3.5"></th>
         </tr>
       </thead>
@@ -40,7 +40,7 @@ $methodLabels = ['pix'=>'PIX','boleto'=>'Boleto','credit_card'=>'Cartão de Cré
           <td class="px-5 py-4 text-gray-300"><?= date('d/m/Y', strtotime($p['payment_date'])) ?></td>
           <td class="px-5 py-4">
             <a href="/faturas/<?= $p['invoice_id'] ?>" class="text-white hover:text-brand-300 transition-colors"><?= e($p['invoice_title']) ?></a>
-            <p class="text-xs text-gray-500 font-mono"><?= e($p['invoice_number']) ?></p>
+            <p class="text-xs text-gray-400 font-mono"><?= e($p['invoice_number']) ?></p>
           </td>
           <td class="px-5 py-4 text-gray-400"><?= e($p['client_name']) ?></td>
           <td class="px-5 py-4 text-gray-400"><?= $methodLabels[$p['payment_method']] ?? $p['payment_method'] ?></td>

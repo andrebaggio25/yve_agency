@@ -4,7 +4,7 @@
 
 <div class="max-w-4xl mx-auto">
   <div class="mb-8">
-    <a href="/faturas/<?= $invoice['id'] ?>" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Fatura</a>
+    <a href="/faturas/<?= $invoice['id'] ?>" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">← Fatura</a>
     <h1 class="text-2xl font-bold text-white mt-2">Editar Fatura</h1>
     <p class="text-sm text-gray-400 mt-1"><?= e($invoice['title']) ?></p>
   </div>
@@ -19,7 +19,7 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Cliente <span class="text-red-400">*</span></label>
-          <select name="client_id" required class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
+          <select aria-label="Cliente" name="client_id" required class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
             <?php foreach ($clients as $cl): ?>
             <option value="<?= $cl['id'] ?>" <?= (string)$invoice['client_id'] === (string)$cl['id'] ? 'selected' : '' ?>><?= e($cl['name']) ?></option>
             <?php endforeach; ?>
@@ -38,13 +38,13 @@
 
         <div class="sm:col-span-2">
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Título <span class="text-red-400">*</span></label>
-          <input type="text" name="title" value="<?= e($invoice['title']) ?>" required
+          <input aria-label="Título" type="text" name="title" value="<?= e($invoice['title']) ?>" required
             class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Status</label>
-          <select name="status" class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
+          <select aria-label="Situação" name="status" class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
             <?php foreach (['draft'=>'Rascunho','sent'=>'Enviada','cancelled'=>'Cancelada'] as $v => $l): ?>
             <option value="<?= $v ?>" <?= $invoice['status'] === $v ? 'selected' : '' ?>><?= $l ?></option>
             <?php endforeach; ?>
@@ -68,7 +68,7 @@
 
         <div class="sm:col-span-2">
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Notas</label>
-          <textarea name="notes" rows="2"
+          <textarea aria-label="Observações" name="notes" rows="2"
             class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors resize-none"><?= e($invoice['notes'] ?? '') ?></textarea>
         </div>
       </div>
@@ -94,7 +94,7 @@
                 class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white focus:border-brand-500 focus:outline-none transition-colors">
             </div>
             <div class="col-span-1 flex items-center justify-end pt-1">
-              <button type="button" @click="removeItem(i)" class="text-gray-500 hover:text-red-400 transition-colors">
+              <button type="button" @click="removeItem(i)" class="text-gray-400 hover:text-red-400 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
@@ -131,7 +131,7 @@
 
     <div class="flex items-center justify-end gap-3">
       <a href="/faturas/<?= $invoice['id'] ?>" class="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-medium text-gray-300 hover:text-white transition-all">Cancelar</a>
-      <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
+      <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
         Salvar Alterações
       </button>
     </div>

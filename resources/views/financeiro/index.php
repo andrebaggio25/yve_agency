@@ -32,7 +32,7 @@ $maxVal = max(array_values($monthly)) ?: 1;
       </a>
       <?php endif; ?>
       <?php if (\App\Support\Auth::can('invoices.create')): ?>
-      <a href="/faturas/nova" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
+      <a href="/faturas/nova" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Nova Fatura
       </a>
@@ -56,7 +56,7 @@ $maxVal = max(array_values($monthly)) ?: 1;
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
       <p class="text-xs text-gray-400 mb-1"><?= e($k['label']) ?></p>
       <p class="text-2xl font-bold text-white"><?= e($k['value']) ?></p>
-      <p class="text-xs text-gray-500 mt-1"><?= e($k['sub']) ?></p>
+      <p class="text-xs text-gray-400 mt-1"><?= e($k['sub']) ?></p>
     </div>
     <?php endforeach; ?>
   </div>
@@ -80,7 +80,7 @@ $maxVal = max(array_values($monthly)) ?: 1;
         <p class="text-xs text-gray-400 mt-0.5">Pagamentos registrados por mês</p>
       </div>
       <form method="GET">
-        <select name="year" onchange="this.form.submit()"
+        <select aria-label="Ano" name="year" onchange="this.form.submit()"
           class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-3 py-1.5 focus:border-brand-500 focus:outline-none">
           <?php for ($y = (int)date('Y'); $y >= (int)date('Y') - 3; $y--): ?>
           <option value="<?= $y ?>" <?= $y === (int)$year ? 'selected' : '' ?>><?= $y ?></option>
@@ -98,7 +98,7 @@ $maxVal = max(array_values($monthly)) ?: 1;
             <?= fmtBrl($val) ?>
           </div>
         </div>
-        <span class="text-[10px] text-gray-500"><?= $months[$m - 1] ?></span>
+        <span class="text-[10px] text-gray-400"><?= $months[$m - 1] ?></span>
       </div>
       <?php endforeach; ?>
     </div>
@@ -126,7 +126,7 @@ $maxVal = max(array_values($monthly)) ?: 1;
         <p class="text-xs text-gray-400 mt-0.5"><?= (int)$s['total'] ?> registros</p>
         <?php endif; ?>
       </div>
-      <svg class="w-4 h-4 text-gray-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      <svg class="w-4 h-4 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     </a>
     <?php endforeach; ?>
   </div>

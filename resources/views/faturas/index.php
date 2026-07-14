@@ -20,7 +20,7 @@ $statusLabels = [
       <p class="mt-1 text-sm text-gray-400"><?= $paginated['total'] ?> fatura<?= $paginated['total'] !== 1 ? 's' : '' ?></p>
     </div>
     <?php if (\App\Support\Auth::can('invoices.create')): ?>
-    <a href="/faturas/nova" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 hover:scale-105 active:scale-95 transition-all">
+    <a href="/faturas/nova" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 hover:scale-105 active:scale-95 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Nova Fatura
     </a>
@@ -36,15 +36,15 @@ $statusLabels = [
     $filterBase = '?' . http_build_query(array_filter(['q' => $qFilter, 'client_id' => $clientFilter, 'status' => $statusFilter]));
   ?>
   <form method="GET" class="mb-6 flex flex-wrap gap-3 items-end">
-    <input type="text" name="q" value="<?= e($qFilter) ?>" placeholder="Buscar..."
+    <input aria-label="Buscar" type="text" name="q" value="<?= e($qFilter) ?>" placeholder="Buscar..."
       class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none w-52">
-    <select name="client_id" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
+    <select aria-label="Cliente" name="client_id" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
       <option value="">Todos os clientes</option>
       <?php foreach ($clients as $cl): ?>
       <option value="<?= $cl['id'] ?>" <?= $clientFilter == $cl['id'] ? 'selected' : '' ?>><?= e($cl['name']) ?></option>
       <?php endforeach; ?>
     </select>
-    <select name="status" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
+    <select aria-label="Situação" name="status" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
       <option value="">Todos os status</option>
       <?php foreach ($statusLabels as $val => [$lbl, $_]): ?>
       <option value="<?= $val ?>" <?= $statusFilter === $val ? 'selected' : '' ?>><?= $lbl ?></option>
@@ -73,13 +73,13 @@ $statusLabels = [
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/5 bg-white/[0.02]">
-          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nº</th>
-          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Título</th>
-          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Cliente</th>
-          <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Total</th>
-          <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Recebido</th>
-          <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
-          <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">Vencimento</th>
+          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Nº</th>
+          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Título</th>
+          <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cliente</th>
+          <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Total</th>
+          <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Recebido</th>
+          <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Status</th>
+          <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Vencimento</th>
           <th class="px-5 py-3.5"></th>
         </tr>
       </thead>
@@ -95,7 +95,7 @@ $statusLabels = [
           </td>
           <td class="px-5 py-4 text-gray-400"><?= e($inv['client_name']) ?></td>
           <td class="px-5 py-4 text-right font-mono text-white">R$ <?= number_format((float)$inv['total'], 2, ',', '.') ?></td>
-          <td class="px-5 py-4 text-right font-mono <?= (float)$inv['amount_paid'] > 0 ? 'text-emerald-400' : 'text-gray-600' ?>">
+          <td class="px-5 py-4 text-right font-mono <?= (float)$inv['amount_paid'] > 0 ? 'text-emerald-400' : 'text-gray-400' ?>">
             R$ <?= number_format((float)$inv['amount_paid'], 2, ',', '.') ?>
           </td>
           <td class="px-5 py-4 text-center">
@@ -138,7 +138,7 @@ $statusLabels = [
     <?php for ($p = 1; $p <= $paginated['pages']; $p++): ?>
     <a href="/faturas?<?= $filterStr ?>page=<?= $p ?>"
        class="flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors
-              <?= $p === $paginated['page'] ? 'bg-brand-600 text-white font-semibold' : 'border border-white/10 text-gray-400 hover:border-brand-500/50 hover:text-white' ?>">
+              <?= $p === $paginated['page'] ? 'bg-brand-600 text-gray-950 font-semibold' : 'border border-white/10 text-gray-400 hover:border-brand-500/50 hover:text-gray-950' ?>">
       <?= $p ?>
     </a>
     <?php endfor; ?>

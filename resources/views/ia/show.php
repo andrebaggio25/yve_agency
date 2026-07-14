@@ -2,7 +2,7 @@
 <?php view_start('content'); ?>
 
 <!-- Breadcrumb -->
-<nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+<nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
   <a href="/ia" class="hover:text-gray-300">IA Insights</a>
   <span>/</span>
   <span class="text-gray-300">Insight #<?= $insight['id'] ?></span>
@@ -29,19 +29,19 @@
         <span><?= e($insight['account_name']) ?></span>
         <?php endif; ?>
         <?php if ($insight['client_name']): ?>
-        <span class="text-gray-600">·</span>
+        <span class="text-gray-400">·</span>
         <span><?= e($insight['client_name']) ?></span>
         <?php endif; ?>
         <?php if ($insight['period_start']): ?>
-        <span class="text-gray-600">·</span>
+        <span class="text-gray-400">·</span>
         <span><?= date('d/m/Y', strtotime($insight['period_start'])) ?> – <?= date('d/m/Y', strtotime($insight['period_end'])) ?></span>
         <?php endif; ?>
       </div>
     </div>
     <div class="text-right flex-shrink-0">
-      <p class="text-xs text-gray-500"><?= date('d/m/Y H:i', strtotime($insight['created_at'])) ?></p>
+      <p class="text-xs text-gray-400"><?= date('d/m/Y H:i', strtotime($insight['created_at'])) ?></p>
       <?php if ($insight['ai_provider']): ?>
-      <p class="text-xs text-gray-600 mt-0.5">
+      <p class="text-xs text-gray-400 mt-0.5">
         <?= $insight['ai_provider'] === 'openai' ? 'OpenAI' : 'Claude' ?> · <?= e($insight['model'] ?? '') ?>
       </p>
       <?php endif; ?>

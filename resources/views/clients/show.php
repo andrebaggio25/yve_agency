@@ -32,7 +32,7 @@
         <?= t('clients.manage_access') ?>
       </a>
       <a href="/clientes/<?= e($client['id']) ?>/editar"
-         class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
+         class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         <?= t('common.edit') ?>
       </a>
@@ -47,21 +47,21 @@
         : 'text-gray-400 bg-white/5 border-white/5';
     ?>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <p class="text-xs text-gray-500 mb-1"><?= t('clients.status') ?></p>
+      <p class="text-xs text-gray-400 mb-1"><?= t('clients.status') ?></p>
       <p class="font-semibold <?= $statusCls ?>">
         <?= $client['status'] === 'active' ? t('status.active') : t('status.inactive') ?>
       </p>
     </div>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <p class="text-xs text-gray-500 mb-1"><?= t('clients.currency') ?></p>
+      <p class="text-xs text-gray-400 mb-1"><?= t('clients.currency') ?></p>
       <p class="font-semibold text-white"><?= e($client['currency_code'] ?? 'BRL') ?></p>
     </div>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <p class="text-xs text-gray-500 mb-1"><?= t('clients.approval_language') ?></p>
+      <p class="text-xs text-gray-400 mb-1"><?= t('clients.approval_language') ?></p>
       <p class="font-semibold text-white"><?= e(strtoupper($client['language'] ?? 'pt')) ?></p>
     </div>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <p class="text-xs text-gray-500 mb-1"><?= t('clients.since') ?></p>
+      <p class="text-xs text-gray-400 mb-1"><?= t('clients.since') ?></p>
       <p class="font-semibold text-white"><?= date_fmt($client['created_at'], 'd/m/Y') ?></p>
     </div>
   </div>
@@ -98,7 +98,7 @@
       <input type="hidden" name="force" value="1">
       <button type="submit" class="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 hover:text-white hover:border-brand-500/40 transition-all">Recriar pasta</button>
       <?php else: ?>
-      <button type="submit" class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">Criar pasta</button>
+      <button type="submit" class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">Criar pasta</button>
       <?php endif; ?>
     </form>
     <?php endif; ?>
@@ -107,14 +107,14 @@
 
   <?php if (!empty($recentPlans)): ?>
   <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
-    <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500 mb-4"><?= t('content.recent_plans') ?></h2>
+    <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4"><?= t('content.recent_plans') ?></h2>
     <div class="space-y-3">
       <?php foreach ($recentPlans as $plan): ?>
       <a href="/conteudo/<?= e($plan['id']) ?>"
          class="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 hover:border-brand-500/20 transition-all">
         <div>
           <p class="text-sm font-medium text-white"><?= e($plan['title']) ?></p>
-          <p class="text-xs text-gray-500"><?= date_fmt($plan['week_start'], 'd/m') ?> – <?= date_fmt($plan['week_end'], 'd/m/Y') ?></p>
+          <p class="text-xs text-gray-400"><?= date_fmt($plan['week_start'], 'd/m') ?> – <?= date_fmt($plan['week_end'], 'd/m/Y') ?></p>
         </div>
         <?php
           $colors = ['draft'=>'text-gray-400','sent'=>'text-blue-300','approved'=>'text-emerald-300','revision'=>'text-amber-300'];
@@ -130,11 +130,11 @@
 
 <!-- Portal do Cliente -->
 <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 mt-6">
-  <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500 mb-4">Portal do Cliente</h2>
+  <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4">Portal do Cliente</h2>
   <?php if ($client['portal_token']): ?>
   <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
     <div class="flex-1 min-w-0">
-      <p class="text-xs text-gray-500 mb-1">Link de acesso</p>
+      <p class="text-xs text-gray-400 mb-1">Link de acesso</p>
       <div class="flex items-center gap-2">
         <code class="text-xs text-brand-300 bg-brand-500/10 px-3 py-1.5 rounded-lg truncate max-w-xs font-mono">
           <?= rtrim(env('APP_URL', ''), '/') ?>/portal/<?= e($client['portal_token']) ?>
@@ -151,7 +151,7 @@
       </div>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
-      <span class="text-xs <?= $client['portal_enabled'] ? 'text-green-400' : 'text-gray-500' ?>">
+      <span class="text-xs <?= $client['portal_enabled'] ? 'text-green-400' : 'text-gray-400' ?>">
         <?= $client['portal_enabled'] ? 'Ativo' : 'Desativado' ?>
       </span>
     </div>
@@ -172,7 +172,7 @@
     </form>
   </div>
   <?php else: ?>
-  <p class="text-sm text-gray-500">Nenhum link gerado ainda.</p>
+  <p class="text-sm text-gray-400">Nenhum link gerado ainda.</p>
   <form method="POST" action="/clientes/<?= $client['id'] ?>/portal/regenerar" class="mt-3">
     <?= csrf_field() ?>
     <button class="text-sm text-brand-400 hover:text-brand-300">Gerar link de acesso</button>

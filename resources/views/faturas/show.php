@@ -17,7 +17,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
   <!-- Header -->
   <div class="flex items-start justify-between">
     <div>
-      <a href="/faturas" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Faturas</a>
+      <a href="/faturas" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">← Faturas</a>
       <div class="mt-2 flex items-center gap-3">
         <h1 class="text-2xl font-bold text-white"><?= e($invoice['title']) ?></h1>
         <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 <?= $icls ?>"><?= $ilabel ?></span>
@@ -55,12 +55,12 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
             <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1.5">E-mail do destinatário <span class="text-red-400">*</span></label>
-                <input type="email" name="email" required autofocus
+                <input aria-label="E-mail" type="email" name="email" required autofocus
                   class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1.5">Nome do destinatário</label>
-                <input type="text" name="name" value="<?= e($invoice['client_name']) ?>"
+                <input aria-label="Nome" type="text" name="name" value="<?= e($invoice['client_name']) ?>"
                   class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
               </div>
             </div>
@@ -68,7 +68,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
               <button type="button" @click="emailModal = false"
                 class="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-300 hover:text-white transition-colors">Cancelar</button>
               <button type="submit"
-                class="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-all">Enviar</button>
+                class="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-gray-950 hover:bg-brand-500 transition-all">Enviar</button>
             </div>
           </form>
         </div>
@@ -101,10 +101,10 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/5 bg-white/[0.02]">
-          <th class="px-6 py-3 text-left text-xs text-gray-500">Descrição</th>
-          <th class="px-6 py-3 text-right text-xs text-gray-500">Qtd</th>
-          <th class="px-6 py-3 text-right text-xs text-gray-500">Preço Unit.</th>
-          <th class="px-6 py-3 text-right text-xs text-gray-500">Total</th>
+          <th class="px-6 py-3 text-left text-xs text-gray-400">Descrição</th>
+          <th class="px-6 py-3 text-right text-xs text-gray-400">Qtd</th>
+          <th class="px-6 py-3 text-right text-xs text-gray-400">Preço Unit.</th>
+          <th class="px-6 py-3 text-right text-xs text-gray-400">Total</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-white/[0.04]">
@@ -140,7 +140,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
       <?php endif; ?>
     </div>
     <?php else: ?>
-    <p class="px-6 py-8 text-sm text-gray-500 text-center">Nenhum item nesta fatura.</p>
+    <p class="px-6 py-8 text-sm text-gray-400 text-center">Nenhum item nesta fatura.</p>
     <?php endif; ?>
   </div>
 
@@ -160,10 +160,10 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/5 bg-white/[0.02]">
-          <th class="px-6 py-3 text-left text-xs text-gray-500">Data</th>
-          <th class="px-6 py-3 text-left text-xs text-gray-500">Método</th>
-          <th class="px-6 py-3 text-left text-xs text-gray-500">Referência</th>
-          <th class="px-6 py-3 text-right text-xs text-gray-500">Valor</th>
+          <th class="px-6 py-3 text-left text-xs text-gray-400">Data</th>
+          <th class="px-6 py-3 text-left text-xs text-gray-400">Método</th>
+          <th class="px-6 py-3 text-left text-xs text-gray-400">Referência</th>
+          <th class="px-6 py-3 text-right text-xs text-gray-400">Valor</th>
           <th class="px-6 py-3"></th>
         </tr>
       </thead>
@@ -174,7 +174,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
         <tr class="group">
           <td class="px-6 py-3 text-gray-300"><?= date('d/m/Y', strtotime($p['payment_date'])) ?></td>
           <td class="px-6 py-3 text-gray-400"><?= $methodLabels[$p['payment_method']] ?? $p['payment_method'] ?></td>
-          <td class="px-6 py-3 text-gray-500 text-xs"><?= e($p['reference'] ?? '—') ?></td>
+          <td class="px-6 py-3 text-gray-400 text-xs"><?= e($p['reference'] ?? '—') ?></td>
           <td class="px-6 py-3 text-right text-emerald-400 font-mono">R$ <?= number_format((float)$p['amount'], 2, ',', '.') ?></td>
           <td class="px-6 py-3 text-right">
             <?php if (\App\Support\Auth::can('payments.delete')): ?>
@@ -190,7 +190,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
       </tbody>
     </table>
     <?php else: ?>
-    <p class="px-6 py-8 text-sm text-gray-500 text-center">Nenhum pagamento registrado.</p>
+    <p class="px-6 py-8 text-sm text-gray-400 text-center">Nenhum pagamento registrado.</p>
     <?php endif; ?>
   </div>
 

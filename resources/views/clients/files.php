@@ -29,18 +29,18 @@
     <button @click="goTo(null)" class="text-gray-400 hover:text-white transition-colors">Início</button>
     <template x-for="crumb in breadcrumb" :key="crumb.id">
       <span class="flex items-center gap-1.5">
-        <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         <button @click="goTo(crumb.id)" class="text-gray-400 hover:text-white transition-colors" x-text="crumb.name"></button>
       </span>
     </template>
   </div>
 
-  <div x-show="loading" class="py-10 text-center text-sm text-gray-500">Carregando…</div>
+  <div x-show="loading" class="py-10 text-center text-sm text-gray-400">Carregando…</div>
 
   <template x-if="!loading">
     <div>
       <div x-show="folders.length === 0 && files.length === 0" class="py-16 text-center rounded-2xl border border-white/5 bg-white/[0.02]">
-        <p class="text-sm text-gray-500">Nenhum conteúdo nesta pasta ainda.</p>
+        <p class="text-sm text-gray-400">Nenhum conteúdo nesta pasta ainda.</p>
       </div>
 
       <!-- Folders -->
@@ -67,7 +67,7 @@
                 <video :src="rawUrl(file)" preload="metadata" muted class="w-full h-full object-cover"></video>
               </template>
               <template x-if="!file.is_image && !file.is_video">
-                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               </template>
               <div x-show="file.is_video" class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <span class="w-9 h-9 rounded-full bg-black/50 flex items-center justify-center">
@@ -77,7 +77,7 @@
             </div>
             <div class="px-2 py-1.5">
               <p class="text-[11px] text-gray-300 truncate" x-text="file.name"></p>
-              <p class="text-[10px] text-gray-600" x-text="humanSize(file.size_bytes)"></p>
+              <p class="text-[10px] text-gray-400" x-text="humanSize(file.size_bytes)"></p>
             </div>
           </button>
         </template>
@@ -103,7 +103,7 @@
       <template x-if="preview.file && !preview.file.is_image && !preview.file.is_video">
         <div class="text-center">
           <p class="text-sm text-gray-300 mb-3" x-text="preview.file.name"></p>
-          <a :href="rawUrl(preview.file)" target="_blank" rel="noopener" class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white inline-flex">Abrir / baixar</a>
+          <a :href="rawUrl(preview.file)" target="_blank" rel="noopener" class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-gray-950 inline-flex">Abrir / baixar</a>
         </div>
       </template>
       <p class="text-xs text-gray-400 mt-3 text-center" x-text="preview.file ? preview.file.name : ''"></p>

@@ -13,7 +13,7 @@
 <form method="GET" class="card p-5 mb-6 flex flex-wrap items-end gap-4">
   <div class="flex-1 min-w-48">
     <label class="label-field">Conta de anúncios</label>
-    <select name="account_id" class="input-field w-full">
+    <select aria-label="Conta" name="account_id" class="input-field w-full">
       <option value="">Selecione…</option>
       <?php foreach ($accounts as $a): ?>
       <option value="<?= $a['id'] ?>" <?= $accountId == $a['id'] ? 'selected' : '' ?>>
@@ -24,21 +24,21 @@
   </div>
   <div>
     <label class="label-field">De</label>
-    <input type="date" name="since" value="<?= e($since) ?>" class="input-field w-40">
+    <input aria-label="Data inicial" type="date" name="since" value="<?= e($since) ?>" class="input-field w-40">
   </div>
   <div>
     <label class="label-field">Até</label>
-    <input type="date" name="until" value="<?= e($until) ?>" class="input-field w-40">
+    <input aria-label="Data final" type="date" name="until" value="<?= e($until) ?>" class="input-field w-40">
   </div>
   <button type="submit" class="btn-primary text-sm px-5 py-2.5">Analisar</button>
 </form>
 
 <?php if (!$accountId): ?>
-<div class="card p-10 text-center text-gray-500">
+<div class="card p-10 text-center text-gray-400">
   Selecione uma conta para gerar recomendações.
 </div>
 <?php elseif (empty($suggestions)): ?>
-<div class="card p-10 text-center text-gray-500">
+<div class="card p-10 text-center text-gray-400">
   Nenhuma recomendação gerada — pode não haver métricas suficientes no período ou a IA não identificou otimizações.
 </div>
 <?php else: ?>
@@ -87,11 +87,11 @@
           <?php if ($s['current_value'] || $s['proposed_value']): ?>
           <div class="mt-3 flex items-center gap-3 text-xs">
             <?php if ($s['current_value']): ?>
-            <span class="text-gray-500">Atual: <span class="text-gray-300"><?= e($s['current_value']) ?></span></span>
+            <span class="text-gray-400">Atual: <span class="text-gray-300"><?= e($s['current_value']) ?></span></span>
             <?php endif; ?>
             <?php if ($s['proposed_value']): ?>
-            <span class="text-gray-600">→</span>
-            <span class="text-gray-500">Proposto: <span class="text-green-400 font-medium"><?= e($s['proposed_value']) ?></span></span>
+            <span class="text-gray-400">→</span>
+            <span class="text-gray-400">Proposto: <span class="text-green-400 font-medium"><?= e($s['proposed_value']) ?></span></span>
             <?php endif; ?>
           </div>
           <?php endif; ?>

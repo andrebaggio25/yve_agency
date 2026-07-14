@@ -12,9 +12,9 @@
 
 <!-- Filters -->
 <form method="GET" action="/admin/usuarios" class="flex items-center gap-3 mb-6">
-  <input type="search" name="q" value="<?= e($search) ?>" placeholder="Buscar por nome ou e-mail..."
+  <input aria-label="Buscar" type="search" name="q" value="<?= e($search) ?>" placeholder="Buscar por nome ou e-mail..."
          class="input-field flex-1 max-w-sm">
-  <select name="agency_id" class="input-field w-48">
+  <select aria-label="Tenant" name="agency_id" class="input-field w-48">
     <option value="">Todos os tenants</option>
     <?php foreach ($agencies as $a): ?>
     <option value="<?= $a['id'] ?>" <?= $agencyId === (int)$a['id'] ? 'selected' : '' ?>><?= e($a['name']) ?></option>
@@ -27,11 +27,11 @@
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-white/[0.06]">
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Usuário</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Tenant</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Perfil</th>
-        <th class="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
-        <th class="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Criado em</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Usuário</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Tenant</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Perfil</th>
+        <th class="text-center px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
+        <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Criado em</th>
         <th class="px-5 py-3"></th>
       </tr>
     </thead>
@@ -40,7 +40,7 @@
       <tr class="hover:bg-white/[0.02] transition-colors">
         <td class="px-5 py-3.5">
           <p class="font-medium text-white"><?= e($u['name']) ?></p>
-          <p class="text-xs text-gray-500"><?= e($u['email']) ?></p>
+          <p class="text-xs text-gray-400"><?= e($u['email']) ?></p>
         </td>
         <td class="px-5 py-3.5">
           <a href="/admin/tenants/<?= $u['agency_id'] ?>/editar" class="text-gray-300 hover:text-white transition-colors text-sm">
@@ -54,17 +54,17 @@
             <?= $u['status'] === 'active' ? 'Ativo' : 'Inativo' ?>
           </span>
         </td>
-        <td class="px-5 py-3.5 text-gray-500 text-xs"><?= date('d/m/Y', strtotime($u['created_at'])) ?></td>
+        <td class="px-5 py-3.5 text-gray-400 text-xs"><?= date('d/m/Y', strtotime($u['created_at'])) ?></td>
         <td class="px-5 py-3.5 text-right">
           <a href="/admin/usuarios/<?= $u['id'] ?>/editar"
-             class="text-xs text-gray-500 hover:text-white border border-white/10 hover:border-white/30 rounded-lg px-3 py-1.5 transition-all">
+             class="text-xs text-gray-400 hover:text-white border border-white/10 hover:border-white/30 rounded-lg px-3 py-1.5 transition-all">
             Editar
           </a>
         </td>
       </tr>
     <?php endforeach; ?>
     <?php if (empty($users)): ?>
-      <tr><td colspan="6" class="px-5 py-10 text-center text-gray-500">Nenhum usuário encontrado.</td></tr>
+      <tr><td colspan="6" class="px-5 py-10 text-center text-gray-400">Nenhum usuário encontrado.</td></tr>
     <?php endif; ?>
     </tbody>
   </table>

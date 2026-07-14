@@ -35,11 +35,11 @@
             <?= $isEvent ? 'evento' : 'agendada' ?>
           </span>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><?= e($r['description'] ?? '') ?></p>
+        <p class="text-xs text-gray-400 mt-1"><?= e($r['description'] ?? '') ?></p>
       </div>
 
       <label class="flex items-center gap-2 cursor-pointer flex-shrink-0">
-        <input type="checkbox" name="status" value="active" <?= $active ? 'checked' : '' ?>
+        <input aria-label="Situação" type="checkbox" name="status" value="active" <?= $active ? 'checked' : '' ?>
                class="w-4 h-4 rounded accent-brand-500">
         <span class="text-sm text-gray-300">Ativa</span>
       </label>
@@ -49,12 +49,12 @@
       <?php if (!$isEvent): ?>
         <div>
           <label class="label-field">Horário</label>
-          <input type="time" name="time" value="<?= e($time) ?>" class="input-field py-1.5">
+          <input aria-label="Horário" type="time" name="time" value="<?= e($time) ?>" class="input-field py-1.5">
         </div>
         <?php if (($r['frequency'] ?? '') === 'weekly'): ?>
         <div>
           <label class="label-field">Dia da semana</label>
-          <select name="day" class="input-field py-1.5">
+          <select aria-label="Dia" name="day" class="input-field py-1.5">
             <?php foreach (['Monday'=>'Segunda','Tuesday'=>'Terça','Wednesday'=>'Quarta','Thursday'=>'Quinta','Friday'=>'Sexta','Saturday'=>'Sábado','Sunday'=>'Domingo'] as $v=>$l): ?>
             <option value="<?= $v ?>" <?= ($r['scheduled_day'] ?? '') === $v ? 'selected' : '' ?>><?= $l ?></option>
             <?php endforeach; ?>
@@ -63,7 +63,7 @@
         <?php elseif (($r['frequency'] ?? '') === 'monthly'): ?>
         <div>
           <label class="label-field">Dia do mês</label>
-          <input type="number" name="day" min="1" max="28" value="<?= e($r['scheduled_day'] ?? '1') ?>" class="input-field py-1.5 w-20">
+          <input aria-label="Dia" type="number" name="day" min="1" max="28" value="<?= e($r['scheduled_day'] ?? '1') ?>" class="input-field py-1.5 w-20">
         </div>
         <?php endif; ?>
         <div>
@@ -73,7 +73,7 @@
           </p>
         </div>
       <?php else: ?>
-        <p class="text-xs text-gray-500">Disparada automaticamente pelo evento correspondente.</p>
+        <p class="text-xs text-gray-400">Disparada automaticamente pelo evento correspondente.</p>
       <?php endif; ?>
 
       <?php if (!empty($r['channels'])): ?>

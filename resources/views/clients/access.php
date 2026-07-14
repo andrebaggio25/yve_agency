@@ -28,13 +28,13 @@
     </div>
 
     <?php if (empty($accesses)): ?>
-    <div class="px-5 py-8 text-center text-sm text-gray-500"><?= t('clients.no_users_linked') ?></div>
+    <div class="px-5 py-8 text-center text-sm text-gray-400"><?= t('clients.no_users_linked') ?></div>
     <?php else: ?>
     <?php foreach ($accesses as $access): ?>
     <div class="flex items-center justify-between px-5 py-3">
       <div>
         <p class="text-sm font-medium text-white"><?= e($access['user_name'] ?? $access['name'] ?? '—') ?></p>
-        <p class="text-xs text-gray-500"><?= e($access['user_email'] ?? $access['email'] ?? '') ?></p>
+        <p class="text-xs text-gray-400"><?= e($access['user_email'] ?? $access['email'] ?? '') ?></p>
       </div>
       <form action="/clientes/<?= e($clientId) ?>/acesso/<?= e($access['user_id'] ?? $access['id']) ?>" method="POST">
         <?= csrf_field() ?>
@@ -60,7 +60,7 @@
         <?php endforeach; ?>
       </select>
       <button type="submit"
-              class="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
+              class="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
         <?= t('common.add') ?>
       </button>
     </form>

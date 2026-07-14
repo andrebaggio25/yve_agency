@@ -18,11 +18,11 @@
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-white/5 bg-white/[0.02]">
-        <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-widest text-gray-500">Nome</th>
-        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-500">Slug</th>
-        <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-500">Usuários</th>
-        <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-500">Clientes</th>
-        <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-500">Status</th>
+        <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Nome</th>
+        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Slug</th>
+        <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Usuários</th>
+        <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Clientes</th>
+        <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Status</th>
         <th class="px-4 py-3"></th>
       </tr>
     </thead>
@@ -32,7 +32,7 @@
         <td class="px-5 py-3.5">
           <div>
             <p class="font-medium text-white"><?= e($agency['name']) ?></p>
-            <p class="text-xs text-gray-500"><?= e($agency['country']) ?> · <?= e($agency['currency_code']) ?></p>
+            <p class="text-xs text-gray-400"><?= e($agency['country']) ?> · <?= e($agency['currency_code']) ?></p>
           </div>
         </td>
         <td class="px-4 py-3.5">
@@ -58,7 +58,7 @@
       </tr>
     <?php endforeach; ?>
     <?php if (empty($agencies)): ?>
-      <tr><td colspan="6" class="px-5 py-10 text-center text-gray-500">Nenhum tenant cadastrado.</td></tr>
+      <tr><td colspan="6" class="px-5 py-10 text-center text-gray-400">Nenhum tenant cadastrado.</td></tr>
     <?php endif; ?>
     </tbody>
   </table>

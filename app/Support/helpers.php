@@ -83,6 +83,41 @@ function public_path(string $path = ''): string
 }
 
 /**
+ * Data por extenso no idioma da interface.
+ *
+ * `date('l, d \d\e F \d\e Y')` devolve **sempre inglês** (o PHP ignora locale
+ * em `date()`), e o dashboard mostrava "Tuesday, 14 de July de 2026" — metade
+ * em cada idioma. Aqui traduzimos explicitamente.
+ */
+function date_long(?int $timestamp = null, ?string $locale = null): string
+{
+    $ts     = $timestamp ?? time();
+    $locale = $locale ?? locale();
+
+    $dias = [
+        'pt' => ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'],
+        'es' => ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],
+        'en' => ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+    ];
+    $meses = [
+        'pt' => [1=>'janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'],
+        'es' => [1=>'enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],
+        'en' => [1=>'January','February','March','April','May','June','July','August','September','October','November','December'],
+    ];
+
+    $lang = isset($dias[$locale]) ? $locale : 'pt';
+    $dia  = $dias[$lang][(int) date('w', $ts)];
+    $mes  = $meses[$lang][(int) date('n', $ts)];
+    $d    = (int) date('j', $ts);
+    $y    = date('Y', $ts);
+
+    return match ($lang) {
+        'en'    => "{$dia}, {$mes} {$d}, {$y}",
+        default => "{$dia}, {$d} de {$mes} de {$y}",
+    };
+}
+
+/**
  * URL de um asset local com cache-busting pelo mtime do arquivo (FE-01).
  *
  * O CSS/JS é servido com cache longo; sem o `?v=` o navegador do usuário

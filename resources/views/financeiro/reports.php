@@ -17,7 +17,7 @@ function fmtBrl(mixed $v): string { return 'R$ ' . number_format((float)$v, 2, '
     <div class="flex gap-3 items-center">
       <a href="/financeiro" class="text-sm text-gray-400 hover:text-white transition-colors">← Visão Geral</a>
       <form method="GET">
-        <select name="year" onchange="this.form.submit()"
+        <select aria-label="Ano" name="year" onchange="this.form.submit()"
           class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-3 py-1.5 focus:border-brand-500 focus:outline-none">
           <?php for ($y = (int)date('Y'); $y >= (int)date('Y') - 3; $y--): ?>
           <option value="<?= $y ?>" <?= $y === (int)$year ? 'selected' : '' ?>><?= $y ?></option>
@@ -57,7 +57,7 @@ function fmtBrl(mixed $v): string { return 'R$ ' . number_format((float)$v, 2, '
             <?= fmtBrl($val) ?>
           </div>
         </div>
-        <span class="text-[10px] text-gray-500"><?= $months[$m - 1] ?></span>
+        <span class="text-[10px] text-gray-400"><?= $months[$m - 1] ?></span>
       </div>
       <?php endforeach; ?>
     </div>
@@ -79,11 +79,11 @@ function fmtBrl(mixed $v): string { return 'R$ ' . number_format((float)$v, 2, '
     <table id="tbl-clients" class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/5">
-          <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Cliente</th>
-          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Faturado</th>
-          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Recebido</th>
-          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Faturas</th>
-          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">% Recebido</th>
+          <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cliente</th>
+          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Faturado</th>
+          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Recebido</th>
+          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Faturas</th>
+          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">% Recebido</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-white/[0.04]">
@@ -121,11 +121,11 @@ function fmtBrl(mixed $v): string { return 'R$ ' . number_format((float)$v, 2, '
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-white/5 bg-white/[0.02]">
-          <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Fatura</th>
-          <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Cliente</th>
-          <th class="px-6 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">Vencimento</th>
-          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Total</th>
-          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Restante</th>
+          <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Fatura</th>
+          <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cliente</th>
+          <th class="px-6 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Vencimento</th>
+          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Total</th>
+          <th class="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Restante</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-white/[0.04]">
@@ -135,7 +135,7 @@ function fmtBrl(mixed $v): string { return 'R$ ' . number_format((float)$v, 2, '
         <tr class="hover:bg-white/[0.02] transition-colors">
           <td class="px-6 py-4">
             <a href="/faturas/<?= $inv['id'] ?>" class="font-medium text-white hover:text-brand-300 transition-colors"><?= e($inv['title']) ?></a>
-            <p class="text-xs text-gray-500 font-mono"><?= e($inv['invoice_number']) ?></p>
+            <p class="text-xs text-gray-400 font-mono"><?= e($inv['invoice_number']) ?></p>
           </td>
           <td class="px-6 py-4 text-gray-400"><?= e($inv['client_name']) ?></td>
           <td class="px-6 py-4 text-center">

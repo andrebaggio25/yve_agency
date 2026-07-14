@@ -32,7 +32,7 @@ $qs = static function (array $extra) use ($filters, $month): string {
 <div class="flex items-start justify-between gap-4 mb-6 flex-wrap">
   <div>
     <h1 class="text-xl font-bold text-white"><?= e($monthLabel) ?></h1>
-    <p class="text-sm text-gray-500 mt-0.5">
+    <p class="text-sm text-gray-400 mt-0.5">
       <?= (int) $total ?> <?= (int) $total === 1 ? 'publicação planejada' : 'publicações planejadas' ?> neste mês
     </p>
   </div>
@@ -58,7 +58,7 @@ $qs = static function (array $extra) use ($filters, $month): string {
     <input type="hidden" name="month" value="<?= e($month) ?>">
     <div>
       <label class="sr-only" for="client_id">Cliente</label>
-      <select id="client_id" name="client_id" class="input-field w-52 py-2" onchange="this.form.submit()">
+      <select aria-label="Cliente" id="client_id" name="client_id" class="input-field w-52 py-2" onchange="this.form.submit()">
         <option value="">Todos os clientes</option>
         <?php foreach ($clientList as $c): ?>
           <option value="<?= (int) $c['id'] ?>" <?= (string) ($filters['client_id'] ?? '') === (string) $c['id'] ? 'selected' : '' ?>>
@@ -71,7 +71,7 @@ $qs = static function (array $extra) use ($filters, $month): string {
 </div>
 
 <!-- Legenda -->
-<div class="flex items-center gap-4 mb-3 flex-wrap text-xs text-gray-500">
+<div class="flex items-center gap-4 mb-3 flex-wrap text-xs text-gray-400">
   <?php foreach ($statusMeta as $meta): ?>
     <span class="inline-flex items-center gap-1.5">
       <span class="w-2 h-2 rounded-full <?= $meta['dot'] ?>"></span><?= e($meta['label']) ?>
@@ -84,7 +84,7 @@ $qs = static function (array $extra) use ($filters, $month): string {
   <div class="min-w-[46rem]">
     <div class="grid grid-cols-7 gap-px mb-px">
       <?php foreach (['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as $dow): ?>
-        <div class="px-2 py-2 text-center text-xs uppercase tracking-wide text-gray-500"><?= e($dow) ?></div>
+        <div class="px-2 py-2 text-center text-xs uppercase tracking-wide text-gray-400"><?= e($dow) ?></div>
       <?php endforeach; ?>
     </div>
 
@@ -100,11 +100,11 @@ $qs = static function (array $extra) use ($filters, $month): string {
                   <?= $isToday ? 'ring-1 ring-brand-500/50' : '' ?>">
 
         <div class="flex items-center justify-between mb-1.5">
-          <span class="text-xs font-medium <?= $isToday ? 'text-brand-300' : ($isMonth ? 'text-gray-400' : 'text-gray-700') ?>">
+          <span class="text-xs font-medium <?= $isToday ? 'text-brand-300' : ($isMonth ? 'text-gray-400' : 'text-gray-500') ?>">
             <?= (int) date('j', $ts) ?>
           </span>
           <?php if (count($dayItems) > 3): ?>
-            <span class="text-[10px] text-gray-600"><?= count($dayItems) ?></span>
+            <span class="text-[10px] text-gray-400"><?= count($dayItems) ?></span>
           <?php endif; ?>
         </div>
 
@@ -120,12 +120,12 @@ $qs = static function (array $extra) use ($filters, $month): string {
                 <?= e($item['title'] ?: ($item['content_type'] ?: 'Publicação')) ?>
               </span>
             </span>
-            <span class="block text-[10px] text-gray-600 truncate pl-2.5"><?= e($item['client_name'] ?? '') ?></span>
+            <span class="block text-[10px] text-gray-400 truncate pl-2.5"><?= e($item['client_name'] ?? '') ?></span>
           </a>
         <?php endforeach; ?>
 
         <?php if (count($dayItems) > 3): ?>
-          <p class="text-[10px] text-gray-600 pl-1">+ <?= count($dayItems) - 3 ?> mais</p>
+          <p class="text-[10px] text-gray-400 pl-1">+ <?= count($dayItems) - 3 ?> mais</p>
         <?php endif; ?>
       </div>
       <?php endfor; ?>
@@ -137,7 +137,7 @@ $qs = static function (array $extra) use ($filters, $month): string {
   <!-- Estado vazio: nunca um mês em branco sem explicação -->
   <div class="card p-8 mt-4 text-center">
     <p class="text-sm text-gray-400">Nenhuma publicação planejada para este mês</p>
-    <p class="text-xs text-gray-600 mt-1">
+    <p class="text-xs text-gray-400 mt-1">
       Crie um plano de conteúdo — os itens com data de publicação aparecem aqui automaticamente.
     </p>
   </div>

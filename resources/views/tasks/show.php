@@ -19,7 +19,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
 $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['due_date']) < strtotime('today');
 ?>
 
-<nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+<nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
   <a href="/tarefas" class="hover:text-gray-300">Tarefas</a>
   <span>/</span>
   <span class="text-gray-300 truncate max-w-xs"><?= e($task['title']) ?></span>
@@ -51,29 +51,29 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
     <!-- Metadados -->
     <div class="grid grid-cols-2 gap-4 text-sm border-t border-white/[0.06] pt-5">
       <div>
-        <p class="text-xs text-gray-500 mb-1">Cliente</p>
+        <p class="text-xs text-gray-400 mb-1">Cliente</p>
         <p class="text-gray-300"><?= e($task['client_name'] ?? '—') ?></p>
       </div>
       <div>
-        <p class="text-xs text-gray-500 mb-1">Responsável</p>
+        <p class="text-xs text-gray-400 mb-1">Responsável</p>
         <p class="text-gray-300"><?= e($task['assigned_name'] ?? '—') ?></p>
       </div>
       <div>
-        <p class="text-xs text-gray-500 mb-1">Criada por</p>
+        <p class="text-xs text-gray-400 mb-1">Criada por</p>
         <p class="text-gray-300"><?= e($task['created_by_name'] ?? '—') ?></p>
       </div>
       <div>
-        <p class="text-xs text-gray-500 mb-1">Data de entrega</p>
+        <p class="text-xs text-gray-400 mb-1">Data de entrega</p>
         <p class="<?= $overdue ? 'text-red-400 font-medium' : 'text-gray-300' ?>">
           <?= $task['due_date'] ? date('d/m/Y', strtotime($task['due_date'])) : '—' ?>
         </p>
       </div>
       <div>
-        <p class="text-xs text-gray-500 mb-1">Criada em</p>
+        <p class="text-xs text-gray-400 mb-1">Criada em</p>
         <p class="text-gray-400 text-xs"><?= date('d/m/Y H:i', strtotime($task['created_at'])) ?></p>
       </div>
       <div>
-        <p class="text-xs text-gray-500 mb-1">Atualizada em</p>
+        <p class="text-xs text-gray-400 mb-1">Atualizada em</p>
         <p class="text-gray-400 text-xs"><?= date('d/m/Y H:i', strtotime($task['updated_at'])) ?></p>
       </div>
     </div>
@@ -90,7 +90,7 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
         </svg>
         Comentários
       </h2>
-      <button @click="loadComments()" class="text-gray-600 hover:text-gray-400 transition-colors">
+      <button @click="loadComments()" class="text-gray-400 hover:text-gray-400 transition-colors">
         <svg class="w-3.5 h-3.5" :class="{'animate-spin': loading}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
@@ -98,7 +98,7 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
     </div>
     <div class="px-5 py-4 space-y-3 max-h-72 overflow-y-auto" x-ref="chatMessages">
       <template x-if="comments.length === 0 && !loading">
-        <p class="text-xs text-gray-600 text-center py-3">Nenhum comentário ainda.</p>
+        <p class="text-xs text-gray-400 text-center py-3">Nenhum comentário ainda.</p>
       </template>
       <template x-for="c in comments" :key="c.id">
         <div class="flex items-start gap-2.5">
@@ -107,7 +107,7 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
           <div class="flex-1 min-w-0">
             <div class="flex items-baseline gap-2 mb-0.5">
               <span class="text-xs font-semibold text-white" x-text="c.user_name"></span>
-              <span class="text-[10px] text-gray-600" x-text="chatDate(c.created_at)"></span>
+              <span class="text-[10px] text-gray-400" x-text="chatDate(c.created_at)"></span>
             </div>
             <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap" x-text="c.message"></p>
           </div>
@@ -119,15 +119,15 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
         <textarea x-model="newMessage" rows="2"
                   placeholder="Adicionar comentário..."
                   @keydown.ctrl.enter.prevent="sendComment()"
-                  class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
+                  class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
         <button @click="sendComment()" :disabled="sending || !newMessage.trim()"
-                class="self-end rounded-xl bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-40">
+                class="self-end rounded-xl bg-brand-600 px-3 py-2 text-sm font-semibold text-gray-950 transition-all hover:bg-brand-500 disabled:opacity-40">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
           </svg>
         </button>
       </div>
-      <p class="text-[10px] text-gray-700 mt-1">Ctrl+Enter para enviar</p>
+      <p class="text-[10px] text-gray-400 mt-1">Ctrl+Enter para enviar</p>
     </div>
   </div>
 

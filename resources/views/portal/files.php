@@ -45,7 +45,7 @@ $jsI18n = [
 <?php if (!$connected): ?>
 <div class="card p-6 text-center">
   <p class="text-sm text-gray-300 font-medium mb-1"><?= t('portal.files.unavailable_title') ?></p>
-  <p class="text-xs text-gray-500"><?= t('portal.files.unavailable_text') ?></p>
+  <p class="text-xs text-gray-400"><?= t('portal.files.unavailable_text') ?></p>
 </div>
 <?php else: ?>
 
@@ -59,7 +59,7 @@ $jsI18n = [
     </button>
     <template x-for="crumb in breadcrumb" :key="crumb.id">
       <span class="flex items-center gap-1.5">
-        <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         <button @click="goTo(crumb.id)" class="text-gray-400 hover:text-white transition-colors" x-text="crumb.name"></button>
       </span>
     </template>
@@ -82,7 +82,7 @@ $jsI18n = [
 
   <!-- Dica do que pode enviar. O teto do servidor só vale no fallback via relay
        (UP-01: o caminho normal envia direto pro Drive, sem limite prático). -->
-  <p class="text-xs text-gray-500 mb-4">
+  <p class="text-xs text-gray-400 mb-4">
     <?= t('portal.files.accepted_hint') ?>
   </p>
 
@@ -102,10 +102,10 @@ $jsI18n = [
   <div x-show="creatingFolder" x-transition class="card p-3 mb-4 flex items-center gap-2" style="display:none">
     <input x-ref="folderInput" type="text" x-model="newFolderName" placeholder="<?= e(t('portal.files.folder_name_placeholder')) ?>"
            @keydown.enter="createFolder()" @keydown.escape="creatingFolder=false; newFolderName=''"
-           class="flex-1 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+           class="flex-1 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
     <button @click="createFolder()" :disabled="!newFolderName.trim() || savingFolder"
             class="btn-primary text-sm px-3 py-2 disabled:opacity-50" x-text="savingFolder ? '<?= e(t('portal.files.creating')) ?>' : '<?= e(t('portal.files.create')) ?>'"></button>
-    <button @click="creatingFolder=false; newFolderName=''" class="text-xs text-gray-500 hover:text-gray-300 px-2"><?= t('portal.files.cancel') ?></button>
+    <button @click="creatingFolder=false; newFolderName=''" class="text-xs text-gray-400 hover:text-gray-300 px-2"><?= t('portal.files.cancel') ?></button>
   </div>
 
   <!-- Drop zone + listagem -->
@@ -115,7 +115,7 @@ $jsI18n = [
        :class="dragging ? 'border-brand-500 bg-brand-500/5' : 'border-white/10'">
 
     <!-- Loading -->
-    <div x-show="loading" class="py-10 text-center text-sm text-gray-500" x-text="i18n.loading"></div>
+    <div x-show="loading" class="py-10 text-center text-sm text-gray-400" x-text="i18n.loading"></div>
 
     <!-- Erro ao carregar a lista (antes: falha silenciosa, lista em branco) -->
     <div x-show="!loading && loadError" class="py-10 text-center" style="display:none">
@@ -127,9 +127,9 @@ $jsI18n = [
       <div>
         <!-- Empty -->
         <div x-show="folders.length === 0 && files.length === 0 && uploads.length === 0" class="py-12 text-center">
-          <svg class="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <svg class="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
           <p class="text-sm text-gray-400" x-text="i18n.empty_title"></p>
-          <p class="text-xs text-gray-600 mt-1" x-text="i18n.empty_hint"></p>
+          <p class="text-xs text-gray-400 mt-1" x-text="i18n.empty_hint"></p>
         </div>
 
         <!-- Lista -->
@@ -143,7 +143,7 @@ $jsI18n = [
                 <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
               </button>
               <button @click="deleteFolder(folder)" :title="i18n.delete"
-                      class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-500 hover:text-rose-400 transition-all p-1.5 flex-shrink-0">
+                      class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-400 hover:text-rose-400 transition-all p-1.5 flex-shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               </button>
             </li>
@@ -159,11 +159,11 @@ $jsI18n = [
                         :class="up.status==='error' ? 'text-rose-400' : (up.status==='done' ? 'text-emerald-400' : 'text-brand-400')"
                         x-text="statusLabel(up)"></span>
                   <button x-show="up.status==='uploading' || up.status==='processing' || up.status==='queued'" @click="cancelUpload(up)"
-                          class="text-gray-500 hover:text-rose-400 transition-colors" :title="i18n.delete">
+                          class="text-gray-400 hover:text-rose-400 transition-colors" :title="i18n.delete">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                   </button>
                   <button x-show="up.status==='error' || up.status==='canceled'" @click="removeUpload(up)"
-                          class="text-gray-500 hover:text-white transition-colors" :title="i18n.delete">
+                          class="text-gray-400 hover:text-white transition-colors" :title="i18n.delete">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                   </button>
                 </div>
@@ -174,7 +174,7 @@ $jsI18n = [
                      :style="`width: ${(up.status==='done'||up.status==='processing') ? 100 : up.progress}%`"></div>
               </div>
               <p x-show="up.status==='error'" class="text-[11px] text-rose-400 mt-1" x-text="up.error"></p>
-              <p x-show="up.status==='uploading' && up.eta" class="text-[10px] text-gray-500 mt-1" x-text="up.eta"></p>
+              <p x-show="up.status==='uploading' && up.eta" class="text-[10px] text-gray-400 mt-1" x-text="up.eta"></p>
             </li>
           </template>
 
@@ -190,16 +190,16 @@ $jsI18n = [
                     <svg x-show="file.is_video" class="w-4 h-4 text-brand-300" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                   </template>
                   <template x-if="!file.is_image && !file.is_video">
-                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                   </template>
                 </span>
                 <span class="min-w-0">
                   <span class="block text-sm text-gray-200 truncate" x-text="file.name"></span>
-                  <span class="block text-[11px] text-gray-600" x-text="humanSize(file.size_bytes)"></span>
+                  <span class="block text-[11px] text-gray-400" x-text="humanSize(file.size_bytes)"></span>
                 </span>
               </button>
               <button @click="deleteFile(file)" :title="i18n.delete"
-                      class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-500 hover:text-rose-400 transition-all p-1.5 flex-shrink-0">
+                      class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-400 hover:text-rose-400 transition-all p-1.5 flex-shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               </button>
             </li>
@@ -241,7 +241,7 @@ $jsI18n = [
       <button x-show="toast.restore" @click="undoDelete()" :disabled="toast.busy"
               class="text-sm font-semibold text-brand-300 hover:text-brand-200 disabled:opacity-50 flex-shrink-0"
               x-text="i18n.undo"></button>
-      <button @click="hideToast()" class="text-gray-500 hover:text-white flex-shrink-0" title="">
+      <button @click="hideToast()" class="text-gray-400 hover:text-white flex-shrink-0" title="">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>

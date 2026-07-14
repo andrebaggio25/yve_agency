@@ -50,7 +50,7 @@
         </p>
         <?php if ($total > 0): ?>
         <div class="mt-3">
-          <div class="flex justify-between text-xs text-gray-500 mb-1">
+          <div class="flex justify-between text-xs text-gray-400 mb-1">
             <span><?= $aprov ?>/<?= $total ?> aprovados</span>
             <span><?= $pct ?>%</span>
           </div>
@@ -61,7 +61,7 @@
         </div>
         <?php endif; ?>
       </div>
-      <svg class="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5 transition-transform group-hover:translate-x-1 group-hover:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5 transition-transform group-hover:translate-x-1 group-hover:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
       </svg>
     </a>

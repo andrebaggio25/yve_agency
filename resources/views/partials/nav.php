@@ -57,7 +57,7 @@ $icons = [
 
 <?php if (Auth::can('content.view')): ?>
 <div class="mt-1"></div>
-<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600"><?= t('nav.section.content') ?></p>
+<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400"><?= t('nav.section.content') ?></p>
 <?= navItem('/content', $icons['content'], t('nav.content_plans'), $cp) ?>
 <?= navItem('/conteudo/calendario', $icons['calendar'], t('nav.calendar'), $cp) ?>
 <?php endif; ?>
@@ -71,7 +71,7 @@ $icons = [
 
 <?php if (Auth::canAny('ads_metrics.view', 'ai_insights.view', 'ads_actions.view', 'organic_metrics.view')): ?>
 <div class="mt-1"></div>
-<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600"><?= t('nav.section.marketing') ?></p>
+<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400"><?= t('nav.section.marketing') ?></p>
 <?php if (Auth::can('ads_metrics.view')): ?>
 <?= navItem('/traffic', $icons['traffic'], t('nav.traffic'), $cp) ?>
 <?php if (Auth::can('ads_actions.view')): ?>
@@ -88,7 +88,7 @@ $icons = [
 
 <?php if (Auth::canAny('invoices.view', 'contracts.view', 'payments.view')): ?>
 <div class="mt-1"></div>
-<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600"><?= t('nav.section.financial') ?></p>
+<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400"><?= t('nav.section.financial') ?></p>
 <?= navItem('/financial', $icons['financial'], t('nav.financial_overview'), $cp, '/financial') ?>
 <?php if (Auth::can('contracts.view')): ?>
 <?= navItem('/contracts', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', t('nav.contracts'), $cp) ?>
@@ -106,7 +106,7 @@ $icons = [
 
 <?php if (Auth::canAny('users.view', 'dashboard.view')): ?>
 <div class="mt-1"></div>
-<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600"><?= t('nav.section.admin') ?></p>
+<p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400"><?= t('nav.section.admin') ?></p>
 <?php if (Auth::can('users.view')): ?>
 <?= navItem('/users', $icons['users'], t('nav.users'), $cp) ?>
 <?php endif; ?>

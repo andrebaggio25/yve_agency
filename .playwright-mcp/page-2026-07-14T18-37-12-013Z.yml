@@ -1,0 +1,151 @@
+- generic [ref=f5e2]:
+  - complementary [ref=f5e3]:
+    - link [ref=f5e4] [cursor=pointer]:
+      - /url: /dashboard
+      - generic [ref=f5e5]:
+        - paragraph [ref=f5e6]: YVE Beauty
+        - paragraph [ref=f5e7]: André Baggio
+    - navigation [ref=f5e8]:
+      - link "Dashboard" [ref=f5e9] [cursor=pointer]:
+        - /url: /
+      - link "Clientes" [ref=f5e12] [cursor=pointer]:
+        - /url: /clients
+      - paragraph [ref=f5e15]: Conteúdo
+      - link "Planos" [ref=f5e16] [cursor=pointer]:
+        - /url: /content
+      - link "Calendário" [ref=f5e19] [cursor=pointer]:
+        - /url: /conteudo/calendario
+      - link "Aprovações" [ref=f5e22] [cursor=pointer]:
+        - /url: /approvals
+      - link "Tarefas" [ref=f5e25] [cursor=pointer]:
+        - /url: /tasks
+      - paragraph [ref=f5e28]: Marketing
+      - link "Tráfego Pago" [ref=f5e29] [cursor=pointer]:
+        - /url: /traffic
+      - link "Ações" [ref=f5e32] [cursor=pointer]:
+        - /url: /traffic/actions
+      - link "IA Insights" [ref=f5e35] [cursor=pointer]:
+        - /url: /ai
+      - link "Orgânico" [ref=f5e38] [cursor=pointer]:
+        - /url: /organic
+      - paragraph [ref=f5e41]: Financeiro
+      - link "Visão Geral" [ref=f5e42] [cursor=pointer]:
+        - /url: /financial
+      - link "Contratos" [ref=f5e45] [cursor=pointer]:
+        - /url: /contracts
+      - link "Faturas" [ref=f5e48] [cursor=pointer]:
+        - /url: /invoices
+      - link "Pagamentos" [ref=f5e51] [cursor=pointer]:
+        - /url: /payments
+      - link "Relatórios" [ref=f5e54] [cursor=pointer]:
+        - /url: /financial/reports
+      - paragraph [ref=f5e57]: Admin
+      - link "Usuários" [ref=f5e58] [cursor=pointer]:
+        - /url: /users
+      - link "Automações" [ref=f5e61] [cursor=pointer]:
+        - /url: /automations
+      - link "Relatório Exec." [ref=f5e64] [cursor=pointer]:
+        - /url: /executive-report
+      - link "Assinatura" [ref=f5e67] [cursor=pointer]:
+        - /url: /subscription
+      - link "ClickUp" [ref=f5e70] [cursor=pointer]:
+        - /url: /integrations/clickup
+      - link "Google Drive" [ref=f5e73] [cursor=pointer]:
+        - /url: /integrations/google-drive
+      - link "Configurações" [ref=f5e76] [cursor=pointer]:
+        - /url: /settings
+    - button "Sair" [ref=f5e81] [cursor=pointer]
+  - generic [ref=f5e84]:
+    - banner [ref=f5e85]:
+      - button [ref=f5e87] [cursor=pointer]
+      - generic [ref=f5e90]:
+        - generic [ref=f5e91]: A
+        - generic [ref=f5e92]: André Baggio
+    - main [ref=f5e93]:
+      - generic [ref=f5e94]:
+        - generic [ref=f5e95]:
+          - heading "Configurações da Agência" [level=1] [ref=f5e96]
+          - paragraph [ref=f5e97]: Informações e preferências da sua agência
+        - generic [ref=f5e98]:
+          - generic [ref=f5e100]:
+            - generic [ref=f5e101]:
+              - heading "Dados da agência" [level=2] [ref=f5e102]
+              - generic [ref=f5e103]:
+                - generic [ref=f5e104]:
+                  - generic [ref=f5e105]: Nome da agência *
+                  - textbox [ref=f5e106]: YVE Beauty
+                - generic [ref=f5e107]:
+                  - generic [ref=f5e108]: Razão social
+                  - textbox [ref=f5e109]
+                - generic [ref=f5e110]:
+                  - generic [ref=f5e111]: CNPJ / Documento
+                  - textbox "00.000.000/0001-00" [ref=f5e112]
+                - generic [ref=f5e113]:
+                  - generic [ref=f5e114]: E-mail
+                  - textbox "contato@agencia.com.br" [ref=f5e115]
+                - generic [ref=f5e116]:
+                  - generic [ref=f5e117]: Telefone
+                  - textbox "+55 11 99999-9999" [ref=f5e118]
+                - generic [ref=f5e119]:
+                  - generic [ref=f5e120]: Website
+                  - textbox "https://www.agencia.com.br" [ref=f5e121]
+                - generic [ref=f5e122]:
+                  - generic [ref=f5e123]: Logotipo
+                  - generic [ref=f5e125]:
+                    - button "Logotipo" [ref=f5e126] [cursor=pointer]
+                    - paragraph [ref=f5e127]: PNG, JPG, WEBP ou GIF · até 2 MB. Aparece no portal do cliente.
+                - generic [ref=f5e128]:
+                  - generic [ref=f5e129]: Cor da marca
+                  - generic [ref=f5e130]:
+                    - textbox "Cor da marca" [ref=f5e131] [cursor=pointer]: "#c6a15b"
+                    - paragraph [ref=f5e133]:
+                      - text: Usada nos botões e destaques do
+                      - strong [ref=f5e134]: portal do cliente
+                      - text: . Deixe no padrão se preferir o tema do sistema.
+            - generic [ref=f5e135]:
+              - heading "Preferências" [level=2] [ref=f5e136]
+              - generic [ref=f5e137]:
+                - generic [ref=f5e138]:
+                  - generic [ref=f5e139]: Idioma padrão
+                  - combobox [ref=f5e140]:
+                    - option "Português (BR)" [selected]
+                    - option "English"
+                    - option "Español"
+                - generic [ref=f5e141]:
+                  - generic [ref=f5e142]: Fuso horário
+                  - combobox [ref=f5e143]:
+                    - option "Brasil — São Paulo (GMT-3)" [selected]
+                    - option "Brasil — Fortaleza (GMT-3)"
+                    - option "Brasil — Manaus (GMT-4)"
+                    - option "Brasil — Belém (GMT-3)"
+                    - option "Brasil — Cuiabá (GMT-4)"
+                    - option "Brasil — Porto Velho (GMT-4)"
+                    - option "Brasil — Rio Branco (GMT-5)"
+                    - option "Brasil — Fernando de Noronha (GMT-2)"
+                    - option "Argentina — Buenos Aires (GMT-3)"
+                    - option "Colômbia — Bogotá (GMT-5)"
+                    - option "Peru — Lima (GMT-5)"
+                    - option "Chile — Santiago (GMT-3)"
+                    - option "EUA — Nova York (GMT-5)"
+                    - option "EUA — Los Angeles (GMT-8)"
+                    - option "Portugal — Lisboa (GMT+0)"
+                    - option "Espanha — Madri (GMT+1)"
+                    - option "UTC"
+            - button "Salvar configurações" [ref=f5e145] [cursor=pointer]
+          - generic [ref=f5e146]:
+            - generic [ref=f5e147]:
+              - heading "WhatsApp" [level=3] [ref=f5e148]
+              - paragraph [ref=f5e149]: Configure a instância do WhatsApp para notificações aos clientes.
+              - link "Gerenciar WhatsApp" [ref=f5e150] [cursor=pointer]:
+                - /url: /configuracoes/whatsapp
+            - generic [ref=f5e151]:
+              - heading "Equipe" [level=3] [ref=f5e152]
+              - generic [ref=f5e153]:
+                - link "Usuários" [ref=f5e154] [cursor=pointer]:
+                  - /url: /usuarios
+                - link "Perfis de acesso" [ref=f5e158] [cursor=pointer]:
+                  - /url: /usuarios/perfis
+            - generic [ref=f5e162]:
+              - heading "Plano & Assinatura" [level=3] [ref=f5e163]
+              - link "Ver assinatura" [ref=f5e164] [cursor=pointer]:
+                - /url: /assinatura

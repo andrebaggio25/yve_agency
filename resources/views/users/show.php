@@ -19,7 +19,7 @@
     </div>
     <?php if (\App\Support\Auth::can('users.edit')): ?>
     <a href="/usuarios/<?= e($user['id']) ?>/editar"
-       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
       <?= t('common.edit') ?>
     </a>
@@ -33,24 +33,24 @@
         : 'text-gray-400';
     ?>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <p class="text-xs text-gray-500 mb-1"><?= t('users.status') ?></p>
+      <p class="text-xs text-gray-400 mb-1"><?= t('users.status') ?></p>
       <p class="font-semibold <?= $statusCls ?>">
         <?= $user['status'] === 'active' ? t('status.active') : t('status.inactive') ?>
       </p>
     </div>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <p class="text-xs text-gray-500 mb-1"><?= t('users.role') ?></p>
+      <p class="text-xs text-gray-400 mb-1"><?= t('users.role') ?></p>
       <p class="font-semibold text-white"><?= e($user['role_name'] ?? '—') ?></p>
     </div>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <p class="text-xs text-gray-500 mb-1"><?= t('users.language') ?></p>
+      <p class="text-xs text-gray-400 mb-1"><?= t('users.language') ?></p>
       <p class="font-semibold text-white uppercase"><?= e($user['language'] ?? 'pt') ?></p>
     </div>
   </div>
 
   <?php if (!empty($clientAccess)): ?>
   <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
-    <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500 mb-4"><?= t('users.client_access') ?></h2>
+    <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4"><?= t('users.client_access') ?></h2>
     <div class="space-y-2">
       <?php foreach ($clientAccess as $c): ?>
       <div class="flex items-center gap-3 rounded-xl border border-white/5 px-4 py-2.5">

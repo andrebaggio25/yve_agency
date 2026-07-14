@@ -1,0 +1,90 @@
+- generic [ref=f9e2]:
+  - complementary [ref=f9e3]:
+    - link [ref=f9e4] [cursor=pointer]:
+      - /url: /dashboard
+      - generic [ref=f9e5]:
+        - paragraph [ref=f9e6]: YVE Beauty
+        - paragraph [ref=f9e7]: André Baggio
+    - navigation [ref=f9e8]:
+      - link "Dashboard" [ref=f9e9] [cursor=pointer]:
+        - /url: /
+      - link "Clientes" [ref=f9e12] [cursor=pointer]:
+        - /url: /clients
+      - paragraph [ref=f9e15]: Conteúdo
+      - link "Planos" [ref=f9e16] [cursor=pointer]:
+        - /url: /content
+      - link "Calendário" [ref=f9e19] [cursor=pointer]:
+        - /url: /conteudo/calendario
+      - link "Aprovações" [ref=f9e22] [cursor=pointer]:
+        - /url: /approvals
+      - link "Tarefas" [ref=f9e25] [cursor=pointer]:
+        - /url: /tasks
+      - paragraph [ref=f9e28]: Marketing
+      - link "Tráfego Pago" [ref=f9e29] [cursor=pointer]:
+        - /url: /traffic
+      - link "Ações" [ref=f9e32] [cursor=pointer]:
+        - /url: /traffic/actions
+      - link "IA Insights" [ref=f9e35] [cursor=pointer]:
+        - /url: /ai
+      - link "Orgânico" [ref=f9e38] [cursor=pointer]:
+        - /url: /organic
+      - paragraph [ref=f9e41]: Financeiro
+      - link "Visão Geral" [ref=f9e42] [cursor=pointer]:
+        - /url: /financial
+      - link "Contratos" [ref=f9e45] [cursor=pointer]:
+        - /url: /contracts
+      - link "Faturas" [ref=f9e48] [cursor=pointer]:
+        - /url: /invoices
+      - link "Pagamentos" [ref=f9e51] [cursor=pointer]:
+        - /url: /payments
+      - link "Relatórios" [ref=f9e54] [cursor=pointer]:
+        - /url: /financial/reports
+      - paragraph [ref=f9e57]: Admin
+      - link "Usuários" [ref=f9e58] [cursor=pointer]:
+        - /url: /users
+      - link "Automações" [ref=f9e61] [cursor=pointer]:
+        - /url: /automations
+      - link "Relatório Exec." [ref=f9e64] [cursor=pointer]:
+        - /url: /executive-report
+      - link "Assinatura" [ref=f9e67] [cursor=pointer]:
+        - /url: /subscription
+      - link "ClickUp" [ref=f9e70] [cursor=pointer]:
+        - /url: /integrations/clickup
+      - link "Google Drive" [ref=f9e73] [cursor=pointer]:
+        - /url: /integrations/google-drive
+      - link "Configurações" [ref=f9e76] [cursor=pointer]:
+        - /url: /settings
+    - button "Sair" [ref=f9e81] [cursor=pointer]
+  - generic [ref=f9e84]:
+    - banner [ref=f9e85]:
+      - button [ref=f9e87] [cursor=pointer]
+      - generic [ref=f9e90]:
+        - generic [ref=f9e91]: A
+        - generic [ref=f9e92]: André Baggio
+    - main [ref=f9e93]:
+      - generic [ref=f9e95]:
+        - generic [ref=f9e96]:
+          - generic [ref=f9e97]:
+            - paragraph [ref=f9e98]: Financeiro
+            - heading "Faturas" [level=1] [ref=f9e99]
+            - paragraph [ref=f9e100]: 0 faturas
+          - link "Nova Fatura" [ref=f9e101] [cursor=pointer]:
+            - /url: /faturas/nova
+        - generic [ref=f9e104]:
+          - textbox "Buscar..." [ref=f9e105]
+          - combobox [ref=f9e106]:
+            - option "Todos os clientes" [selected]
+            - option "Cliente Teste"
+          - combobox [ref=f9e107]:
+            - option "Todos os status" [selected]
+            - option "Rascunho"
+            - option "Enviada"
+            - option "Paga"
+            - option "Vencida"
+            - option "Parcial"
+            - option "Cancelada"
+          - button "Filtrar" [ref=f9e108] [cursor=pointer]
+        - generic [ref=f9e109]:
+          - paragraph [ref=f9e113]: Nenhuma fatura encontrada.
+          - link "Criar primeira fatura →" [ref=f9e114] [cursor=pointer]:
+            - /url: /faturas/nova

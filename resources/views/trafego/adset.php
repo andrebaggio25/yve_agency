@@ -2,7 +2,7 @@
 <?php view_start('content'); ?>
 
 <!-- Breadcrumb -->
-<nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+<nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
   <a href="/trafego" class="hover:text-gray-300">Tráfego Pago</a>
   <span>/</span>
   <a href="/trafego/campanhas/<?= $campaign['id'] ?>?since=<?= e($since) ?>&until=<?= e($until) ?>"
@@ -17,7 +17,7 @@
     <p class="text-sm text-gray-400 mt-1">
       Conjunto de anúncio · <?= e($campaign['name']) ?>
       <?php if ($adSet['optimization_goal']): ?>
-        <span class="mx-1 text-gray-600">·</span>
+        <span class="mx-1 text-gray-400">·</span>
         <?= e($adSet['optimization_goal']) ?>
       <?php endif; ?>
     </p>
@@ -30,9 +30,9 @@
 
 <!-- Filtro período -->
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">
-  <input type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
-  <span class="text-gray-500 text-sm">até</span>
-  <input type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+  <input aria-label="Data inicial" type="date" name="since" value="<?= e($since) ?>" class="input-field text-sm py-1.5 px-3 w-40">
+  <span class="text-gray-400 text-sm">até</span>
+  <input aria-label="Data final" type="date" name="until" value="<?= e($until) ?>" class="input-field text-sm py-1.5 px-3 w-40">
   <button type="submit" class="btn-secondary text-sm px-4 py-1.5">Filtrar</button>
 </form>
 
@@ -49,7 +49,7 @@
   ];
   foreach ($kpis as $k): ?>
   <div class="card p-4">
-    <p class="text-xs text-gray-500 mb-1"><?= $k['label'] ?></p>
+    <p class="text-xs text-gray-400 mb-1"><?= $k['label'] ?></p>
     <p class="text-lg font-bold <?= $k['color'] ?>"><?= $k['value'] ?></p>
   </div>
   <?php endforeach; ?>
@@ -61,7 +61,7 @@
   <?php foreach ($ads as $ad): ?>
   <?php
     $statusColor = $ad['status'] === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-yellow-500/15 text-yellow-400';
-    $roasColor   = (float)$ad['roas'] >= 1 ? 'text-green-400' : ((float)$ad['roas'] > 0 ? 'text-yellow-400' : 'text-gray-500');
+    $roasColor   = (float)$ad['roas'] >= 1 ? 'text-green-400' : ((float)$ad['roas'] > 0 ? 'text-yellow-400' : 'text-gray-400');
   ?>
   <div class="card flex flex-col overflow-hidden">
     <!-- Creative preview -->
@@ -85,7 +85,7 @@
     </div>
     <?php else: ?>
     <div class="bg-white/[0.03] flex-shrink-0 flex items-center justify-center" style="height:120px;">
-      <svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
       </svg>
       <span class="absolute top-2 right-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $statusColor ?>">
@@ -111,27 +111,27 @@
       <!-- Métricas do anúncio -->
       <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mt-auto pt-3 border-t border-white/[0.06]">
         <div>
-          <p class="text-gray-500">Investido</p>
+          <p class="text-gray-400">Investido</p>
           <p class="font-semibold text-brand-300">R$ <?= number_format((float)$ad['spend'], 2, ',', '.') ?></p>
         </div>
         <div>
-          <p class="text-gray-500">Impressões</p>
+          <p class="text-gray-400">Impressões</p>
           <p class="font-semibold text-blue-300"><?= number_format((int)$ad['impressions'], 0, ',', '.') ?></p>
         </div>
         <div>
-          <p class="text-gray-500">Cliques</p>
+          <p class="text-gray-400">Cliques</p>
           <p class="font-semibold text-cyan-300"><?= number_format((int)$ad['clicks'], 0, ',', '.') ?></p>
         </div>
         <div>
-          <p class="text-gray-500">CPC</p>
+          <p class="text-gray-400">CPC</p>
           <p class="font-semibold text-yellow-300">R$ <?= number_format((float)$ad['cpc'], 2, ',', '.') ?></p>
         </div>
         <div>
-          <p class="text-gray-500">Conversões</p>
+          <p class="text-gray-400">Conversões</p>
           <p class="font-semibold text-green-300"><?= number_format((int)$ad['conversions'], 0, ',', '.') ?></p>
         </div>
         <div>
-          <p class="text-gray-500">ROAS</p>
+          <p class="text-gray-400">ROAS</p>
           <p class="font-semibold <?= $roasColor ?>">
             <?= (float)$ad['roas'] > 0 ? number_format((float)$ad['roas'], 2, ',', '.') . 'x' : '—' ?>
           </p>
@@ -141,7 +141,7 @@
   </div>
   <?php endforeach; ?>
   <?php if (empty($ads)): ?>
-  <div class="col-span-full card p-10 text-center text-gray-500">
+  <div class="col-span-full card p-10 text-center text-gray-400">
     Nenhum anúncio no período.
   </div>
   <?php endif; ?>

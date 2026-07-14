@@ -6,7 +6,7 @@
   <div>
     <p class="text-xs font-semibold uppercase tracking-widest text-red-500 mb-1">Tenant</p>
     <h1 class="text-2xl font-bold text-white"><?= e($agency['name']) ?></h1>
-    <p class="text-sm text-gray-500 mt-0.5">Slug: <code class="text-gray-400"><?= e($agency['slug'] ?? '—') ?></code></p>
+    <p class="text-sm text-gray-400 mt-0.5">Slug: <code class="text-gray-400"><?= e($agency['slug'] ?? '—') ?></code></p>
   </div>
   <form method="POST" action="/admin/tenants/<?= $agency['id'] ?>"
         onsubmit="return confirm('Excluir este tenant? Apenas possível se não houver usuários.')">
@@ -29,7 +29,7 @@
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Nome <span class="text-red-400">*</span></label>
-        <input type="text" name="name" value="<?= e($agency['name']) ?>" required
+        <input aria-label="Nome" type="text" name="name" value="<?= e($agency['name']) ?>" required
                class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors">
       </div>
 
@@ -55,7 +55,7 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Fuso horário</label>
-          <select name="timezone" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-red-500 focus:outline-none transition-colors">
+          <select aria-label="Fuso horário" name="timezone" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-red-500 focus:outline-none transition-colors">
             <?php foreach (['America/Sao_Paulo','America/Manaus','America/New_York','Europe/Lisbon','Europe/Madrid','UTC'] as $tz): ?>
             <option value="<?= $tz ?>" <?= $agency['timezone'] === $tz ? 'selected' : '' ?>><?= $tz ?></option>
             <?php endforeach; ?>
@@ -63,7 +63,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Status</label>
-          <select name="status" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-red-500 focus:outline-none transition-colors">
+          <select aria-label="Situação" name="status" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-red-500 focus:outline-none transition-colors">
             <option value="active"   <?= $agency['status'] === 'active'   ? 'selected' : '' ?>>Ativo</option>
             <option value="inactive" <?= $agency['status'] === 'inactive' ? 'selected' : '' ?>>Inativo</option>
           </select>
@@ -87,9 +87,9 @@
       <div class="flex items-center justify-between rounded-xl px-3 py-2 bg-white/[0.02]">
         <div class="min-w-0">
           <p class="text-xs font-medium text-white truncate"><?= e($u['name']) ?></p>
-          <p class="text-xs text-gray-500 truncate"><?= e($u['email']) ?></p>
+          <p class="text-xs text-gray-400 truncate"><?= e($u['email']) ?></p>
           <?php if ($u['role_name']): ?>
-          <p class="text-xs text-gray-600"><?= e($u['role_name']) ?></p>
+          <p class="text-xs text-gray-400"><?= e($u['role_name']) ?></p>
           <?php endif; ?>
         </div>
         <span class="ml-2 text-xs px-2 py-0.5 rounded-full flex-shrink-0 <?= $u['status'] === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-gray-400' ?>">
@@ -98,7 +98,7 @@
       </div>
       <?php endforeach; ?>
       <?php if (empty($users)): ?>
-      <p class="text-sm text-gray-500 text-center py-4">Nenhum usuário.</p>
+      <p class="text-sm text-gray-400 text-center py-4">Nenhum usuário.</p>
       <?php endif; ?>
     </div>
   </div>

@@ -29,14 +29,14 @@
           $statusColor = $status === 1 ? 'text-green-400' : 'text-red-400';
         ?>
         <label class="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06] cursor-pointer hover:bg-white/[0.03] transition-colors has-[:checked]:border-brand-500/40 has-[:checked]:bg-brand-500/5">
-          <input type="radio" name="account_id" value="<?= e($cleanId) ?>" required
+          <input aria-label="Conta" type="radio" name="account_id" value="<?= e($cleanId) ?>" required
                  x-on:change="selected='<?= e($cleanId) ?>'"
                  class="text-brand-500">
           <input type="hidden" name="account_name_<?= e($cleanId) ?>" value="<?= e($acc['name'] ?? "Conta {$cleanId}") ?>">
           <input type="hidden" name="currency_<?= e($cleanId) ?>"     value="<?= e($acc['currency'] ?? 'BRL') ?>">
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-white"><?= e($acc['name'] ?? "Conta {$cleanId}") ?></p>
-            <p class="text-xs text-gray-500">ID: <?= e($cleanId) ?> &middot;
+            <p class="text-xs text-gray-400">ID: <?= e($cleanId) ?> &middot;
               <span class="<?= $statusColor ?>"><?= $statusLabel ?></span>
             </p>
           </div>
@@ -50,7 +50,7 @@
 
     <div>
       <label class="label-field">Cliente (opcional)</label>
-      <select name="client_id" class="input-field w-full">
+      <select aria-label="Cliente" name="client_id" class="input-field w-full">
         <option value="">— Sem cliente —</option>
         <?php foreach ($clients as $c): ?>
         <option value="<?= $c['id'] ?>" <?= $clientId === (int)$c['id'] ? 'selected' : '' ?>>

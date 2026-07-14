@@ -11,7 +11,7 @@
     </div>
     <?php if (\App\Support\Auth::can('clients.create')): ?>
     <a href="/clientes/novo"
-       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95">
+       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-500 hover:scale-105 active:scale-95">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       <?= t('clients.new') ?>
     </a>
@@ -22,10 +22,10 @@
   <form method="GET" class="mb-4">
     <input type="hidden" name="status" value="<?= e($status ?? 'active') ?>">
     <div class="relative w-full max-w-sm">
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
       </svg>
-      <input type="text" name="q" value="<?= e($q) ?>" placeholder="Buscar por nome..."
+      <input aria-label="Buscar" type="text" name="q" value="<?= e($q) ?>" placeholder="Buscar por nome..."
              class="w-full rounded-xl border border-white/10 bg-white/[0.03] pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none">
     </div>
   </form>
@@ -43,7 +43,7 @@
         $href = '/clientes?status=' . $key . ($q ? '&q=' . urlencode($q) : '');
     ?>
     <a href="<?= $href ?>"
-       class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors <?= $isActive ? 'bg-brand-600 text-white' : 'border border-white/10 text-gray-400 hover:text-white hover:border-brand-500/40' ?>">
+       class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors <?= $isActive ? 'bg-brand-600 text-gray-950' : 'border border-white/10 text-gray-400 hover:text-gray-950 hover:border-brand-500/40' ?>">
       <?= $label ?>
     </a>
     <?php endforeach; ?>
@@ -93,10 +93,10 @@
       <?php if (!empty($client['segment'])): ?>
       <p class="text-sm text-gray-400 mt-0.5 truncate"><?= e($client['segment']) ?></p>
       <?php endif; ?>
-      <div class="mt-3 flex items-center gap-2 text-xs text-gray-500">
+      <div class="mt-3 flex items-center gap-2 text-xs text-gray-400">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
         <?= e(strtoupper($client['language'] ?? 'pt')) ?>
-        <span class="text-gray-700">·</span>
+        <span class="text-gray-400">·</span>
         <?= e($client['currency_code'] ?? 'BRL') ?>
       </div>
     </a>
@@ -115,7 +115,7 @@
     <?php for ($p = 1; $p <= $paginated['pages']; $p++): ?>
     <a href="<?= $base ?>page=<?= $p ?>"
        class="flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors
-              <?= $p === $paginated['page'] ? 'bg-brand-600 text-white font-semibold' : 'border border-white/10 text-gray-400 hover:border-brand-500/50 hover:text-white' ?>">
+              <?= $p === $paginated['page'] ? 'bg-brand-600 text-gray-950 font-semibold' : 'border border-white/10 text-gray-400 hover:border-brand-500/50 hover:text-gray-950' ?>">
       <?= $p ?>
     </a>
     <?php endfor; ?>

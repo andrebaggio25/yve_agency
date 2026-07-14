@@ -33,25 +33,25 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
 
 <!-- Filtros -->
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">
-  <select name="status" class="input-field text-sm py-1.5 px-3 w-44">
+  <select aria-label="Situação" name="status" class="input-field text-sm py-1.5 px-3 w-44">
     <option value="">Todos os status</option>
     <?php foreach ($statusLabels as $v => $l): ?>
     <option value="<?= $v ?>" <?= $filters['status'] === $v ? 'selected' : '' ?>><?= $l ?></option>
     <?php endforeach; ?>
   </select>
-  <select name="client_id" class="input-field text-sm py-1.5 px-3 w-48">
+  <select aria-label="Cliente" name="client_id" class="input-field text-sm py-1.5 px-3 w-48">
     <option value="">Todos os clientes</option>
     <?php foreach ($clients as $c): ?>
     <option value="<?= $c['id'] ?>" <?= $filters['client_id'] === $c['id'] ? 'selected' : '' ?>><?= e($c['name']) ?></option>
     <?php endforeach; ?>
   </select>
-  <select name="assigned_to" class="input-field text-sm py-1.5 px-3 w-44">
+  <select aria-label="Responsável" name="assigned_to" class="input-field text-sm py-1.5 px-3 w-44">
     <option value="">Qualquer responsável</option>
     <?php foreach ($users as $u): ?>
     <option value="<?= $u['id'] ?>" <?= $filters['assigned_to'] === $u['id'] ? 'selected' : '' ?>><?= e($u['name']) ?></option>
     <?php endforeach; ?>
   </select>
-  <select name="priority" class="input-field text-sm py-1.5 px-3 w-36">
+  <select aria-label="Prioridade" name="priority" class="input-field text-sm py-1.5 px-3 w-36">
     <option value="">Qualquer prioridade</option>
     <?php foreach ($priorityLabels as $v => $l): ?>
     <option value="<?= $v ?>" <?= $filters['priority'] === $v ? 'selected' : '' ?>><?= $l ?></option>
@@ -59,7 +59,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
   </select>
   <button type="submit" class="btn-secondary text-sm px-4 py-1.5">Filtrar</button>
   <?php if (array_filter($filters)): ?>
-  <a href="/tarefas" class="text-xs text-gray-500 hover:text-gray-300">Limpar</a>
+  <a href="/tarefas" class="text-xs text-gray-400 hover:text-gray-300">Limpar</a>
   <?php endif; ?>
 </form>
 
@@ -79,7 +79,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
         <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border <?= $statusColors[$col] ?>">
           <?= $statusLabels[$col] ?>
         </span>
-        <span class="text-xs text-gray-600 font-medium"><?= $counts[$col] ?></span>
+        <span class="text-xs text-gray-400 font-medium"><?= $counts[$col] ?></span>
       </div>
       <?php if (\App\Support\Auth::can('tasks.create')): ?>
       <a href="/tarefas/nova?status=<?= $col ?>"
@@ -119,7 +119,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
 
         <!-- Cliente -->
         <?php if ($t['client_name']): ?>
-        <p class="text-xs text-gray-500 mb-2 flex items-center gap-1">
+        <p class="text-xs text-gray-400 mb-2 flex items-center gap-1">
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
           </svg>
@@ -130,7 +130,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
         <!-- Footer: data + responsável -->
         <div class="flex items-center justify-between pt-2 border-t border-white/[0.05]">
           <?php if ($t['due_date']): ?>
-          <span class="text-[11px] <?= $overdue ? 'text-red-400 font-semibold' : 'text-gray-500' ?>">
+          <span class="text-[11px] <?= $overdue ? 'text-red-400 font-semibold' : 'text-gray-400' ?>">
             <?= $overdue ? '⚠ ' : '' ?><?= date('d/m', strtotime($t['due_date'])) ?>
           </span>
           <?php else: ?>
@@ -147,7 +147,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
       <?php endforeach; ?>
 
       <?php if (empty($board[$col])): ?>
-      <div class="flex-1 flex items-center justify-center py-8 text-xs text-gray-700">
+      <div class="flex-1 flex items-center justify-center py-8 text-xs text-gray-400">
         Arraste cards aqui
       </div>
       <?php endif; ?>

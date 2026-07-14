@@ -5,7 +5,7 @@
 <div class="text-center">
     <p class="text-6xl font-bold text-orange-500">429</p>
     <h1 class="mt-4 text-2xl font-semibold text-gray-900">Muitas requisições</h1>
-    <p class="mt-2 text-gray-500">Você excedeu o limite de tentativas. Tente novamente em instantes.</p>
+    <p class="mt-2 text-gray-400">Você excedeu o limite de tentativas. Tente novamente em instantes.</p>
     <?php if (!empty($retry_after)): ?>
     <p class="mt-1 text-sm text-gray-400">Aguarde <?= (int)$retry_after ?> segundo(s).</p>
     <?php endif; ?>

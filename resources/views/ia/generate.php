@@ -25,7 +25,7 @@
 
     <div>
       <label class="label-field">Tipo de análise *</label>
-      <select name="type" class="input-field w-full">
+      <select aria-label="Tipo" name="type" class="input-field w-full">
         <option value="performance_summary">Resumo de performance</option>
         <option value="recommendation">Recomendações de otimização</option>
         <option value="alert">Alertas de atenção</option>
@@ -36,12 +36,12 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label class="label-field">Período — De</label>
-        <input type="date" name="since" value="<?= date('Y-m-d', strtotime('-30 days')) ?>"
+        <input aria-label="Data inicial" type="date" name="since" value="<?= date('Y-m-d', strtotime('-30 days')) ?>"
                class="input-field w-full">
       </div>
       <div>
         <label class="label-field">Até</label>
-        <input type="date" name="until" value="<?= date('Y-m-d') ?>"
+        <input aria-label="Data final" type="date" name="until" value="<?= date('Y-m-d') ?>"
                class="input-field w-full">
       </div>
     </div>
@@ -69,7 +69,7 @@
     </div>
   </form>
 
-  <div class="mt-4 rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 text-xs text-gray-500">
+  <div class="mt-4 rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 text-xs text-gray-400">
     <p class="font-medium text-gray-400 mb-1">Sobre o uso de IA</p>
     <p>O provedor e modelo são configurados em <a href="/admin/configuracoes" class="text-brand-400 hover:underline">Configurações globais</a>. Suporta OpenAI (gpt-4o) e Claude (claude-sonnet-4-6).</p>
   </div>

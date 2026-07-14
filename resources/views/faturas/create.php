@@ -8,7 +8,7 @@ $old = flash_old();
 
 <div class="max-w-4xl mx-auto">
   <div class="mb-8">
-    <a href="/faturas" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Faturas</a>
+    <a href="/faturas" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">← Faturas</a>
     <h1 class="text-2xl font-bold text-white mt-2">Nova Fatura</h1>
   </div>
 
@@ -22,7 +22,7 @@ $old = flash_old();
         <!-- Cliente -->
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Cliente <span class="text-red-400">*</span></label>
-          <select name="client_id" required x-model="clientId" @change="loadContracts()"
+          <select aria-label="Cliente" name="client_id" required x-model="clientId" @change="loadContracts()"
             class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
             <option value="">Selecione...</option>
             <?php foreach ($clients as $cl): ?>
@@ -46,14 +46,14 @@ $old = flash_old();
         <!-- Título -->
         <div class="sm:col-span-2">
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Título <span class="text-red-400">*</span></label>
-          <input type="text" name="title" value="<?= e($old['title'] ?? '') ?>" required
+          <input aria-label="Título" type="text" name="title" value="<?= e($old['title'] ?? '') ?>" required
             class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
         </div>
 
         <!-- Status -->
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Status</label>
-          <select name="status" class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
+          <select aria-label="Situação" name="status" class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
             <?php foreach (['draft'=>'Rascunho','sent'=>'Enviada'] as $v => $l): ?>
             <option value="<?= $v ?>" <?= ($old['status'] ?? 'draft') === $v ? 'selected' : '' ?>><?= $l ?></option>
             <?php endforeach; ?>
@@ -80,7 +80,7 @@ $old = flash_old();
         <!-- Notas -->
         <div class="sm:col-span-2">
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Notas</label>
-          <textarea name="notes" rows="2"
+          <textarea aria-label="Observações" name="notes" rows="2"
             class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors resize-none"><?= e($old['notes'] ?? '') ?></textarea>
         </div>
       </div>
@@ -106,7 +106,7 @@ $old = flash_old();
                 class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white focus:border-brand-500 focus:outline-none transition-colors">
             </div>
             <div class="col-span-1 flex items-center justify-end pt-1">
-              <button type="button" @click="removeItem(i)" class="text-gray-500 hover:text-red-400 transition-colors">
+              <button type="button" @click="removeItem(i)" class="text-gray-400 hover:text-red-400 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
@@ -145,7 +145,7 @@ $old = flash_old();
 
     <div class="flex items-center justify-end gap-3">
       <a href="/faturas" class="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-medium text-gray-300 hover:text-white hover:border-white/20 transition-all">Cancelar</a>
-      <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
+      <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-gray-950 shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
         Criar Fatura
       </button>
     </div>

@@ -32,7 +32,7 @@
             <?= view_partial('flash') ?>
             <?= view_slot('content') ?>
         </div>
-        <p class="mt-6 text-center text-xs text-gray-600">
+        <p class="mt-6 text-center text-xs text-gray-400">
             &copy; <?= date('Y') ?> <?= e(env('APP_NAME', 'YVE Agency')) ?>. Todos os direitos reservados.
         </p>
     </div>

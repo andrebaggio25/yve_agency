@@ -14,7 +14,7 @@
     <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></div>
     <div class="flex-1">
       <p class="text-sm font-semibold text-emerald-300">Conectado</p>
-      <p class="text-xs text-gray-500 mt-0.5">Lista padrão: <span class="text-gray-300"><?= e($integration['default_list_id']) ?></span></p>
+      <p class="text-xs text-gray-400 mt-0.5">Lista padrão: <span class="text-gray-300"><?= e($integration['default_list_id']) ?></span></p>
     </div>
     <form action="/integrations/clickup" method="POST" onsubmit="return confirm('Desativar integração ClickUp?')">
       <?= csrf_field() ?>
@@ -35,7 +35,7 @@
       </div>
       <div>
         <p class="text-sm font-semibold text-white mb-1">Integração não configurada</p>
-        <p class="text-xs text-gray-500">Preencha os dados abaixo para ativar a sincronização bidirecional de tarefas com o ClickUp.</p>
+        <p class="text-xs text-gray-400">Preencha os dados abaixo para ativar a sincronização bidirecional de tarefas com o ClickUp.</p>
       </div>
     </div>
   </div>
@@ -47,25 +47,25 @@
     <?= csrf_field() ?>
 
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-4">
-      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Conexão</h2>
+      <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400">Conexão</h2>
 
       <div>
         <label class="label-field">Token Pessoal ClickUp <span class="text-red-400">*</span></label>
-        <input type="password" name="api_token"
+        <input aria-label="pk_XXXXXXXXXXXXXXXX" type="password" name="api_token"
                placeholder="pk_XXXXXXXXXXXXXXXX"
                value="<?= !empty($integration['api_token']) ? '••••••••' : '' ?>"
                class="input-field"
                autocomplete="off">
-        <p class="mt-1 text-xs text-gray-600">Configurações do ClickUp → Apps → API Token. <a href="https://app.clickup.com/settings/apps" target="_blank" class="text-brand-400 hover:text-brand-300">Abrir ClickUp ↗</a></p>
+        <p class="mt-1 text-xs text-gray-400">Configurações do ClickUp → Apps → API Token. <a href="https://app.clickup.com/settings/apps" target="_blank" class="text-brand-400 hover:text-brand-300">Abrir ClickUp ↗</a></p>
       </div>
 
       <div>
-        <label class="label-field">Workspace ID <span class="text-gray-600 font-normal">(para webhook)</span></label>
+        <label class="label-field">Workspace ID <span class="text-gray-400 font-normal">(para webhook)</span></label>
         <input type="text" name="workspace_id"
                value="<?= e($integration['workspace_id'] ?? '') ?>"
                placeholder="12345678"
                class="input-field">
-        <p class="mt-1 text-xs text-gray-600">Na URL do ClickUp: app.clickup.com/<strong class="text-gray-400">{workspace_id}</strong>/home</p>
+        <p class="mt-1 text-xs text-gray-400">Na URL do ClickUp: app.clickup.com/<strong class="text-gray-400">{workspace_id}</strong>/home</p>
       </div>
 
       <div>
@@ -74,15 +74,15 @@
                value="<?= e($integration['default_list_id'] ?? '') ?>"
                placeholder="901234567"
                class="input-field">
-        <p class="mt-1 text-xs text-gray-600">Abra a lista no ClickUp, copie o ID da URL: .../li/<strong class="text-gray-400">{list_id}</strong></p>
+        <p class="mt-1 text-xs text-gray-400">Abra a lista no ClickUp, copie o ID da URL: .../li/<strong class="text-gray-400">{list_id}</strong></p>
       </div>
     </div>
 
     <!-- Mapa de status ──────────────────────────────────────────────────────── -->
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6 space-y-4">
       <div>
-        <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Mapa de Status</h2>
-        <p class="text-xs text-gray-600 mt-1">Informe o nome exato do status no ClickUp que corresponde a cada status do YVE.</p>
+        <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-400">Mapa de Status</h2>
+        <p class="text-xs text-gray-400 mt-1">Informe o nome exato do status no ClickUp que corresponde a cada status do YVE.</p>
       </div>
 
       <?php
@@ -107,19 +107,19 @@
     <?php if (!empty($integration) && ($integration['status'] ?? '') === 'active' && !empty($integration['webhook_token'])): ?>
     <!-- Info do webhook ─────────────────────────────────────────────────────── -->
     <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-      <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-3">Webhook (entrada ClickUp → YVE)</h3>
+      <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Webhook (entrada ClickUp → YVE)</h3>
       <?php
       $appUrl     = env('APP_URL', 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost'));
       $webhookUrl = rtrim($appUrl, '/') . '/webhook/clickup/' . $integration['webhook_token'];
       ?>
-      <p class="text-xs text-gray-500 mb-2">URL configurada automaticamente ao salvar com Workspace ID:</p>
+      <p class="text-xs text-gray-400 mb-2">URL configurada automaticamente ao salvar com Workspace ID:</p>
       <div class="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-2">
         <code class="text-xs text-brand-300 flex-1 break-all"><?= e($webhookUrl) ?></code>
         <button type="button" onclick="navigator.clipboard.writeText('<?= e($webhookUrl) ?>').then(()=>this.textContent='✓').catch(()=>{})"
-                class="text-xs text-gray-500 hover:text-white shrink-0 transition-colors">Copiar</button>
+                class="text-xs text-gray-400 hover:text-white shrink-0 transition-colors">Copiar</button>
       </div>
       <?php if (!empty($integration['webhook_id'])): ?>
-      <p class="text-xs text-gray-600 mt-2">Webhook ID: <span class="text-gray-400"><?= e($integration['webhook_id']) ?></span></p>
+      <p class="text-xs text-gray-400 mt-2">Webhook ID: <span class="text-gray-400"><?= e($integration['webhook_id']) ?></span></p>
       <?php endif; ?>
     </div>
     <?php endif; ?>
