@@ -195,4 +195,22 @@ class GoogleDriveService
             default        => 'gray',
         };
     }
+
+    /**
+     * True se o MIME pode ser servido INLINE pelo proxy /raw sem risco.
+     * O proxy entrega bytes no domínio do app: um HTML/SVG hostil renderizado
+     * inline vira XSS armazenado com a sessão do usuário. Só mídia passiva é
+     * inline; todo o resto (html, svg, zip, exe, …) força download.
+     */
+    public static function inlineSafeMime(?string $mime): bool
+    {
+        $mime = strtolower(trim((string) $mime));
+        if ($mime === '' || str_contains($mime, 'svg')) {
+            return false; // SVG executa script quando navegado diretamente
+        }
+        return str_starts_with($mime, 'image/')
+            || str_starts_with($mime, 'video/')
+            || str_starts_with($mime, 'audio/')
+            || $mime === 'application/pdf';
+    }
 }

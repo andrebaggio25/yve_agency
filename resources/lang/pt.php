@@ -356,12 +356,12 @@ return [
 
     // Envio de conteúdos (arquivos)
     'portal.files.title'               => 'Enviar conteúdos',
-    'portal.files.subtitle'            => 'Organize em pastas e envie seus vídeos e fotos. Tudo vai direto para o nosso acervo.',
+    'portal.files.subtitle'            => 'Organize em pastas e envie seus arquivos. Tudo vai direto para o nosso acervo.',
     'portal.files.unavailable_title'   => 'Envio indisponível no momento',
     'portal.files.unavailable_text'    => 'A agência ainda não habilitou o envio de arquivos. Fale com a gente.',
     'portal.files.new_folder'          => 'Nova pasta',
     'portal.files.upload_files'        => 'Enviar arquivos',
-    'portal.files.accepted_hint'       => 'Fotos e vídeos',
+    'portal.files.accepted_hint'       => 'Fotos, vídeos e qualquer outro arquivo',
     'portal.files.max_hint'            => 'até :max por arquivo',
     'portal.files.folder_name_placeholder' => 'Nome da pasta (ex: Dia 15, Modelo Ana...)',
     'portal.files.create'              => 'Criar',
@@ -383,7 +383,6 @@ return [
     'portal.files.status_canceled'     => 'Cancelado',
     'portal.files.status_error'        => 'Erro',
     'portal.files.err_too_large'       => 'Arquivo muito grande (máximo :max).',
-    'portal.files.err_bad_type'        => 'Tipo não suportado. Envie apenas fotos ou vídeos.',
     'portal.files.err_conn'            => 'Conexão interrompida. Verifique a internet e tente de novo.',
     'portal.files.err_generic'         => 'Não foi possível enviar. Tente novamente.',
     'portal.files.err_invalid_response'=> 'Resposta inesperada do servidor. Tente novamente.',

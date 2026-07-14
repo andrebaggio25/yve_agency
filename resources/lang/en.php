@@ -345,12 +345,12 @@ return [
 
     // Content upload (files)
     'portal.files.title'               => 'Upload content',
-    'portal.files.subtitle'            => 'Organize into folders and upload your videos and photos. Everything goes straight to our library.',
+    'portal.files.subtitle'            => 'Organize into folders and upload your files. Everything goes straight to our library.',
     'portal.files.unavailable_title'   => 'Uploads unavailable right now',
     'portal.files.unavailable_text'    => 'The agency has not enabled file uploads yet. Get in touch with us.',
     'portal.files.new_folder'          => 'New folder',
     'portal.files.upload_files'        => 'Upload files',
-    'portal.files.accepted_hint'       => 'Photos and videos',
+    'portal.files.accepted_hint'       => 'Photos, videos and any other file',
     'portal.files.max_hint'            => 'up to :max per file',
     'portal.files.folder_name_placeholder' => 'Folder name (e.g. Day 15, Model Ana...)',
     'portal.files.create'              => 'Create',
@@ -372,7 +372,6 @@ return [
     'portal.files.status_canceled'     => 'Canceled',
     'portal.files.status_error'        => 'Error',
     'portal.files.err_too_large'       => 'File too large (max :max).',
-    'portal.files.err_bad_type'        => 'Unsupported type. Upload photos or videos only.',
     'portal.files.err_conn'            => 'Connection lost. Check your internet and try again.',
     'portal.files.err_generic'         => 'Upload failed. Please try again.',
     'portal.files.err_invalid_response'=> 'Unexpected server response. Please try again.',

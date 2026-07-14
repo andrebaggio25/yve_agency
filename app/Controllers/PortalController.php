@@ -677,22 +677,35 @@ class PortalController extends Controller
             return Response::json(['error' => t('portal.files.gone')], 404);
         }
 
-        return $this->emitStream($resp, $row['mime_type'] ?? null);
+        return $this->emitStream($resp, $row['mime_type'] ?? null, (string) ($row['name'] ?? 'arquivo'));
     }
 
-    /** Streama uma resposta do Drive direto pra saída (sem bufferizar na memória). */
-    private function emitStream(\Psr\Http\Message\ResponseInterface $resp, ?string $mime): Response
+    /**
+     * Streama uma resposta do Drive direto pra saída (sem bufferizar na memória).
+     * Só mídia passiva vai inline; o resto força download — HTML/SVG servidos
+     * inline no nosso domínio seriam XSS armazenado (ver inlineSafeMime).
+     */
+    private function emitStream(\Psr\Http\Message\ResponseInterface $resp, ?string $mime, string $name = 'arquivo'): Response
     {
+        $effectiveMime = $mime ?: ($resp->getHeaderLine('Content-Type') ?: null);
+        $inline        = GoogleDriveService::inlineSafeMime($effectiveMime);
+
         http_response_code($resp->getStatusCode());
-        foreach (['Content-Type', 'Content-Length', 'Content-Range', 'Accept-Ranges'] as $h) {
+        foreach (['Content-Length', 'Content-Range', 'Accept-Ranges'] as $h) {
             $v = $resp->getHeaderLine($h);
             if ($v !== '') {
                 header("{$h}: {$v}");
             }
         }
-        if ($resp->getHeaderLine('Content-Type') === '' && $mime) {
-            header('Content-Type: ' . $mime);
+
+        if ($inline) {
+            header('Content-Type: ' . ($effectiveMime ?: 'application/octet-stream'));
+        } else {
+            $safeName = str_replace(['"', "\r", "\n"], '', $name) ?: 'arquivo';
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . $safeName . '"');
         }
+        header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, max-age=3600');
 
         $body = $resp->getBody();

@@ -144,16 +144,26 @@ class ClientFilesController extends Controller
         $agencyId = (int) Auth::agencyId();
         $resp     = $this->driveApi->streamResponse($agencyId, $row['drive_file_id'], $request->server('HTTP_RANGE', null));
 
+        // Só mídia passiva vai inline; o resto força download (anti-XSS — o
+        // arquivo vem do cliente do portal e é servido no domínio do app).
+        $effectiveMime = ($row['mime_type'] ?? null) ?: ($resp->getHeaderLine('Content-Type') ?: null);
+        $inline        = \App\Services\GoogleDriveService::inlineSafeMime($effectiveMime);
+
         http_response_code($resp->getStatusCode());
-        foreach (['Content-Type', 'Content-Length', 'Content-Range', 'Accept-Ranges'] as $h) {
+        foreach (['Content-Length', 'Content-Range', 'Accept-Ranges'] as $h) {
             $v = $resp->getHeaderLine($h);
             if ($v !== '') {
                 header("{$h}: {$v}");
             }
         }
-        if ($resp->getHeaderLine('Content-Type') === '' && !empty($row['mime_type'])) {
-            header('Content-Type: ' . $row['mime_type']);
+        if ($inline) {
+            header('Content-Type: ' . ($effectiveMime ?: 'application/octet-stream'));
+        } else {
+            $safeName = str_replace(['"', "\r", "\n"], '', (string) ($row['name'] ?? '')) ?: 'arquivo';
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . $safeName . '"');
         }
+        header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, max-age=3600');
 
         $body = $resp->getBody();

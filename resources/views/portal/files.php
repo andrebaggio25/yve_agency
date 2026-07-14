@@ -20,7 +20,6 @@ $jsI18n = [
   'status_canceled'      => t('portal.files.status_canceled'),
   'status_error'         => t('portal.files.status_error'),
   'err_too_large'        => t('portal.files.err_too_large'),
-  'err_bad_type'         => t('portal.files.err_bad_type'),
   'err_conn'             => t('portal.files.err_conn'),
   'err_generic'          => t('portal.files.err_generic'),
   'err_invalid_response' => t('portal.files.err_invalid_response'),
@@ -76,7 +75,7 @@ $jsI18n = [
     <label class="btn-primary text-sm px-3 py-2 inline-flex items-center gap-1.5 cursor-pointer">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
       <?= t('portal.files.upload_files') ?>
-      <input type="file" multiple accept="image/*,video/*" class="hidden" @change="onFiles($event.target.files); $event.target.value=''">
+      <input type="file" multiple class="hidden" @change="onFiles($event.target.files); $event.target.value=''">
     </label>
   </div>
 
@@ -445,14 +444,10 @@ function driveManager(token, i18n, maxBytes) {
 
     enqueue(file) {
       const uid = ++_driveUploadSeq;
-      // Validação client-side: só o tipo. Tamanho não bloqueia mais aqui — o
-      // caminho direto browser→Drive não tem o teto do servidor; o limite
-      // (maxBytes) só vale se cairmos no fallback via relay PHP.
-      const typeOk = !file.type || file.type.startsWith('image/') || file.type.startsWith('video/');
-      if (!typeOk) {
-        this.uploads.push({ uid, name: file.name, progress: 0, status: 'error', error: this.i18n.err_bad_type, eta: '' });
-        return;
-      }
+      // Sem trava de tipo (qualquer arquivo é aceito; o proxy /raw força
+      // download do que não for mídia) e sem trava de tamanho — o caminho
+      // direto browser→Drive não tem o teto do servidor; o limite (maxBytes)
+      // só vale se cairmos no fallback via relay PHP.
       this.uploads.push({ uid, name: file.name, progress: 0, status: 'queued', error: null, eta: '', startedAt: 0, file });
       this.queue.push(uid);
       this.pumpQueue();

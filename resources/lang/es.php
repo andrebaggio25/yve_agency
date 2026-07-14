@@ -345,12 +345,12 @@ return [
 
     // Subida de contenidos (archivos)
     'portal.files.title'               => 'Subir contenidos',
-    'portal.files.subtitle'            => 'Organiza en carpetas y sube tus vídeos y fotos. Todo va directo a nuestro acervo.',
+    'portal.files.subtitle'            => 'Organiza en carpetas y sube tus archivos. Todo va directo a nuestro acervo.',
     'portal.files.unavailable_title'   => 'Subida no disponible por ahora',
     'portal.files.unavailable_text'    => 'La agencia aún no habilitó el envío de archivos. Habla con nosotros.',
     'portal.files.new_folder'          => 'Nueva carpeta',
     'portal.files.upload_files'        => 'Subir archivos',
-    'portal.files.accepted_hint'       => 'Fotos y vídeos',
+    'portal.files.accepted_hint'       => 'Fotos, vídeos y cualquier otro archivo',
     'portal.files.max_hint'            => 'hasta :max por archivo',
     'portal.files.folder_name_placeholder' => 'Nombre de la carpeta (ej: Día 15, Modelo Ana...)',
     'portal.files.create'              => 'Crear',
@@ -372,7 +372,6 @@ return [
     'portal.files.status_canceled'     => 'Cancelado',
     'portal.files.status_error'        => 'Error',
     'portal.files.err_too_large'       => 'Archivo demasiado grande (máximo :max).',
-    'portal.files.err_bad_type'        => 'Tipo no admitido. Sube solo fotos o vídeos.',
     'portal.files.err_conn'            => 'Conexión interrumpida. Revisa tu internet e inténtalo de nuevo.',
     'portal.files.err_generic'         => 'No se pudo subir. Inténtalo de nuevo.',
     'portal.files.err_invalid_response'=> 'Respuesta inesperada del servidor. Inténtalo de nuevo.',
