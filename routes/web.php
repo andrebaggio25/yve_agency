@@ -25,6 +25,7 @@ use App\Controllers\AdsActionController;
 use App\Controllers\OrganicController;
 use App\Controllers\TaskController;
 use App\Controllers\PortalController;
+use App\Controllers\PortalDriveController;
 use App\Controllers\InvoiceController;
 use App\Controllers\PaymentController;
 use App\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -503,16 +504,16 @@ $router->group([PortalMiddleware::class], function ($router) {
     $router->get('/portal/{portal_token}/faturas',                     [PortalController::class, 'invoices']);
     $router->get('/portal/{portal_token}/contratos',                   [PortalController::class, 'contracts']);
 
-    // Envio de conteúdos (Drive) — JSON, sem CSRF (igual itemFeedback)
-    $router->get('/portal/{portal_token}/arquivos',                    [PortalController::class, 'driveFiles']);
-    $router->get('/portal/{portal_token}/drive/folders',               [PortalController::class, 'driveFolders']);
-    $router->post('/portal/{portal_token}/drive/folders',              [PortalController::class, 'driveCreateFolder']);
-    $router->post('/portal/{portal_token}/drive/upload',               [PortalController::class, 'driveUpload']);
+    // Envio de conteúdos (Drive) — JSON, sem CSRF (igual itemFeedback; ver SEC-08)
+    $router->get('/portal/{portal_token}/arquivos',                    [PortalDriveController::class, 'driveFiles']);
+    $router->get('/portal/{portal_token}/drive/folders',               [PortalDriveController::class, 'driveFolders']);
+    $router->post('/portal/{portal_token}/drive/folders',              [PortalDriveController::class, 'driveCreateFolder']);
+    $router->post('/portal/{portal_token}/drive/upload',               [PortalDriveController::class, 'driveUpload']);
     // Upload direto browser→Drive (UP-01): sessão resumável + confirmação
-    $router->post('/portal/{portal_token}/drive/upload/session',       [PortalController::class, 'driveUploadSession']);
-    $router->post('/portal/{portal_token}/drive/upload/complete',      [PortalController::class, 'driveUploadComplete']);
-    $router->post('/portal/{portal_token}/drive/file/{fileId}/delete', [PortalController::class, 'driveDeleteFile']);
-    $router->post('/portal/{portal_token}/drive/file/restore',         [PortalController::class, 'driveRestoreFile']);
-    $router->post('/portal/{portal_token}/drive/folder/{folderId}/delete', [PortalController::class, 'driveDeleteFolder']);
-    $router->get('/portal/{portal_token}/drive/file/{fileId}/raw',     [PortalController::class, 'driveFileRaw']);
+    $router->post('/portal/{portal_token}/drive/upload/session',       [PortalDriveController::class, 'driveUploadSession']);
+    $router->post('/portal/{portal_token}/drive/upload/complete',      [PortalDriveController::class, 'driveUploadComplete']);
+    $router->post('/portal/{portal_token}/drive/file/{fileId}/delete', [PortalDriveController::class, 'driveDeleteFile']);
+    $router->post('/portal/{portal_token}/drive/file/restore',         [PortalDriveController::class, 'driveRestoreFile']);
+    $router->post('/portal/{portal_token}/drive/folder/{folderId}/delete', [PortalDriveController::class, 'driveDeleteFolder']);
+    $router->get('/portal/{portal_token}/drive/file/{fileId}/raw',     [PortalDriveController::class, 'driveFileRaw']);
 });

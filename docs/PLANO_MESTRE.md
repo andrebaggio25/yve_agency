@@ -75,7 +75,7 @@
 - **UX-04 · PDF real (dompdf) para fatura/contrato/relatório** — `M` 🟡.
 - **AUTH-01 · 2FA TOTP** — `M` 🟡.
 - **ARCH-02 · Unificar rotas pt/en por mapa de aliases** — `M` 🟡 · corta `routes/web.php` pela metade.
-- **ARCH-03 · Extrair `PortalDriveController`** — `P` 🟡 · natural durante UP-01.
+- **ARCH-03 · Extrair `PortalDriveController`** — `P` 🟡 · ✅ FEITO (2026-07-14) · `PortalController` 750→277 linhas (dashboard, planos, feedback, faturas, contratos); o CRUD de Drive + os dois caminhos de upload viraram `PortalDriveController` (574 l., coeso). As 10 rotas do portal foram remapeadas e um teste novo (`RoutesResolveTest`) valida que **toda rota do app aponta para um handler existente** — extração/rename de controller que esqueça a rota agora quebra a suíte.
 
 ---
 
