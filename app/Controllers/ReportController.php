@@ -14,6 +14,7 @@ use App\Repositories\ExecutiveReportRepository;
 use App\Repositories\InvoiceRepository;
 use App\Repositories\TaskRepository;
 use App\Repositories\AdMetricsRepository;
+use App\Services\PdfService;
 
 class ReportController extends Controller
 {
@@ -24,6 +25,7 @@ class ReportController extends Controller
         private AdMetricsRepository       $adMetrics,
         private ExecutiveReportRepository $reports,
         private AgencyRepository          $agencies,
+        private PdfService                $pdf,
     ) {}
 
     public function index(Request $request): Response
@@ -48,7 +50,28 @@ class ReportController extends Controller
         ]);
     }
 
-    /** Printable per-client PDF report (browser print-to-PDF). */
+    /** PDF real do relatório do cliente (UX-04) — o que se manda para a cliente. */
+    public function clientReportPdf(Request $request): Response
+    {
+        $response = $this->clientReport($request);
+
+        // Se o clientReport redirecionou (cliente inexistente), respeita.
+        if ($response->getStatus() !== 200) {
+            return $response;
+        }
+
+        $client = $this->clientRepo->findByIdAndAgency(
+            (int) $request->param('clientId'),
+            (int) Auth::agencyId()
+        );
+
+        return Response::file(
+            $this->pdf->fromHtml($response->getBody()),
+            $this->pdf->filename('relatorio', (string) ($client['name'] ?? ''), date('Y-m'))
+        );
+    }
+
+    /** Printable per-client report (base do PDF e da visualização). */
     public function clientReport(Request $request): Response
     {
         Auth::requirePermission('dashboard.view');

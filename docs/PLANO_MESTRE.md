@@ -77,7 +77,7 @@
 - **PROD-08 · Dashboard acionável ("meu dia")** — `M` 🟠 · aprovações paradas, faturas vencendo, tarefas atrasadas, syncs quebrados (depende de ARCH-01).
 - **PROD-03 · Hub 360° do cliente** — `M` 🟡 · abas conteúdo/financeiro/tráfego/arquivos na tela do cliente.
 - **PROD-06 · White-label do portal** — `M` 🟡 · logo + cor por agência (viável após FE-01 tokenizar).
-- **UX-04 · PDF real (dompdf) para fatura/contrato/relatório** — `M` 🟡.
+- **UX-04 · PDF real (dompdf)** — `M` 🟡 · ✅ FEITO (2026-07-14) · "PDF" era uma **tela de impressão**: a cliente recebia um link e tinha de imprimir→salvar na mão. Agora `/faturas/{id}/pdf`, `/contratos/{id}/pdf` e `/relatorio-executivo/cliente/{id}/pdf` devolvem **bytes de PDF** (dompdf, reaproveitando as views de impressão que já existiam). **O ganho real: a fatura vai anexada no e-mail** — é como cobrança circula; ninguém quer um link para uma tela de impressão. Falha ao gerar o PDF não impede o envio da cobrança. Nome de arquivo sem acento e sem caractere que quebre o header. Teste confere os bytes (`%PDF-`), então se alguém quebrar a geração e a rota voltar a devolver HTML, a suíte pega.
 - **AUTH-01 · 2FA TOTP** — `M` 🟡.
 - **ARCH-02 · Unificar rotas pt/en por mapa de aliases** — `M` 🟡 · corta `routes/web.php` pela metade.
 - **ARCH-03 · Extrair `PortalDriveController`** — `P` 🟡 · ✅ FEITO (2026-07-14) · `PortalController` 750→277 linhas (dashboard, planos, feedback, faturas, contratos); o CRUD de Drive + os dois caminhos de upload viraram `PortalDriveController` (574 l., coeso). As 10 rotas do portal foram remapeadas e um teste novo (`RoutesResolveTest`) valida que **toda rota do app aponta para um handler existente** — extração/rename de controller que esqueça a rota agora quebra a suíte.

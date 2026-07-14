@@ -8,6 +8,7 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Services\InvoiceService;
+use App\Services\PdfService;
 use App\Services\ContractService;
 use App\Services\ClientService;
 use App\Support\Auth;
@@ -18,6 +19,7 @@ class InvoiceController extends Controller
         private InvoiceService  $invoiceService,
         private ContractService $contractService,
         private ClientService   $clientService,
+        private PdfService      $pdf,
     ) {}
 
     public function index(Request $request): Response
@@ -127,12 +129,26 @@ class InvoiceController extends Controller
         return $this->redirect('/faturas/' . $id);
     }
 
+    /**
+     * PDF de verdade (UX-04). Antes isto abria uma tela de impressão e o
+     * usuário tinha de imprimir→salvar como PDF na mão — e não dava para
+     * anexar no e-mail, que é como cobrança circula.
+     */
     public function printView(Request $request): Response
     {
         Auth::requirePermission('invoices.view');
 
         $invoice = $this->invoiceService->findWithItems((int) $request->param('id'));
-        return $this->view('faturas.print', compact('invoice'));
+        if (!$invoice) {
+            return Response::view('errors.404', [], 404);
+        }
+
+        $pdf = $this->pdf->fromView('faturas.print', compact('invoice'));
+
+        return Response::file(
+            $pdf,
+            $this->pdf->filename('fatura', (string) $invoice['invoice_number'], (string) ($invoice['client_name'] ?? ''))
+        );
     }
 
     public function sendEmail(Request $request): Response

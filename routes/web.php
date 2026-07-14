@@ -259,7 +259,8 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/subscription', [BillingController::class, 'index']);
     // Executive report
     $router->get('/executive-report',                      [ReportController::class, 'index']);
-    $router->get('/executive-report/client/{clientId}',    [ReportController::class, 'clientReport']);
+    $router->get('/executive-report/client/{clientId}',     [ReportController::class, 'clientReport']);
+    $router->get('/executive-report/client/{clientId}/pdf', [ReportController::class, 'clientReportPdf']);
     // Notifications
     $router->get('/notifications',               [SettingsController::class, 'notificationsIndex']);
     $router->get('/notifications/count',         [SettingsController::class, 'notificationsCount']);
@@ -461,7 +462,8 @@ $router->group([AuthMiddleware::class], function ($router) {
 
     // ── Relatório Executivo ──────────────────────────────────────────────────
     $router->get('/relatorio-executivo',                   [ReportController::class, 'index']);
-    $router->get('/relatorio-executivo/cliente/{clientId}',[ReportController::class, 'clientReport']);
+    $router->get('/relatorio-executivo/cliente/{clientId}',     [ReportController::class, 'clientReport']);
+    $router->get('/relatorio-executivo/cliente/{clientId}/pdf', [ReportController::class, 'clientReportPdf']);
 
     // ── Notificações (JSON) ───────────────────────────────────────────────────
     $router->get('/notificacoes',                            [SettingsController::class, 'notificationsIndex']);

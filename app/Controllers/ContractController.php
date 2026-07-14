@@ -8,6 +8,7 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Services\ContractService;
+use App\Services\PdfService;
 use App\Services\ClientService;
 use App\Support\Auth;
 
@@ -16,6 +17,7 @@ class ContractController extends Controller
     public function __construct(
         private ContractService $contractService,
         private ClientService   $clientService,
+        private PdfService      $pdf,
     ) {}
 
     public function index(Request $request): Response
@@ -96,11 +98,18 @@ class ContractController extends Controller
         return $this->redirect('/contratos');
     }
 
+    /** PDF real do contrato (UX-04) — era tela de impressão. */
     public function printView(Request $request): Response
     {
         Auth::requirePermission('contracts.view');
 
         $contract = $this->contractService->findOrFail((int) $request->param('id'));
-        return $this->view('contratos.print', compact('contract'));
+
+        $pdf = $this->pdf->fromView('contratos.print', compact('contract'));
+
+        return Response::file(
+            $pdf,
+            $this->pdf->filename('contrato', (string) ($contract['contract_number'] ?? $contract['id']), (string) ($contract['client_name'] ?? ''))
+        );
     }
 }

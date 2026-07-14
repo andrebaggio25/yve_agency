@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+
 use App\Repositories\InvoiceRepository;
 use App\Services\EmailService;
 use App\Support\Auth;
@@ -131,7 +132,33 @@ class InvoiceService
             'notes'          => $invoice['notes'] ?? '',
         ];
 
-        return $this->emailService->send($recipientEmail, $recipientName, 'invoice_sent', $vars);
+        // Anexa a fatura em PDF (UX-04). É como cobrança circula: ninguém quer
+        // um link para uma tela de impressão — quer o documento no e-mail.
+        // Falha ao gerar o PDF não pode impedir o envio da cobrança.
+        $attachments = [];
+        try {
+            $pdf  = new PdfService();
+            $file = storage_path('exports/' . $pdf->filename('fatura', (string) $invoice['invoice_number']));
+
+            if (!is_dir(dirname($file))) {
+                @mkdir(dirname($file), 0775, true);
+            }
+            file_put_contents($file, $pdf->fromView('faturas.print', compact('invoice')));
+
+            $attachments[] = $file;
+        } catch (\Throwable $e) {
+            error_log('[invoice] falha ao gerar PDF da fatura: ' . $e->getMessage());
+        }
+
+        $result = $attachments
+            ? $this->emailService->sendWithAttachment($recipientEmail, $recipientName, 'invoice_sent', $vars, 'pt', $attachments)
+            : $this->emailService->send($recipientEmail, $recipientName, 'invoice_sent', $vars);
+
+        foreach ($attachments as $tmp) {
+            @unlink($tmp);
+        }
+
+        return $result;
     }
 
     public function summary(): array

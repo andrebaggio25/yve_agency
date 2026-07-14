@@ -55,9 +55,14 @@ $invoiceStatusColors = ['paid' => '#059669', 'sent' => '#2563eb', 'overdue' => '
       </p>
     </div>
     <div class="no-print" style="display:flex;gap:.5rem;align-items:center">
+      <!-- UX-04: PDF de verdade (gerado no servidor), não "imprima você mesmo" -->
+      <a href="/relatorio-executivo/cliente/<?= (int) $client['id'] ?>/pdf"
+         style="background:#7c3aed;color:#fff;padding:.5rem 1.25rem;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">
+        Baixar PDF
+      </a>
       <button onclick="window.print()"
-              style="background:#7c3aed;color:#fff;border:none;padding:.5rem 1.25rem;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer">
-        Imprimir / Salvar PDF
+              style="background:transparent;color:#6b7280;border:1px solid #e5e7eb;padding:.5rem 1rem;border-radius:8px;font-size:13px;cursor:pointer">
+        Imprimir
       </button>
       <a href="/relatorio-executivo" style="font-size:13px;color:#6b7280;text-decoration:none">← Voltar</a>
     </div>

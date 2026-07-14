@@ -40,6 +40,32 @@ final class Response
         return $instance;
     }
 
+    /**
+     * Arquivo para download/inline (UX-04 — PDF).
+     *
+     * `inline`: o navegador abre no visualizador (é o que o usuário espera ao
+     * clicar em "PDF"); `attachment` força o download.
+     */
+    public static function file(
+        string $content,
+        string $filename,
+        string $mime = 'application/pdf',
+        bool $inline = true,
+    ): static {
+        $disposition = $inline ? 'inline' : 'attachment';
+        // Aspas e quebras de linha no nome quebrariam o header (response splitting).
+        $safeName    = str_replace(['"', "\r", "\n"], '', $filename);
+
+        $instance         = new static();
+        $instance->status = 200;
+        $instance->body   = $content;
+        $instance->headers['Content-Type']        = $mime;
+        $instance->headers['Content-Disposition'] = "{$disposition}; filename=\"{$safeName}\"";
+        $instance->headers['Content-Length']      = (string) strlen($content);
+
+        return $instance;
+    }
+
     public static function text(string $body, int $status = 200): static
     {
         $instance         = new static();
