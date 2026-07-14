@@ -478,26 +478,32 @@ function driveManager(token, i18n, maxBytes) {
       this.activeCount++;
 
       try {
-        const uploadUrl = await this.createUploadSession(entry.file);
+        const sess = await this.createUploadSession(entry.file);
         let outcome = 'failed';
-        if (uploadUrl) {
-          outcome = await this.uploadDirect(entry, uploadUrl);
+        let diag = sess.diag || '';
+        if (sess.url) {
+          const res = await this.uploadDirect(entry, sess.url);
+          outcome = res.outcome;
+          diag = res.diag || diag;
         }
         if (outcome === 'failed') {
           if (this.maxBytes === 0 || entry.file.size <= this.maxBytes) {
             // Transporte direto indisponível (rede/proxy): tenta o relay PHP.
+            console.warn('[drive] upload direto indisponível (' + diag + '); usando o relay');
             entry.status = 'uploading';
             entry.progress = 0;
             entry.error = null;
             entry.startedAt = Date.now();
             await this.uploadRelay(entry);
           } else {
+            // Sem fallback possível (arquivo maior que o limite do relay):
+            // mostra o passo que falhou pra diagnosticar sem DevTools.
             entry.status = 'error';
-            entry.error = this.i18n.err_conn;
+            entry.error = this.i18n.err_conn + (diag ? ' [' + diag + ']' : '');
           }
         }
       } catch (e) {
-        if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn; }
+        if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn + ' [inesperado]'; }
       } finally {
         delete _driveXhrs[entry.uid];
         this.activeCount = Math.max(0, this.activeCount - 1);
@@ -505,7 +511,11 @@ function driveManager(token, i18n, maxBytes) {
       }
     },
 
-    /** Pede ao servidor a session URI do upload resumável. Null = usar fallback relay. */
+    /**
+     * Pede ao servidor a session URI do upload resumável.
+     * Retorna {url} no sucesso ou {diag} explicando a falha (pro fallback/erro).
+     * Timeout de 20s: uma sessão que não abre não pode segurar a fila em 0%.
+     */
     async createUploadSession(file) {
       try {
         const r = await fetch(`${this.base()}/drive/upload/session`, {
@@ -517,31 +527,35 @@ function driveManager(token, i18n, maxBytes) {
             size: file.size,
             folder_id: this.folderId,
           }),
+          signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(20000) : undefined,
         });
-        if (!r.ok) return null;
+        if (!r.ok) return { diag: 'sessao:HTTP' + r.status };
         const d = await r.json();
-        return (d.success && d.upload_url) ? d.upload_url : null;
-      } catch { return null; }
+        return (d.success && d.upload_url) ? { url: d.upload_url } : { diag: 'sessao:sem-url' };
+      } catch (e) {
+        return { diag: (e && e.name === 'TimeoutError') ? 'sessao:timeout' : 'sessao:rede' };
+      }
     },
 
     /**
      * Envia os bytes em chunks direto pra session URI do Google (com retomada).
-     * Retorna: 'done' (terminou, sucesso ou erro já mostrado), 'canceled', ou
-     * 'failed' (transporte indisponível — o chamador pode cair no relay).
+     * Retorna {outcome, diag}: 'done' (terminou — sucesso ou erro já mostrado),
+     * 'canceled', ou 'failed' + diag (transporte indisponível — chamador decide).
      */
     async uploadDirect(entry, uploadUrl) {
       const file = entry.file;
       const total = file.size;
       let offset = 0;
       let attempts = 0;
+      let diag = '';
 
       while (offset < total) {
-        if (entry.status === 'canceled') return 'canceled';
+        if (entry.status === 'canceled') return { outcome: 'canceled' };
 
         const end = Math.min(offset + _DRIVE_CHUNK, total);
         const res = await this.putChunk(entry, uploadUrl, file.slice(offset, end), offset, end, total);
 
-        if (entry.status === 'canceled') return 'canceled';
+        if (entry.status === 'canceled') return { outcome: 'canceled' };
 
         if (res.type === 'progress') { offset = res.next; attempts = 0; continue; }
 
@@ -549,17 +563,18 @@ function driveManager(token, i18n, maxBytes) {
           entry.status = 'processing';
           entry.eta = '';
           await this.completeDirect(entry, res.file);
-          return 'done';
+          return { outcome: 'done' };
         }
 
         // Chunk falhou: espera, pergunta ao Google quanto já foi gravado e retoma.
+        diag = res.diag || 'put:?';
         attempts++;
-        if (attempts > 3) return 'failed';
+        if (attempts > 3) return { outcome: 'failed', diag };
         await new Promise(r => setTimeout(r, 1000 * attempts));
         const committed = await this.probeOffset(uploadUrl, total);
         if (committed !== null) offset = committed;
       }
-      return 'failed';
+      return { outcome: 'failed', diag: diag || 'put:fim-inesperado' };
     },
 
     /** PUT de um chunk com Content-Range. 308 = continuar; 200/201 = terminou. */
@@ -569,6 +584,8 @@ function driveManager(token, i18n, maxBytes) {
         _driveXhrs[entry.uid] = xhr;
         xhr.open('PUT', url, true);
         xhr.setRequestHeader('Content-Range', `bytes ${start}-${end - 1}/${total}`);
+        // Nenhuma etapa pode pendurar o upload em silêncio (bug do "0% eterno").
+        xhr.timeout = 180000;
 
         xhr.upload.onprogress = (e) => {
           if (!e.lengthComputable) return;
@@ -587,13 +604,14 @@ function driveManager(token, i18n, maxBytes) {
           } else if (xhr.status === 200 || xhr.status === 201) {
             let file = null;
             try { file = JSON.parse(xhr.responseText); } catch {}
-            resolve(file && file.id ? { type: 'done', file } : { type: 'error' });
+            resolve(file && file.id ? { type: 'done', file } : { type: 'error', diag: 'put:resposta-invalida' });
           } else {
-            resolve({ type: 'error' });
+            resolve({ type: 'error', diag: 'put:HTTP' + xhr.status });
           }
         };
-        xhr.onerror = () => resolve({ type: 'error' });
-        xhr.onabort = () => resolve({ type: 'error' });
+        xhr.ontimeout = () => resolve({ type: 'error', diag: 'put:timeout' });
+        xhr.onerror = () => resolve({ type: 'error', diag: 'put:rede' });
+        xhr.onabort = () => resolve({ type: 'error', diag: 'put:cancelado' });
 
         xhr.send(blob);
       });
@@ -605,6 +623,7 @@ function driveManager(token, i18n, maxBytes) {
         const xhr = new XMLHttpRequest();
         xhr.open('PUT', url, true);
         xhr.setRequestHeader('Content-Range', `bytes */${total}`);
+        xhr.timeout = 20000;
         xhr.onload = () => {
           if (xhr.status === 308) {
             const m = /-(\d+)$/.exec(xhr.getResponseHeader('Range') || '');
@@ -613,6 +632,7 @@ function driveManager(token, i18n, maxBytes) {
             resolve(null);
           }
         };
+        xhr.ontimeout = () => resolve(null);
         xhr.onerror = () => resolve(null);
         xhr.send();
       });
@@ -625,6 +645,7 @@ function driveManager(token, i18n, maxBytes) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
           body: JSON.stringify({ drive_file_id: driveFile.id, folder_id: this.folderId }),
+          signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(30000) : undefined,
         });
         const d = await r.json();
         if (r.ok && d.success) {

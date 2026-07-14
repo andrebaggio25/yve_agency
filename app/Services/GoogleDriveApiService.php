@@ -365,7 +365,9 @@ class GoogleDriveApiService
         }
 
         try {
-            $resp = (new Client(['timeout' => 0]))->put($sessionUri, [
+            // Teto de 15min: um PUT pendurado no Google não pode segurar um
+            // worker PHP (e o navegador do cliente) pra sempre.
+            $resp = (new Client(['timeout' => 900]))->put($sessionUri, [
                 'headers' => [
                     'Content-Type'   => $mime,
                     'Content-Length' => (string) $size,
