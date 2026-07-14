@@ -74,8 +74,8 @@
 </div>
 
 <?php view_start('scripts'); ?>
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="<?= asset('/js/vendor/marked.min.js') ?>"></script>
+<script src="<?= asset('/js/vendor/purify.min.js') ?>"></script>
 <script>
 const raw = <?= json_encode($insight['content'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
 // SEC-04: o Markdown vira HTML e é SANITIZADO com DOMPurify antes de ir ao DOM.

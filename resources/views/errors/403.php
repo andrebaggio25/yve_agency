@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><title>403 — Acesso Negado</title>
-<script src="https://cdn.tailwindcss.com"></script></head>
+<link rel="stylesheet" href="<?= asset('/css/app.css') ?>"></head>
 <body class="flex min-h-screen items-center justify-center bg-gray-100">
 <div class="text-center">
     <p class="text-6xl font-bold text-indigo-600">403</p>

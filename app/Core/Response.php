@@ -111,24 +111,30 @@ final class Response
     }
 
     /**
-     * CSP alinhada ao que o app carrega hoje: Tailwind/Alpine/Chart/marked por
-     * CDN (exigem 'unsafe-inline'/'unsafe-eval'), embeds do Drive/Docs/YouTube e
-     * fontes do Google. Ainda assim restringe origens de script, bloqueia
-     * object/embed, trava base-uri e frame-ancestors (anti-clickjacking).
-     * Endurecer para nonce/sem unsafe depois do self-host de assets (PERF-01).
+     * CSP do app (SEC-03 + SEC-10).
+     *
+     * Depois do FE-01 (self-host de Tailwind/Alpine/Chart/marked), **nenhum
+     * script vem de CDN** — `script-src` é só `'self'`, e o `'unsafe-eval'`
+     * que o Tailwind-CDN exigia foi eliminado. O `'unsafe-inline'` continua
+     * porque várias views ainda têm `<script>` inline; sai quando o FE-02
+     * mover esse JS para arquivos (aí vira nonce).
+     *
+     * Exceções conscientes:
+     * - `style-src` inline: Tailwind/Alpine escrevem estilo inline em runtime.
+     * - `img-src https:`: logo/thumbnail de agência e do Drive vêm de fora.
+     * - `connect-src googleapis`: PUTs do upload direto pro Drive (UP-01).
+     * - `frame-src` Drive/Docs/YouTube: preview de arquivo e vídeo embutido.
      */
     private static function contentSecurityPolicy(): string
     {
         return implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://www.youtube.com",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+            "script-src 'self' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' data: https://fonts.gstatic.com",
             "img-src 'self' data: https:",
             "media-src 'self' https://drive.google.com blob:",
             "frame-src https://drive.google.com https://docs.google.com https://www.youtube.com https://www.youtube-nocookie.com",
-            // googleapis.com: upload direto browser→Drive (UP-01) — os PUTs da
-            // sessão resumável saem do navegador direto pro Google.
             "connect-src 'self' https://www.googleapis.com",
             "object-src 'none'",
             "base-uri 'self'",

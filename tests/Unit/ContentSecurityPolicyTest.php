@@ -37,4 +37,17 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertStringContainsString("object-src 'none'", $csp);
         $this->assertStringContainsString("frame-ancestors 'self'", $csp);
     }
+
+    /** SEC-10: com os assets self-hosted (FE-01), script só pode vir de 'self'. */
+    public function test_scripts_come_only_from_self_without_eval(): void
+    {
+        $csp = $this->csp();
+
+        preg_match('/script-src([^;]*)/', $csp, $m);
+        $scriptSrc = $m[1] ?? '';
+
+        $this->assertStringNotContainsString('unsafe-eval', $scriptSrc, "'unsafe-eval' voltou — era exigência do Tailwind CDN, que não existe mais.");
+        $this->assertStringNotContainsString('cdn.', $scriptSrc, 'Script de CDN voltou — os assets são self-hosted (FE-01).');
+        $this->assertStringContainsString("'self'", $scriptSrc);
+    }
 }

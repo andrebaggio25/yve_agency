@@ -4,16 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e(view_slot('title', 'Entrar')) ?> — <?= e(env('APP_NAME', 'YVE Agency')) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { font-family: 'Inter', sans-serif; }
-        html { background: #09090f; }
-        .noise { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); }
-        .glow { box-shadow: 0 0 80px -20px rgba(139,92,246,0.3); }
-    </style>
+    <link rel="stylesheet" href="<?= asset('/css/app.css') ?>">
 </head>
 <body class="h-full bg-[#09090f] text-white noise">
 

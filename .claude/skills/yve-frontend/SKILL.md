@@ -5,26 +5,39 @@ description: Use ao criar ou alterar QUALQUER tela do YVE Agency — views PHP c
 
 # Frontend do YVE Agency (tokens, estados, JS e anti-genérico)
 
-Stack: views PHP nativas + Tailwind + Alpine.js, tema **dark** com acento violeta. Sem React, sem build (ainda — FE-01 no `yve-roadmap` vai trazer Tailwind CLI). O objetivo destas regras: toda tela nova parecer parte de um **produto validado**, não de um template.
+Stack: views PHP nativas + Tailwind (**build local, sem CDN**) + Alpine.js, tema **dark** com acento violeta. Sem React. O objetivo destas regras: toda tela nova parecer parte de um **produto validado**, não de um template.
+
+## 0. O build (FE-01) — leia antes de tocar em CSS
+
+```bash
+npm install         # uma vez
+npm run build       # gera public/css/app.css (purgado) + public/js/vendor/*
+npm run dev         # watch enquanto trabalha
+```
+
+- **Mexeu em `resources/css/app.css` ou `tailwind.config.js` → rode `npm run build`.** O CSS gerado (`public/css/app.css`) é **versionado de propósito**: o hosting compartilhado não roda build no deploy. Esquecer isso = mudança não aparece em produção.
+- **Zero CDN em runtime.** Tailwind, Alpine, Chart.js, marked e DOMPurify são self-hosted em `public/js/vendor/`. O teste `NoRuntimeCdnTest` quebra se alguém colar um `<script src="https://cdn...">`. Precisa de uma lib nova? Adicione ao `package.json` e ao `build:vendor` — não ao HTML.
+- **Purge:** o CSS final só contém classes que aparecem *literalmente* em `resources/views/**`, `app/**` ou `public/js/**`. **Nunca monte classe por concatenação** (`"bg-" + cor`, `bg-<?= $c ?>-500`) — ela some do build. Use a classe completa (`$map = ['approved' => 'text-emerald-300 bg-emerald-500/10']`), que é o padrão já usado no projeto.
 
 ## 1. Tokens — nada hardcoded
 
-Fonte de verdade visual (hoje duplicada nos layouts; FE-01 vai unificar — **não crie uma 5ª cópia**):
+Fonte de verdade: **`tailwind.config.js`** (paleta, fonte, sombras) e **`resources/css/app.css`** (componentes). Não existe mais `<style>` de componente nos layouts — não recrie um.
 
 | Token | Valor | Uso |
 |-------|-------|-----|
 | Fundo base | `gray-950` (#09090f) | body |
-| Superfície | `gray-925` (#0f1117) / `#12121a` | cards, dropdowns |
+| Superfície | `surface` (#0d0d14) sidebar/topbar · `surface-raised` (#12121a) dropdown · `surface-card` (#16161f) card do portal |
 | Borda | `white/[0.06]`–`white/[0.10]` | divisões sutis |
 | Texto | `gray-200` corpo · `gray-500` secundário · `white` título | |
-| Acento | violeta `violet-500` (#8b5cf6) | ação primária, foco, glow |
-| Estados | `emerald` sucesso · `amber` alerta · `red` erro | |
+| **Acento** | var CSS `--accent` (padrão violeta; `[data-theme="admin"]` = vermelho) | ação primária, foco, glow |
+| Estados | `emerald` sucesso · `amber` alerta · `rose`/`red` erro | |
 | Fonte | Inter (400–800) | |
-| Raio | `rounded-lg` padrão · `rounded-xl` cards | |
+| Raio | `rounded-xl` controles · `rounded-2xl` cards | |
 
 Regras:
-- **Nunca** cor hexadecimal solta em view (`style="color:#8b5cf6"` é proibido). Use classe Tailwind do token.
-- Reutilize as classes de componente do layout: `.card`, `.btn-primary`, `.input-field`, `.label-field`. Se precisar de um componente novo, defina-o **no layout/CSS compartilhado**, não inline na view.
+- **Nunca** cor hexadecimal solta em view (`style="color:#8b5cf6"` é proibido). Use a classe do token.
+- **O acento é variável (`--accent`), não uma cor fixa.** Componente novo que precise da cor da marca usa `rgb(var(--accent))` no `app.css` — nunca `violet-600` hardcoded. É isso que faz o painel admin ficar vermelho com o mesmo CSS, e é a base do white-label por agência (PROD-06).
+- Componentes prontos: `.card`, `.card-solid` (portal), `.btn-primary`, `.btn-secondary`, `.btn-danger`, `.input-field`, `.label-field`, `.badge`. Precisa de um novo? Defina em `@layer components` do `app.css` — não inline na view.
 - Espaçamento na escala do Tailwind (`p-4`, `gap-3`…) — nunca `style="margin: 13px"`.
 - Novo padrão visual recorrente (badge de status, tabela, empty-state) → vira partial em `resources/views/partials/`.
 

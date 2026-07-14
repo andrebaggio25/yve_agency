@@ -6,46 +6,15 @@
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <title><?= e(view_slot('title', 'Admin')) ?> — YVE Platform Admin</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: { gray: { 925: '#0f1117', 950: '#09090f' } },
-            fontFamily: { sans: ['"Inter"', 'system-ui', 'sans-serif'] }
-          }
-        }
-      }
-    </script>
+    <!-- Assets locais (FE-01). O acento vermelho vem do data-theme="admin"
+         no <body> — mesmo CSS do tenant, um token diferente. -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <style>
-      * { -webkit-font-smoothing: antialiased; }
-      html,body { background: #09090f; color: #e5e7eb; }
-      ::-webkit-scrollbar { width: 4px; }
-      ::-webkit-scrollbar-thumb { background: rgba(239,68,68,0.3); border-radius: 4px; }
-      .nav-active { box-shadow: 0 0 0 1px rgba(239,68,68,0.4), inset 0 0 0 1px rgba(239,68,68,0.2); }
-      @keyframes fadeInUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-      .page-enter { animation: fadeInUp 0.25s ease-out; }
-
-      /* Utility classes shared with tenant layout */
-      .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; }
-      .input-field { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); border-radius: 0.75rem; color: #fff; padding: 0.5rem 0.875rem; font-size: 0.875rem; transition: border-color .15s; outline: none; }
-      .input-field:focus { border-color: rgba(239,68,68,0.5); box-shadow: 0 0 0 2px rgba(239,68,68,0.15); }
-      select { color-scheme: dark; }
-      select option, select optgroup { background-color: #1a1a2e; color: #e5e7eb; }
-      .label-field { display: block; font-size: 0.75rem; font-weight: 500; color: #9ca3af; margin-bottom: 0.375rem; }
-      .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; background: linear-gradient(135deg,#dc2626,#b91c1c); color: #fff; font-size: 0.875rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.75rem; transition: all .15s; border: none; cursor: pointer; }
-      .btn-primary:hover { background: linear-gradient(135deg,#ef4444,#dc2626); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,.25); }
-      .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; background: rgba(255,255,255,0.05); color: #d1d5db; font-size: 0.875rem; font-weight: 500; padding: 0.5rem 1rem; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.08); transition: all .15s; cursor: pointer; text-decoration: none; }
-      .btn-secondary:hover { background: rgba(255,255,255,0.08); color: #fff; }
-      .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
-    </style>
+    <link rel="stylesheet" href="<?= asset('/css/app.css') ?>">
+    <script defer src="<?= asset('/js/vendor/alpine.min.js') ?>"></script>
     <?= view_slot('head') ?>
 </head>
-<body class="h-full font-sans" x-data="{open:false}">
+<body class="h-full font-sans" data-theme="admin" x-data="{open:false}">
 
 <div class="flex h-full min-h-screen">
 

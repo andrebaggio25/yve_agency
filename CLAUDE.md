@@ -11,9 +11,14 @@ composer audit       # sem advisories
 composer migrate     # Phinx (produção também roda por /admin/migrations)
 composer cs-fix      # PHP-CS-Fixer
 php -S localhost:8000 router.php   # dev server
+
+npm install          # uma vez
+npm run build        # CSS purgado + vendor self-hosted → public/ (VERSIONADO)
+npm run dev          # watch do Tailwind
 ```
 
 Não finalize nenhuma tarefa com teste vermelho, erro novo no PHPStan ou advisory novo no audit.
+**Mexeu em `resources/css/app.css` ou `tailwind.config.js`? Rode `npm run build` e commite `public/css/app.css`** — o hosting compartilhado não roda build no deploy.
 
 ## Arquitetura (resumo — detalhe na skill `yve-arquitetura`)
 
@@ -26,6 +31,7 @@ public/index.php → Router → Pipeline(middlewares) → Controller → Service
 - `app/Services/` — regra de negócio; DI por construtor (Container auto-wire)
 - `app/Repositories/` — SQL isolado, prepared statements, **escopo `agency_id` sempre**
 - `resources/views/` — PHP nativo; `e()` em toda saída; `csrf_field()` em todo form; layouts `app|admin|portal|guest|print`
+- `resources/css/app.css` + `tailwind.config.js` — **design system único** (tokens, `.card`, `.btn-*`); acento é a var `--accent` (violeta; `[data-theme="admin"]` = vermelho). Zero CDN em runtime.
 - `app/Automations/` + tabela `jobs` — regras agendadas e fila (cron HTTP em `/queue/*`)
 
 ## Invariantes inegociáveis

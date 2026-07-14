@@ -1,6 +1,6 @@
 <?php view_layout('app'); view_start('title'); ?>Relatório Executivo<?php view_end(); ?>
 <?php view_start('head'); ?>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script defer src="<?= asset('/js/vendor/chart.umd.min.js') ?>"></script>
 <?php view_end(); ?>
 <?php view_start('content'); ?>
 

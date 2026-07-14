@@ -4,18 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= e(view_slot('title', $client['name'] ?? 'Portal')) ?> — Portal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
-  <style>
-    body { background: #09090f; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; }
-    .card { background: #16161f; border: 1px solid rgba(255,255,255,0.07); border-radius: 1rem; }
-    select { color-scheme: dark; }
-    select option, select optgroup { background-color: #16161f; color: #e2e8f0; }
-    .btn-primary { background: #7c3aed; color: #fff; border-radius: .625rem; font-weight: 500; display: inline-flex; align-items: center; transition: opacity .15s; }
-    .btn-primary:hover { opacity: .85; }
-    .btn-secondary { background: rgba(255,255,255,.06); color: #d1d5db; border: 1px solid rgba(255,255,255,.07); border-radius: .625rem; font-weight: 500; display: inline-flex; align-items: center; transition: background .15s; }
-    .btn-secondary:hover { background: rgba(255,255,255,.1); }
-  </style>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="<?= asset('/css/app.css') ?>">
+  <script defer src="<?= asset('/js/vendor/alpine.min.js') ?>"></script>
 </head>
 <body class="min-h-full flex flex-col pb-16 sm:pb-0">
 

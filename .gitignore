@@ -1,7 +1,11 @@
 /vendor/
+/node_modules/
 /.env
 /.env.*
 !/.env.example
+
+# public/css/app.css e public/js/vendor/* SÃO versionados de propósito:
+# o hosting compartilhado não roda `npm run build` no deploy (FE-01).
 /storage/logs/*.log
 /storage/cache/*
 /storage/uploads/*

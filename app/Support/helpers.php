@@ -82,6 +82,24 @@ function public_path(string $path = ''): string
     return base_path('public') . ($path ? DIRECTORY_SEPARATOR . ltrim($path, '/\\') : '');
 }
 
+/**
+ * URL de um asset local com cache-busting pelo mtime do arquivo (FE-01).
+ *
+ * O CSS/JS é servido com cache longo; sem o `?v=` o navegador do usuário
+ * continuaria com a versão antiga depois de um deploy. Se o arquivo não
+ * existir (build não rodou), devolve o caminho puro — a página carrega feia,
+ * mas não quebra.
+ */
+function asset(string $path): string
+{
+    $path = '/' . ltrim($path, '/');
+    $file = public_path($path);
+
+    $version = is_file($file) ? (string) filemtime($file) : null;
+
+    return $version !== null ? "{$path}?v={$version}" : $path;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Views
 // ─────────────────────────────────────────────────────────────────────────────

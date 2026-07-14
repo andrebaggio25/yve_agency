@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Camada de componentes do YVE Agency (FE-01).
+ *
+ * Fonte única de `.card`, `.btn-*`, `.input-field`, `.label-field`, `.badge` —
+ * antes duplicados (e divergentes) nos <style> de cada layout. Todo valor sai
+ * dos tokens do tailwind.config.js: nada de hex solto aqui.
+ *
+ * Editar este arquivo requer rodar `npm run build` (gera public/css/app.css,
+ * que é versionado — o hosting compartilhado não roda build no deploy).
+ */
+
+@layer base {
+  /**
+   * Acento como variável: um único ponto controla a identidade.
+   *   - padrão      → violeta (painel da agência, portal, login)
+   *   - data-theme="admin" → vermelho (painel da plataforma; precisa ser
+   *     visualmente inconfundível para ninguém achar que está no tenant)
+   * É também o gancho do white-label por agência (PROD-06): basta emitir
+   * `--accent` no <body> com a cor da agência.
+   */
+  :root {
+    --accent: 124 58 237;       /* brand-600 */
+    --accent-hover: 109 40 217; /* brand-700 */
+    --accent-soft: 139 92 246;  /* brand-500 — anéis, glows, scrollbar */
+  }
+
+  [data-theme='admin'] {
+    --accent: 220 38 38;
+    --accent-hover: 185 28 28;
+    --accent-soft: 239 68 68;
+  }
+
+  html {
+    @apply bg-gray-950;
+  }
+
+  body {
+    @apply bg-gray-950 text-gray-200 font-sans antialiased;
+  }
+
+  /* O <option> herda o texto claro do <select>, mas o dropdown nativo tem fundo
+     branco — sem isto a lista fica branco no branco. Bug real já corrigido uma
+     vez; mantido aqui de forma global para não voltar em tela nova. */
+  select {
+    color-scheme: dark;
+  }
+  select option,
+  select optgroup {
+    @apply bg-surface-raised text-gray-200;
+  }
+
+  /* Foco visível é requisito de acessibilidade: só removemos o outline nativo
+     porque substituímos por um anel da marca. */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(var(--accent-soft) / 0.6);
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: rgb(var(--accent-soft) / 0.3);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--accent-soft) / 0.5);
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/[0.06] bg-white/[0.03];
+  }
+
+  /* Card do portal: superfície sólida (o portal não tem sidebar por trás). */
+  .card-solid {
+    @apply rounded-2xl border border-white/[0.07] bg-surface-card;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5
+           text-sm text-gray-100 outline-none transition
+           placeholder:text-gray-500
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .input-field:focus {
+    border-color: rgb(var(--accent-soft) / 0.6);
+    box-shadow: 0 0 0 3px rgb(var(--accent-soft) / 0.12);
+  }
+
+  select.input-field {
+    @apply appearance-auto bg-surface;
+  }
+
+  textarea.input-field {
+    @apply resize-y;
+  }
+
+  .label-field {
+    @apply mb-1.5 block text-[0.8125rem] font-medium text-gray-300;
+  }
+
+  .btn-primary {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl
+           border-0 px-5 py-2.5 text-sm font-semibold text-white
+           no-underline transition
+           hover:-translate-y-px active:translate-y-0
+           disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    background: rgb(var(--accent));
+    box-shadow: 0 4px 14px rgb(var(--accent) / 0.25);
+  }
+  .btn-primary:hover {
+    background: rgb(var(--accent-hover));
+    box-shadow: 0 6px 20px rgb(var(--accent) / 0.35);
+  }
+
+  .btn-secondary {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl
+           border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium
+           text-gray-300 no-underline transition
+           hover:border-white/[0.18] hover:bg-white/[0.09] hover:text-gray-50
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-danger {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl
+           border-0 bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white
+           no-underline transition hover:bg-rose-500
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+}
+
+@layer utilities {
+  /* Esconde elementos com x-cloak até o Alpine inicializar (evita flash). */
+  [x-cloak] {
+    display: none !important;
+  }
+
+  .nav-active {
+    box-shadow: 0 0 0 1px rgb(var(--accent-soft) / 0.4),
+                inset 0 0 0 1px rgb(var(--accent-soft) / 0.2);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, theme('colors.brand.400') 0%, #818cf8 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .page-enter {
+    @apply animate-fade-in-up;
+  }
+
+  /* Tela de login: textura sutil + brilho da marca. */
+  .noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  .glow {
+    box-shadow: 0 0 80px -20px rgb(var(--accent-soft) / 0.3);
+  }
+}

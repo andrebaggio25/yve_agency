@@ -15,15 +15,11 @@
 > **O teto de 256MB acabou.** `initiateResumable()` vincula a sessão à origem do app (header `Origin` ← `APP_URL`); endpoints `POST /portal/{token}/drive/upload/session` (devolve a session URI) e `/upload/complete` (valida no Drive que o arquivo está na pasta do cliente via `metaHasParent` antes de registrar — não confia no ID do navegador; idempotente por `drive_file_id`). JS envia chunks de 16MB com `Content-Range` direto à session URI: progresso, ETA, retomada (probe 308) e cancelamento. Relay PHP vira fallback (única via onde `maxBytes` ainda vale). Testes: `DriveDirectUploadTest`.
 > **Dois bugs achados no teste em produção, ambos corrigidos:** (a) a CSP do Marco 1 tinha `connect-src 'self'` e o navegador bloqueava os PUTs pro Google — upload ficava mudo em 0% (regressão travada por `ContentSecurityPolicyTest`); (b) nenhuma etapa tinha timeout, então uma falha pendurava a barra em silêncio — agora toda etapa tem timeout e o erro mostra o passo (`[sessao:timeout]`, `[put:HTTP403]`…).
 > **Extras entregues junto:** upload liberado para **qualquer tipo de arquivo** (com o proxy `/raw` forçando download de conteúdo não-passivo — anti-XSS, `inlineSafeMime()`); mitigações de iPhone/iCloud (wake lock, pré-leitura do arquivo, aviso ao sair, dica contextual em iOS). Limite remanescente é do **seletor de fotos do iOS** (etapa da Apple, fora do alcance da web) — orientação no produto.
-- **Problema:** todo upload passa pelo relay PHP; a Hostinger compartilhada trava `upload_max_filesize`/`post_max_size` em 256M acima do `.user.ini`. Vídeos de cliente maiores que isso falham. Não é limite do Google (resumável aceita 5TB) nem exige migrar de hosting.
-- **Arquivos:** `app/Services/GoogleDriveApiService.php` (`initiateResumable` — adicionar header `Origin` = `APP_URL` na iniciação), `app/Controllers/PortalController.php` (novo endpoint JSON `driveUploadSession` que devolve a session URI + registro pós-upload dos metadados), `resources/views/portal/files.php` (JS: PUT em chunks de 8–32MB com `Content-Range`, progresso, retomada em 308), `routes/web.php`.
-- **Ação:** (1) iniciar sessão resumável server-side com `Origin`; (2) JS envia chunks direto à session URI (CORS liberado pelo Google para a origem registrada); (3) ao receber 200/201 do último chunk, POST leve ao servidor confirma e grava `drive_files` (validar que o `fileId` está na pasta esperada); (4) manter relay como fallback < 200MB; (5) subir o aviso de limite da UI só quando o fallback for usado.
-- **Pronto quando:** vídeo de 1,5GB sobe pelo portal na Hostinger com barra de progresso, aparece na galeria e no Drive; queda de conexão no meio retoma; relay continua funcionando para arquivo pequeno.
-
-### FE-01 · Design tokens únicos + build de assets (absorve PERF-01) — `G` 🟠
-- **Problema:** Tailwind via CDN em produção (recompila no browser, trava CSP em `unsafe-inline/eval`); `tailwind.config` + `<style>` duplicados nos 4 layouts; Alpine sem pin em `app`/`admin`; nada de SRI.
-- **Ação:** Tailwind CLI com um `tailwind.config.js` único (cores da marca, gray-925/950, fonte) gerando `public/css/app.css` purgado; extrair o CSS custom dos layouts para camada `@layer components` (`.card`, `.btn-primary`, `.input-field`, …); self-host Alpine (pin) e Chart.js com SRI; os 4 layouts passam a incluir os mesmos assets locais.
-- **Pronto quando:** zero `<script src="https://cdn...">` em runtime; trocar a cor de acento = editar 1 arquivo; CSP sem `unsafe-eval` (SEC-10 na sequência); Lighthouse sem flash de estilo.
+### FE-01 · Design tokens únicos + build de assets (absorve PERF-01) — `G` 🟠 · ✅ FEITO (2026-07-14)
+> **Zero CDN em runtime.** Tailwind CLI (`npm run build`) gera `public/css/app.css` purgado — **60KB** contra os ~3MB que o CDN baixava e **compilava no navegador a cada page load**. Alpine, Chart.js, marked e DOMPurify self-hosted em `public/js/vendor/` (versões pinadas no `package.json`). Assets buildados são **versionados** — o hosting compartilhado não roda build no deploy; helper `asset()` faz cache-busting por mtime.
+> **Design system único:** `tailwind.config.js` (paleta, fonte, sombras) + `resources/css/app.css` (`@layer components`: `.card`, `.card-solid`, `.btn-primary/secondary/danger`, `.input-field`, `.label-field`, `.badge`). Os 5 layouts tinham `<style>` próprios e **`.card`/`.btn-primary` divergentes entre painel e portal** — agora é um arquivo só.
+> **Acento tokenizado como var CSS `--accent`:** o painel da plataforma vira vermelho só com `data-theme="admin"` no `<body>`, com o mesmo CSS. Isso entrega de graça a base do **white-label por agência (PROD-06)**.
+> Travado por `NoRuntimeCdnTest` (nenhuma view pode voltar a usar CDN; assets buildados têm de estar commitados). Purge auditado: nenhuma classe é montada por concatenação, então nada some do build.
 
 ### FE-02 · Extrair JS inline das views gigantes — `G` 🟠
 - **Arquivos:** `resources/views/content/show.php` (1.183 l.), `portal/files.php` (566 l.), `approvals/show.php` (423 l.).
@@ -61,7 +57,7 @@
 - **INFRA-03 · Padronizar `insert()` com `RETURNING id`** — `P` 🟡.
 - **DATA-01 · Backup e retenção documentados** — `P` 🟡 · política do Supabase + retenção de `activity_logs`.
 - **ADM-01 · Guard-rail no painel de migrations** — `P` 🟡 · aviso forte + registrar dump/backup antes de `rollback` em produção.
-- **SEC-10 · CSP estrita (nonce, sem unsafe-\*)** — `M` 🟡 · destravado por FE-01/FE-02.
+- **SEC-10 · CSP estrita** — `M` 🟡 · ✅ **PARCIAL (2026-07-14)** · com o self-host do FE-01, `script-src` virou **`'self'` puro: `unsafe-eval` e todos os CDNs saíram** (era exigência do Tailwind-CDN). Resta `'unsafe-inline'`, porque várias views ainda têm `<script>` inline — **sai com o FE-02** (extrair o JS), aí vira nonce. Regressão travada por `ContentSecurityPolicyTest`.
 
 ---
 
@@ -95,9 +91,9 @@
 
 | Sprint | Foco | Itens |
 |--------|------|-------|
-| **1** | Dor nº 1 + base do frontend | UP-01 · ARCH-01 · ARCH-03 |
-| **2** | Frontend vira produto | FE-01 · FE-03 · SEC-08 |
-| **3** | JS sustentável + rede de segurança | FE-02 · QA-03 · SEC-10 |
+| **1** ✅ | Dor nº 1 + base do frontend | ~~UP-01 · ARCH-01 · ARCH-03~~ **concluído 2026-07-14** |
+| **2** | Frontend vira produto | ~~FE-01~~ ✅ · ~~SEC-10 (parcial)~~ ✅ · **FE-03** · **SEC-08** |
+| **3** | JS sustentável + rede de segurança | FE-02 (destrava o nonce da CSP) · QA-03 |
 | **4** | Confiabilidade | INT-01/02/03 · OBS-01/02 · INFRA-01/02/03 · DATA-01 · ADM-01 |
 | **5+** | Escala comercial | PROD-01(a) · PROD-08 · PROD-03 · PROD-06 · UX-04 · AUTH-01 · ARCH-02 |
 | **6+** | Diferenciação | Marco D |
