@@ -15,6 +15,16 @@ class ContentPlanService
     /** Status válidos de um criativo. */
     public const ITEM_STATUSES = ['draft', 'revision', 'approved', 'rejected'];
 
+    /**
+     * Link PÚBLICO de aprovação (portal do cliente). O cliente não tem login —
+     * mandar a rota interna /aprovacoes/{id} gera um link que ele não abre.
+     */
+    public static function portalPlanUrl(?string $portalToken, int $planId): ?string
+    {
+        if (!$portalToken) return null;
+        return rtrim((string) env('APP_URL', ''), '/') . "/portal/{$portalToken}/planos/{$planId}";
+    }
+
     public function __construct(
         private readonly ContentPlanRepository $repo,
         private readonly GoogleDriveService    $drive,
@@ -118,7 +128,7 @@ class ContentPlanService
                 'plan_title' => $plan['title'],
                 'client_id'  => $plan['client_id'],
                 'client'     => $client,
-                'approval_url' => env('APP_URL') . "/aprovacoes/{$id}",
+                'approval_url' => self::portalPlanUrl($plan['client_portal_token'] ?? null, $id),
             ]);
         }
 

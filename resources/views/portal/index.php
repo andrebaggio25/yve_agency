@@ -9,11 +9,15 @@ $hasPending  = $stats['plans_pending'] > 0;
 $hasOverdue  = count(array_filter($invoices, fn($i) => $i['status'] === 'overdue')) > 0;
 $recentPlans = array_slice($plans, 0, 4);
 $openInvoices = array_filter($invoices, fn($i) => in_array($i['status'], ['sent', 'overdue']));
-$statusLabels = ['draft' => t('portal.pstatus.draft'), 'pending_approval' => t('portal.pstatus.pending_approval'), 'approved' => t('portal.pstatus.approved'), 'in_revision' => t('portal.pstatus.in_revision'), 'published' => t('portal.pstatus.published')];
+// 'sent' e 'revision' são os status que o sistema grava; 'pending_approval'
+// e 'in_revision' ficam por compatibilidade de leitura.
+$statusLabels = ['draft' => t('portal.pstatus.draft'), 'sent' => t('portal.pstatus.sent'), 'pending_approval' => t('portal.pstatus.pending_approval'), 'approved' => t('portal.pstatus.approved'), 'revision' => t('portal.pstatus.revision'), 'in_revision' => t('portal.pstatus.in_revision'), 'published' => t('portal.pstatus.published')];
 $statusColors = [
   'draft'            => 'text-gray-400 bg-gray-500/10',
+  'sent'             => 'text-amber-300 bg-amber-500/10',
   'pending_approval' => 'text-amber-300 bg-amber-500/10',
   'approved'         => 'text-green-300 bg-green-500/10',
+  'revision'         => 'text-blue-300 bg-blue-500/10',
   'in_revision'      => 'text-blue-300 bg-blue-500/10',
   'published'        => 'text-brand-300 bg-brand-500/10',
 ];
@@ -69,7 +73,7 @@ $statusColors = [
 </div>
 
 <!-- Ação urgente: planos pendentes -->
-<?php $pending = array_filter($plans, fn($p) => $p['status'] === 'pending_approval'); ?>
+<?php $pending = array_filter($plans, fn($p) => in_array($p['status'], ['sent', 'pending_approval'], true)); ?>
 <?php if (!empty($pending)): ?>
 <div class="mb-6">
   <div class="flex items-center gap-2 mb-3">

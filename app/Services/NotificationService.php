@@ -189,7 +189,9 @@ class NotificationService
         $clientId  = $ctx['client_id'] ?? null;
         $planId    = $ctx['plan_id'] ?? null;
         $planTitle = $ctx['plan_title'] ?? 'Plano';
-        $approvalUrl = $ctx['approval_url'] ?? (env('APP_URL') . "/aprovacoes/{$planId}");
+        // Sem link do portal, melhor nenhum link: /aprovacoes/{id} é rota
+        // interna da agência e o cliente não consegue abrir.
+        $approvalUrl = $ctx['approval_url'] ?? '';
 
         // Notify client via WhatsApp + email
         if ($clientId) {

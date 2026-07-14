@@ -2,17 +2,23 @@
 <?php view_start('content'); ?>
 
 <?php
+// 'sent' e 'revision' são os status que o sistema grava; 'pending_approval'
+// e 'in_revision' ficam por compatibilidade de leitura.
 $statusLabels = [
   'draft'            => t('portal.pstatus.draft'),
+  'sent'             => t('portal.pstatus.sent'),
   'pending_approval' => t('portal.pstatus.pending_approval'),
   'approved'         => t('portal.pstatus.approved'),
+  'revision'         => t('portal.pstatus.revision'),
   'in_revision'      => t('portal.pstatus.in_revision'),
   'published'        => t('portal.pstatus.published'),
 ];
 $statusColors = [
   'draft'            => 'text-gray-400 bg-gray-500/10',
+  'sent'             => 'text-yellow-300 bg-yellow-500/10',
   'pending_approval' => 'text-yellow-300 bg-yellow-500/10',
   'approved'         => 'text-green-300 bg-green-500/10',
+  'revision'         => 'text-blue-300 bg-blue-500/10',
   'in_revision'      => 'text-blue-300 bg-blue-500/10',
   'published'        => 'text-brand-300 bg-brand-500/10',
 ];

@@ -16,9 +16,11 @@ class ApprovalReminder extends AbstractAutomation
         $sent = 0; $skipped = 0;
 
         $plans = $this->select("
-            SELECT * FROM content_plans
-            WHERE agency_id = :a AND status = 'sent' AND sent_at IS NOT NULL
-              AND sent_at <= NOW() - INTERVAL '2 days'
+            SELECT cp.*, c.portal_token AS client_portal_token
+            FROM content_plans cp
+            JOIN clients c ON c.id = cp.client_id
+            WHERE cp.agency_id = :a AND cp.status = 'sent' AND cp.sent_at IS NOT NULL
+              AND cp.sent_at <= NOW() - INTERVAL '2 days'
         ", [':a' => $agencyId]);
 
         foreach ($plans as $plan) {
@@ -33,7 +35,7 @@ class ApprovalReminder extends AbstractAutomation
                     'plan_id'      => (int) $plan['id'],
                     'plan_title'   => $plan['title'],
                     'client'       => $this->client($agencyId, $clientId),
-                    'approval_url' => rtrim((string) env('APP_URL', ''), '/') . "/aprovacoes/{$plan['id']}",
+                    'approval_url' => \App\Services\ContentPlanService::portalPlanUrl($plan['client_portal_token'] ?? null, (int) $plan['id']),
                     'days'         => $days,
                 ]);
             }, 'whatsapp');

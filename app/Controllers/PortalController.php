@@ -76,7 +76,7 @@ class PortalController extends Controller
         }
 
         $stats = [
-            'plans_pending'  => count(array_filter($plans,    fn($p) => $p['status'] === 'pending_approval')),
+            'plans_pending'  => count(array_filter($plans,    fn($p) => in_array($p['status'], ['sent', 'pending_approval'], true))),
             'plans_approved' => count(array_filter($plans,    fn($p) => $p['status'] === 'approved')),
             'invoices_open'  => count(array_filter($invoices, fn($i) => $i['status'] === 'sent')),
             'invoices_paid'  => count(array_filter($invoices, fn($i) => $i['status'] === 'paid')),
@@ -132,11 +132,15 @@ class PortalController extends Controller
             return Response::view('errors.404', [], 404);
         }
 
-        if ($plan['status'] === 'pending_approval') {
+        // O envio grava status 'sent'; 'pending_approval' fica aceito por
+        // compatibilidade de leitura (dado legado/manual).
+        if (in_array($plan['status'], ['sent', 'pending_approval'], true)) {
             $this->planService->approvePlan($planId, (int) $client['id']);
+            $this->withSuccess(t('portal.plan.approved_ok'));
+        } else {
+            $this->withError(t('portal.plan.not_awaiting'));
         }
 
-        $this->withSuccess('Plano aprovado!');
         return $this->redirect("/portal/{$token}/planos/{$planId}");
     }
 
@@ -152,11 +156,13 @@ class PortalController extends Controller
         }
 
         $comment = trim((string) $request->post('comment', ''));
-        if ($plan['status'] === 'pending_approval') {
+        if (in_array($plan['status'], ['sent', 'pending_approval'], true)) {
             $this->planService->requestRevision($planId, (int) $client['id'], $comment);
+            $this->withSuccess(t('portal.plan.revision_ok'));
+        } else {
+            $this->withError(t('portal.plan.not_awaiting'));
         }
 
-        $this->withSuccess('Revisão solicitada.');
         return $this->redirect("/portal/{$token}/planos/{$planId}");
     }
 

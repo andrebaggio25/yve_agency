@@ -269,6 +269,9 @@ return [
 
     // Plano (detalhe)
     'portal.plan.breadcrumb'           => 'Planos',
+    'portal.plan.approved_ok'          => 'Plano aprovado!',
+    'portal.plan.revision_ok'          => 'Revisão solicitada.',
+    'portal.plan.not_awaiting'         => 'Este plano não está aguardando aprovação.',
     'portal.plan.approve_full'         => 'Aprovar plano completo',
     'portal.plan.request_revision'     => 'Solicitar revisão',
     'portal.plan.revision_placeholder' => 'Descreva o que precisa ser ajustado...',

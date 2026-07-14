@@ -258,6 +258,9 @@ return [
 
     // Plan (detail)
     'portal.plan.breadcrumb'           => 'Plans',
+    'portal.plan.approved_ok'          => 'Plan approved!',
+    'portal.plan.revision_ok'          => 'Revision requested.',
+    'portal.plan.not_awaiting'         => 'This plan is not awaiting approval.',
     'portal.plan.approve_full'         => 'Approve full plan',
     'portal.plan.request_revision'     => 'Request revision',
     'portal.plan.revision_placeholder' => 'Describe what needs to change...',
