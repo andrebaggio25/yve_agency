@@ -5,7 +5,7 @@ description: Use ao criar ou alterar QUALQUER tela do YVE Agency — views PHP c
 
 # Frontend do YVE Agency (tokens, estados, JS e anti-genérico)
 
-Stack: views PHP nativas + Tailwind (**build local, sem CDN**) + Alpine.js, tema **dark** com acento violeta. Sem React. O objetivo destas regras: toda tela nova parecer parte de um **produto validado**, não de um template.
+Stack: views PHP nativas + Tailwind (**build local, sem CDN**) + Alpine.js, tema **dark** com acento dourado champagne (YVE Beauty). Sem React. O objetivo destas regras: toda tela nova parecer parte de um **produto validado**, não de um template.
 
 ## 0. O build (FE-01) — leia antes de tocar em CSS
 
@@ -28,15 +28,16 @@ Fonte de verdade: **`tailwind.config.js`** (paleta, fonte, sombras) e **`resourc
 | Fundo base | `gray-950` (#09090f) | body |
 | Superfície | `surface` (#0d0d14) sidebar/topbar · `surface-raised` (#12121a) dropdown · `surface-card` (#16161f) card do portal |
 | Borda | `white/[0.06]`–`white/[0.10]` | divisões sutis |
-| Texto | `gray-200` corpo · `gray-500` secundário · `white` título | |
-| **Acento** | var CSS `--accent` (padrão violeta; `[data-theme="admin"]` = vermelho) | ação primária, foco, glow |
+| Texto | `gray-200` corpo · **`gray-400` secundário** (gray-500/600 reprovam no contraste) · `white` título | |
+| **Acento** | var CSS `--accent` (dourado `#c6a15b`; `[data-theme="admin"]` = vermelho) | ação primária, foco, glow |
+| **Texto sobre o acento** | var CSS `--accent-fg` (escuro no dourado, branco no vermelho) | **nunca** `text-white` num botão dourado |
 | Estados | `emerald` sucesso · `amber` alerta · `rose`/`red` erro | |
 | Fonte | Inter (400–800) | |
 | Raio | `rounded-xl` controles · `rounded-2xl` cards | |
 
 Regras:
 - **Nunca** cor hexadecimal solta em view (`style="color:#8b5cf6"` é proibido). Use a classe do token.
-- **O acento é variável (`--accent`), não uma cor fixa.** Componente novo que precise da cor da marca usa `rgb(var(--accent))` no `app.css` — nunca `violet-600` hardcoded. É isso que faz o painel admin ficar vermelho com o mesmo CSS, e é a base do white-label por agência (PROD-06).
+- **O acento é variável (`--accent`), não uma cor fixa.** Componente novo que precise da cor da marca usa `rgb(var(--accent))` no `app.css` — nunca `brand-600` hardcoded. É isso que faz o painel admin ficar vermelho com o mesmo CSS, e é a base do white-label por agência (PROD-06).
 - Componentes prontos: `.card`, `.card-solid` (portal), `.btn-primary`, `.btn-secondary`, `.btn-danger`, `.input-field`, `.label-field`, `.badge`. Precisa de um novo? Defina em `@layer components` do `app.css` — não inline na view.
 - Espaçamento na escala do Tailwind (`p-4`, `gap-3`…) — nunca `style="margin: 13px"`.
 - Novo padrão visual recorrente (badge de status, tabela, empty-state) → vira partial em `resources/views/partials/`.
