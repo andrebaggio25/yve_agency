@@ -10,7 +10,26 @@ class ClientRepository extends Repository
 {
     protected string $table = 'clients';
 
+    /**
+     * Clientes da agência para **uso operacional** (selects, filtros, listas de
+     * trabalho): exclui os arquivados.
+     *
+     * Cliente arquivado não pode aparecer em seletor — você não cria fatura,
+     * tarefa ou plano para um cliente que encerrou (UX-02). Para relatórios
+     * históricos, que precisam do arquivado, use `findByAgencyIncludingArchived`.
+     */
     public function findByAgency(int $agencyId): array
+    {
+        return $this->all(
+            "SELECT * FROM clients
+             WHERE agency_id = :agency_id AND (status IS NULL OR status <> 'cancelled')
+             ORDER BY name",
+            [':agency_id' => $agencyId],
+        );
+    }
+
+    /** Inclui arquivados — só para histórico/relatório, nunca para seletor. */
+    public function findByAgencyIncludingArchived(int $agencyId): array
     {
         return $this->all(
             'SELECT * FROM clients WHERE agency_id = :agency_id ORDER BY name',
@@ -45,6 +64,7 @@ class ClientRepository extends Repository
         );
     }
 
+    /** Clientes que o usuário acessa — também sem arquivados (ver findByAgency). */
     public function findByUserAccess(int $userId, int $agencyId): array
     {
         return $this->all("
@@ -52,6 +72,7 @@ class ClientRepository extends Repository
             FROM clients c
             JOIN client_user_access cua ON cua.client_id = c.id
             WHERE cua.user_id = :user_id AND c.agency_id = :agency_id
+              AND (c.status IS NULL OR c.status <> 'cancelled')
             ORDER BY c.name
         ", [':user_id' => $userId, ':agency_id' => $agencyId]);
     }

@@ -111,11 +111,26 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         </a>
         <?php endif; ?>
 
+        <?php if (\App\Support\Auth::can('content.delete') && ($plan['status'] ?? '') !== 'approved'): ?>
+        <!-- Excluir: só antes da aprovação. Plano aprovado é registro do que a
+             cliente autorizou — o backend recusa, e a UI nem oferece. -->
+        <form method="POST" action="/conteudo/<?= e($plan['id']) ?>" class="inline"
+              onsubmit="return confirm('Excluir a planificação &quot;<?= e(addslashes($plan['title'] ?? '')) ?>&quot; e todos os seus itens? Esta ação não pode ser desfeita.')">
+          <?= csrf_field() ?>
+          <?= method_field('DELETE') ?>
+          <button type="submit"
+                  class="inline-flex items-center gap-2 rounded-xl border border-rose-500/20 px-4 py-2 text-sm font-medium text-rose-300 hover:text-rose-200 hover:border-rose-500/40 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Excluir
+          </button>
+        </form>
+        <?php endif; ?>
+
         <?php if (\App\Support\Auth::can('content.create')): ?>
         <!-- PROD-05: duplicar evita refazer o mês do zero — o trabalho mais
              repetitivo da rotina. A cópia nasce em rascunho, na semana seguinte. -->
         <form method="POST" action="/conteudo/<?= e($plan['id']) ?>/duplicar" class="inline"
-              onsubmit="return confirm('Duplicar este plano com todos os itens? A cópia nasce como rascunho na semana seguinte, sem o histórico de aprovação.')">
+              onsubmit="return confirm('Duplicar a ESTRUTURA deste plano? A cópia leva as datas, plataformas, formatos e responsáveis — mas NÃO o conteúdo dos posts (legenda, roteiro, mídia), que você escreve do zero. Nasce como rascunho na semana seguinte.')">
           <?= csrf_field() ?>
           <button type="submit"
                   class="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:border-white/20 transition-all">

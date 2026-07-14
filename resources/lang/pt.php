@@ -54,6 +54,7 @@ return [
     'nav.clients'           => 'Clientes',
     'nav.content'           => 'Conteúdo',
     'nav.content_plans'     => 'Planos',
+    'nav.calendar'          => 'Calendário',
     'nav.approvals'         => 'Aprovações',
     'nav.tasks'             => 'Tarefas',
     'nav.traffic'           => 'Tráfego Pago',

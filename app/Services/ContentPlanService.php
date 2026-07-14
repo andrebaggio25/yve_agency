@@ -131,14 +131,17 @@ class ContentPlanService
     }
 
     /**
-     * Duplica um plano com todos os itens (PROD-05).
+     * Duplica a ESTRUTURA de um plano (PROD-05).
      *
-     * Montar o plano do mês seguinte era refazer tudo do zero — o trabalho mais
-     * repetitivo da rotina de uma social media. A cópia nasce em **rascunho**,
-     * com as datas deslocadas para a nova semana e **sem** o histórico do
-     * original: nada de status de aprovação, feedback da cliente ou datas de
-     * envio viajando junto (seria mentira dizer que a cliente aprovou o que ela
-     * nunca viu).
+     * Copia a grade de trabalho — quando, onde, que formato, quem faz — e
+     * **não o conteúdo do post**: legenda, roteiro, CTA, tema, título, capa,
+     * imagens e links do Drive nascem vazios. O post de cada mês é único;
+     * herdar o texto do anterior só produziria material errado esperando para
+     * ser publicado por engano.
+     *
+     * A cópia nasce em **rascunho**, sem herdar aprovação, feedback ou datas de
+     * envio — dizer que a cliente aprovou um plano que ela nunca viu seria
+     * mentira do sistema.
      *
      * @return array{success:bool,id?:int,error?:string}
      */
@@ -167,6 +170,16 @@ class ContentPlanService
             'notes'      => $plan['notes'] ?? null,
         ]);
 
+        // Copia a ESTRUTURA, não o post.
+        //
+        // O que vem junto: quando publicar (data deslocada, hora), onde
+        // (plataforma), que formato (tipo), quem faz (responsável) e a ordem —
+        // é a grade de trabalho, e é isso que se repete de um mês para o outro.
+        //
+        // O que NÃO vem: legenda, roteiro, CTA, tema, título, capa, imagens e
+        // links do Drive. O conteúdo em si é único de cada mês; herdar o texto
+        // do post anterior só criaria material errado esperando para ser
+        // publicado por engano.
         foreach ($plan['items'] ?? [] as $item) {
             $this->repo->createItem([
                 'content_plan_id' => $newId,
@@ -175,19 +188,9 @@ class ContentPlanService
                 'publish_time'    => $item['publish_time'] ?? null,
                 'platform'        => $item['platform'] ?? null,
                 'content_type'    => $item['content_type'] ?? null,
-                'title'           => $item['title'] ?? null,
-                'theme'           => $item['theme'] ?? null,
-                'caption'         => $item['caption'] ?? null,
-                'script'          => $item['script'] ?? null,
-                'cta'             => $item['cta'] ?? null,
-                'cover_url'       => $item['cover_url'] ?? null,
-                'images'          => $item['images'] ?? null,
-                'drive_url'       => $item['drive_url'] ?? null,
-                'drive_file_id'   => $item['drive_file_id'] ?? null,
-                'drive_file_type' => $item['drive_file_type'] ?? null,
                 'assigned_to'     => $item['assigned_to'] ?? null,
                 'sort_order'      => (int) ($item['sort_order'] ?? 0),
-                'status'          => 'draft',  // sem status/feedback do original
+                'status'          => 'draft',
             ]);
         }
 

@@ -72,9 +72,16 @@ class ContentPlanDuplicateTest extends FeatureTestCase
         )->fetchAll();
 
         $this->assertCount(2, $items);
-        $this->assertSame('Post A', $items[0]['title']);
-        $this->assertSame('Legenda original', $items[0]['caption']);
         $this->assertSame('draft', $items[0]['status'], 'Item copiado não pode vir aprovado.');
+
+        // A ESTRUTURA vem junto (quando, onde, que formato).
+        $this->assertSame('instagram', $items[0]['platform']);
+        $this->assertSame('feed', $items[0]['content_type']);
+
+        // O POST não vem: cada mês tem conteúdo próprio. Herdar a legenda do mês
+        // anterior criaria material errado esperando para ser publicado por engano.
+        $this->assertNull($items[0]['caption'], 'A legenda do post anterior não pode ser copiada.');
+        $this->assertNull($items[0]['title'], 'O título do post anterior não pode ser copiado.');
     }
 
     /** As datas deslocam para a semana seguinte preservando os dias da semana. */

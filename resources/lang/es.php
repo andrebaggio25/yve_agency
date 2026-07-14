@@ -50,6 +50,7 @@ return [
     'nav.clients'           => 'Clientes',
     'nav.content'           => 'Contenido',
     'nav.content_plans'     => 'Planes',
+    'nav.calendar'          => 'Calendario',
     'nav.approvals'         => 'Aprobaciones',
     'nav.tasks'             => 'Tareas',
     'nav.traffic'           => 'Tráfico Pago',

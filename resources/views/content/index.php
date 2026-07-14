@@ -83,15 +83,100 @@
     <?php endif; ?>
   </div>
   <?php else: ?>
-  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+
+  <?php
+  /**
+   * Lista é o padrão (pedido de uso real): scaneia mais rápido, cabe mais na
+   * tela e alinha as colunas — cliente, período, progresso — para comparar.
+   * O card continua disponível para quem prefere; a escolha fica no navegador.
+   */
+  $statusColors = [
+    'draft'    => ['bg' => 'bg-gray-500/15',   'text' => 'text-gray-300',   'ring' => 'ring-gray-500/30',   'dot' => 'bg-gray-400'],
+    'sent'     => ['bg' => 'bg-blue-500/15',   'text' => 'text-blue-300',   'ring' => 'ring-blue-500/30',   'dot' => 'bg-blue-400'],
+    'revision' => ['bg' => 'bg-amber-500/15',  'text' => 'text-amber-300',  'ring' => 'ring-amber-500/30',  'dot' => 'bg-amber-400'],
+    'approved' => ['bg' => 'bg-emerald-500/15','text' => 'text-emerald-300','ring' => 'ring-emerald-500/30','dot' => 'bg-emerald-400'],
+    'rejected' => ['bg' => 'bg-rose-500/15',   'text' => 'text-rose-300',   'ring' => 'ring-rose-500/30',   'dot' => 'bg-rose-400'],
+  ];
+  ?>
+
+  <div x-data="plansView()">
+
+    <!-- Alternador de visualização -->
+    <div class="flex justify-end mb-3">
+      <div class="inline-flex rounded-lg border border-white/10 overflow-hidden">
+        <button type="button" @click="setView('list')"
+                :class="view === 'list' ? 'bg-white/[0.08] text-white' : 'text-gray-500 hover:text-gray-300'"
+                class="px-3 py-1.5 text-xs font-medium transition-colors" aria-label="Ver em lista">
+          Lista
+        </button>
+        <button type="button" @click="setView('cards')"
+                :class="view === 'cards' ? 'bg-white/[0.08] text-white' : 'text-gray-500 hover:text-gray-300'"
+                class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-white/10" aria-label="Ver em cards">
+          Cards
+        </button>
+      </div>
+    </div>
+
+    <!-- ── LISTA (padrão) ─────────────────────────────────────────────────── -->
+    <div x-show="view === 'list'" x-cloak class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs uppercase tracking-wide text-gray-500 border-b border-white/[0.06]">
+              <th class="text-left font-medium px-4 py-3">Plano</th>
+              <th class="text-left font-medium px-4 py-3">Cliente</th>
+              <th class="text-left font-medium px-4 py-3">Período</th>
+              <th class="text-left font-medium px-4 py-3">Progresso</th>
+              <th class="text-left font-medium px-4 py-3">Situação</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/[0.04]">
+            <?php foreach ($plans as $plan):
+              $sc          = $statusColors[$plan['status']] ?? $statusColors['draft'];
+              $statusLabel = \App\Services\ContentPlanService::statusLabel($plan['status']);
+              $total       = (int) $plan['total_items'];
+              $approved    = (int) $plan['approved_items'];
+              $pct         = $total > 0 ? round(($approved / $total) * 100) : 0;
+            ?>
+            <tr class="hover:bg-white/[0.03] transition-colors cursor-pointer"
+                onclick="window.location='/conteudo/<?= e($plan['id']) ?>'">
+              <td class="px-4 py-3">
+                <a href="/conteudo/<?= e($plan['id']) ?>" class="font-medium text-gray-100 hover:text-violet-300 transition-colors">
+                  <?= e($plan['title']) ?>
+                </a>
+              </td>
+              <td class="px-4 py-3 text-gray-400"><?= e($plan['client_name']) ?></td>
+              <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
+                <?= date('d/m', strtotime($plan['week_start'])) ?> – <?= date('d/m/Y', strtotime($plan['week_end'])) ?>
+              </td>
+              <td class="px-4 py-3">
+                <?php if ($total > 0): ?>
+                  <div class="flex items-center gap-2 min-w-[8rem]">
+                    <div class="h-1.5 flex-1 rounded-full bg-white/5 overflow-hidden">
+                      <div class="h-full rounded-full bg-violet-500" style="width: <?= $pct ?>%"></div>
+                    </div>
+                    <span class="text-xs text-gray-500 tabular-nums whitespace-nowrap"><?= $approved ?>/<?= $total ?></span>
+                  </div>
+                <?php else: ?>
+                  <span class="text-xs text-gray-600">Sem itens</span>
+                <?php endif; ?>
+              </td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 <?= $sc['bg'] ?> <?= $sc['text'] ?> <?= $sc['ring'] ?>">
+                  <span class="inline-block w-1.5 h-1.5 rounded-full <?= $sc['dot'] ?>"></span>
+                  <?= $statusLabel ?>
+                </span>
+              </td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CARDS (alternativa) ────────────────────────────────────────────── -->
+    <div x-show="view === 'cards'" x-cloak class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
     <?php foreach ($plans as $plan):
-      $statusColors = [
-        'draft'    => ['bg' => 'bg-gray-500/15',   'text' => 'text-gray-300',   'ring' => 'ring-gray-500/30',   'dot' => 'bg-gray-400'],
-        'sent'     => ['bg' => 'bg-blue-500/15',   'text' => 'text-blue-300',   'ring' => 'ring-blue-500/30',   'dot' => 'bg-blue-400'],
-        'revision' => ['bg' => 'bg-amber-500/15',  'text' => 'text-amber-300',  'ring' => 'ring-amber-500/30',  'dot' => 'bg-amber-400'],
-        'approved' => ['bg' => 'bg-emerald-500/15','text' => 'text-emerald-300','ring' => 'ring-emerald-500/30','dot' => 'bg-emerald-400'],
-        'rejected' => ['bg' => 'bg-rose-500/15',   'text' => 'text-rose-300',   'ring' => 'ring-rose-500/30',   'dot' => 'bg-rose-400'],
-      ];
       $sc        = $statusColors[$plan['status']] ?? $statusColors['draft'];
       $statusLabel = \App\Services\ContentPlanService::statusLabel($plan['status']);
       $total    = (int) $plan['total_items'];
@@ -150,12 +235,31 @@
       <?php endif; ?>
     </a>
     <?php endforeach; ?>
-  </div>
+    </div><!-- /cards -->
+
+  </div><!-- /plansView -->
   <?php endif; ?>
 
 </div>
 
 <script>
+// Preferência de visualização fica no navegador de cada pessoa (lista é o padrão).
+function plansView() {
+  return {
+    view: 'list',
+    init() {
+      try {
+        const saved = localStorage.getItem('yve_plans_view');
+        if (saved === 'cards' || saved === 'list') this.view = saved;
+      } catch {}
+    },
+    setView(v) {
+      this.view = v;
+      try { localStorage.setItem('yve_plans_view', v); } catch {}
+    },
+  };
+}
+
 function contentIndex() {
   return {}
 }
