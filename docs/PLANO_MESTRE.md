@@ -1,161 +1,118 @@
-# YVE Agency — Plano Mestre
+# YVE Agency — Plano Mestre v2
 
-> Roteiro priorizado de correções, hardening e evolução para comercialização.
-> Base: [ANALISE_SISTEMA.md](ANALISE_SISTEMA.md) · Atualizado: 2026-07-06
-> Cada item tem: ID · severidade · esforço (P/M/G) · arquivos · critério de pronto.
+> **A verdade absoluta do projeto.** Roteiro único e priorizado de correções, melhorias e evolução.
+> Base: [ANALISE_PRODUTO.md](ANALISE_PRODUTO.md) (SWOT + notas) e [ANALISE_SISTEMA.md](ANALISE_SISTEMA.md) (fotografia técnica).
+> Atualizado: 2026-07-14 · Ciclo: 2026-07 (ciclo 2) · Anterior: [historico/PLANO_MESTRE_2026-07-06.md](historico/PLANO_MESTRE_2026-07-06.md)
+> Convenções: esforço **P** ≤2h · **M** = meio dia a 1 dia · **G** = vários dias. Ao fechar este roadmap, arquivar em `docs/historico/` e gerar o próximo com a skill `yve-analise-produto`.
 
-Convenção de esforço: **P** = ≤2h · **M** = meio dia a 1 dia · **G** = vários dias.
-
----
-
-## Marco 0 — Bloqueadores de comercialização (fazer primeiro)
-
-> Sem estes, **não** vá para produção paga. Todos são de segurança/config e de baixo esforço.
->
-> **✅ CONCLUÍDO em 2026-07-06** — SEC-01, SEC-02, DEP-01 e BUG-01 corrigidos e validados (42 testes verdes, `composer audit` limpo). Detalhes de cada correção abaixo mantidos para referência.
-
-### SEC-01 · `APP_ENV=production` em produção — `P` 🔴
-- **Problema:** `.env.production` está com `APP_ENV=development` → stack traces e erros de SQL vazam ao usuário.
-- **Arquivos:** `.env.production`, `public/index.php` (§error reporting), `app/Core/Router.php:147` (`handleError`).
-- **Ação:** setar `APP_ENV=production`; confirmar `display_errors=0`/`log_errors=1` no PHP-FPM de produção; garantir que `handleError` nunca inclua trace fora de dev.
-- **Pronto quando:** um erro 500 forçado em produção mostra a página `errors/500` genérica, sem trace, e o detalhe aparece só no log.
-
-### SEC-02 · Rate limit à prova de `X-Forwarded-For` — `M` 🔴
-- **Problema:** `Request::ip()` confia em `HTTP_X_FORWARDED_FOR`; brute-force de login contorna o limite variando o header.
-- **Arquivos:** `app/Core/Request.php:141-146`, `app/Middlewares/RateLimitMiddleware.php`.
-- **Ação:** `ip()` retorna `REMOTE_ADDR` por padrão; só honra `X-Forwarded-For` se `REMOTE_ADDR` estiver em `TRUSTED_PROXIES` (nova env). Reduzir login para `maxAttempts=5`, `decaySeconds=60`. Adicionar lock (`flock`) na escrita do arquivo.
-- **Pronto quando:** um teste envia 20 logins falhos variando `X-Forwarded-For` e é bloqueado após 5.
-
-### DEP-01 · Atualizar Guzzle/psr7 (3 CVEs) — `P` 🔴
-- **Arquivos:** `composer.json`, `composer.lock`.
-- **Ação:** `composer update guzzlehttp/guzzle guzzlehttp/psr7` (≥7.12.1 / ≥2.12.1). Rodar `composer audit` e a suíte depois.
-- **Pronto quando:** `composer audit` retorna 0 advisories e os 38 testes seguem verdes.
+**Estado herdado do ciclo 1 (tudo ✅):** Marco 0 (SEC-01/02, DEP-01, BUG-01) · Marco 1 (SEC-03/04/05/06*/07, SCHEMA-01) · QA-01, QA-02, DRIVE-01, DRIVE-02 fase 1. Gates em 2026-07-14: 77 testes verdes, PHPStan nível 6 = 0 erros, audit limpo. (*SEC-06 parcial — portal virou SEC-08 abaixo.)
 
 ---
 
-## Marco 1 — Hardening de produção
+## Marco A — Fechar o MVP (o que um cliente pagante sente)
 
-> **✅ CONCLUÍDO em 2026-07-06** — SEC-03, SEC-04, SEC-05, SEC-06 e SEC-07 e SCHEMA-01 implementados e validados (48 testes verdes, PHPStan sem regressão). Ressalvas: (a) a CSP mantém `unsafe-inline`/`unsafe-eval` pois o app usa Tailwind/Alpine por CDN — endurecer para nonce após PERF-01; validar em navegador com `visual-validation`. (b) SEC-06 cobriu a API interna `/api/comentarios` (gap real de cookie de sessão); os endpoints do portal seguem protegidos pelo token na URL — CSRF uniforme no portal fica como follow-up. (c) as 2 migrations novas precisam rodar em produção (`composer migrate`). Detalhes de cada item abaixo.
+### UP-01 · Upload > 256MB: direto browser→Drive (resumável) — `G` 🔴 · ✅ IMPLEMENTADO (2026-07-14)
+> Feito: `initiateResumable()` agora vincula a sessão à origem do app (header `Origin` a partir de `APP_URL`); novos endpoints `POST /portal/{token}/drive/upload/session` (devolve a session URI) e `/upload/complete` (valida no Drive que o arquivo está na pasta do cliente via `metaHasParent` antes de registrar — não confia no ID do navegador; idempotente por `drive_file_id`). JS de `portal/files.php` envia chunks de 16MB com `Content-Range` direto à session URI, com progresso, retomada (probe 308) e cancelamento; relay PHP mantido como fallback (única via onde `maxBytes` ainda vale). Registro pós-upload unificado em `PortalController::registerDriveFile()`. Testes: `DriveDirectUploadTest` (82 verdes, PHPStan ok).
+> **Validação pendente em produção (o "pronto quando" real):** subir vídeo de 1,5GB pelo portal na Hostinger, conferir progresso/retomada e o arquivo na galeria + Drive. Requisito: `APP_URL` de produção correto no `.env.production`.
+- **Problema:** todo upload passa pelo relay PHP; a Hostinger compartilhada trava `upload_max_filesize`/`post_max_size` em 256M acima do `.user.ini`. Vídeos de cliente maiores que isso falham. Não é limite do Google (resumável aceita 5TB) nem exige migrar de hosting.
+- **Arquivos:** `app/Services/GoogleDriveApiService.php` (`initiateResumable` — adicionar header `Origin` = `APP_URL` na iniciação), `app/Controllers/PortalController.php` (novo endpoint JSON `driveUploadSession` que devolve a session URI + registro pós-upload dos metadados), `resources/views/portal/files.php` (JS: PUT em chunks de 8–32MB com `Content-Range`, progresso, retomada em 308), `routes/web.php`.
+- **Ação:** (1) iniciar sessão resumável server-side com `Origin`; (2) JS envia chunks direto à session URI (CORS liberado pelo Google para a origem registrada); (3) ao receber 200/201 do último chunk, POST leve ao servidor confirma e grava `drive_files` (validar que o `fileId` está na pasta esperada); (4) manter relay como fallback < 200MB; (5) subir o aviso de limite da UI só quando o fallback for usado.
+- **Pronto quando:** vídeo de 1,5GB sobe pelo portal na Hostinger com barra de progresso, aparece na galeria e no Drive; queda de conexão no meio retoma; relay continua funcionando para arquivo pequeno.
 
-### SEC-03 · Content-Security-Policy + HSTS — `M` 🟠 · ✅ FEITO
-- **Arquivos:** `app/Core/Response.php:91-104`.
-- **Ação:** header CSP com allowlist (ou self-host, ver PERF-01); `Strict-Transport-Security` quando HTTPS. Bloquear `unsafe-inline` gradualmente (há inline scripts hoje — coordenar com PERF-02).
-- **Pronto quando:** resposta traz CSP e HSTS; o app funciona sem violações no console.
+### FE-01 · Design tokens únicos + build de assets (absorve PERF-01) — `G` 🟠
+- **Problema:** Tailwind via CDN em produção (recompila no browser, trava CSP em `unsafe-inline/eval`); `tailwind.config` + `<style>` duplicados nos 4 layouts; Alpine sem pin em `app`/`admin`; nada de SRI.
+- **Ação:** Tailwind CLI com um `tailwind.config.js` único (cores da marca, gray-925/950, fonte) gerando `public/css/app.css` purgado; extrair o CSS custom dos layouts para camada `@layer components` (`.card`, `.btn-primary`, `.input-field`, …); self-host Alpine (pin) e Chart.js com SRI; os 4 layouts passam a incluir os mesmos assets locais.
+- **Pronto quando:** zero `<script src="https://cdn...">` em runtime; trocar a cor de acento = editar 1 arquivo; CSP sem `unsafe-eval` (SEC-10 na sequência); Lighthouse sem flash de estilo.
 
-### SEC-05 · Cifrar credenciais globais em `platform_settings` — `M` 🟠
-- **Arquivos:** `app/Repositories/PlatformSettingsRepository.php`, `app/Controllers/Admin/GlobalSettingsController.php`, consumidores (`MetaAdsService`, `AiInsightService`, `EvolutionApiService`, `EmailService`).
-- **Ação:** cifrar chaves sensíveis (`mail_password`, `meta_app_secret`, `openai_api_key`, `anthropic_api_key`, `evolution_api_key`) com `Secret` na escrita e decifrar na leitura. Migration para cifrar valores existentes (usar `bin/encrypt_tokens.php` como referência).
-- **Pronto quando:** um `SELECT` em `platform_settings` mostra as chaves cifradas e as integrações continuam funcionando.
+### FE-02 · Extrair JS inline das views gigantes — `G` 🟠
+- **Arquivos:** `resources/views/content/show.php` (1.183 l.), `portal/files.php` (566 l.), `approvals/show.php` (423 l.).
+- **Ação:** mover para módulos em `public/js/` (ex.: `content-editor.js`, `drive-manager.js`); dados do PHP entram por `data-*`/`json_encode` com flags `JSON_HEX_*`; view fica < 400 linhas.
+- **Pronto quando:** as três views só têm markup + include do módulo; nenhuma regressão nos fluxos (validar com `visual-validation`).
 
-### SEC-06 · CSRF uniforme em ações de estado — `M` 🟠
-- **Arquivos:** `routes/web.php` (portal drive + itemFeedback), `app/Middlewares/CsrfMiddleware.php`, `/api/comentarios/*`.
-- **Ação:** aplicar CSRF (ou double-submit) em todo POST/PUT/DELETE que muda estado. Para APIs JSON autenticadas por sessão, exigir `X-CSRF-Token`. Corrigir a lista `except` (`/webhooks/` não bate com a rota real `/webhook/`).
-- **Pronto quando:** todo endpoint de mutação valida CSRF; webhooks (com HMAC/token próprio) seguem isentos por caminho correto.
+### FE-03 · Wrapper padrão de fetch (estados + erros) — `M` 🟠
+- **Ação:** `public/js/api.js` único: injeta `X-CSRF-Token`, checa `response.ok`, timeout, e devolve erro tipado; padrão de UI para loading/vazio/erro/sucesso documentado na skill `yve-frontend`. Migrar os `fetch` existentes.
+- **Pronto quando:** nenhum `fetch()` cru nas views; erro de rede mostra feedback visível (não `catch {}` silencioso).
 
-### SEC-04 · Sanitizar Markdown da IA + pin de CDN — `P` 🟠
-- **Arquivos:** `resources/views/ia/show.php:76-81`.
-- **Ação:** DOMPurify após `marked.parse`, ou render como texto; fixar versão do `marked` com hash SRI.
-- **Pronto quando:** um insight com `<img onerror>` embutido não executa script.
+### SEC-08 · CSRF nos endpoints de mutação do portal — `M` 🟠
+- **Problema:** `itemFeedback` e `/portal/{token}/drive/*` mutam estado só com o token da URL (follow-up do SEC-06).
+- **Ação:** double-submit cookie no portal (cookie + header `X-Portal-CSRF` verificados com `hash_equals`); aproveitar e mover mutações de "GET-like POST" para o wrapper FE-03.
+- **Pronto quando:** POST cross-site forjado contra o portal falha; fluxos de aprovação e upload seguem funcionando.
 
-### SEC-07 · Validar posse de entidade nos comentários — `P` 🟠
-- **Arquivos:** `app/Services/InternalCommentService.php`, `app/Repositories/InternalCommentRepository.php`.
-- **Ação:** antes de gravar, confirmar que `entity_id` do tipo pertence à agência.
-- **Pronto quando:** comentar numa tarefa de outra agência retorna 404/403.
+### ARCH-01 · Tirar SQL do DashboardController — `P` 🟡
+- **Problema:** única violação encontrada da invariante "controller sem SQL" — o dashboard monta PDO na mão.
+- **Ação:** mover para `DashboardRepository` (ou métodos nos repositórios existentes); aproveitar para preparar PROD-08.
+- **Pronto quando:** `grep -r "prepare(" app/Controllers` vazio; testes verdes.
 
-### SCHEMA-01 · FKs faltantes (Drive/ClickUp) — `M` 🟠
-- **Arquivos:** nova migration; `database/migrations/20260612000020..23`, `20260612000014`.
-- **Ação:** adicionar FKs de `agency_id`/`client_id`/`folder_id` com `ON DELETE CASCADE`. Limpar órfãos antes de aplicar.
-- **Pronto quando:** excluir um cliente remove suas pastas/arquivos/integrações em cascata; migration reverte sem erro.
-
----
-
-## Marco 2 — Correção de bugs e qualidade
-
-### BUG-01 · Notificações in-app sem `action_url` — `P` 🟠
-- **Arquivos:** `app/Services/NotificationService.php:87-93`.
-- **Ação:** montar o array explicitamente (`'action_url' => $actionUrl`, etc.), removendo o `compact()` com nomes errados.
-- **Pronto quando:** clicar numa notificação leva ao destino; PHPStan não acusa variável indefinida.
-
-### QA-01 · Zerar PHPStan nível 6 — `M` 🟡 · ✅ FEITO (2026-07-06)
-> `Container`/`Request`/`Response` marcadas `final` (resolve `new static()`); `Container` usa `self::`; `View::render` lê os statics via acessores tipados (o include muta por efeito colateral que o PHPStan não rastreia). Bug real corrigido de brinde: `ReportController` chamava `Response::withError()` (inexistente) — agora flash + redirect. Removido código morto (5 props injetadas sem uso, `videoTypes()`, ternário sempre-verdadeiro). `phpstan.neon` migrado da opção deprecada. **`composer analyse` = [OK] No errors.**
-
-### QA-02 · Testes de autorização e multi-tenancy — `G` 🟠 · ✅ FEITO (2026-07-06)
-> `tests/Unit/MiddlewareAuthorizationTest.php` (11 casos): positivo+negativo para `AuthMiddleware` (401/302/passa), `PermissionMiddleware` (403/passa), `ClientAccessMiddleware` (403/passa/`view_all` bypassa) e `PlatformAdminMiddleware` (403/redirect/passa). `tests/Unit/RepositoryScopeTest.php` (3 casos): `agencyScope()` filtra por tenant, é `1=1` para platform admin, e **falha fechado** (throw) sem agência. Falha se alguém quebrar o enforcement. **62 testes verdes.** Follow-up possível: testes HTTP ponta a ponta (exigem schema em banco de teste — hoje as migrations são PG-only).
-
-### PERF-01 · Build de assets (sair do Tailwind CDN) — `M` 🟡
-- **Ação:** pipeline mínimo (Tailwind CLI) gerando CSS purgado em `public/css/app.css`; self-host de Alpine/Chart.js com SRI. Remove dependência de CDN em runtime e destrava CSP estrita.
-- **Pronto quando:** nenhuma tag `<script src="cdn...">` em runtime; página carrega CSS local.
-
-### PERF-02 · Extrair JS inline das views grandes — `M` 🟡
-- **Arquivos:** `resources/views/content/show.php`, `portal/files.php`, `clients/files.php`.
-- **Ação:** mover para módulos em `public/js/`; padronizar wrapper `fetch` com checagem de `response.ok`, estado de loading e erro.
-- **Pronto quando:** views grandes < 400 linhas; um helper único de fetch trata erro/loading.
-
-### DRIVE-01 · Preview de imagem do Drive na aprovação do cliente — `M` 🟠 · ✅ FEITO (2026-07-06)
-> Helper `GoogleDriveService::imageSrc()` converte links do Drive para o endpoint `thumbnail` (funciona em `<img>`); aplicado em `portal/plan_show.php` (capa, carrossel e imagem do Drive agora com preview inline) e na função JS `driveImageUrl()` de `content/show.php`. Coberto por `tests/Unit/DriveImageSrcTest.php`. Pré-requisito operacional: o arquivo do Drive precisa estar compartilhado "qualquer um com o link".
-- **Problema (confirmado):** na página que o cliente usa para aprovar a planificação (`portal/plan_show.php`) e na edição do item (`content/show.php`), as imagens (`cover_url`, `images[]`) são hotlinkadas do Google via `https://drive.google.com/uc?export=view&id=…` (montado por `driveImageUrl()` em `content/show.php:719-724`). **O Google descontinuou esse endpoint para `<img>`** — devolve uma página HTML de aviso/consentimento em vez dos bytes, então o `onerror` esconde a imagem e o preview fica em branco. Imagem do Drive em `drive_url` ainda cai no ramo "ver arquivo no Drive" (só link, sem preview inline — `plan_show.php:177`).
-- **Causa raiz secundária:** o app usa escopo OAuth `drive.file` — só enxerga arquivos que ele mesmo criou. Link colado manualmente pela equipe aponta para arquivo que o app não lê pela API; só renderiza se estiver compartilhado "qualquer um com o link".
-- **Correção:**
-  1. Imagens **enviadas pelo app** (existem em `drive_files`): referenciar pelo **proxy próprio** já existente (`/portal/{token}/drive/file/{id}/raw`; agência `/clientes/{id}/conteudos/file/{fileId}/raw`) em vez do link do Google — streaming autenticado, confiável e privado. Ideal: ligar o seletor de imagem do item ao upload do app, guardando `drive_file_id`.
-  2. Links **colados manualmente**: trocar `uc?export=view&id=` por `https://drive.google.com/thumbnail?id=ID&sz=w1000` (funciona para arquivo com link público) + iframe `/preview` como fallback; instruir a compartilhar "qualquer um com o link".
-  3. Renderizar imagem do Drive (`file_type === 'image'`) com preview inline no `plan_show.php`, não só link.
-- **Pronto quando:** item com imagem enviada pelo portal mostra o preview no card de aprovação (desktop e mobile); imagem via link público renderiza; nenhum `<img>` quebrado.
-
-### DRIVE-02 · Sincronizar alterações feitas direto no Drive → sistema — `G` 🟠 · ✅ FASE 1 FEITA (2026-07-06)
-> Reconciliação implementada: `DriveSyncService` (recursivo) + `GoogleDriveApiService::listFolder()` + botão "Sincronizar" na galeria da agência (`/clientes/{id}/conteudos/sync`) + cron `/queue/sync-drive`. Reflete delete/rename/move de arquivos **criados pelo app**. **Ainda pendente** (fase 2, decisão de produto): detectar arquivos adicionados **manualmente** no Drive exige escopo `drive.readonly` + verificação do Google — ver abaixo.
-- **Problema:** o sistema grava metadados em `drive_files`/`drive_folders` no upload. Se alguém **mexe direto no Google Drive** (adiciona, apaga, renomeia, move), o banco não sabe — galeria dessincroniza (arquivo fantasma ou novo invisível). Hoje só há limpeza reativa de órfão no 404 do proxy (`PortalController::driveFileRaw`).
-- **Restrição de arquitetura decisiva:** o escopo `drive.file` **só expõe arquivos criados pelo próprio app**. Arquivos que o cliente **adiciona manualmente na interface do Drive são invisíveis** para a API. Logo: detectar delete/rename/move do que o app enviou → viável com `drive.file`; detectar adição manual → exige escopo `drive.readonly`/`drive` + verificação/CASA do Google (custo/prazo — decisão de produto).
-- **Solução recomendada (faseada):**
-  1. **Reconciliação sob demanda + agendada** (sem trocar escopo): serviço que lista a pasta via `files.list` (`'{folderId}' in parents and trashed=false`) e reconcilia com o banco — insere novo, remove sumido, atualiza nome. Botão "Sincronizar" na galeria + cron (`/queue/sync-drive`). Usar `changes.list` com `startPageToken` por agência para delta eficiente.
-  2. **Endurecer a listagem:** marcar item ausente no Drive como "removido" em vez de mostrar quebrado (estende o padrão órfão-em-404 para a lista).
-  3. **Push opcional (real-time):** `changes.watch` (canal de webhook, renovar ~7 dias) — só se precisar de tempo real.
-  4. **Se incluir adições manuais:** planejar upgrade de escopo `drive.readonly` + verificação Google (item separado, impacto de compliance).
-- **Pronto quando:** "Sincronizar" reflete no sistema arquivos/pastas criados pelo app que foram apagados/renomeados no Drive; cron mantém consistência; a listagem não exibe arquivo fantasma.
+### QA-03 · Testes HTTP ponta a ponta dos fluxos críticos — `G` 🟡
+- **Ação:** banco PG de teste (schema via Phinx) + 5 testes: login+RBAC, aprovação pelo portal, upload (mock do Drive), criação de fatura, isolamento multi-tenant via HTTP.
+- **Pronto quando:** `composer test` cobre os cinco; CI-able.
 
 ---
 
-## Marco 3 — Robustez de plataforma
+## Marco B — Confiabilidade (o que já existe passa a ser monitorado e validado)
 
-- **INFRA-01 · Worker de fila resiliente** (`M`): hoje a fila roda por cron HTTP (`/queue/work`). Documentar/prover `bin/worker.php` como serviço (supervisord) para latência menor; manter o modo HTTP como fallback. Unificar `jobs` e `notification_jobs`.
-- **INFRA-02 · Reavaliar PDO persistente** (`P`): medir conexões com o pooler do Supabase; desligar `ATTR_PERSISTENT` se houver saturação.
-- **INFRA-03 · Padronizar `insert()` com `RETURNING id`** (`P`): remover dependência de `lastInsertId()` sem sequência.
-- **OBS-01 · Observabilidade** (`M`): centralizar logs (já há Monolog), alertas de job falho, painel de saúde `/health`. Rastrear erros de integração.
-- **DATA-01 · Backup e retenção** (`P`): política de backup do Supabase documentada; retenção de `activity_logs`.
-
----
-
-## Marco 4 — Evolução de produto (pós-comercialização)
-
-Continuidade das fases do [PLANO.md](../PLANO.md) que seguem parciais:
-
-- **Fase 3 (Comunicação):** consolidar templates de e-mail/WhatsApp, logs de entrega e retry visível.
-- **Fase 7–8 (IA de tráfego + ações assistidas):** amarrar `ai_recommendations` → `ads_actions` com guardrails de `ai_safety_rules` verificados em código antes de chamar a Meta.
-- **Fase 11 (Criativos com IA):** `brand_guidelines` + geração de copy/conceito com revisão interna.
-- **Fase 12 (SaaS):** onboarding self-service de agência, billing real (gateway), limites por plano aplicados de forma centralizada (hoje checados controller a controller), white-label.
-- **UX:** unificar idioma canônico de rotas (reduzir duplicação pt/en); design system consistente (há tokens repetidos em CSS inline no layout).
+- **INT-01 · Validar Evolution/WhatsApp ponta a ponta** — `M` 🟠 · staging com instância real: conectar QR, enviar automação, receber webhook; documentar operação da instância (quem hospeda, como reinicia) em `docs/EVOLUTION_API_INTEGRACAO.md`. **Pronto:** roteiro da skill `yve-analise-produto` §validação-de-integração executado e anexado.
+- **INT-02 · Rate limit de envio de WhatsApp por instância** — `P` 🟡 · evitar ban de número (fila já permite espaçar).
+- **INT-03 · Validar ClickUp com workspace real** — `M` 🟡 · sync bidirecional + webhook + conflito de edição; decidir papel (tarefas nativas vs ClickUp-first) e registrar a decisão aqui.
+- **OBS-01 · Observabilidade mínima** — `M` 🟠 · endpoint `/health` (DB, fila, último cron); alerta (e-mail ao admin) quando job falha `max_attempts` ou sync de conta Meta/orgânico falha 3× seguidas.
+- **OBS-02 · Timeline de automações/entregas na UI** — `M` 🟡 · o que foi enviado, pra quem, por qual canal, com que resultado.
+- **INFRA-01 · Worker resiliente + unificar filas** — `M` 🟠 · mover `bin/worker.php` para a VPS (supervisord) mantendo cron HTTP como fallback; fundir `notification_jobs` na tabela `jobs`.
+- **INFRA-02 · Medir PDO persistente vs pooler Supabase** — `P` 🟡 · desligar `ATTR_PERSISTENT` se houver saturação de conexões.
+- **INFRA-03 · Padronizar `insert()` com `RETURNING id`** — `P` 🟡.
+- **DATA-01 · Backup e retenção documentados** — `P` 🟡 · política do Supabase + retenção de `activity_logs`.
+- **ADM-01 · Guard-rail no painel de migrations** — `P` 🟡 · aviso forte + registrar dump/backup antes de `rollback` em produção.
+- **SEC-10 · CSP estrita (nonce, sem unsafe-\*)** — `M` 🟡 · destravado por FE-01/FE-02.
 
 ---
 
-## Sequenciamento sugerido (sprints)
+## Marco C — Escala comercial
+
+- **PROD-01 · Billing SaaS real** — `G` 🔴 (para escalar) · gateway de assinatura (avaliar Stripe vs Mercado Pago), trial 14 dias, dunning, tela de upgrade; **ARCH-04** junto: centralizar `checkLimit` num gate único (hoje controller a controller).
+- **PROD-01a · Recebimento de faturas de clientes (PIX/boleto)** — `G` 🟠 · Asaas/Mercado Pago na fatura do módulo financeiro; recibo automático.
+- **PROD-08 · Dashboard acionável ("meu dia")** — `M` 🟠 · aprovações paradas, faturas vencendo, tarefas atrasadas, syncs quebrados (depende de ARCH-01).
+- **PROD-03 · Hub 360° do cliente** — `M` 🟡 · abas conteúdo/financeiro/tráfego/arquivos na tela do cliente.
+- **PROD-06 · White-label do portal** — `M` 🟡 · logo + cor por agência (viável após FE-01 tokenizar).
+- **UX-04 · PDF real (dompdf) para fatura/contrato/relatório** — `M` 🟡.
+- **AUTH-01 · 2FA TOTP** — `M` 🟡.
+- **ARCH-02 · Unificar rotas pt/en por mapa de aliases** — `M` 🟡 · corta `routes/web.php` pela metade.
+- **ARCH-03 · Extrair `PortalDriveController`** — `P` 🟡 · natural durante UP-01.
+
+---
+
+## Marco D — Diferenciação (pós-escala)
+
+- **PROD-02 · IA→Ação com guardrails** — `G` · recomendação gera `ads_action` pré-preenchida; `ai_safety_rules` verificadas **em código** antes de executar na Meta. (Fases 7–8 do [PLANO_FASES.md](PLANO_FASES.md).)
+- **AI-01 · Metering de IA por agência** — `M` · tokens/custo por tenant, insumo de precificação.
+- **PROD-04 · Calendário de conteúdo** — `M` · visão mês dos itens de plano.
+- **PROD-05 · Duplicar plano/itens** — `P`.
+- **PROD-07 · Vincular post orgânico ↔ item de plano** — `G` · fecha o ciclo planejou→postou→performou.
+- **UX-02/03/05/06/07** — exclusão informativa, convite por e-mail, drag-and-drop no kanban, preferências de notificação, seletor de período.
+- **DRIVE-03 · Sync fase 2 (adições manuais no Drive)** — `G` · exige escopo `drive.readonly` + verificação Google — decisão de produto pendente.
+
+---
+
+## Sequenciamento sugerido
 
 | Sprint | Foco | Itens |
 |--------|------|-------|
-| **1** | Bloqueadores | SEC-01, SEC-02, DEP-01, BUG-01 |
-| **2** | Hardening | SEC-03, SEC-05, SEC-06, SEC-04, SEC-07, SCHEMA-01 |
-| **3** | Qualidade + Drive | QA-01, QA-02, PERF-01, PERF-02, DRIVE-01, DRIVE-02 |
-| **4** | Robustez | INFRA-01..03, OBS-01, DATA-01 |
-| **5+** | Produto | Marco 4 |
+| **1** | Dor nº 1 + base do frontend | UP-01 · ARCH-01 · ARCH-03 |
+| **2** | Frontend vira produto | FE-01 · FE-03 · SEC-08 |
+| **3** | JS sustentável + rede de segurança | FE-02 · QA-03 · SEC-10 |
+| **4** | Confiabilidade | INT-01/02/03 · OBS-01/02 · INFRA-01/02/03 · DATA-01 · ADM-01 |
+| **5+** | Escala comercial | PROD-01(a) · PROD-08 · PROD-03 · PROD-06 · UX-04 · AUTH-01 · ARCH-02 |
+| **6+** | Diferenciação | Marco D |
 
-**Go-live pago = fim do Sprint 2** (bloqueadores + hardening resolvidos, com QA-02 idealmente já iniciado).
+**Marco de "MVP fechado" = fim do Sprint 3.** A partir daí o produto aguenta demo de venda e uso diário sem ressalva técnica.
 
 ---
 
 ## Definição de pronto global (por item)
 
 - [ ] Migrations reversíveis aplicam e revertem sem erro.
-- [ ] Rota nova passa por auth + permissão + (se de cliente) `ClientAccessMiddleware`.
-- [ ] Regra de negócio nova tem teste PHPUnit; permissão nova tem teste positivo **e** negativo.
-- [ ] `composer analyse` (PHPStan) sem erro novo; `composer audit` limpo.
-- [ ] Ação sensível grava em `activity_logs`.
-- [ ] Nenhum segredo no código; segredos novos cifrados em repouso.
-- [ ] Nenhuma saída de template sem `e()`; nenhuma `innerHTML` com dado sem sanitização.
+- [ ] Rota nova: auth + permissão + (se de cliente) `ClientAccessMiddleware` + CSRF em mutação — nos pares pt **e** en.
+- [ ] Regra nova tem teste (permissão: positivo **e** negativo).
+- [ ] `composer test` + `composer analyse` verdes; `composer audit` limpo.
+- [ ] Ação sensível grava `activity_logs`; segredo novo cifrado.
+- [ ] Saída de template com `e()`; `innerHTML` só com sanitização; `fetch` via wrapper (pós FE-03).
+- [ ] Tela nova/alterada: tokens do design system (nada hardcoded), 4 estados (loading/vazio/erro/sucesso), validada com `visual-validation`.
+- [ ] Item concluído: marcar ✅ **neste arquivo** com data e uma linha de como foi resolvido.

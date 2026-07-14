@@ -1,10 +1,12 @@
 # YVE Agency — Análise Técnica Completa do Sistema
 
 > Documento de engenharia sênior · Auditoria e documentação para preparação de comercialização
-> Data: 2026-07-06 · Stack: PHP 8.3 puro · PostgreSQL (Supabase) · Tailwind + Alpine.js
+> Data: 2026-07-06 · Revisado: 2026-07-14 (ciclo 2) · Stack: PHP 8.3 puro · PostgreSQL (Supabase) · Tailwind + Alpine.js
 > Escopo: arquitetura, módulos, integrações, segurança, banco, frontend, testes e achados.
 
-Este documento é a **fotografia técnica** do sistema. Ele descreve o que existe, como funciona e onde estão os riscos. O roteiro de correções e evolução está em [PLANO_MESTRE.md](PLANO_MESTRE.md). O guia funcional de uso está em [GUIA_SISTEMA.md](GUIA_SISTEMA.md).
+Este documento é a **fotografia técnica** do sistema. Ele descreve o que existe, como funciona e onde estão os riscos. A análise de produto (SWOT + notas por módulo) está em [ANALISE_PRODUTO.md](ANALISE_PRODUTO.md); o roteiro vigente em [PLANO_MESTRE.md](PLANO_MESTRE.md). O guia funcional de uso está em [GUIA_SISTEMA.md](GUIA_SISTEMA.md).
+
+> **Nota do ciclo 2 (2026-07-14):** os achados 🔴/🟠 do §6 foram **corrigidos** nos Marcos 0–2 (ver histórico em [historico/PLANO_MESTRE_2026-07-06.md](historico/PLANO_MESTRE_2026-07-06.md)); permanecem abertos os itens 🟡 de polish (agora INFRA-01/02/03 e SEC-10 no plano vigente). O texto original foi mantido como registro do estado auditado.
 
 ---
 
@@ -20,7 +22,7 @@ O YVE Agency é uma **plataforma multi-tenant (SaaS) de gestão de agência de m
 
 O sistema cobre o ciclo operacional de uma agência: cadastro de clientes → planejamento de conteúdo → aprovação pelo cliente → comunicação (WhatsApp/e-mail) → tráfego pago (Meta) → orgânico (Instagram) → IA de insights → financeiro (contratos/faturas/pagamentos) → tarefas → automações.
 
-**Maturidade atual:** Fases 1 e 2 do [PLANO.md](../PLANO.md) completas (core, RBAC, clientes, conteúdo, aprovação, portal). Fases 3–12 implementadas em graus variados — a maioria dos módulos existe e funciona, mas com dívidas de robustez que este documento detalha.
+**Maturidade atual:** Fases 1 e 2 do [PLANO_FASES.md](PLANO_FASES.md) completas (core, RBAC, clientes, conteúdo, aprovação, portal). Fases 3–12 implementadas em graus variados — a maioria dos módulos existe e funciona, mas com dívidas de robustez que este documento detalha.
 
 ---
 
@@ -263,9 +265,10 @@ Inconsistência: `planApprove` tem `CsrfMiddleware`, mas `itemFeedback`, os endp
 ## 9. Estado de qualidade (medições)
 
 ```
-PHPUnit:        38 testes, 71 asserts — 100% verde
-PHPStan (nvl 6): 22 erros (cosméticos + BUG-01 já mapeado)
-composer audit:  3 CVEs médios (guzzle x2, psr7 x1)
+Em 2026-07-06 (auditoria):        38 testes · PHPStan 22 erros · 3 CVEs (guzzle/psr7)
+Em 2026-07-14 (ciclo 2, medido):  77 testes, 140 asserts — 100% verde
+                                  PHPStan nível 6 (v2.2.5): 0 erros
+                                  composer audit: 0 advisories
 PHP runtime:     8.5.2 (composer.json exige >=8.3) ✓
 Secrets no git:  apenas .env.example versionado ✓ (.env/.env.production ignorados)
 ```

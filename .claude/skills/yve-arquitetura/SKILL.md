@@ -40,7 +40,9 @@ Response          → view | json | redirect (headers de segurança no send())
 4. **Toda saída de template com `e()`.** Nunca `echo` cru de dado do usuário. Ver `yve-seguranca`.
 5. **Permissão validada no backend** (`Auth::requirePermission('modulo.acao')` no início do método do controller), não só escondendo botão na view.
 6. **Ação sensível grava `activity_logs`** via `App\Support\ActivityLogger::log(...)`.
-7. **Segredo só via `.env`/`Core\Crypto`/`Core\Secret`.** Nunca hardcoded, nunca em texto puro no banco (exceção atual: `platform_settings` — em correção, ver `yve-roadmap` SEC-05).
+7. **Segredo só via `.env`/`Core\Crypto`/`Core\Secret`.** Nunca hardcoded, nunca em texto puro no banco (`platform_settings` também cifra as chaves sensíveis desde SEC-05).
+
+> Violação conhecida e mapeada: `DashboardController` tem SQL direto (item ARCH-01 do roadmap). Não use como referência — e não crie outra.
 
 ## Como o Container resolve dependências
 
@@ -81,6 +83,6 @@ Layouts disponíveis: `app` (painel tenant), `admin` (platform), `portal` (clien
 - **Rotas pt+en:** hoje cada endpoint existe nos dois idiomas (`/clientes` e `/clients`). Ao adicionar rota, mantenha o par para não quebrar links. (Há proposta de unificar — ver `yve-roadmap`.)
 - **Dois níveis de admin:** `PlatformAdminMiddleware` protege `/admin/*` (dono do SaaS); `AuthMiddleware` protege o painel da agência. Platform admin **não** tem `agency_id` e bypassa RBAC de tenant.
 - **Portal é público por token:** `PortalMiddleware` resolve o cliente por `portal_token` na URL; usa `PortalAuth` (não `Auth`). Fala o idioma do cliente, não o da sessão.
-- **Qualidade:** rode `composer test` (PHPUnit) e `composer analyse` (PHPStan nível 6) antes de finalizar. Não introduza erro novo no PHPStan.
+- **Qualidade:** rode `composer test` (PHPUnit) e `composer analyse` (PHPStan nível 6, hoje **zerado** — mantenha assim) antes de finalizar.
 
-Para segurança, veja `yve-seguranca`. Para adicionar um módulo completo, veja `yve-novo-modulo`. Para o backlog priorizado, veja `yve-roadmap`.
+Para segurança, veja `yve-seguranca`. Para telas (tokens, estados, JS), veja `yve-frontend`. Para adicionar um módulo completo, veja `yve-novo-modulo`. Para o backlog priorizado, veja `yve-roadmap` (fonte: `docs/PLANO_MESTRE.md`).

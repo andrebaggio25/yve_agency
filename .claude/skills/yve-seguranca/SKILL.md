@@ -13,10 +13,10 @@ Este app é multi-tenant e vai ser comercializado. O modelo de ameaça inclui um
 2. **RBAC no backend.** `Auth::requirePermission('modulo.acao')` no início do método do controller. Esconder o botão na view **não** é proteção. Rota de cliente exige `ClientAccessMiddleware`/`Auth::requireClientAccess`.
 3. **Prepared statements sempre.** PDO com `bind`. Zero interpolação de input em SQL. Identificador dinâmico só por allowlist explícita.
 4. **Escape na saída.** `e()` (= `htmlspecialchars(ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8')`) em todo dado em HTML/atributo. Em `<script>`, `json_encode` com `JSON_HEX_TAG|JSON_HEX_AMP`. **Nunca** `innerHTML` com dado sem sanitizar (DOMPurify) — há um caso aberto em `ia/show.php` (SEC-04).
-5. **CSRF em toda mutação.** POST/PUT/DELETE levam `CsrfMiddleware`. Tokens comparados com `hash_equals`. APIs JSON autenticadas por sessão exigem `X-CSRF-Token`. (Há endpoints do portal/comentários ainda sem — SEC-06.)
-6. **Segredos cifrados.** Token de integração por agência → `Core\Secret::encrypt`. Nada de credencial hardcoded. `.env`/`.env.production` nunca versionados (só `.env.example`). (Credenciais globais em `platform_settings` ainda em texto puro — SEC-05.)
-7. **Não confie em headers de cliente.** `Host`, `X-Forwarded-For`, `Referer`, `User-Agent` são forjáveis. **Não** use `X-Forwarded-For` para rate limit/decisão de segurança sem proxy confiável (SEC-02 — hoje `Request::ip()` confia nele).
-8. **Erros não vazam.** Produção com `APP_ENV=production`, `display_errors=0`, `log_errors=1`. Stack trace só no log, nunca na resposta (SEC-01).
+5. **CSRF em toda mutação.** POST/PUT/DELETE levam `CsrfMiddleware`. Tokens comparados com `hash_equals`. APIs JSON autenticadas por sessão exigem `X-CSRF-Token`. Pendência conhecida: mutações do **portal** ainda dependem só do token da URL (SEC-08) — toda rota de mutação nova no portal deve nascer com double-submit.
+6. **Segredos cifrados.** Token de integração por agência → `Core\Secret::encrypt`; chaves globais de `platform_settings` cifradas de forma transparente (SEC-05 ✅). Nada de credencial hardcoded. `.env`/`.env.production` nunca versionados (só `.env.example`).
+7. **Não confie em headers de cliente.** `Host`, `X-Forwarded-For`, `Referer`, `User-Agent` são forjáveis. `Request::ip()` já usa `REMOTE_ADDR` e só honra `X-Forwarded-For` vindo de `TRUSTED_PROXIES` (SEC-02 ✅) — não regrida isso.
+8. **Erros não vazam.** Produção com `APP_ENV=production`, `display_errors=0`, `log_errors=1`. Stack trace só no log, nunca na resposta (SEC-01 ✅).
 
 ## Checklist de merge (rode antes de aprovar/pushar)
 
@@ -46,4 +46,4 @@ Ao mexer em upload: confirme `is_uploaded_file($tmp)`, limite de tamanho (`maxUp
 
 ## Antes de dizer "pode ir pra produção"
 
-Consulte `yve-roadmap`: os itens do **Marco 0** (SEC-01, SEC-02, DEP-01, BUG-01) são bloqueadores absolutos. Não aprove go-live pago com qualquer um deles aberto. Para uma revisão profunda de PHP/JS, acione a skill global `php-js-review`; para supply chain e segredos vazados, `dependency-audit`.
+Os bloqueadores do ciclo 1 (Marcos 0 e 1) estão **concluídos** — o hardening base existe. Pendências de segurança vigentes (ver `docs/PLANO_MESTRE.md`): **SEC-08** (CSRF do portal), **SEC-10** (CSP estrita, destravada por FE-01) e AUTH-01 (2FA, pós-MVP). Nenhuma delas re-bloqueia o go-live, mas rota nova de portal sem CSRF ou CDN novo sem SRI **é regressão — não aprove**. Para revisão profunda de PHP/JS, acione a skill global `php-js-review`; para supply chain e segredos vazados, `dependency-audit`.

@@ -158,7 +158,7 @@ $router->delete('/exemplos/{id}',    [ExemploController::class, 'destroy'], [Csr
 
 ## Passo 7 — View
 
-`resources/views/exemplos/index.php`. `e()` em toda saída, `csrf_field()` em todo form, os 4 estados (carregando/vazio/erro/sucesso). Reutilize as classes utilitárias do layout (`.card`, `.btn-primary`, `.input-field`, `.label-field`).
+`resources/views/exemplos/index.php`. `e()` em toda saída, `csrf_field()` em todo form, os 4 estados (carregando/vazio/erro/sucesso). Reutilize as classes utilitárias do layout (`.card`, `.btn-primary`, `.input-field`, `.label-field`) e **carregue a skill `yve-frontend`** — tokens do design system (nada hardcoded), erros comuns e o checklist de tela vivem lá.
 
 ```php
 <?php view_layout('app'); view_start('content'); ?>
