@@ -122,16 +122,18 @@
 >   plano aprovado); idempotente; criação manual antecipada vence; equipe
 >   avisada in-app.
 >
-> **Próximo ciclo do módulo (registrado, não iniciado):**
-> - **CONT-AVISOS · Padronizar avisos** — catálogo único de eventos × canais
->   (whatsapp/email/inapp) × idioma; e-mail ganhar paridade com WhatsApp; a
->   matriz de automações como fonte única. Desenhar junto com INT-01.
-> - **CONT-PORTAL · Coesão do portal** — dashboard do cliente mostrando "sua
->   semana" (posts dos próximos 7 dias); item aprovado exibir quando foi
->   publicado (fecha planejou→aprovou→publicou, conversa com PROD-07).
-> - **CONT-RADAR · Listagem agrupada por semana** — "Semana atual / Próxima /
->   Passadas" destacando **clientes sem plano na próxima semana** — o radar do
->   que a automação não cobriu.
+> **Continuação (2026-07-14, commit `2fdf52c`):**
+> - **CONT-RADAR** ✅ — listagem agrupada por semana (atual/próxima/futuras/
+>   anteriores) + banner-radar de clientes ativos **sem plano na próxima
+>   semana**, com atalho "criar plano" já com o cliente pré-selecionado.
+> - **CONT-PORTAL (parte 1)** ✅ — dashboard do cliente com **"Sua semana"**
+>   (grade seg–dom da semana corrente, nunca rascunho, hoje destacado, link
+>   pro calendário). Parte 2 pendente: item exibir quando foi **publicado**
+>   (fecha planejou→aprovou→publicou — fazer junto com PROD-07).
+> - **CONT-AVISOS · Padronizar avisos** — pendente: catálogo único de eventos
+>   × canais (whatsapp/email/inapp) × idioma; e-mail ganhar paridade com
+>   WhatsApp; matriz de automações como fonte única. **Desenhar junto com
+>   INT-01** (validação do WhatsApp pelo usuário).
 
 - **PROD-02 · IA→Ação com guardrails** — `G` · recomendação gera `ads_action` pré-preenchida; `ai_safety_rules` verificadas **em código** antes de executar na Meta. (Fases 7–8 do [PLANO_FASES.md](PLANO_FASES.md).)
 - **AI-01 · Metering de IA por agência** — `M` · tokens/custo por tenant, insumo de precificação.
