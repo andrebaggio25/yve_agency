@@ -167,13 +167,57 @@ class ClientService
         $this->clientRepo->updateById($clientId, ['drive_folder_id' => null, 'updated_at' => date('Y-m-d H:i:s')]);
     }
 
-    public function delete(int $clientId, int $agencyId): void
+    /**
+     * Arquiva o cliente (UX-02).
+     *
+     * A ação se chamava "excluir", mas **nunca excluiu**: marcava
+     * `status = 'cancelled'`. Isso era bom (faturas e contratos são `RESTRICT`
+     * — apagar de verdade falharia; planos e arquivos são `CASCADE` — sumiriam)
+     * **mas a interface mentia**, e havia um furo real: o soft-delete não
+     * desativava o portal, então o cliente "removido" **continuava entrando no
+     * portal**, vendo faturas e enviando arquivos. Agora arquivar revoga o
+     * acesso, que é o que qualquer pessoa espera de "remover".
+     *
+     * O histórico (faturas, contratos, planos, arquivos) é preservado de
+     * propósito: é registro financeiro e de trabalho entregue.
+     */
+    public function archive(int $clientId, int $agencyId): void
     {
         $client = $this->findById($clientId, $agencyId);
         if (!$client) return;
 
-        $this->clientRepo->updateById($clientId, ['status' => 'cancelled', 'updated_at' => date('Y-m-d H:i:s')]);
-        ActivityLogger::log('client_deleted', 'clients', null, $clientId);
+        $this->clientRepo->updateById($clientId, [
+            'status'         => 'cancelled',
+            'portal_enabled' => false, // revoga o acesso do cliente ao portal
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        ActivityLogger::log('client_archived', 'clients', null, $clientId);
+    }
+
+    /** Reativa um cliente arquivado. O portal fica desligado até ser religado. */
+    public function restore(int $clientId, int $agencyId): void
+    {
+        $client = $this->findById($clientId, $agencyId);
+        if (!$client) return;
+
+        $this->clientRepo->updateById($clientId, [
+            'status'     => 'active',
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        ActivityLogger::log('client_restored', 'clients', null, $clientId);
+    }
+
+    /**
+     * O que existe vinculado ao cliente — para a tela de arquivamento mostrar o
+     * impacto real em vez de um "tem certeza?" vazio.
+     *
+     * @return array{invoices:int,contracts:int,plans:int,files:int,tasks:int}
+     */
+    public function relatedCounts(int $clientId, int $agencyId): array
+    {
+        return $this->clientRepo->relatedCounts($clientId, $agencyId);
     }
 
     public function listAccess(int $clientId, int $agencyId): array

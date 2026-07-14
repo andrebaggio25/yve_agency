@@ -150,12 +150,54 @@ class ClientRepository extends Repository
 
     // ── Portal ────────────────────────────────────────────────────────────────
 
+    /**
+     * Resolve o cliente pelo token do portal.
+     *
+     * Filtra `status <> 'cancelled'`: cliente arquivado **não entra no portal**.
+     * Antes, o soft-delete não mexia no portal e o cliente "removido" continuava
+     * acessando faturas e enviando arquivos (UX-02). O `portal_enabled` também é
+     * desligado ao arquivar — este filtro é a segunda camada, para o caso de
+     * alguém religar o portal de um cliente arquivado sem perceber.
+     */
     public function findByPortalToken(string $token): ?array
     {
         return $this->first(
-            'SELECT * FROM clients WHERE portal_token = :token LIMIT 1',
+            "SELECT * FROM clients WHERE portal_token = :token AND (status IS NULL OR status <> 'cancelled') LIMIT 1",
             [':token' => $token],
         );
+    }
+
+    /**
+     * Contadores do que está vinculado ao cliente (UX-02 — mostrar o impacto
+     * real antes de arquivar, em vez de um "tem certeza?" sem informação).
+     *
+     * @return array{invoices:int,contracts:int,plans:int,files:int,tasks:int}
+     */
+    public function relatedCounts(int $clientId, int $agencyId): array
+    {
+        $row = $this->first(
+            "SELECT
+                (SELECT COUNT(*) FROM invoices       WHERE client_id = :c1 AND agency_id = :a1) AS invoices,
+                (SELECT COUNT(*) FROM contracts      WHERE client_id = :c2 AND agency_id = :a2) AS contracts,
+                (SELECT COUNT(*) FROM content_plans  WHERE client_id = :c3 AND agency_id = :a3) AS plans,
+                (SELECT COUNT(*) FROM drive_files    WHERE client_id = :c4 AND agency_id = :a4) AS files,
+                (SELECT COUNT(*) FROM tasks          WHERE client_id = :c5 AND agency_id = :a5) AS tasks",
+            [
+                ':c1' => $clientId, ':a1' => $agencyId,
+                ':c2' => $clientId, ':a2' => $agencyId,
+                ':c3' => $clientId, ':a3' => $agencyId,
+                ':c4' => $clientId, ':a4' => $agencyId,
+                ':c5' => $clientId, ':a5' => $agencyId,
+            ]
+        ) ?? [];
+
+        return [
+            'invoices'  => (int) ($row['invoices']  ?? 0),
+            'contracts' => (int) ($row['contracts'] ?? 0),
+            'plans'     => (int) ($row['plans']     ?? 0),
+            'files'     => (int) ($row['files']     ?? 0),
+            'tasks'     => (int) ($row['tasks']     ?? 0),
+        ];
     }
 
     public function regeneratePortalToken(int $id): string

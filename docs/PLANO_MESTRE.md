@@ -86,12 +86,23 @@
 
 ## Marco D — Diferenciação (pós-escala)
 
+> **CICLO PRÓPRIO PEDIDO (2026-07-14): realinhar Planificações.** O usuário quer
+> um plano específico para o módulo de conteúdo (planificações) — o coração do
+> uso diário da agência. Rodar a skill `yve-analise-produto` **focada nesse
+> módulo**: fluxo real de trabalho da equipe, o que a cliente vê, o que trava
+> hoje. Itens já mapeados que provavelmente entram nesse plano: PROD-04
+> (calendário), PROD-05 (duplicar plano), PROD-07 (orgânico ↔ plano), o tamanho
+> de `content/show.php` e o vocabulário de status. **Fazer depois de usar o
+> sistema por algumas semanas** — o log de irritação real vale mais que a
+> especulação.
+
 - **PROD-02 · IA→Ação com guardrails** — `G` · recomendação gera `ads_action` pré-preenchida; `ai_safety_rules` verificadas **em código** antes de executar na Meta. (Fases 7–8 do [PLANO_FASES.md](PLANO_FASES.md).)
 - **AI-01 · Metering de IA por agência** — `M` · tokens/custo por tenant, insumo de precificação.
 - **PROD-04 · Calendário de conteúdo** — `M` · visão mês dos itens de plano.
 - **PROD-05 · Duplicar plano/itens** — `P`.
 - **PROD-07 · Vincular post orgânico ↔ item de plano** — `G` · fecha o ciclo planejou→postou→performou.
-- **UX-02/03/05/06/07** — exclusão informativa, convite por e-mail, drag-and-drop no kanban, preferências de notificação, seletor de período.
+- **UX-02 · Arquivar cliente (era "exclusão informativa")** — `P` · ✅ FEITO (2026-07-14) · **Dois bugs achados aqui.** (1) O botão dizia "Excluir" e **nunca excluiu** (soft-delete) — mas o soft-delete **não desligava o portal**: o cliente "removido" continuava entrando pelo link, vendo faturas e enviando arquivos. Agora arquivar **revoga o acesso** (e o `findByPortalToken` recusa cliente arquivado — segunda camada). (2) `Repository::query()` fazia bind de tudo como string: `false` virava `''` e o Postgres rejeitava — **qualquer `update` com booleano falso dava erro 500**; ninguém tinha esbarrado porque nenhum fluxo gravava `false`. Bind por tipo + teste. A tela agora mostra **o impacto real** (o que é preservado, o que é revogado) e permite **reativar**.
+- **UX-03/05/06/07** — convite por e-mail, drag-and-drop no kanban, preferências de notificação, seletor de período.
 - **DRIVE-03 · Sync fase 2 (adições manuais no Drive)** — `G` · exige escopo `drive.readonly` + verificação Google — decisão de produto pendente.
 
 ---

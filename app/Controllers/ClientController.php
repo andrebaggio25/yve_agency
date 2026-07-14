@@ -127,6 +127,9 @@ class ClientController extends Controller
             'client'            => $client,
             'clientAutomations' => $this->automations->clientAutomations(),
             'clientAutoSettings'=> $this->automations->settingsForClient($clientId),
+            // UX-02: a tela mostra o que existe vinculado, para o arquivamento
+            // ser uma decisão informada e não um "tem certeza?" no vazio.
+            'related'           => $this->clientService->relatedCounts($clientId, (int) Auth::agencyId()),
         ]);
     }
 
@@ -170,15 +173,30 @@ class ClientController extends Controller
         return $this->redirect("/clientes/{$clientId}");
     }
 
+    /**
+     * Arquiva o cliente (UX-02). A ação se chamava "excluir" e nunca excluiu —
+     * agora a interface diz a verdade e o acesso ao portal é revogado.
+     */
     public function destroy(Request $request): Response
     {
         Auth::requirePermission('clients.delete');
 
         $clientId = (int) $request->param('clientId');
-        $this->clientService->delete($clientId, Auth::agencyId());
+        $this->clientService->archive($clientId, (int) Auth::agencyId());
 
-        $this->withSuccess('Cliente removido.');
+        $this->withSuccess('Cliente arquivado. O histórico foi preservado e o acesso ao portal, revogado.');
         return $this->redirect('/clientes');
+    }
+
+    public function restore(Request $request): Response
+    {
+        Auth::requirePermission('clients.delete');
+
+        $clientId = (int) $request->param('clientId');
+        $this->clientService->restore($clientId, (int) Auth::agencyId());
+
+        $this->withSuccess('Cliente reativado. O portal continua desligado — religue quando quiser.');
+        return $this->redirect('/clientes/' . $clientId);
     }
 
     /** Cria (ou recria/re-vincula) a pasta do cliente no Google Drive. */

@@ -175,14 +175,75 @@
   <!-- Barra de ações (FORA do form de edição: forms aninhados quebram o submit) -->
   <div class="flex items-center justify-between mt-6">
     <?php if (\App\Support\Auth::can('clients.delete')): ?>
-    <form action="/clientes/<?= e($client['id']) ?>" method="POST" class="inline"
-          onsubmit="return confirm('<?= t('clients.confirm_delete') ?>')">
-      <?= csrf_field() ?>
-      <?= method_field('DELETE') ?>
-      <button type="submit" class="text-sm text-red-400 hover:text-red-300 transition-colors">
-        <?= t('common.delete') ?>
-      </button>
-    </form>
+    <?php
+      // UX-02: "Excluir" nunca excluiu (soft-delete). A tela agora diz a verdade
+      // e mostra o impacto real — o que é preservado e o que é revogado.
+      $r        = $related ?? ['invoices' => 0, 'contracts' => 0, 'plans' => 0, 'files' => 0, 'tasks' => 0];
+      $preserved = array_filter([
+        $r['invoices']  ? $r['invoices']  . ' fatura'  . ($r['invoices']  > 1 ? 's' : '')  : null,
+        $r['contracts'] ? $r['contracts'] . ' contrato'. ($r['contracts'] > 1 ? 's' : '') : null,
+        $r['plans']     ? $r['plans']     . ' plano'   . ($r['plans']     > 1 ? 's' : '') . ' de conteúdo' : null,
+        $r['files']     ? $r['files']     . ' arquivo' . ($r['files']     > 1 ? 's' : '')  : null,
+        $r['tasks']     ? $r['tasks']     . ' tarefa'  . ($r['tasks']     > 1 ? 's' : '')  : null,
+      ]);
+      $isArchived = ($client['status'] ?? '') === 'cancelled';
+    ?>
+
+    <div x-data="{ open: false }">
+      <?php if ($isArchived): ?>
+        <form action="/clientes/<?= e($client['id']) ?>/reativar" method="POST" class="inline">
+          <?= csrf_field() ?>
+          <button type="submit" class="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">
+            Reativar cliente
+          </button>
+        </form>
+      <?php else: ?>
+        <button type="button" @click="open = true" class="text-sm text-red-400 hover:text-red-300 transition-colors">
+          Arquivar cliente
+        </button>
+      <?php endif; ?>
+
+      <!-- Diálogo informativo: a decisão precisa mostrar a consequência -->
+      <div x-show="open" x-cloak x-transition.opacity @keydown.escape.window="open = false" @click.self="open = false"
+           class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(0,0,0,.7)">
+        <div class="w-full max-w-md rounded-2xl bg-[#16161f] border border-white/10 shadow-xl p-6">
+          <div class="flex items-start gap-3 mb-4">
+            <span class="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+            </span>
+            <div class="min-w-0">
+              <p class="text-base font-semibold text-white mb-1">Arquivar <?= e($client['name']) ?>?</p>
+              <p class="text-sm text-gray-400">O cliente sai da lista ativa. Nada é apagado.</p>
+            </div>
+          </div>
+
+          <div class="rounded-xl bg-rose-500/[0.07] border border-rose-500/20 px-4 py-3 mb-3">
+            <p class="text-xs font-semibold text-rose-200 mb-1">O acesso é revogado</p>
+            <p class="text-xs text-gray-400">O portal deste cliente é desligado — o link dele deixa de funcionar imediatamente.</p>
+          </div>
+
+          <?php if ($preserved): ?>
+          <div class="rounded-xl bg-emerald-500/[0.07] border border-emerald-500/20 px-4 py-3 mb-5">
+            <p class="text-xs font-semibold text-emerald-200 mb-1">O histórico é preservado</p>
+            <p class="text-xs text-gray-400">
+              <?= e(implode(' · ', $preserved)) ?> — tudo continua disponível, e o cliente pode ser reativado depois.
+            </p>
+          </div>
+          <?php else: ?>
+          <p class="text-xs text-gray-500 mb-5">Este cliente ainda não tem faturas, planos ou arquivos vinculados.</p>
+          <?php endif; ?>
+
+          <div class="flex justify-end gap-2">
+            <button type="button" @click="open = false" class="btn-secondary text-sm px-4 py-2"><?= t('common.cancel') ?></button>
+            <form action="/clientes/<?= e($client['id']) ?>" method="POST" class="inline">
+              <?= csrf_field() ?>
+              <?= method_field('DELETE') ?>
+              <button type="submit" class="btn-danger text-sm px-4 py-2">Arquivar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
     <?php else: ?>
     <div></div>
     <?php endif; ?>

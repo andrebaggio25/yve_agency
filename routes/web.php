@@ -140,6 +140,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/clients/{clientId}/edit',  [ClientController::class, 'edit'],   [ClientAccessMiddleware::class]);
     $router->put('/clients/{clientId}',       [ClientController::class, 'update'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->delete('/clients/{clientId}',    [ClientController::class, 'destroy'],[CsrfMiddleware::class]);
+    $router->post('/clients/{clientId}/restore', [ClientController::class, 'restore'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->get('/clients/{clientId}/access',         [ClientController::class, 'accessIndex'],  [ClientAccessMiddleware::class]);
     $router->post('/clients/{clientId}/access',        [ClientController::class, 'grantAccess'],  [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->delete('/clients/{clientId}/access/{userId}', [ClientController::class, 'revokeAccess'], [CsrfMiddleware::class]);
@@ -300,6 +301,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/clientes/{clientId}/editar', [ClientController::class, 'edit'], [ClientAccessMiddleware::class]);
     $router->put('/clientes/{clientId}',    [ClientController::class, 'update'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->delete('/clientes/{clientId}', [ClientController::class, 'destroy'],[CsrfMiddleware::class]);
+    $router->post('/clientes/{clientId}/reativar', [ClientController::class, 'restore'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->post('/clientes/{clientId}/drive/pasta', [ClientController::class, 'createDriveFolder'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
 
     // Conteúdos enviados pelo cliente (Drive) — galeria lado agência

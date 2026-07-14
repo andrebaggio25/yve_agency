@@ -56,11 +56,31 @@ abstract class Repository
     // Core query helpers (all use prepared statements)
     // -------------------------------------------------------------------------
 
-    /** @param array<string,mixed> $params */
+    /**
+     * @param array<string,mixed> $params
+     *
+     * Bind explícito por tipo. Sem isto, `PDOStatement::execute($params)` trata
+     * tudo como string — e `false` vira `''`, que o PostgreSQL **rejeita** num
+     * campo boolean ("invalid input syntax for type boolean"). Ou seja:
+     * qualquer `update` com um booleano falso explodia. Bug latente encontrado
+     * ao desligar `portal_enabled` no arquivamento de cliente (UX-02).
+     */
     protected function query(string $sql, array $params = []): PDOStatement
     {
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
+
+        foreach ($params as $key => $value) {
+            $type = match (true) {
+                is_bool($value) => PDO::PARAM_BOOL,
+                is_int($value)  => PDO::PARAM_INT,
+                is_null($value) => PDO::PARAM_NULL,
+                default         => PDO::PARAM_STR,
+            };
+            $stmt->bindValue(is_int($key) ? $key + 1 : $key, $value, $type);
+        }
+
+        $stmt->execute();
+
         return $stmt;
     }
 
