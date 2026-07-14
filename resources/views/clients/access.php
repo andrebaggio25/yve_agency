@@ -54,13 +54,13 @@
     <form action="/clientes/<?= e($clientId) ?>/acesso" method="POST" class="flex gap-3">
       <?= csrf_field() ?>
       <select name="user_id"
-              class="flex-1 rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+              class="flex-1 rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
         <?php foreach ($users as $u): ?>
         <option value="<?= e($u['id']) ?>"><?= e($u['name']) ?> (<?= e($u['email']) ?>)</option>
         <?php endforeach; ?>
       </select>
       <button type="submit"
-              class="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all">
+              class="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
         <?= t('common.add') ?>
       </button>
     </form>

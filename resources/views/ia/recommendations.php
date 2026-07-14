@@ -67,12 +67,12 @@
     ?>
     <?php foreach ($suggestions as $idx => $s): ?>
     <?php $ai = $actionIcons[$s['action_type']] ?? ['icon' => '•', 'color' => 'text-gray-400', 'bg' => 'bg-gray-500/10', 'label' => $s['action_type']]; ?>
-    <label class="card p-5 cursor-pointer hover:border-violet-500/30 transition-colors block" x-data="{ checked: true }">
+    <label class="card p-5 cursor-pointer hover:border-brand-500/30 transition-colors block" x-data="{ checked: true }">
       <div class="flex items-start gap-4">
         <input type="checkbox" name="suggestions[]"
                value="<?= e(json_encode($s)) ?>"
                checked
-               class="mt-0.5 w-4 h-4 accent-violet-500 flex-shrink-0">
+               class="mt-0.5 w-4 h-4 accent-brand-500 flex-shrink-0">
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-2">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium <?= $ai['bg'] ?> <?= $ai['color'] ?>">

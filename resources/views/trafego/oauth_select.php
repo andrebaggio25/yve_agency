@@ -28,10 +28,10 @@
           $statusLabel = match($status) { 1=>'Ativa', 2=>'Desativada', 3=>'Não confirmada', 7=>'Pendente', 9=>'Em revisão', default=>'Desconhecida' };
           $statusColor = $status === 1 ? 'text-green-400' : 'text-red-400';
         ?>
-        <label class="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06] cursor-pointer hover:bg-white/[0.03] transition-colors has-[:checked]:border-violet-500/40 has-[:checked]:bg-violet-500/5">
+        <label class="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06] cursor-pointer hover:bg-white/[0.03] transition-colors has-[:checked]:border-brand-500/40 has-[:checked]:bg-brand-500/5">
           <input type="radio" name="account_id" value="<?= e($cleanId) ?>" required
                  x-on:change="selected='<?= e($cleanId) ?>'"
-                 class="text-violet-500">
+                 class="text-brand-500">
           <input type="hidden" name="account_name_<?= e($cleanId) ?>" value="<?= e($acc['name'] ?? "Conta {$cleanId}") ?>">
           <input type="hidden" name="currency_<?= e($cleanId) ?>"     value="<?= e($acc['currency'] ?? 'BRL') ?>">
           <div class="flex-1 min-w-0">

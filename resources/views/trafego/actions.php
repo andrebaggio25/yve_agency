@@ -74,7 +74,7 @@
             <?= $actionLabels[$a['action_type']] ?? $a['action_type'] ?>
           </span>
           <?php if ($a['ai_generated']): ?>
-          <span class="text-xs text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full">IA</span>
+          <span class="text-xs text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full">IA</span>
           <?php endif; ?>
           <span class="text-xs text-gray-600 ml-auto"><?= date('d/m/Y H:i', strtotime($a['created_at'])) ?></span>
         </div>

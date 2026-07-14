@@ -25,12 +25,12 @@
           <?= t('roles.name') ?> <span class="text-red-400">*</span>
         </label>
         <input type="text" name="name" value="<?= old('name', $role['name']) ?>" required
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('roles.description') ?></label>
         <input type="text" name="description" value="<?= old('description', $role['description'] ?? '') ?>"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
     </div>
 
@@ -51,10 +51,10 @@
           <p class="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2"><?= e(ucfirst($group)) ?></p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <?php foreach ($perms as $perm): ?>
-            <label class="flex items-center gap-3 rounded-xl border border-white/5 px-3 py-2.5 cursor-pointer hover:border-violet-500/20 transition-colors">
+            <label class="flex items-center gap-3 rounded-xl border border-white/5 px-3 py-2.5 cursor-pointer hover:border-brand-500/20 transition-colors">
               <input type="checkbox" name="permissions[]" value="<?= e($perm['slug']) ?>"
                      <?= in_array($perm['slug'], $activePerms) ? 'checked' : '' ?>
-                     class="rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500 focus:ring-offset-0">
+                     class="rounded border-white/20 bg-white/5 text-brand-500 focus:ring-brand-500 focus:ring-offset-0">
               <span class="text-sm text-gray-300"><?= e($perm['label']) ?></span>
             </label>
             <?php endforeach; ?>
@@ -83,7 +83,7 @@
           <?= t('common.cancel') ?>
         </a>
         <button type="submit"
-                class="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all hover:scale-105 active:scale-95">
+                class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95">
           <?= t('common.save') ?>
         </button>
       </div>

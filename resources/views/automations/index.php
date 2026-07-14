@@ -28,7 +28,7 @@
       <div class="min-w-0">
         <div class="flex items-center gap-2 flex-wrap">
           <h2 class="text-sm font-semibold text-white"><?= e($r['label'] ?? $key) ?></h2>
-          <span class="badge <?= $isClient ? 'bg-violet-500/10 text-violet-300' : 'bg-blue-500/10 text-blue-300' ?>">
+          <span class="badge <?= $isClient ? 'bg-brand-500/10 text-brand-300' : 'bg-blue-500/10 text-blue-300' ?>">
             <?= $isClient ? 'por cliente' : 'agência' ?>
           </span>
           <span class="badge <?= $isEvent ? 'bg-amber-500/10 text-amber-300' : 'bg-emerald-500/10 text-emerald-300' ?>">
@@ -40,7 +40,7 @@
 
       <label class="flex items-center gap-2 cursor-pointer flex-shrink-0">
         <input type="checkbox" name="status" value="active" <?= $active ? 'checked' : '' ?>
-               class="w-4 h-4 rounded accent-violet-500">
+               class="w-4 h-4 rounded accent-brand-500">
         <span class="text-sm text-gray-300">Ativa</span>
       </label>
     </div>
@@ -85,7 +85,7 @@
           ?>
           <label class="flex items-center gap-1.5 cursor-pointer">
             <input type="checkbox" name="channels[]" value="<?= e($ch) ?>" <?= in_array($ch, $channels, true) ? 'checked' : '' ?>
-                   class="w-3.5 h-3.5 rounded accent-violet-500">
+                   class="w-3.5 h-3.5 rounded accent-brand-500">
             <span class="text-xs text-gray-400"><?= $labels[$ch] ?? $ch ?></span>
           </label>
           <?php endforeach; ?>

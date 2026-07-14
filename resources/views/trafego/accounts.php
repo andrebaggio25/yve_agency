@@ -73,7 +73,7 @@
             <?php else: ?>
             <form method="POST" action="/trafego/contas/<?= $a['id'] ?>/sync">
               <?= csrf_field() ?>
-              <button type="submit" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+              <button type="submit" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">
                 Sincronizar
               </button>
             </form>

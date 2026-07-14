@@ -8,6 +8,11 @@
 
     <!-- Assets locais (FE-01). O acento vermelho vem do data-theme="admin"
          no <body> — mesmo CSS do tenant, um token diferente. -->
+    <!-- Marca YVE Beauty (ícone oficial: monograma dourado sobre preto) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= asset('/assets/brand/favicon-32.png') ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= asset('/assets/brand/favicon-16.png') ?>">
+    <link rel="apple-touch-icon" href="<?= asset('/assets/brand/apple-touch-icon.png') ?>">
+    <meta name="theme-color" content="#09090f">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= asset('/css/app.css') ?>">

@@ -82,7 +82,7 @@
         <label class="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" name="is_active" value="1"
                  <?= ($plan['is_active'] ?? true) ? 'checked' : '' ?>
-                 class="w-4 h-4 rounded accent-violet-500">
+                 class="w-4 h-4 rounded accent-brand-500">
           <span class="text-sm text-gray-300">Plano ativo</span>
         </label>
       </div>

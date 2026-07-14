@@ -31,24 +31,33 @@ module.exports = {
           raised:  '#12121a', // dropdowns, option
           card:    '#16161f', // cards do portal
         },
-        // Acento da marca. Trocar aqui = trocar a identidade do produto inteiro.
+        /**
+         * Acento da marca — YVE Beauty (dourado champagne).
+         *
+         * A cor foi extraída dos arquivos oficiais da logo: `#c6a15b`, idêntica
+         * nos três (monograma, ícone e horizontal). Os tons acima e abaixo são
+         * derivados dela.
+         *
+         * Trocar aqui = trocar a identidade do produto inteiro.
+         */
         brand: {
-          50:  '#f5f3ff',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
+          50:  '#faf6ef',
+          200: '#e6d4b0',
+          300: '#dcc48f',
+          400: '#d4b478',
+          500: '#c6a15b',  // ← a cor da logo
+          600: '#b8914c',
+          700: '#9a7739',
+          800: '#7c5f2d',
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
       },
       boxShadow: {
-        brand: '0 4px 14px rgba(124,58,237,0.25)',
-        'brand-lg': '0 6px 20px rgba(124,58,237,0.35)',
-        glow: '0 0 80px -20px rgba(139,92,246,0.3)',
+        brand: '0 4px 14px rgba(198,161,91,0.25)',
+        'brand-lg': '0 6px 20px rgba(198,161,91,0.35)',
+        glow: '0 0 80px -20px rgba(198,161,91,0.30)',
       },
       keyframes: {
         fadeInUp: {

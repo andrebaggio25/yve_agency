@@ -37,7 +37,7 @@
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
   <?php
   $kpis = [
-    ['label' => 'Investimento',  'value' => 'R$ ' . number_format($totals['spend'], 2, ',', '.'),  'color' => 'text-violet-300'],
+    ['label' => 'Investimento',  'value' => 'R$ ' . number_format($totals['spend'], 2, ',', '.'),  'color' => 'text-brand-300'],
     ['label' => 'Impressões',    'value' => number_format($totals['impressions'], 0, ',', '.'),     'color' => 'text-blue-300'],
     ['label' => 'Cliques',       'value' => number_format($totals['clicks'], 0, ',', '.'),          'color' => 'text-cyan-300'],
     ['label' => 'Conversões',    'value' => number_format($totals['conversions'], 0, ',', '.'),     'color' => 'text-green-300'],
@@ -82,7 +82,7 @@
         <tr class="hover:bg-white/[0.02] transition-colors">
           <td class="px-4 py-3">
             <a href="/trafego/conjuntos/<?= $s['id'] ?>?since=<?= e($since) ?>&until=<?= e($until) ?>"
-               class="font-medium text-white hover:text-violet-300 transition-colors">
+               class="font-medium text-white hover:text-brand-300 transition-colors">
               <?= e($s['name']) ?>
             </a>
           </td>
@@ -107,7 +107,7 @@
           </td>
           <td class="px-4 py-3 text-right">
             <a href="/trafego/conjuntos/<?= $s['id'] ?>?since=<?= e($since) ?>&until=<?= e($until) ?>"
-               class="text-xs text-violet-400 hover:text-violet-300">Anúncios &rarr;</a>
+               class="text-xs text-brand-400 hover:text-brand-300">Anúncios &rarr;</a>
           </td>
         </tr>
         <?php endforeach; ?>

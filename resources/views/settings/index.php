@@ -64,8 +64,8 @@
                 <input type="file" id="logo_file" name="logo_file" accept="image/png,image/jpeg,image/webp,image/gif"
                        class="block w-full text-sm text-gray-400
                               file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
-                              file:text-sm file:font-medium file:bg-violet-600 file:text-white
-                              hover:file:bg-violet-500 file:cursor-pointer cursor-pointer">
+                              file:text-sm file:font-medium file:bg-brand-600 file:text-white
+                              hover:file:bg-brand-500 file:cursor-pointer cursor-pointer">
                 <p class="text-xs text-gray-500 mt-1.5">PNG, JPG, WEBP ou GIF · até 2 MB. Aparece no portal do cliente.</p>
               </div>
             </div>
@@ -83,7 +83,7 @@
             <label class="label-field" for="brand_color">Cor da marca</label>
             <div class="flex items-center gap-3">
               <input type="color" id="brand_color" name="brand_color"
-                     value="<?= e($agency['brand_color'] ?? '#7c3aed') ?>"
+                     value="<?= e($agency['brand_color'] ?? '#c6a15b') ?>"
                      class="h-10 w-14 rounded-lg bg-white/5 border border-white/10 cursor-pointer p-1">
               <div class="min-w-0">
                 <p class="text-xs text-gray-500">

@@ -16,22 +16,35 @@
 @layer base {
   /**
    * Acento como variável: um único ponto controla a identidade.
-   *   - padrão      → violeta (painel da agência, portal, login)
+   *   - padrão      → dourado champagne YVE (painel, portal, login)
    *   - data-theme="admin" → vermelho (painel da plataforma; precisa ser
    *     visualmente inconfundível para ninguém achar que está no tenant)
    * É também o gancho do white-label por agência (PROD-06): basta emitir
    * `--accent` no <body> com a cor da agência.
    */
   :root {
-    --accent: 124 58 237;       /* brand-600 */
-    --accent-hover: 109 40 217; /* brand-700 */
-    --accent-soft: 139 92 246;  /* brand-500 — anéis, glows, scrollbar */
+    /* YVE Beauty — dourado champagne (#c6a15b, extraído da logo oficial). */
+    --accent: 198 161 91;        /* brand-500 */
+    --accent-hover: 212 180 120; /* brand-400 — dourado clareia no hover, não escurece */
+    --accent-soft: 198 161 91;   /* anéis, glows, scrollbar */
+
+    /**
+     * Cor do TEXTO sobre o acento — não é detalhe, é acessibilidade.
+     *
+     * Branco sobre este dourado dá contraste 2.43:1: reprovado (mínimo 4.5:1),
+     * e ilegível de verdade. Texto quase-preto dá 7.97:1. É também como marcas
+     * de luxo usam dourado: fundo dourado, letra escura.
+     */
+    --accent-fg: 13 13 20;
   }
 
   [data-theme='admin'] {
+    /* Painel da plataforma: vermelho, para ser inconfundível com o tenant.
+       Aqui o texto branco tem contraste suficiente sobre o vermelho. */
     --accent: 220 38 38;
     --accent-hover: 185 28 28;
     --accent-soft: 239 68 68;
+    --accent-fg: 255 255 255;
   }
 
   html {
@@ -111,11 +124,12 @@
 
   .btn-primary {
     @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl
-           border-0 px-5 py-2.5 text-sm font-semibold text-white
+           border-0 px-5 py-2.5 text-sm font-semibold
            no-underline transition
            hover:-translate-y-px active:translate-y-0
            disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
     background: rgb(var(--accent));
+    color: rgb(var(--accent-fg));   /* ver --accent-fg: branco no dourado é ilegível */
     box-shadow: 0 4px 14px rgb(var(--accent) / 0.25);
   }
   .btn-primary:hover {
@@ -155,7 +169,7 @@
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, theme('colors.brand.400') 0%, #818cf8 50%, #c084fc 100%);
+    background: linear-gradient(135deg, theme('colors.brand.300') 0%, theme('colors.brand.500') 50%, theme('colors.brand.700') 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -177,8 +191,9 @@
   /* Utilitários do acento (PROD-06 — white-label).
      Tailwind não resolve cor a partir de var CSS em runtime, então quem precisa
      seguir a cor da AGÊNCIA (e não a do sistema) usa estas classes em vez de
-     `violet-*` hardcoded. É o que faz o portal ficar com a cara da agência. */
-  .bg-accent      { background-color: rgb(var(--accent)); }
+     `brand-*` fixo. É o que faz o portal ficar com a cara da agência. */
+  .bg-accent      { background-color: rgb(var(--accent)); color: rgb(var(--accent-fg)); }
+  .text-accent-fg { color: rgb(var(--accent-fg)); }
   .bg-accent-soft { background-color: rgb(var(--accent-soft) / 0.12); }
   .text-accent    { color: rgb(var(--accent-soft)); }
   .border-accent  { border-color: rgb(var(--accent-soft) / 0.35); }

@@ -38,7 +38,7 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
           <?= $actionLabels[$action['action_type']] ?? $action['action_type'] ?>
         </span>
         <?php if ($action['ai_generated']): ?>
-        <span class="text-xs text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full">Gerado por IA</span>
+        <span class="text-xs text-brand-400 bg-brand-500/10 px-2 py-1 rounded-full">Gerado por IA</span>
         <?php endif; ?>
       </div>
       <span class="text-xs text-gray-500 flex-shrink-0">

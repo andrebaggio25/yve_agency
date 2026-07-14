@@ -25,7 +25,7 @@
     th { text-align: left; padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
     td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; }
     tr:last-child td { border-bottom: none; }
-    .section-title { font-size: 14px; font-weight: 700; color: #374151; margin: 2rem 0 .75rem; border-left: 3px solid #7c3aed; padding-left: .75rem; }
+    .section-title { font-size: 14px; font-weight: 700; color: #374151; margin: 2rem 0 .75rem; border-left: 3px solid #c6a15b; padding-left: .75rem; }
   </style>
 </head>
 <body>
@@ -37,7 +37,7 @@ $fmtFloat = fn($v, $d = 2) => number_format((float)$v, $d, ',', '.');
 $planStatusLabels = ['draft' => 'Rascunho', 'sent' => 'Aguardando', 'approved' => 'Aprovado', 'revision' => 'Revisão', 'archived' => 'Arquivado'];
 $planStatusColors = ['draft' => '#6b7280', 'sent' => '#d97706', 'approved' => '#059669', 'revision' => '#dc2626', 'archived' => '#9ca3af'];
 $taskStatusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' => 'Revisão', 'done' => 'Concluída'];
-$priorityColors   = ['low' => '#6b7280', 'medium' => '#d97706', 'high' => '#dc2626', 'urgent' => '#7c3aed'];
+$priorityColors   = ['low' => '#6b7280', 'medium' => '#d97706', 'high' => '#dc2626', 'urgent' => '#c6a15b'];
 $invoiceStatusLabels = ['draft' => 'Rascunho', 'sent' => 'Enviada', 'paid' => 'Paga', 'overdue' => 'Atrasada', 'partial' => 'Parcial', 'cancelled' => 'Cancelada'];
 $invoiceStatusColors = ['paid' => '#059669', 'sent' => '#2563eb', 'overdue' => '#dc2626', 'partial' => '#d97706', 'draft' => '#9ca3af', 'cancelled' => '#9ca3af'];
 ?>
@@ -46,7 +46,7 @@ $invoiceStatusColors = ['paid' => '#059669', 'sent' => '#2563eb', 'overdue' => '
   <!-- Header -->
   <div class="flex items-start justify-between mb-8">
     <div>
-      <div style="font-size:11px;color:#7c3aed;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.25rem">
+      <div style="font-size:11px;color:#c6a15b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.25rem">
         <?= e($agency['name'] ?? 'Agência') ?>
       </div>
       <h1 style="font-size:24px;font-weight:800;color:#111;margin:0"><?= e($client['name']) ?></h1>
@@ -57,7 +57,7 @@ $invoiceStatusColors = ['paid' => '#059669', 'sent' => '#2563eb', 'overdue' => '
     <div class="no-print" style="display:flex;gap:.5rem;align-items:center">
       <!-- UX-04: PDF de verdade (gerado no servidor), não "imprima você mesmo" -->
       <a href="/relatorio-executivo/cliente/<?= (int) $client['id'] ?>/pdf"
-         style="background:#7c3aed;color:#fff;padding:.5rem 1.25rem;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">
+         style="background:#c6a15b;color:#0d0d14;padding:.5rem 1.25rem;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">
         Baixar PDF
       </a>
       <button onclick="window.print()"

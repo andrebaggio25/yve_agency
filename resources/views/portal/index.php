@@ -15,27 +15,27 @@ $statusColors = [
   'pending_approval' => 'text-amber-300 bg-amber-500/10',
   'approved'         => 'text-green-300 bg-green-500/10',
   'in_revision'      => 'text-blue-300 bg-blue-500/10',
-  'published'        => 'text-violet-300 bg-violet-500/10',
+  'published'        => 'text-brand-300 bg-brand-500/10',
 ];
 ?>
 
 <!-- Hero -->
 <div class="relative overflow-hidden rounded-2xl mb-6 p-6 sm:p-8"
-     style="background: linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(59,130,246,0.15) 50%, rgba(16,185,129,0.1) 100%); border: 1px solid rgba(139,92,246,0.2);">
+     style="background: linear-gradient(135deg, rgba(198,161,91,0.25) 0%, rgba(59,130,246,0.15) 50%, rgba(16,185,129,0.1) 100%); border: 1px solid rgba(198,161,91,0.2);">
   <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10" style="background:radial-gradient(circle, #8b5cf6, transparent)"></div>
+    <div class="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10" style="background:radial-gradient(circle, #c6a15b, transparent)"></div>
     <div class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-10" style="background:radial-gradient(circle, #3b82f6, transparent)"></div>
   </div>
   <div class="relative flex items-start justify-between gap-4 flex-wrap">
     <div>
-      <p class="text-sm text-violet-300/80 mb-1"><?= $greeting ?>,</p>
+      <p class="text-sm text-brand-300/80 mb-1"><?= $greeting ?>,</p>
       <h1 class="text-2xl sm:text-3xl font-bold text-white"><?= e($firstName) ?> 👋</h1>
       <p class="text-sm text-gray-400 mt-1.5"><?= t('portal.home.summary') ?></p>
     </div>
     <?php if ($hasPending): ?>
     <a href="/portal/<?= $token ?>/planos"
        class="flex-shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all"
-       style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">
+       style="background:linear-gradient(135deg,#c6a15b,#4f46e5)">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
       </svg>
@@ -118,7 +118,7 @@ $statusColors = [
     <?php if (!empty($recentPlans)): ?>
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-sm font-semibold text-gray-300"><?= t('portal.home.content_plans') ?></h2>
-      <a href="/portal/<?= $token ?>/planos" class="text-xs text-violet-400 hover:text-violet-300"><?= t('portal.home.see_all') ?></a>
+      <a href="/portal/<?= $token ?>/planos" class="text-xs text-brand-400 hover:text-brand-300"><?= t('portal.home.see_all') ?></a>
     </div>
     <div class="space-y-2 mb-6">
       <?php foreach ($recentPlans as $p):
@@ -132,8 +132,8 @@ $statusColors = [
          class="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-white/[0.04]"
          style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
         <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-             style="background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.15)">
-          <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             style="background:rgba(198,161,91,0.12); border:1px solid rgba(198,161,91,0.15)">
+          <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"/>
           </svg>
         </div>
@@ -146,7 +146,7 @@ $statusColors = [
           <div class="flex items-center gap-2">
             <div class="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div class="h-full rounded-full transition-all"
-                   style="width:<?= $pct ?>%; background:linear-gradient(90deg,#8b5cf6,#3b82f6)"></div>
+                   style="width:<?= $pct ?>%; background:linear-gradient(90deg,#c6a15b,#3b82f6)"></div>
             </div>
             <span class="text-[10px] text-gray-500 flex-shrink-0"><?= $approved ?>/<?= $total ?> <?= t('portal.home.approved_count') ?></span>
           </div>
@@ -179,7 +179,7 @@ $statusColors = [
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <?php
         $adsKpis = [
-          ['label' => t('portal.home.ads_impressions'), 'value' => number_format((float)($adsSummary['impressions']??0),0,',','.'), 'color'=>'#8b5cf6'],
+          ['label' => t('portal.home.ads_impressions'), 'value' => number_format((float)($adsSummary['impressions']??0),0,',','.'), 'color'=>'#c6a15b'],
           ['label' => t('portal.home.ads_clicks'),      'value' => number_format((float)($adsSummary['clicks']??0),     0,',','.'), 'color'=>'#3b82f6'],
           ['label' => t('portal.home.ads_spend'),       'value' => 'R$ '.number_format((float)($adsSummary['spend']??0),2,',','.'), 'color'=>'#f59e0b'],
           ['label' => t('portal.home.ads_results'),     'value' => number_format((float)($adsSummary['conversions']??$adsSummary['results']??0),0,',','.'), 'color'=>'#10b981'],
@@ -212,7 +212,7 @@ $statusColors = [
         <?php
         $orgKpis = [
           ['label' => t('portal.home.org_reach'),       'value' => number_format((float)($organicSummary['reach']??0),        0,',','.'), 'color'=>'#10b981'],
-          ['label' => t('portal.home.org_impressions'), 'value' => number_format((float)($organicSummary['impressions']??0),  0,',','.'), 'color'=>'#8b5cf6'],
+          ['label' => t('portal.home.org_impressions'), 'value' => number_format((float)($organicSummary['impressions']??0),  0,',','.'), 'color'=>'#c6a15b'],
           ['label' => t('portal.home.org_engagement'),  'value' => number_format((float)($organicSummary['engagement']??0),   0,',','.'), 'color'=>'#3b82f6'],
           ['label' => t('portal.home.org_followers'),   'value' => '+'.number_format((float)($organicSummary['followers_gained']??0),0,',','.'), 'color'=>'#ec4899'],
         ];
@@ -236,7 +236,7 @@ $statusColors = [
       <div class="space-y-1.5">
         <?php
         $navLinks = [
-          ['href' => "/portal/{$token}/planos",    'label' => t('portal.home.content_plans'), 'icon' => 'M4 6h16M4 10h16M4 14h10',                                                   'color' => '#8b5cf6'],
+          ['href' => "/portal/{$token}/planos",    'label' => t('portal.home.content_plans'), 'icon' => 'M4 6h16M4 10h16M4 14h10',                                                   'color' => '#c6a15b'],
           ['href' => "/portal/{$token}/faturas",   'label' => t('portal.nav.invoices'),       'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2', 'color' => '#f59e0b'],
           ['href' => "/portal/{$token}/contratos", 'label' => t('portal.nav.contracts'),      'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'color' => '#3b82f6'],
         ];
@@ -289,8 +289,8 @@ $statusColors = [
     <!-- Mensagem vazia amigável -->
     <?php if (empty($plans) && empty($openInvoices)): ?>
     <div class="rounded-2xl p-6 text-center" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-      <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style="background:rgba(139,92,246,0.1)">
-        <svg class="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style="background:rgba(198,161,91,0.1)">
+        <svg class="w-6 h-6 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
         </svg>
       </div>

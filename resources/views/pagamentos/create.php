@@ -30,14 +30,14 @@
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Valor (R$) <span class="text-red-400">*</span></label>
         <input type="number" name="amount" value="<?= $invoice ? number_format(max(0, (float)$invoice['total'] - (float)$invoice['amount_paid']), 2, '.', '') : '' ?>"
           step="0.01" min="0.01" required
-          class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-violet-500 focus:outline-none transition-colors">
+          class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
       </div>
 
       <!-- Data -->
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Data do Pagamento <span class="text-red-400">*</span></label>
         <input type="date" name="payment_date" value="<?= date('Y-m-d') ?>" required
-          class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-violet-500 focus:outline-none transition-colors">
+          class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
       </div>
 
       <!-- Método -->
@@ -47,8 +47,8 @@
           <?php
           $methods = ['pix'=>'PIX','boleto'=>'Boleto','credit_card'=>'Cartão','bank_transfer'=>'TED/DOC','cash'=>'Dinheiro','other'=>'Outro'];
           foreach ($methods as $v => $l): ?>
-          <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 cursor-pointer hover:border-violet-500/40 transition-colors has-[:checked]:border-violet-500 has-[:checked]:bg-violet-500/10">
-            <input type="radio" name="payment_method" value="<?= $v ?>" <?= $v === 'pix' ? 'checked' : '' ?> class="text-violet-500 focus:ring-violet-500">
+          <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 cursor-pointer hover:border-brand-500/40 transition-colors has-[:checked]:border-brand-500 has-[:checked]:bg-brand-500/10">
+            <input type="radio" name="payment_method" value="<?= $v ?>" <?= $v === 'pix' ? 'checked' : '' ?> class="text-brand-500 focus:ring-brand-500">
             <span class="text-sm text-gray-300"><?= $l ?></span>
           </label>
           <?php endforeach; ?>
@@ -59,14 +59,14 @@
       <div class="sm:col-span-2">
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Referência / Comprovante</label>
         <input type="text" name="reference" placeholder="Ex: txid do PIX, número do boleto..."
-          class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white placeholder-gray-500 focus:border-violet-500 focus:outline-none transition-colors">
+          class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none transition-colors">
       </div>
 
       <!-- Notas -->
       <div class="sm:col-span-2">
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Notas</label>
         <textarea name="notes" rows="2"
-          class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white placeholder-gray-500 focus:border-violet-500 focus:outline-none transition-colors resize-none"></textarea>
+          class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none transition-colors resize-none"></textarea>
       </div>
     </div>
 

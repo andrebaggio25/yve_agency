@@ -71,7 +71,7 @@
 
   <div class="mt-4 rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 text-xs text-gray-500">
     <p class="font-medium text-gray-400 mb-1">Sobre o uso de IA</p>
-    <p>O provedor e modelo são configurados em <a href="/admin/configuracoes" class="text-violet-400 hover:underline">Configurações globais</a>. Suporta OpenAI (gpt-4o) e Claude (claude-sonnet-4-6).</p>
+    <p>O provedor e modelo são configurados em <a href="/admin/configuracoes" class="text-brand-400 hover:underline">Configurações globais</a>. Suporta OpenAI (gpt-4o) e Claude (claude-sonnet-4-6).</p>
   </div>
 </div>
 

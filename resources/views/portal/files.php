@@ -89,20 +89,20 @@ $jsI18n = [
   <!-- Dica iOS/iCloud (só iPhone/iPad, dispensável): o seletor de fotos do iOS
        trava ao preparar lotes com itens no iCloud — antes do site receber algo.
        Nada a fazer no código; a saída é orientar o cliente. -->
-  <div x-show="iosTip" x-transition class="flex items-start gap-2.5 rounded-xl bg-violet-500/[0.07] border border-violet-500/20 px-3.5 py-3 mb-4" style="display:none">
-    <svg class="w-4 h-4 text-violet-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  <div x-show="iosTip" x-transition class="flex items-start gap-2.5 rounded-xl bg-brand-500/[0.07] border border-brand-500/20 px-3.5 py-3 mb-4" style="display:none">
+    <svg class="w-4 h-4 text-brand-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     <div class="min-w-0 text-xs text-gray-300 leading-relaxed">
-      <span class="font-semibold text-violet-200"><?= t('portal.files.ios_tip_title') ?></span>
+      <span class="font-semibold text-brand-200"><?= t('portal.files.ios_tip_title') ?></span>
       <?= t('portal.files.ios_tip_text') ?>
     </div>
-    <button @click="dismissIosTip()" class="text-[11px] text-violet-300 hover:text-white font-medium flex-shrink-0 mt-0.5"><?= t('portal.files.ios_tip_ok') ?></button>
+    <button @click="dismissIosTip()" class="text-[11px] text-brand-300 hover:text-white font-medium flex-shrink-0 mt-0.5"><?= t('portal.files.ios_tip_ok') ?></button>
   </div>
 
   <!-- Create folder inline -->
   <div x-show="creatingFolder" x-transition class="card p-3 mb-4 flex items-center gap-2" style="display:none">
     <input x-ref="folderInput" type="text" x-model="newFolderName" placeholder="<?= e(t('portal.files.folder_name_placeholder')) ?>"
            @keydown.enter="createFolder()" @keydown.escape="creatingFolder=false; newFolderName=''"
-           class="flex-1 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50">
+           class="flex-1 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
     <button @click="createFolder()" :disabled="!newFolderName.trim() || savingFolder"
             class="btn-primary text-sm px-3 py-2 disabled:opacity-50" x-text="savingFolder ? '<?= e(t('portal.files.creating')) ?>' : '<?= e(t('portal.files.create')) ?>'"></button>
     <button @click="creatingFolder=false; newFolderName=''" class="text-xs text-gray-500 hover:text-gray-300 px-2"><?= t('portal.files.cancel') ?></button>
@@ -112,7 +112,7 @@ $jsI18n = [
   <div @dragover.prevent="dragging=true" @dragleave.prevent="dragging=false"
        @drop.prevent="dragging=false; onFiles($event.dataTransfer.files)"
        class="rounded-2xl border-2 border-dashed transition-colors p-2 sm:p-3"
-       :class="dragging ? 'border-violet-500 bg-violet-500/5' : 'border-white/10'">
+       :class="dragging ? 'border-brand-500 bg-brand-500/5' : 'border-white/10'">
 
     <!-- Loading -->
     <div x-show="loading" class="py-10 text-center text-sm text-gray-500" x-text="i18n.loading"></div>
@@ -139,7 +139,7 @@ $jsI18n = [
           <template x-for="folder in folders" :key="'f'+folder.id">
             <li class="flex items-center gap-3 px-2 py-2.5 hover:bg-white/[0.03] rounded-lg group">
               <button @click="goTo(folder.id)" class="flex items-center gap-3 flex-1 min-w-0 text-left">
-                <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+                <svg class="w-5 h-5 text-brand-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
                 <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
               </button>
               <button @click="deleteFolder(folder)" :title="i18n.delete"
@@ -156,7 +156,7 @@ $jsI18n = [
                 <span class="text-sm text-gray-300 truncate" x-text="up.name"></span>
                 <div class="flex items-center gap-2 flex-shrink-0">
                   <span class="text-[11px]"
-                        :class="up.status==='error' ? 'text-rose-400' : (up.status==='done' ? 'text-emerald-400' : 'text-violet-400')"
+                        :class="up.status==='error' ? 'text-rose-400' : (up.status==='done' ? 'text-emerald-400' : 'text-brand-400')"
                         x-text="statusLabel(up)"></span>
                   <button x-show="up.status==='uploading' || up.status==='processing' || up.status==='queued'" @click="cancelUpload(up)"
                           class="text-gray-500 hover:text-rose-400 transition-colors" :title="i18n.delete">
@@ -170,7 +170,7 @@ $jsI18n = [
               </div>
               <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
                 <div class="h-full rounded-full transition-all"
-                     :class="(up.status==='error'||up.status==='canceled' ? 'bg-rose-500' : (up.status==='done' ? 'bg-emerald-500' : 'bg-violet-500')) + (up.status==='processing' ? ' animate-pulse' : '')"
+                     :class="(up.status==='error'||up.status==='canceled' ? 'bg-rose-500' : (up.status==='done' ? 'bg-emerald-500' : 'bg-brand-500')) + (up.status==='processing' ? ' animate-pulse' : '')"
                      :style="`width: ${(up.status==='done'||up.status==='processing') ? 100 : up.progress}%`"></div>
               </div>
               <p x-show="up.status==='error'" class="text-[11px] text-rose-400 mt-1" x-text="up.error"></p>
@@ -187,7 +187,7 @@ $jsI18n = [
                     <img :src="rawUrl(file)" loading="lazy" class="w-full h-full object-cover" @error="$el.style.display='none'">
                   </template>
                   <template x-if="!file.is_image">
-                    <svg x-show="file.is_video" class="w-4 h-4 text-violet-300" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg x-show="file.is_video" class="w-4 h-4 text-brand-300" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                   </template>
                   <template x-if="!file.is_image && !file.is_video">
                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -239,7 +239,7 @@ $jsI18n = [
       <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
       <span class="text-sm text-gray-200 flex-1 truncate" x-text="toast.msg"></span>
       <button x-show="toast.restore" @click="undoDelete()" :disabled="toast.busy"
-              class="text-sm font-semibold text-violet-300 hover:text-violet-200 disabled:opacity-50 flex-shrink-0"
+              class="text-sm font-semibold text-brand-300 hover:text-brand-200 disabled:opacity-50 flex-shrink-0"
               x-text="i18n.undo"></button>
       <button @click="hideToast()" class="text-gray-500 hover:text-white flex-shrink-0" title="">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>

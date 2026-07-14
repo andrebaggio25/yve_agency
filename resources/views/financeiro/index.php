@@ -20,7 +20,7 @@ $maxVal = max(array_values($monthly)) ?: 1;
   <!-- Header -->
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-1">Módulo</p>
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-500 mb-1">Módulo</p>
       <h1 class="text-2xl font-bold text-white">Financeiro</h1>
       <p class="mt-1 text-sm text-gray-400">Visão geral de contratos, faturas e recebimentos</p>
     </div>
@@ -32,7 +32,7 @@ $maxVal = max(array_values($monthly)) ?: 1;
       </a>
       <?php endif; ?>
       <?php if (\App\Support\Auth::can('invoices.create')): ?>
-      <a href="/faturas/nova" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all">
+      <a href="/faturas/nova" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Nova Fatura
       </a>
@@ -44,12 +44,12 @@ $maxVal = max(array_values($monthly)) ?: 1;
   <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
     <?php
     $kpis = [
-      ['label'=>'Faturas Enviadas',  'value'=>fmtBrl($is['billed_total'] ?? 0),   'sub'=>($is['total']??0).' faturas',    'color'=>'violet'],
+      ['label'=>'Faturas Enviadas',  'value'=>fmtBrl($is['billed_total'] ?? 0),   'sub'=>($is['total']??0).' faturas',    'color'=>'brand'],
       ['label'=>'Recebido',          'value'=>fmtBrl($is['received_total'] ?? 0),  'sub'=>($is['paid']??0).' pagas',       'color'=>'emerald'],
       ['label'=>'A Receber',         'value'=>fmtBrl($is['pending_total'] ?? 0),   'sub'=>($is['sent']??0)+($is['overdue']??0).' pendentes', 'color'=>'amber'],
       ['label'=>'Contratos Ativos',  'value'=>$cs['active']??0,                    'sub'=>fmtBrl($cs['active_value']??0),  'color'=>'blue'],
     ];
-    $colorMap = ['violet'=>'violet-500','emerald'=>'emerald-500','amber'=>'amber-500','blue'=>'blue-500'];
+    $colorMap = ['brand'=>'brand-500','emerald'=>'emerald-500','amber'=>'amber-500','blue'=>'blue-500'];
     foreach ($kpis as $k):
         $c = $colorMap[$k['color']];
     ?>
@@ -81,7 +81,7 @@ $maxVal = max(array_values($monthly)) ?: 1;
       </div>
       <form method="GET">
         <select name="year" onchange="this.form.submit()"
-          class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-3 py-1.5 focus:border-violet-500 focus:outline-none">
+          class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-3 py-1.5 focus:border-brand-500 focus:outline-none">
           <?php for ($y = (int)date('Y'); $y >= (int)date('Y') - 3; $y--): ?>
           <option value="<?= $y ?>" <?= $y === (int)$year ? 'selected' : '' ?>><?= $y ?></option>
           <?php endfor; ?>
@@ -92,7 +92,7 @@ $maxVal = max(array_values($monthly)) ?: 1;
       <?php foreach ($monthly as $m => $val): ?>
       <?php $pct = $maxVal > 0 ? ($val / $maxVal * 100) : 0; ?>
       <div class="flex-1 flex flex-col items-center gap-1">
-        <div class="w-full rounded-t-lg bg-violet-500/20 hover:bg-violet-500/40 transition-all relative group"
+        <div class="w-full rounded-t-lg bg-brand-500/20 hover:bg-brand-500/40 transition-all relative group"
              style="height: <?= max(4, round($pct * 1.2)) ?>px">
           <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
             <?= fmtBrl($val) ?>
@@ -114,14 +114,14 @@ $maxVal = max(array_values($monthly)) ?: 1;
     ];
     foreach ($shortcuts as $s):
     ?>
-    <a href="<?= $s['href'] ?>" class="group flex items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-5 hover:border-violet-500/30 hover:bg-white/[0.06] transition-all">
-      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/10">
-        <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <a href="<?= $s['href'] ?>" class="group flex items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-5 hover:border-brand-500/30 hover:bg-white/[0.06] transition-all">
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10">
+        <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="<?= $s['icon'] ?>"/>
         </svg>
       </div>
       <div>
-        <p class="font-semibold text-white group-hover:text-violet-200 transition-colors"><?= $s['label'] ?></p>
+        <p class="font-semibold text-white group-hover:text-brand-200 transition-colors"><?= $s['label'] ?></p>
         <?php if ($s['total'] !== null): ?>
         <p class="text-xs text-gray-400 mt-0.5"><?= (int)$s['total'] ?> registros</p>
         <?php endif; ?>

@@ -37,7 +37,7 @@
   <?php
   $kpis = [
     ['label' => 'Total seguidores', 'value' => number_format($totals['followers'], 0, ',', '.'), 'color' => 'text-pink-300'],
-    ['label' => 'Posts no período', 'value' => number_format($totals['posts'], 0, ',', '.'),     'color' => 'text-violet-300'],
+    ['label' => 'Posts no período', 'value' => number_format($totals['posts'], 0, ',', '.'),     'color' => 'text-brand-300'],
     ['label' => 'Alcance total',    'value' => number_format($totals['reach'], 0, ',', '.'),     'color' => 'text-blue-300'],
     ['label' => 'Impressões',       'value' => number_format($totals['impressions'], 0, ',', '.'), 'color' => 'text-cyan-300'],
     ['label' => 'Curtidas',         'value' => number_format($totals['likes'], 0, ',', '.'),     'color' => 'text-red-300'],
@@ -115,7 +115,7 @@
           </td>
           <td class="px-4 py-3 text-right">
             <a href="/organico/contas/<?= $a['id'] ?>"
-               class="text-xs text-violet-400 hover:text-violet-300">Ver &rarr;</a>
+               class="text-xs text-brand-400 hover:text-brand-300">Ver &rarr;</a>
           </td>
         </tr>
         <?php endforeach; ?>

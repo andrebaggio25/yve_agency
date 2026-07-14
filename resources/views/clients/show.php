@@ -8,7 +8,7 @@
         <?= t('clients.title') ?>
       </a>
       <div class="flex items-center gap-4">
-        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 text-xl font-bold text-violet-300">
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/10 text-xl font-bold text-brand-300">
           <?= strtoupper(substr($client['name'], 0, 2)) ?>
         </div>
         <div>
@@ -32,7 +32,7 @@
         <?= t('clients.manage_access') ?>
       </a>
       <a href="/clientes/<?= e($client['id']) ?>/editar"
-         class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all">
+         class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         <?= t('common.edit') ?>
       </a>
@@ -70,7 +70,7 @@
   <?php if (\App\Support\Auth::can('clients.edit')): ?>
   <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-5 mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div class="flex items-center gap-3">
-      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-300 flex-shrink-0">
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-300 flex-shrink-0">
         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
       </span>
       <div>
@@ -96,9 +96,9 @@
       <?= csrf_field() ?>
       <?php if ($hasFolder): ?>
       <input type="hidden" name="force" value="1">
-      <button type="submit" class="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 hover:text-white hover:border-violet-500/40 transition-all">Recriar pasta</button>
+      <button type="submit" class="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 hover:text-white hover:border-brand-500/40 transition-all">Recriar pasta</button>
       <?php else: ?>
-      <button type="submit" class="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all">Criar pasta</button>
+      <button type="submit" class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">Criar pasta</button>
       <?php endif; ?>
     </form>
     <?php endif; ?>
@@ -111,7 +111,7 @@
     <div class="space-y-3">
       <?php foreach ($recentPlans as $plan): ?>
       <a href="/conteudo/<?= e($plan['id']) ?>"
-         class="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 hover:border-violet-500/20 transition-all">
+         class="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 hover:border-brand-500/20 transition-all">
         <div>
           <p class="text-sm font-medium text-white"><?= e($plan['title']) ?></p>
           <p class="text-xs text-gray-500"><?= date_fmt($plan['week_start'], 'd/m') ?> – <?= date_fmt($plan['week_end'], 'd/m/Y') ?></p>
@@ -136,7 +136,7 @@
     <div class="flex-1 min-w-0">
       <p class="text-xs text-gray-500 mb-1">Link de acesso</p>
       <div class="flex items-center gap-2">
-        <code class="text-xs text-violet-300 bg-violet-500/10 px-3 py-1.5 rounded-lg truncate max-w-xs font-mono">
+        <code class="text-xs text-brand-300 bg-brand-500/10 px-3 py-1.5 rounded-lg truncate max-w-xs font-mono">
           <?= rtrim(env('APP_URL', ''), '/') ?>/portal/<?= e($client['portal_token']) ?>
         </code>
         <button onclick="navigator.clipboard.writeText('<?= rtrim(env('APP_URL', ''), '/') ?>/portal/<?= e($client['portal_token']) ?>'); this.textContent='✓'"
@@ -175,7 +175,7 @@
   <p class="text-sm text-gray-500">Nenhum link gerado ainda.</p>
   <form method="POST" action="/clientes/<?= $client['id'] ?>/portal/regenerar" class="mt-3">
     <?= csrf_field() ?>
-    <button class="text-sm text-violet-400 hover:text-violet-300">Gerar link de acesso</button>
+    <button class="text-sm text-brand-400 hover:text-brand-300">Gerar link de acesso</button>
   </form>
   <?php endif; ?>
 </div>

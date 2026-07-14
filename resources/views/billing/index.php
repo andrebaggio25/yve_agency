@@ -4,7 +4,7 @@
 <?php
 $statusLabels = ['trialing' => 'Trial', 'active' => 'Ativa', 'past_due' => 'Atrasada', 'cancelled' => 'Cancelada', 'suspended' => 'Suspensa', 'none' => 'Sem plano'];
 $statusColors = ['trialing' => 'text-blue-300 bg-blue-500/10', 'active' => 'text-green-300 bg-green-500/10', 'past_due' => 'text-red-300 bg-red-500/10', 'cancelled' => 'text-gray-500 bg-gray-700/20', 'suspended' => 'text-orange-300 bg-orange-500/10', 'none' => 'text-gray-400 bg-gray-500/10'];
-$tierColors   = ['free' => 'text-gray-300', 'starter' => 'text-blue-300', 'pro' => 'text-violet-300', 'enterprise' => 'text-yellow-300'];
+$tierColors   = ['free' => 'text-gray-300', 'starter' => 'text-blue-300', 'pro' => 'text-brand-300', 'enterprise' => 'text-yellow-300'];
 $tc           = $tierColors[$subscription['plan_slug'] ?? ''] ?? 'text-gray-300';
 
 $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accounts' => 'Contas Meta Ads', 'organic_accounts' => 'Contas Orgânicas'];
@@ -59,7 +59,7 @@ $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accoun
       <?php foreach ($usage as $resource => $data):
         $label  = $resourceLabels[$resource] ?? $resource;
         $pct    = $data['pct'];
-        $barColor = $data['over'] ? 'bg-red-500' : ($pct >= 80 ? 'bg-yellow-500' : 'bg-violet-500');
+        $barColor = $data['over'] ? 'bg-red-500' : ($pct >= 80 ? 'bg-yellow-500' : 'bg-brand-500');
       ?>
       <div>
         <div class="flex items-center justify-between mb-1.5">
@@ -79,7 +79,7 @@ $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accoun
                style="width: <?= $pct ?>%"></div>
         </div>
         <?php else: ?>
-        <div class="h-2 rounded-full bg-violet-500/20"></div>
+        <div class="h-2 rounded-full bg-brand-500/20"></div>
         <?php endif; ?>
         <?php if ($data['over']): ?>
         <p class="text-xs text-red-400 mt-1">Limite atingido — faça upgrade para continuar adicionando.</p>
@@ -111,11 +111,11 @@ $resourceLabels = ['clients' => 'Clientes', 'users' => 'Usuários', 'meta_accoun
     $features  = is_string($p['features']) ? (json_decode($p['features'], true) ?? []) : ($p['features'] ?? []);
     $tc2 = $tierColors[$p['slug']] ?? 'text-gray-300';
   ?>
-  <div class="card p-5 flex flex-col <?= $isCurrent ? 'ring-1 ring-violet-500/50' : '' ?>">
+  <div class="card p-5 flex flex-col <?= $isCurrent ? 'ring-1 ring-brand-500/50' : '' ?>">
     <div class="flex items-center justify-between mb-3">
       <span class="text-xs font-bold uppercase tracking-wider <?= $tc2 ?>"><?= e($p['name']) ?></span>
       <?php if ($isCurrent): ?>
-      <span class="text-xs text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded-full font-medium">Atual</span>
+      <span class="text-xs text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-full font-medium">Atual</span>
       <?php endif; ?>
     </div>
 

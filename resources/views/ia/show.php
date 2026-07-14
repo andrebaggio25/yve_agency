@@ -54,8 +54,8 @@
     prose-p:text-gray-300 prose-p:leading-relaxed
     prose-li:text-gray-300
     prose-strong:text-white
-    prose-code:bg-white/10 prose-code:text-violet-300 prose-code:px-1 prose-code:rounded
-    prose-blockquote:border-violet-500 prose-blockquote:text-gray-400"
+    prose-code:bg-white/10 prose-code:text-brand-300 prose-code:px-1 prose-code:rounded
+    prose-blockquote:border-brand-500 prose-blockquote:text-gray-400"
     id="insightContent">
   </div>
 

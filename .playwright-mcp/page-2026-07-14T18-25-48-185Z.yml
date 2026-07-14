@@ -1,0 +1,15 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - img "YVE Beauty" [ref=e4]
+    - paragraph [ref=e5]: tela de login
+  - generic [ref=e8]:
+    - paragraph [ref=e9]: YVE Beauty
+    - paragraph [ref=e10]: sidebar
+  - generic [ref=e11]:
+    - paragraph [ref=e12]: BotÃµes
+    - generic [ref=e13]:
+      - button "AÃ§Ã£o primÃ¡ria" [ref=e14]
+      - button "SecundÃ¡ria" [ref=e15]
+      - button "Excluir" [ref=e16]
+    - textbox "Campo de formulÃ¡rio (foco dourado)" [ref=e17]
+    - generic [ref=e18]: Aprovado RevisÃ£o Marca

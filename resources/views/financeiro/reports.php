@@ -11,14 +11,14 @@ function fmtBrl(mixed $v): string { return 'R$ ' . number_format((float)$v, 2, '
   <!-- Header -->
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-1">Financeiro</p>
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-500 mb-1">Financeiro</p>
       <h1 class="text-2xl font-bold text-white">Relatórios</h1>
     </div>
     <div class="flex gap-3 items-center">
       <a href="/financeiro" class="text-sm text-gray-400 hover:text-white transition-colors">← Visão Geral</a>
       <form method="GET">
         <select name="year" onchange="this.form.submit()"
-          class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-3 py-1.5 focus:border-violet-500 focus:outline-none">
+          class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-3 py-1.5 focus:border-brand-500 focus:outline-none">
           <?php for ($y = (int)date('Y'); $y >= (int)date('Y') - 3; $y--): ?>
           <option value="<?= $y ?>" <?= $y === (int)$year ? 'selected' : '' ?>><?= $y ?></option>
           <?php endfor; ?>
@@ -51,7 +51,7 @@ function fmtBrl(mixed $v): string { return 'R$ ' . number_format((float)$v, 2, '
       <?php foreach ($monthlyMap as $m => $val): ?>
       <?php $pct = $maxVal > 0 ? ($val / $maxVal * 100) : 0; ?>
       <div class="flex-1 flex flex-col items-center gap-1">
-        <div class="w-full rounded-t-lg bg-violet-500/20 hover:bg-violet-500/40 transition-all relative group"
+        <div class="w-full rounded-t-lg bg-brand-500/20 hover:bg-brand-500/40 transition-all relative group"
              style="height: <?= max(4, round($pct * 1.2)) ?>px">
           <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
             <?= fmtBrl($val) ?>
@@ -134,7 +134,7 @@ function fmtBrl(mixed $v): string { return 'R$ ' . number_format((float)$v, 2, '
         ?>
         <tr class="hover:bg-white/[0.02] transition-colors">
           <td class="px-6 py-4">
-            <a href="/faturas/<?= $inv['id'] ?>" class="font-medium text-white hover:text-violet-300 transition-colors"><?= e($inv['title']) ?></a>
+            <a href="/faturas/<?= $inv['id'] ?>" class="font-medium text-white hover:text-brand-300 transition-colors"><?= e($inv['title']) ?></a>
             <p class="text-xs text-gray-500 font-mono"><?= e($inv['invoice_number']) ?></p>
           </td>
           <td class="px-6 py-4 text-gray-400"><?= e($inv['client_name']) ?></td>

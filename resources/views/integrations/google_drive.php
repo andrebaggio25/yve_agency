@@ -2,7 +2,7 @@
 
 <div class="max-w-xl mx-auto">
   <div class="mb-8">
-    <p class="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-1">Configurações</p>
+    <p class="text-xs font-semibold uppercase tracking-widest text-brand-500 mb-1">Configurações</p>
     <h1 class="text-2xl font-bold text-white">Google Drive</h1>
     <p class="mt-1 text-sm text-gray-400">Conecte o Drive da agência para que os clientes enviem conteúdos direto pelas pastas certas — sem precisar de conta Google.</p>
   </div>
@@ -15,7 +15,7 @@
     <p class="text-sm font-semibold text-amber-300 mb-1">Credenciais do Google não configuradas</p>
     <p class="text-xs text-gray-400">Defina <code class="text-amber-300">GOOGLE_CLIENT_ID</code> e <code class="text-amber-300">GOOGLE_CLIENT_SECRET</code> no <code>.env</code> do servidor. No Google Cloud, ative a Drive API, crie uma credencial OAuth (tipo Web) e configure o redirect URI:</p>
     <div class="mt-2 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-2">
-      <code class="text-xs text-violet-300 break-all"><?= e(rtrim(env('APP_URL', ''), '/') . '/integrations/google-drive/oauth/callback') ?></code>
+      <code class="text-xs text-brand-300 break-all"><?= e(rtrim(env('APP_URL', ''), '/') . '/integrations/google-drive/oauth/callback') ?></code>
     </div>
   </div>
   <?php endif; ?>
@@ -43,10 +43,10 @@
   <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
     <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500 mb-3">Como funciona</h2>
     <ul class="space-y-2 text-sm text-gray-400">
-      <li class="flex gap-2"><span class="text-violet-400">1.</span> Cada cliente ganha uma pasta própria sob a raiz da agência.</li>
-      <li class="flex gap-2"><span class="text-violet-400">2.</span> No portal, o cliente cria subpastas (por dia, modelo etc.) e envia vídeos/fotos.</li>
-      <li class="flex gap-2"><span class="text-violet-400">3.</span> Os arquivos caem direto no seu Drive — usando a sua quota, não a do cliente.</li>
-      <li class="flex gap-2"><span class="text-violet-400">4.</span> Sua equipe visualiza e baixa tudo aqui no sistema.</li>
+      <li class="flex gap-2"><span class="text-brand-400">1.</span> Cada cliente ganha uma pasta própria sob a raiz da agência.</li>
+      <li class="flex gap-2"><span class="text-brand-400">2.</span> No portal, o cliente cria subpastas (por dia, modelo etc.) e envia vídeos/fotos.</li>
+      <li class="flex gap-2"><span class="text-brand-400">3.</span> Os arquivos caem direto no seu Drive — usando a sua quota, não a do cliente.</li>
+      <li class="flex gap-2"><span class="text-brand-400">4.</span> Sua equipe visualiza e baixa tudo aqui no sistema.</li>
     </ul>
   </div>
 

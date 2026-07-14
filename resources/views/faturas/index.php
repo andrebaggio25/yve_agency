@@ -15,12 +15,12 @@ $statusLabels = [
 <div class="min-h-screen">
   <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-1">Financeiro</p>
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-500 mb-1">Financeiro</p>
       <h1 class="text-2xl font-bold text-white">Faturas</h1>
       <p class="mt-1 text-sm text-gray-400"><?= $paginated['total'] ?> fatura<?= $paginated['total'] !== 1 ? 's' : '' ?></p>
     </div>
     <?php if (\App\Support\Auth::can('invoices.create')): ?>
-    <a href="/faturas/nova" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 hover:scale-105 active:scale-95 transition-all">
+    <a href="/faturas/nova" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 hover:scale-105 active:scale-95 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Nova Fatura
     </a>
@@ -37,14 +37,14 @@ $statusLabels = [
   ?>
   <form method="GET" class="mb-6 flex flex-wrap gap-3 items-end">
     <input type="text" name="q" value="<?= e($qFilter) ?>" placeholder="Buscar..."
-      class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-violet-500 focus:outline-none w-52">
-    <select name="client_id" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-violet-500 focus:outline-none">
+      class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-brand-500 focus:outline-none w-52">
+    <select name="client_id" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
       <option value="">Todos os clientes</option>
       <?php foreach ($clients as $cl): ?>
       <option value="<?= $cl['id'] ?>" <?= $clientFilter == $cl['id'] ? 'selected' : '' ?>><?= e($cl['name']) ?></option>
       <?php endforeach; ?>
     </select>
-    <select name="status" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-violet-500 focus:outline-none">
+    <select name="status" class="rounded-xl border border-white/10 bg-[#09090f] text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:outline-none">
       <option value="">Todos os status</option>
       <?php foreach ($statusLabels as $val => [$lbl, $_]): ?>
       <option value="<?= $val ?>" <?= $statusFilter === $val ? 'selected' : '' ?>><?= $lbl ?></option>
@@ -58,14 +58,14 @@ $statusLabels = [
 
   <?php if (empty($invoices)): ?>
   <div class="flex flex-col items-center justify-center py-24 text-center">
-    <div class="mb-4 rounded-2xl bg-violet-500/10 p-6">
-      <svg class="w-12 h-12 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-4 rounded-2xl bg-brand-500/10 p-6">
+      <svg class="w-12 h-12 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
       </svg>
     </div>
     <p class="text-gray-400">Nenhuma fatura encontrada.</p>
     <?php if (\App\Support\Auth::can('invoices.create') && !$hasFilter): ?>
-    <a href="/faturas/nova" class="mt-4 text-sm text-violet-400 hover:text-violet-300 transition-colors">Criar primeira fatura →</a>
+    <a href="/faturas/nova" class="mt-4 text-sm text-brand-400 hover:text-brand-300 transition-colors">Criar primeira fatura →</a>
     <?php endif; ?>
   </div>
   <?php else: ?>
@@ -91,7 +91,7 @@ $statusLabels = [
         <tr class="group hover:bg-white/[0.03] transition-colors <?= $isOverdue ? 'bg-red-500/[0.03]' : '' ?>">
           <td class="px-5 py-4 font-mono text-xs text-gray-400"><?= e($inv['invoice_number']) ?></td>
           <td class="px-5 py-4">
-            <a href="/faturas/<?= $inv['id'] ?>" class="font-medium text-white hover:text-violet-300 transition-colors"><?= e($inv['title']) ?></a>
+            <a href="/faturas/<?= $inv['id'] ?>" class="font-medium text-white hover:text-brand-300 transition-colors"><?= e($inv['title']) ?></a>
           </td>
           <td class="px-5 py-4 text-gray-400"><?= e($inv['client_name']) ?></td>
           <td class="px-5 py-4 text-right font-mono text-white">R$ <?= number_format((float)$inv['total'], 2, ',', '.') ?></td>
@@ -131,20 +131,20 @@ $statusLabels = [
   <div class="mt-6 flex items-center justify-center gap-1">
     <?php if ($paginated['page'] > 1): ?>
     <a href="/faturas?<?= $filterStr ?>page=<?= $paginated['page'] - 1 ?>"
-       class="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-gray-400 hover:border-violet-500/50 hover:text-white transition-colors">
+       class="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-gray-400 hover:border-brand-500/50 hover:text-white transition-colors">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
     </a>
     <?php endif; ?>
     <?php for ($p = 1; $p <= $paginated['pages']; $p++): ?>
     <a href="/faturas?<?= $filterStr ?>page=<?= $p ?>"
        class="flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors
-              <?= $p === $paginated['page'] ? 'bg-violet-600 text-white font-semibold' : 'border border-white/10 text-gray-400 hover:border-violet-500/50 hover:text-white' ?>">
+              <?= $p === $paginated['page'] ? 'bg-brand-600 text-white font-semibold' : 'border border-white/10 text-gray-400 hover:border-brand-500/50 hover:text-white' ?>">
       <?= $p ?>
     </a>
     <?php endfor; ?>
     <?php if ($paginated['page'] < $paginated['pages']): ?>
     <a href="/faturas?<?= $filterStr ?>page=<?= $paginated['page'] + 1 ?>"
-       class="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-gray-400 hover:border-violet-500/50 hover:text-white transition-colors">
+       class="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-gray-400 hover:border-brand-500/50 hover:text-white transition-colors">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     </a>
     <?php endif; ?>

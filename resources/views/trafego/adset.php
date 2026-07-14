@@ -40,7 +40,7 @@
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
   <?php
   $kpis = [
-    ['label' => 'Investimento',  'value' => 'R$ ' . number_format($totals['spend'], 2, ',', '.'),   'color' => 'text-violet-300'],
+    ['label' => 'Investimento',  'value' => 'R$ ' . number_format($totals['spend'], 2, ',', '.'),   'color' => 'text-brand-300'],
     ['label' => 'Impressões',    'value' => number_format($totals['impressions'], 0, ',', '.'),      'color' => 'text-blue-300'],
     ['label' => 'Cliques',       'value' => number_format($totals['clicks'], 0, ',', '.'),           'color' => 'text-cyan-300'],
     ['label' => 'Conversões',    'value' => number_format($totals['conversions'], 0, ',', '.'),      'color' => 'text-green-300'],
@@ -112,7 +112,7 @@
       <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mt-auto pt-3 border-t border-white/[0.06]">
         <div>
           <p class="text-gray-500">Investido</p>
-          <p class="font-semibold text-violet-300">R$ <?= number_format((float)$ad['spend'], 2, ',', '.') ?></p>
+          <p class="font-semibold text-brand-300">R$ <?= number_format((float)$ad['spend'], 2, ',', '.') ?></p>
         </div>
         <div>
           <p class="text-gray-500">Impressões</p>

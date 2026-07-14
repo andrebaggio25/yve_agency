@@ -85,7 +85,7 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
        x-init="loadComments()">
     <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
       <h2 class="text-sm font-semibold text-white flex items-center gap-2">
-        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
         Comentários
@@ -102,7 +102,7 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
       </template>
       <template x-for="c in comments" :key="c.id">
         <div class="flex items-start gap-2.5">
-          <div class="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-violet-300"
+          <div class="w-7 h-7 rounded-full bg-brand-500/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-brand-300"
                x-text="(c.user_name || '?').charAt(0).toUpperCase()"></div>
           <div class="flex-1 min-w-0">
             <div class="flex items-baseline gap-2 mb-0.5">
@@ -119,9 +119,9 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
         <textarea x-model="newMessage" rows="2"
                   placeholder="Adicionar comentário..."
                   @keydown.ctrl.enter.prevent="sendComment()"
-                  class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 resize-none"></textarea>
+                  class="flex-1 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
         <button @click="sendComment()" :disabled="sending || !newMessage.trim()"
-                class="self-end rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-40">
+                class="self-end rounded-xl bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-40">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
           </svg>

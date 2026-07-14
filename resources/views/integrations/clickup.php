@@ -2,7 +2,7 @@
 
 <div class="max-w-xl mx-auto">
   <div class="mb-8">
-    <p class="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-1">Configurações</p>
+    <p class="text-xs font-semibold uppercase tracking-widest text-brand-500 mb-1">Configurações</p>
     <h1 class="text-2xl font-bold text-white">ClickUp</h1>
     <p class="mt-1 text-sm text-gray-400">Sincronize tarefas do YVE com seus projetos no ClickUp.</p>
   </div>
@@ -56,7 +56,7 @@
                value="<?= !empty($integration['api_token']) ? '••••••••' : '' ?>"
                class="input-field"
                autocomplete="off">
-        <p class="mt-1 text-xs text-gray-600">Configurações do ClickUp → Apps → API Token. <a href="https://app.clickup.com/settings/apps" target="_blank" class="text-violet-400 hover:text-violet-300">Abrir ClickUp ↗</a></p>
+        <p class="mt-1 text-xs text-gray-600">Configurações do ClickUp → Apps → API Token. <a href="https://app.clickup.com/settings/apps" target="_blank" class="text-brand-400 hover:text-brand-300">Abrir ClickUp ↗</a></p>
       </div>
 
       <div>
@@ -114,7 +114,7 @@
       ?>
       <p class="text-xs text-gray-500 mb-2">URL configurada automaticamente ao salvar com Workspace ID:</p>
       <div class="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-2">
-        <code class="text-xs text-violet-300 flex-1 break-all"><?= e($webhookUrl) ?></code>
+        <code class="text-xs text-brand-300 flex-1 break-all"><?= e($webhookUrl) ?></code>
         <button type="button" onclick="navigator.clipboard.writeText('<?= e($webhookUrl) ?>').then(()=>this.textContent='✓').catch(()=>{})"
                 class="text-xs text-gray-500 hover:text-white shrink-0 transition-colors">Copiar</button>
       </div>

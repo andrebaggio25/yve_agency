@@ -56,19 +56,19 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1.5">E-mail do destinatário <span class="text-red-400">*</span></label>
                 <input type="email" name="email" required autofocus
-                  class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-violet-500 focus:outline-none transition-colors">
+                  class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1.5">Nome do destinatário</label>
                 <input type="text" name="name" value="<?= e($invoice['client_name']) ?>"
-                  class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-violet-500 focus:outline-none transition-colors">
+                  class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
               </div>
             </div>
             <div class="flex justify-end gap-3 mt-6">
               <button type="button" @click="emailModal = false"
                 class="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-300 hover:text-white transition-colors">Cancelar</button>
               <button type="submit"
-                class="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 transition-all">Enviar</button>
+                class="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-all">Enviar</button>
             </div>
           </form>
         </div>
@@ -129,7 +129,7 @@ $remaining = (float)$invoice['total'] - (float)$invoice['amount_paid'];
       <?php endif; ?>
       <div class="flex justify-between font-bold text-white border-t border-white/5 pt-2">
         <span>Total</span>
-        <span class="font-mono text-violet-300">R$ <?= number_format((float)$invoice['total'], 2, ',', '.') ?></span>
+        <span class="font-mono text-brand-300">R$ <?= number_format((float)$invoice['total'], 2, ',', '.') ?></span>
       </div>
       <?php if ((float)$invoice['amount_paid'] > 0): ?>
       <div class="flex justify-between text-emerald-400"><span>Recebido</span><span class="font-mono">R$ <?= number_format((float)$invoice['amount_paid'], 2, ',', '.') ?></span></div>

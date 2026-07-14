@@ -43,7 +43,7 @@
           <td class="px-4 py-3 text-center">
             <input type="checkbox" name="enabled[<?= $cid ?>][<?= e($key) ?>]" value="1"
                    <?= !empty($row[$key]) ? 'checked' : '' ?>
-                   class="w-4 h-4 rounded accent-violet-500">
+                   class="w-4 h-4 rounded accent-brand-500">
           </td>
           <?php endforeach; ?>
         </tr>

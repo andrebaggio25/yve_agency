@@ -23,7 +23,7 @@
     <pre class="text-left text-xs text-gray-500 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 overflow-x-auto mb-6"><?= htmlspecialchars($trace) ?></pre>
     <?php endif; ?>
 
-    <a href="/dashboard" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 transition-colors">
+    <a href="/dashboard" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors">
       ← Voltar ao dashboard
     </a>
   </div>

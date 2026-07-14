@@ -107,7 +107,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
             <?= $priorityLabels[$t['priority']] ?>
           </span>
           <a href="/tarefas/<?= $t['id'] ?>"
-             class="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-violet-400 hover:text-violet-300">
+             class="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-brand-400 hover:text-brand-300">
             Ver
           </a>
         </div>
@@ -137,7 +137,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
           <span></span>
           <?php endif; ?>
           <?php if ($t['assigned_name']): ?>
-          <div class="w-5 h-5 rounded-full bg-violet-500/30 flex items-center justify-center text-[10px] font-bold text-violet-200"
+          <div class="w-5 h-5 rounded-full bg-brand-500/30 flex items-center justify-center text-[10px] font-bold text-brand-200"
                title="<?= e($t['assigned_name']) ?>">
             <?= mb_strtoupper(mb_substr($t['assigned_name'], 0, 1)) ?>
           </div>

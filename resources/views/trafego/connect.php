@@ -17,7 +17,7 @@
 
     <ol class="text-xs text-gray-300 space-y-2.5 list-decimal list-inside mb-4">
       <li>
-        Em <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener" class="text-violet-400 underline hover:text-violet-300">developers.facebook.com</a>,
+        Em <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener" class="text-brand-400 underline hover:text-brand-300">developers.facebook.com</a>,
         crie um App e adicione o produto <span class="text-white">Marketing API</span>.
       </li>
       <li>
@@ -40,14 +40,14 @@
       </li>
       <li>
         Cole o <span class="text-white">App ID</span> e o <span class="text-white">App Secret</span> em
-        <a href="/admin/configuracoes" class="text-violet-400 underline hover:text-violet-300">Admin → Configurações</a>.
+        <a href="/admin/configuracoes" class="text-brand-400 underline hover:text-brand-300">Admin → Configurações</a>.
       </li>
     </ol>
   </div>
   <?php endif; ?>
 
   <!-- OAuth (recomendado) -->
-  <div class="card p-5 mb-5 border border-violet-500/20 bg-violet-500/5">
+  <div class="card p-5 mb-5 border border-brand-500/20 bg-brand-500/5">
     <div class="flex items-start gap-4">
       <div class="w-10 h-10 rounded-xl bg-[#1877f2] flex items-center justify-center flex-shrink-0 mt-0.5">
         <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -55,7 +55,7 @@
         </svg>
       </div>
       <div class="flex-1">
-        <p class="text-sm font-semibold text-white mb-1">Conectar via Facebook Login <span class="text-xs text-violet-400 font-medium">(recomendado)</span></p>
+        <p class="text-sm font-semibold text-white mb-1">Conectar via Facebook Login <span class="text-xs text-brand-400 font-medium">(recomendado)</span></p>
         <p class="text-xs text-gray-500 mb-3">Autorize automaticamente. Mais seguro e sem precisar copiar tokens.</p>
         <?php if ($metaAppConfigured ?? false): ?>
         <a href="/trafego/contas/oauth?client_id=<?= (int)($clients[0]['id'] ?? 0) ?>"

@@ -57,7 +57,7 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
         <span><?= $pct ?>%</span>
       </div>
       <div class="h-2 rounded-full bg-white/5">
-        <div class="h-full rounded-full bg-gradient-to-r from-violet-600 to-emerald-400 transition-all duration-700"
+        <div class="h-full rounded-full bg-gradient-to-r from-brand-600 to-emerald-400 transition-all duration-700"
              style="width:<?= $pct ?>%"></div>
       </div>
     </div>
@@ -140,12 +140,12 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
           </div>
           <?php endif; ?>
           <?php if (!empty($item['cta'])): ?>
-          <div class="rounded-xl bg-violet-500/10 border border-violet-500/20 px-3 py-2">
-            <p class="text-xs font-medium text-violet-400 mb-0.5">CTA</p>
+          <div class="rounded-xl bg-brand-500/10 border border-brand-500/20 px-3 py-2">
+            <p class="text-xs font-medium text-brand-400 mb-0.5">CTA</p>
             <p class="text-sm text-gray-200"><?= e($item['cta']) ?></p>
           </div>
           <?php endif; ?>
-          <button @click="showFull = !showFull" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+          <button @click="showFull = !showFull" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">
             <span x-text="showFull ? 'Ver menos ↑' : 'Ver mais ↓'"></span>
           </button>
         </div>
@@ -184,14 +184,14 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
         <?php if (!empty($parsed) && $parsed['valid']): ?>
         <div class="rounded-xl overflow-hidden border border-white/5 mb-4" x-data="{loaded: false}">
           <div class="flex items-center gap-2 px-3 py-2 bg-white/[0.03] border-b border-white/5">
-            <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
             </svg>
             <span class="text-xs text-gray-400 flex-1">
               <?= e($drive->getTypeLabel($parsed['file_type'])) ?> — Google Drive
             </span>
             <a href="<?= e($parsed['original']) ?>" target="_blank" rel="noopener"
-               class="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+               class="text-xs text-brand-400 hover:text-brand-300 transition-colors">
               Abrir ↗
             </a>
           </div>
@@ -201,7 +201,7 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
                     loading="lazy" allowfullscreen
                     @load="loaded = true"></iframe>
             <div x-show="!loaded" class="absolute inset-0 flex items-center justify-center">
-              <div class="w-8 h-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin"></div>
+              <div class="w-8 h-8 rounded-full border-2 border-brand-500/30 border-t-brand-500 animate-spin"></div>
             </div>
           </div>
         </div>
@@ -254,9 +254,9 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
           <div x-show="open" x-transition class="mt-3 space-y-3">
             <!-- Type selector -->
             <div class="grid grid-cols-3 gap-2">
-              <?php foreach (['approved'=>['label'=>'Aprovar','cls'=>'hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300'],'changes_requested'=>['label'=>'Revisão','cls'=>'hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-300'],'comment'=>['label'=>'Comentar','cls'=>'hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-300']] as $t => $tc): ?>
+              <?php foreach (['approved'=>['label'=>'Aprovar','cls'=>'hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300'],'changes_requested'=>['label'=>'Revisão','cls'=>'hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-300'],'comment'=>['label'=>'Comentar','cls'=>'hover:border-brand-500/40 hover:bg-brand-500/10 hover:text-brand-300']] as $t => $tc): ?>
               <button type="button" @click="type = '<?= $t ?>'"
-                      :class="type === '<?= $t ?>' ? 'border-violet-500/50 bg-violet-500/10 text-violet-200' : 'border-white/10 text-gray-400'"
+                      :class="type === '<?= $t ?>' ? 'border-brand-500/50 bg-brand-500/10 text-brand-200' : 'border-white/10 text-gray-400'"
                       class="<?= $tc['cls'] ?> rounded-xl border py-2 text-xs font-medium transition-all">
                 <?= $tc['label'] ?>
               </button>
@@ -265,14 +265,14 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
 
             <textarea x-model="comment" rows="3"
                       :placeholder="type === 'comment' ? 'Escreva seu comentário...' : 'Opcional: explique o motivo'"
-                      class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 resize-none"></textarea>
+                      class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
 
             <button @click="submitFeedback(<?= $item['id'] ?>, type, comment)"
                     :disabled="submitting"
                     :class="{
                       'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20': type === 'approved',
                       'bg-amber-600 hover:bg-amber-500 shadow-amber-500/20':  type === 'changes_requested',
-                      'bg-violet-600 hover:bg-violet-500 shadow-violet-500/20': type === 'comment'
+                      'bg-brand-600 hover:bg-brand-500 shadow-brand-500/20': type === 'comment'
                     }"
                     class="w-full rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50">
               <span x-text="submitting ? 'Enviando...' : 'Enviar Feedback'"></span>

@@ -5,7 +5,7 @@ $methodLabels = ['pix'=>'PIX','boleto'=>'Boleto','credit_card'=>'Cartão de Cré
 <div class="min-h-screen">
   <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-1">Financeiro</p>
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-500 mb-1">Financeiro</p>
       <h1 class="text-2xl font-bold text-white">Pagamentos</h1>
       <p class="mt-1 text-sm text-gray-400"><?= count($payments) ?> registro<?= count($payments) !== 1 ? 's' : '' ?></p>
     </div>
@@ -13,13 +13,13 @@ $methodLabels = ['pix'=>'PIX','boleto'=>'Boleto','credit_card'=>'Cartão de Cré
 
   <?php if (empty($payments)): ?>
   <div class="flex flex-col items-center justify-center py-24 text-center">
-    <div class="mb-4 rounded-2xl bg-violet-500/10 p-6">
-      <svg class="w-12 h-12 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-4 rounded-2xl bg-brand-500/10 p-6">
+      <svg class="w-12 h-12 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
       </svg>
     </div>
     <p class="text-gray-400">Nenhum pagamento registrado ainda.</p>
-    <a href="/faturas" class="mt-4 text-sm text-violet-400 hover:text-violet-300 transition-colors">Ver faturas →</a>
+    <a href="/faturas" class="mt-4 text-sm text-brand-400 hover:text-brand-300 transition-colors">Ver faturas →</a>
   </div>
   <?php else: ?>
   <div class="overflow-hidden rounded-2xl border border-white/5">
@@ -39,7 +39,7 @@ $methodLabels = ['pix'=>'PIX','boleto'=>'Boleto','credit_card'=>'Cartão de Cré
         <tr class="group hover:bg-white/[0.03] transition-colors">
           <td class="px-5 py-4 text-gray-300"><?= date('d/m/Y', strtotime($p['payment_date'])) ?></td>
           <td class="px-5 py-4">
-            <a href="/faturas/<?= $p['invoice_id'] ?>" class="text-white hover:text-violet-300 transition-colors"><?= e($p['invoice_title']) ?></a>
+            <a href="/faturas/<?= $p['invoice_id'] ?>" class="text-white hover:text-brand-300 transition-colors"><?= e($p['invoice_title']) ?></a>
             <p class="text-xs text-gray-500 font-mono"><?= e($p['invoice_number']) ?></p>
           </td>
           <td class="px-5 py-4 text-gray-400"><?= e($p['client_name']) ?></td>

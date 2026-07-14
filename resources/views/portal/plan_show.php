@@ -10,7 +10,7 @@ $statusColors = [
   'approved'         => 'text-green-300 bg-green-500/10',
   'in_revision'      => 'text-blue-300 bg-blue-500/10',
   'revision'         => 'text-blue-300 bg-blue-500/10',
-  'published'        => 'text-violet-300 bg-violet-500/10',
+  'published'        => 'text-brand-300 bg-brand-500/10',
 ];
 $itemStatusColors = ['draft' => 'text-gray-400 bg-gray-500/10', 'approved' => 'text-green-300 bg-green-500/10', 'revision' => 'text-yellow-300 bg-yellow-500/10', 'rejected' => 'text-red-300 bg-red-500/10'];
 $itemStatusLabels = ['draft' => t('portal.istatus.draft'), 'approved' => t('portal.istatus.approved'), 'revision' => t('portal.istatus.revision'), 'rejected' => t('portal.istatus.rejected')];
@@ -108,7 +108,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
           </span>
           <?php endif; ?>
           <?php if (!empty($item['content_type'])): ?>
-          <span class="text-xs text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded-full">
+          <span class="text-xs text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-full">
             <?= e($item['content_type']) ?>
           </span>
           <?php endif; ?>
@@ -164,12 +164,12 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         <?php elseif ($parsedDrive && $parsedDrive['valid'] && ($isVideo || $parsedDrive['file_type'] === 'video')): ?>
         <div class="rounded-xl overflow-hidden border border-white/10 bg-black/30">
           <div class="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-            <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <span class="text-xs text-gray-400"><?= t('portal.plan.video') ?></span>
             <a href="<?= e($parsedDrive['original']) ?>" target="_blank" rel="noopener"
-               class="ml-auto text-xs text-violet-400 hover:text-violet-300"><?= t('portal.plan.open_drive') ?></a>
+               class="ml-auto text-xs text-brand-400 hover:text-brand-300"><?= t('portal.plan.open_drive') ?></a>
           </div>
           <div class="aspect-video">
             <iframe src="<?= e($parsedDrive['embed_url']) ?>"
@@ -186,7 +186,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         </div>
         <?php elseif ($parsedDrive && $parsedDrive['valid']): ?>
         <a href="<?= e($parsedDrive['original']) ?>" target="_blank" rel="noopener"
-           class="inline-flex items-center gap-2 text-xs text-violet-400 hover:text-violet-300">
+           class="inline-flex items-center gap-2 text-xs text-brand-400 hover:text-brand-300">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
           <?= t('portal.plan.see_file_drive') ?>
         </a>
@@ -232,7 +232,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
                           class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                           x-text="feedbackTypeLabel(fb)"></span>
                     <template x-if="fb.timecode">
-                      <span class="inline-flex items-center gap-1 text-[10px] text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded-full font-mono">
+                      <span class="inline-flex items-center gap-1 text-[10px] text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-full font-mono">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <span x-text="fb.timecode"></span>
                       </span>
@@ -269,7 +269,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
             </button>
             <button type="button"
                     @click="selectedType = 'comment'"
-                    :class="selectedType === 'comment' ? 'bg-violet-600 border-violet-500 text-white' : 'border-white/10 text-gray-400 hover:text-white'"
+                    :class="selectedType === 'comment' ? 'bg-brand-600 border-brand-500 text-white' : 'border-white/10 text-gray-400 hover:text-white'"
                     class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
               <?= t('portal.plan.fb_comment') ?>
@@ -280,15 +280,15 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
             <!-- Textarea -->
             <textarea x-model="comment" rows="2"
                       :placeholder="selectedType === 'approved' ? <?= e(json_encode(t('portal.plan.note_optional'), JSON_UNESCAPED_UNICODE)) ?> : <?= e(json_encode(t('portal.plan.describe_change'), JSON_UNESCAPED_UNICODE)) ?>"
-                      class="w-full rounded-xl text-sm text-white placeholder-gray-600 px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                      class="w-full rounded-xl text-sm text-white placeholder-gray-600 px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500/50"
                       style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);"></textarea>
 
             <!-- Timecode (só para vídeos) -->
             <?php if ($isVideo): ?>
             <div class="flex items-center gap-2 mt-2 flex-wrap">
-              <svg class="w-4 h-4 text-violet-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <svg class="w-4 h-4 text-brand-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               <input type="text" x-model="timecode" placeholder="<?= e(t('portal.plan.timecode_placeholder')) ?>"
-                     class="w-24 rounded-lg text-xs text-white placeholder-gray-600 px-2.5 py-1.5 font-mono focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                     class="w-24 rounded-lg text-xs text-white placeholder-gray-600 px-2.5 py-1.5 font-mono focus:outline-none focus:ring-1 focus:ring-brand-500/50"
                      style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
               <?php if ($youtubeId): ?>
               <button type="button" @click="captureYtTime()"
@@ -306,7 +306,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
             <div class="flex items-center gap-2 mt-3">
               <button type="button" @click="submitFeedback()"
                       :disabled="sending"
-                      class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-50">
+                      class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-50">
                 <svg x-show="sending" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>

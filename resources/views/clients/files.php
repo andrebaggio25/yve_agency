@@ -47,8 +47,8 @@
       <div x-show="folders.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
         <template x-for="folder in folders" :key="folder.id">
           <button @click="goTo(folder.id)"
-                  class="flex items-center gap-2 rounded-xl bg-white/[0.03] border border-white/5 hover:border-violet-500/30 hover:bg-white/[0.06] transition-all px-3 py-3 text-left">
-            <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+                  class="flex items-center gap-2 rounded-xl bg-white/[0.03] border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.06] transition-all px-3 py-3 text-left">
+            <svg class="w-5 h-5 text-brand-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
             <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
           </button>
         </template>
@@ -58,7 +58,7 @@
       <div x-show="files.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
         <template x-for="file in files" :key="file.id">
           <button @click="openPreview(file)"
-                  class="group rounded-xl overflow-hidden bg-white/[0.03] border border-white/5 hover:border-violet-500/30 transition-all text-left">
+                  class="group rounded-xl overflow-hidden bg-white/[0.03] border border-white/5 hover:border-brand-500/30 transition-all text-left">
             <div class="aspect-square bg-black/30 flex items-center justify-center relative">
               <template x-if="file.is_image">
                 <img :src="rawUrl(file)" loading="lazy" class="w-full h-full object-cover" @error="$el.style.display='none'">
@@ -103,7 +103,7 @@
       <template x-if="preview.file && !preview.file.is_image && !preview.file.is_video">
         <div class="text-center">
           <p class="text-sm text-gray-300 mb-3" x-text="preview.file.name"></p>
-          <a :href="rawUrl(preview.file)" target="_blank" rel="noopener" class="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white inline-flex">Abrir / baixar</a>
+          <a :href="rawUrl(preview.file)" target="_blank" rel="noopener" class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white inline-flex">Abrir / baixar</a>
         </div>
       </template>
       <p class="text-xs text-gray-400 mt-3 text-center" x-text="preview.file ? preview.file.name : ''"></p>

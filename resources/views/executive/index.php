@@ -29,7 +29,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
 <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
   <?php
   $kpis = [
-    ['Clientes Ativos',    count(array_filter($clients, fn($c) => $c['status'] === 'active')), null, 'text-violet-300'],
+    ['Clientes Ativos',    count(array_filter($clients, fn($c) => $c['status'] === 'active')), null, 'text-brand-300'],
     ['Faturado Total',     $fmtMoney($financialKpis['billed_total'] ?? 0), null, 'text-emerald-300'],
     ['Recebido',           $fmtMoney($financialKpis['received_total'] ?? 0), null, 'text-green-300'],
     ['Em Aberto',          $fmtMoney($financialKpis['pending_total'] ?? 0), null, 'text-yellow-300'],
@@ -61,7 +61,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
             {
               label: 'Recebido',
               data: <?= json_encode(array_map(fn($r) => (float)$r['received'], $revenueTrend)) ?>,
-              backgroundColor: 'rgba(139,92,246,0.7)',
+              backgroundColor: 'rgba(198,161,91,0.7)',
               borderRadius: 4,
             },
             {
@@ -195,7 +195,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
         <td class="px-5 py-3 text-right">
           <a href="/relatorio-executivo/cliente/<?= $cs['id'] ?>?since=<?= e($since) ?>&until=<?= e($until) ?>"
              target="_blank"
-             class="text-xs text-violet-400 hover:text-violet-300 font-medium">
+             class="text-xs text-brand-400 hover:text-brand-300 font-medium">
             Relatório PDF →
           </a>
         </td>

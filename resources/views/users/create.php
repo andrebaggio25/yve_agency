@@ -26,7 +26,7 @@
           <?= t('users.name') ?> <span class="text-red-400">*</span>
         </label>
         <input type="text" name="name" value="<?= old('name') ?>" required
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
 
       <div>
@@ -34,7 +34,7 @@
           <?= t('users.email') ?> <span class="text-red-400">*</span>
         </label>
         <input type="email" name="email" value="<?= old('email') ?>" required
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -43,14 +43,14 @@
             <?= t('users.password') ?> <span class="text-red-400">*</span>
           </label>
           <input type="password" name="password" required minlength="8"
-                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">
             Confirmar senha <span class="text-red-400">*</span>
           </label>
           <input type="password" name="password_confirmation" required minlength="8"
-                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                 class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
         </div>
       </div>
 
@@ -60,7 +60,7 @@
             <?= t('users.role') ?> <span class="text-red-400">*</span>
           </label>
           <select name="role_id" required
-                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
             <option value=""><?= t('common.select') ?>...</option>
             <?php foreach ($roles as $role): ?>
             <option value="<?= e($role['id']) ?>" <?= old('role_id') == $role['id'] ? 'selected' : '' ?>>
@@ -72,7 +72,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('users.status') ?></label>
           <select name="status"
-                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
             <option value="active" selected><?= t('status.active') ?></option>
             <option value="inactive"><?= t('status.inactive') ?></option>
           </select>
@@ -82,7 +82,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('users.language') ?></label>
         <select name="language"
-                class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
           <?php foreach (\App\Core\Lang::supportedLocales() as $code => $label): ?>
           <option value="<?= e($code) ?>" <?= old('language', 'pt') === $code ? 'selected' : '' ?>>
             <?= e($label) ?>
@@ -98,7 +98,7 @@
         <?= t('common.cancel') ?>
       </a>
       <button type="submit"
-              class="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all hover:scale-105 active:scale-95">
+              class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95">
         <?= t('common.save') ?>
       </button>
     </div>

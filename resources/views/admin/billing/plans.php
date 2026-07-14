@@ -13,7 +13,7 @@
   <?php foreach ($plans as $plan):
     $subs = $subsByPlan[$plan['id']] ?? 0;
     $features = is_string($plan['features']) ? (json_decode($plan['features'], true) ?? []) : ($plan['features'] ?? []);
-    $tierColors = ['free' => 'text-gray-300', 'starter' => 'text-blue-300', 'pro' => 'text-violet-300', 'enterprise' => 'text-yellow-300'];
+    $tierColors = ['free' => 'text-gray-300', 'starter' => 'text-blue-300', 'pro' => 'text-brand-300', 'enterprise' => 'text-yellow-300'];
     $tc = $tierColors[$plan['slug']] ?? 'text-gray-300';
   ?>
   <div class="card p-5 flex flex-col <?= !$plan['is_active'] ? 'opacity-50' : '' ?>">

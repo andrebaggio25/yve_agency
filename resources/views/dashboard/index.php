@@ -5,7 +5,7 @@
 <div class="space-y-8">
 
   <div>
-    <p class="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-1">Dashboard</p>
+    <p class="text-xs font-semibold uppercase tracking-widest text-brand-500 mb-1">Dashboard</p>
     <h1 class="text-2xl font-bold text-white">
       Olá, <?= e(explode(' ', $user['name'] ?? 'usuário')[0]) ?>
     </h1>
@@ -21,7 +21,7 @@
         'value' => $stats['active_clients'],
         'href'  => '/clientes',
         'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>',
-        'color' => 'text-violet-400 bg-violet-500/10',
+        'color' => 'text-brand-400 bg-brand-500/10',
       ],
       [
         'label' => 'Planos em andamento',
@@ -41,7 +41,7 @@
     foreach ($statCards as $card):
     ?>
     <a href="<?= $card['href'] ?>"
-       class="group flex items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-5 hover:border-violet-500/20 hover:bg-white/[0.05] transition-all">
+       class="group flex items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-5 hover:border-brand-500/20 hover:bg-white/[0.05] transition-all">
       <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl <?= $card['color'] ?>">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><?= $card['icon'] ?></svg>
       </div>
@@ -59,7 +59,7 @@
   <div>
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Financeiro</h2>
-      <a href="/financeiro" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">Ver mais →</a>
+      <a href="/financeiro" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">Ver mais →</a>
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <?php
@@ -84,14 +84,14 @@
   <div>
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-sm font-semibold uppercase tracking-widest text-gray-500">Planos recentes</h2>
-      <a href="/conteudo" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">Ver todos →</a>
+      <a href="/conteudo" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">Ver todos →</a>
     </div>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] overflow-hidden">
       <?php foreach ($recent_plans as $i => $plan): ?>
       <a href="/conteudo/<?= e($plan['id']) ?>"
          class="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.03] transition-colors <?= $i > 0 ? 'border-t border-white/5' : '' ?>">
         <div class="flex items-center gap-3">
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-300 shrink-0">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500/10 text-xs font-bold text-brand-300 shrink-0">
             <?= strtoupper(substr($plan['client_name'], 0, 2)) ?>
           </div>
           <div>
@@ -116,7 +116,7 @@
   <?php else: ?>
   <div class="rounded-2xl border border-dashed border-white/10 p-10 text-center">
     <p class="text-gray-500 text-sm">Nenhum plano criado ainda.</p>
-    <a href="/conteudo/novo" class="mt-3 inline-block text-sm text-violet-400 hover:text-violet-300 transition-colors">
+    <a href="/conteudo/novo" class="mt-3 inline-block text-sm text-brand-400 hover:text-brand-300 transition-colors">
       Criar primeiro plano →
     </a>
   </div>

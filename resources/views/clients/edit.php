@@ -27,20 +27,20 @@
           <?= t('clients.name') ?> <span class="text-red-400">*</span>
         </label>
         <input type="text" name="name" value="<?= old('name', $client['name']) ?>" required
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('clients.segment') ?></label>
         <input type="text" name="segment" value="<?= old('segment', $client['segment'] ?? '') ?>"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('clients.status') ?></label>
           <select name="status"
-                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
             <option value="active" <?= old('status', $client['status']) === 'active' ? 'selected' : '' ?>><?= t('status.active') ?></option>
             <option value="inactive" <?= old('status', $client['status']) === 'inactive' ? 'selected' : '' ?>><?= t('status.inactive') ?></option>
           </select>
@@ -48,7 +48,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('clients.currency') ?></label>
           <select name="currency_code"
-                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
             <?php foreach (['BRL' => 'BRL — Real', 'USD' => 'USD — Dollar', 'EUR' => 'EUR — Euro'] as $code => $label): ?>
             <option value="<?= $code ?>" <?= old('currency_code', $client['currency_code'] ?? 'BRL') === $code ? 'selected' : '' ?>><?= $label ?></option>
             <?php endforeach; ?>
@@ -59,7 +59,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('clients.approval_language') ?></label>
         <select name="language"
-                class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
           <?php foreach (\App\Core\Lang::supportedLocales() as $code => $label): ?>
           <option value="<?= e($code) ?>" <?= old('language', $client['language'] ?? 'pt') === $code ? 'selected' : '' ?>>
             <?= e($label) ?>
@@ -77,7 +77,7 @@
         <label class="block text-sm font-medium text-gray-300 mb-1.5">Logo do cliente (URL)</label>
         <input type="url" name="logo_url" value="<?= old('logo_url', $client['logo_url'] ?? '') ?>"
                placeholder="https://cdn.exemplo.com/logo.png"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
         <p class="mt-1 text-xs text-gray-500">Exibido no portal de aprovação do cliente. URL pública (PNG, SVG, JPG).</p>
         <?php if (!empty($client['logo_url'])): ?>
         <div class="mt-3 flex items-center gap-3">
@@ -95,7 +95,7 @@
       <label class="flex items-start gap-3 cursor-pointer">
         <input type="checkbox" name="enable_portal" value="1" x-model="enabled"
                <?= !empty($client['portal_token']) ? 'checked' : '' ?>
-               class="w-4 h-4 mt-0.5 rounded accent-violet-500">
+               class="w-4 h-4 mt-0.5 rounded accent-brand-500">
         <span>
           <span class="block text-sm text-white">Habilitar portal de aprovação</span>
           <span class="block text-xs text-gray-500 mt-0.5">O cliente acessa planos, faturas e contratos pelo link. Desativar revoga o acesso imediatamente.</span>
@@ -120,7 +120,7 @@
           </button>
         </div>
         <?php else: ?>
-        <p class="text-xs text-violet-400">Um link de acesso será gerado ao salvar.</p>
+        <p class="text-xs text-brand-400">Um link de acesso será gerado ao salvar.</p>
         <?php endif; ?>
       </div>
     </div>
@@ -132,19 +132,19 @@
         <label class="block text-sm font-medium text-gray-300 mb-1.5">WhatsApp do cliente</label>
         <input type="text" name="whatsapp" value="<?= old('whatsapp', $client['whatsapp'] ?? '') ?>"
                placeholder="5511999998888"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
         <p class="mt-1 text-xs text-gray-500">Com DDI + DDD. Necessário para os avisos por WhatsApp.</p>
       </div>
 
       <div class="flex flex-wrap gap-5">
         <label class="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" name="notify_whatsapp" value="1" <?= ($client['notify_whatsapp'] ?? true) ? 'checked' : '' ?>
-                 class="w-4 h-4 rounded accent-violet-500">
+                 class="w-4 h-4 rounded accent-brand-500">
           <span class="text-sm text-gray-300">Permitir avisos por WhatsApp</span>
         </label>
         <label class="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" name="notify_email" value="1" <?= ($client['notify_email'] ?? true) ? 'checked' : '' ?>
-                 class="w-4 h-4 rounded accent-violet-500">
+                 class="w-4 h-4 rounded accent-brand-500">
           <span class="text-sm text-gray-300">Permitir avisos por e-mail</span>
         </label>
       </div>
@@ -158,7 +158,7 @@
           <label class="flex items-start gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 cursor-pointer hover:bg-white/[0.04] transition-colors">
             <input type="checkbox" name="automations[<?= e($key) ?>]" value="1"
                    <?= !empty($clientAutoSettings[$key]) ? 'checked' : '' ?>
-                   class="w-4 h-4 mt-0.5 rounded accent-violet-500">
+                   class="w-4 h-4 mt-0.5 rounded accent-brand-500">
             <span>
               <span class="block text-sm text-white"><?= e($def['label'] ?? $key) ?></span>
               <span class="block text-xs text-gray-600"><?= e($def['description'] ?? '') ?></span>
@@ -252,7 +252,7 @@
         <?= t('common.cancel') ?>
       </a>
       <button type="submit" form="client-edit-form"
-              class="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all hover:scale-105 active:scale-95">
+              class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95">
         <?= t('common.save') ?>
       </button>
     </div>

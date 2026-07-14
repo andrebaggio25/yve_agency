@@ -8,7 +8,7 @@
         <?= t('users.title') ?>
       </a>
       <div class="flex items-center gap-4">
-        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 text-xl font-bold text-violet-300">
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/10 text-xl font-bold text-brand-300">
           <?= strtoupper(substr($user['name'], 0, 2)) ?>
         </div>
         <div>
@@ -19,7 +19,7 @@
     </div>
     <?php if (\App\Support\Auth::can('users.edit')): ?>
     <a href="/usuarios/<?= e($user['id']) ?>/editar"
-       class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
       <?= t('common.edit') ?>
     </a>
@@ -54,7 +54,7 @@
     <div class="space-y-2">
       <?php foreach ($clientAccess as $c): ?>
       <div class="flex items-center gap-3 rounded-xl border border-white/5 px-4 py-2.5">
-        <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-300">
+        <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500/10 text-xs font-bold text-brand-300">
           <?= strtoupper(substr($c['name'], 0, 2)) ?>
         </div>
         <span class="text-sm text-gray-300"><?= e($c['name']) ?></span>

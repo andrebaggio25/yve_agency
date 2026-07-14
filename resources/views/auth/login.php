@@ -21,7 +21,7 @@
         <input id="email" name="email" type="email" autocomplete="email" required
                value="<?= old('email') ?>"
                class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600
-                      focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                      focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
     </div>
 
     <div>
@@ -30,23 +30,23 @@
         </label>
         <input id="password" name="password" type="password" autocomplete="current-password" required
                class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600
-                      focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                      focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
     </div>
 
     <div class="flex items-center justify-between pt-1">
         <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
             <input type="checkbox" name="remember"
-                   class="rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500 focus:ring-offset-0">
+                   class="rounded border-white/20 bg-white/5 text-brand-500 focus:ring-brand-500 focus:ring-offset-0">
             Lembrar-me
         </label>
-        <a href="/esqueci-senha" class="text-sm text-violet-400 hover:text-violet-300 transition-colors">
+        <a href="/esqueci-senha" class="text-sm text-brand-400 hover:text-brand-300 transition-colors">
             <?= t('auth.forgot_password') ?>
         </a>
     </div>
 
     <button type="submit"
-            class="mt-2 w-full rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white
-                   shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all hover:scale-[1.02] active:scale-[0.98]">
+            class="mt-2 w-full rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white
+                   shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-[1.02] active:scale-[0.98]">
         <?= t('auth.login') ?>
     </button>
 </form>

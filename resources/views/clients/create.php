@@ -26,20 +26,20 @@
           <?= t('clients.name') ?> <span class="text-red-400">*</span>
         </label>
         <input type="text" name="name" value="<?= old('name') ?>" required
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('clients.segment') ?></label>
         <input type="text" name="segment" value="<?= old('segment') ?>"
-               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('clients.status') ?></label>
           <select name="status"
-                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
             <option value="active" <?= old('status', 'active') === 'active' ? 'selected' : '' ?>><?= t('status.active') ?></option>
             <option value="inactive" <?= old('status') === 'inactive' ? 'selected' : '' ?>><?= t('status.inactive') ?></option>
           </select>
@@ -47,7 +47,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('clients.currency') ?></label>
           <select name="currency_code"
-                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                  class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
             <option value="BRL" <?= old('currency_code', 'BRL') === 'BRL' ? 'selected' : '' ?>>BRL — Real</option>
             <option value="USD" <?= old('currency_code') === 'USD' ? 'selected' : '' ?>>USD — Dollar</option>
             <option value="EUR" <?= old('currency_code') === 'EUR' ? 'selected' : '' ?>>EUR — Euro</option>
@@ -58,7 +58,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-1.5"><?= t('clients.approval_language') ?></label>
         <select name="language"
-                class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors">
+                class="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
           <?php foreach (\App\Core\Lang::supportedLocales() as $code => $label): ?>
           <option value="<?= e($code) ?>" <?= old('language', 'pt') === $code ? 'selected' : '' ?>>
             <?= e($label) ?>
@@ -74,7 +74,7 @@
         <?= t('common.cancel') ?>
       </a>
       <button type="submit"
-              class="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all hover:scale-105 active:scale-95">
+              class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all hover:scale-105 active:scale-95">
         <?= t('common.save') ?>
       </button>
     </div>

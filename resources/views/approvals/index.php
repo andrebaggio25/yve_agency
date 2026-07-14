@@ -4,7 +4,7 @@
 
   <!-- Header -->
   <div class="mb-8">
-    <p class="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-1">Aprovações</p>
+    <p class="text-xs font-semibold uppercase tracking-widest text-brand-500 mb-1">Aprovações</p>
     <h1 class="text-2xl font-bold text-white">Planos para Revisar</h1>
     <p class="mt-1 text-sm text-gray-400">
       <?= count($plans) ?> plano<?= count($plans) !== 1 ? 's' : '' ?> disponível<?= count($plans) !== 1 ? 'is' : '' ?>
@@ -36,7 +36,7 @@
       $pct   = $total > 0 ? round(($aprov / $total) * 100) : 0;
     ?>
     <a href="/aprovacoes/<?= e($plan['id']) ?>"
-       class="group flex items-start gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-5 transition-all hover:border-violet-500/30 hover:bg-white/[0.06] hover:-translate-y-0.5">
+       class="group flex items-start gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-5 transition-all hover:border-brand-500/30 hover:bg-white/[0.06] hover:-translate-y-0.5">
       <div class="flex-1 min-w-0">
         <div class="flex flex-wrap items-center gap-2 mb-2">
           <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 <?= $sc['bg'] ?> <?= $sc['text'] ?> <?= $sc['ring'] ?>">
@@ -44,7 +44,7 @@
             <?= $sc['label'] ?>
           </span>
         </div>
-        <h3 class="font-semibold text-white group-hover:text-violet-200 transition-colors"><?= e($plan['title']) ?></h3>
+        <h3 class="font-semibold text-white group-hover:text-brand-200 transition-colors"><?= e($plan['title']) ?></h3>
         <p class="text-sm text-gray-400 mt-0.5">
           <?= date('d/m', strtotime($plan['week_start'])) ?> – <?= date('d/m/Y', strtotime($plan['week_end'])) ?>
         </p>
@@ -55,13 +55,13 @@
             <span><?= $pct ?>%</span>
           </div>
           <div class="h-1.5 rounded-full bg-white/5">
-            <div class="h-full rounded-full <?= $plan['status'] === 'approved' ? 'bg-emerald-400' : 'bg-gradient-to-r from-violet-600 to-violet-400' ?>"
+            <div class="h-full rounded-full <?= $plan['status'] === 'approved' ? 'bg-emerald-400' : 'bg-gradient-to-r from-brand-600 to-brand-400' ?>"
                  style="width:<?= $pct ?>%"></div>
           </div>
         </div>
         <?php endif; ?>
       </div>
-      <svg class="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5 transition-transform group-hover:translate-x-1 group-hover:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5 transition-transform group-hover:translate-x-1 group-hover:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
       </svg>
     </a>

@@ -66,10 +66,10 @@
         </td>
         <td class="px-5 py-3 text-right">
           <div class="flex items-center justify-end gap-3">
-            <a href="/organico/contas/<?= $a['id'] ?>" class="text-xs text-violet-400 hover:text-violet-300">Ver</a>
+            <a href="/organico/contas/<?= $a['id'] ?>" class="text-xs text-brand-400 hover:text-brand-300">Ver</a>
             <form method="POST" action="/organico/contas/<?= $a['id'] ?>/sync">
               <?= csrf_field() ?>
-              <button class="text-xs text-violet-400 hover:text-violet-300">Sync</button>
+              <button class="text-xs text-brand-400 hover:text-brand-300">Sync</button>
             </form>
             <form method="POST" action="/organico/contas/<?= $a['id'] ?>"
                   onsubmit="return confirm('Remover esta conta?')">

@@ -97,10 +97,10 @@ $qs = static function (array $extra) use ($filters, $month): string {
       ?>
       <div class="min-h-[7rem] rounded-xl border p-2 transition-colors
                   <?= $isMonth ? 'border-white/[0.06] bg-white/[0.02]' : 'border-transparent bg-transparent' ?>
-                  <?= $isToday ? 'ring-1 ring-violet-500/50' : '' ?>">
+                  <?= $isToday ? 'ring-1 ring-brand-500/50' : '' ?>">
 
         <div class="flex items-center justify-between mb-1.5">
-          <span class="text-xs font-medium <?= $isToday ? 'text-violet-300' : ($isMonth ? 'text-gray-400' : 'text-gray-700') ?>">
+          <span class="text-xs font-medium <?= $isToday ? 'text-brand-300' : ($isMonth ? 'text-gray-400' : 'text-gray-700') ?>">
             <?= (int) date('j', $ts) ?>
           </span>
           <?php if (count($dayItems) > 3): ?>

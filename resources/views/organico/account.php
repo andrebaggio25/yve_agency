@@ -48,7 +48,7 @@
     <?php endif; ?>
     <form method="POST" action="/organico/contas/<?= $account['id'] ?>/sync" class="mt-2">
       <?= csrf_field() ?>
-      <button type="submit" class="text-violet-400 hover:text-violet-300 transition-colors">Sincronizar</button>
+      <button type="submit" class="text-brand-400 hover:text-brand-300 transition-colors">Sincronizar</button>
     </form>
   </div>
 </div>

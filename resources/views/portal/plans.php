@@ -14,7 +14,7 @@ $statusColors = [
   'pending_approval' => 'text-yellow-300 bg-yellow-500/10',
   'approved'         => 'text-green-300 bg-green-500/10',
   'in_revision'      => 'text-blue-300 bg-blue-500/10',
-  'published'        => 'text-violet-300 bg-violet-500/10',
+  'published'        => 'text-brand-300 bg-brand-500/10',
 ];
 ?>
 

@@ -69,7 +69,7 @@ $statusLabels = [
   <?php if (\App\Support\Auth::can('invoices.create')): ?>
   <div class="flex justify-end">
     <a href="/faturas/nova?client_id=<?= $contract['client_id'] ?>&contract_id=<?= $contract['id'] ?>"
-       class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-500 transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Gerar Fatura
     </a>

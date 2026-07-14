@@ -14,7 +14,7 @@ function navItem(string $href, string $icon, string $label, string $current, str
     $active  = $href === '/' ? $current === '/' || $current === '/dashboard' : str_starts_with($current, $target);
     $baseCls = 'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ';
     $cls     = $active
-        ? $baseCls . 'bg-violet-500/15 text-violet-200 nav-active'
+        ? $baseCls . 'bg-brand-500/15 text-brand-200 nav-active'
         : $baseCls . 'text-gray-400 hover:text-white hover:bg-white/[0.06]';
 
     return <<<HTML
