@@ -1,4 +1,10 @@
-<?php view_layout('app'); view_start('content'); ?>
+<?php
+view_layout('app'); view_start('content');
+
+// A semana do plano é sempre seg–dom: o default já nasce na segunda da
+// semana atual, e o JS reencaixa qualquer data escolhida.
+$defaultWeekStart = \App\Services\ContentPlanService::mondayOf((string) old('week_start', date('Y-m-d')));
+?>
 
 <div class="max-w-2xl mx-auto" x-data="createPlan()">
 
@@ -28,7 +34,7 @@
         <label class="block text-sm font-medium text-gray-300 mb-2">
           Cliente <span class="text-rose-400">*</span>
         </label>
-        <select aria-label="Cliente" name="client_id" required
+        <select aria-label="Cliente" name="client_id" required x-ref="client" @change="syncTitle()"
                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
           <option value="">Selecione um cliente...</option>
           <?php foreach ($clientList as $c): ?>
@@ -40,29 +46,32 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-300 mb-2">
-          Título do Plano <span class="text-rose-400">*</span>
-        </label>
-        <input aria-label="Título" type="text" name="title" value="<?= e(old('title')) ?>" required
-               placeholder="Ex: Semana 01 — Janeiro 2025"
+        <label class="block text-sm font-medium text-gray-300 mb-2">Título do Plano</label>
+        <input aria-label="Título" type="text" name="title" x-model="title"
+               @input="titleTouched = $event.target.value.trim() !== ''; if (!titleTouched) syncTitle()"
+               placeholder="Gerado automaticamente: CLIENTE | dd/mm – dd/mm"
                class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
+        <p class="text-xs text-gray-400 mt-1.5">Deixe em branco para usar o nome padrão — cliente e período da semana.</p>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-2">
-            Início da Semana <span class="text-rose-400">*</span>
+            Semana (segunda) <span class="text-rose-400">*</span>
           </label>
-          <input aria-label="A partir de" type="date" name="week_start" value="<?= e(old('week_start', date('Y-m-d'))) ?>" required
-                 x-model="weekStart" @change="updateWeekEnd()"
+          <input aria-label="Semana (segunda-feira)" type="date" name="week_start" required
+                 x-model="weekStart" @change="snapWeek()"
                  class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-2">Fim da Semana</label>
-          <input type="date" name="week_end" x-model="weekEnd"
-                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
+          <label class="block text-sm font-medium text-gray-300 mb-2">Domingo</label>
+          <input aria-label="Domingo (derivado)" type="date" disabled :value="weekEnd"
+                 class="w-full rounded-xl bg-white/5 border border-white/10 text-gray-400 px-4 py-3 text-sm cursor-not-allowed">
         </div>
       </div>
+
+      <div class="rounded-xl border border-brand-500/20 bg-brand-500/5 px-4 py-2.5 text-xs text-brand-300"
+           x-text="'Planificação semanal: de segunda ' + fmt(weekStart) + ' a domingo ' + fmt(weekEnd) + '. Qualquer data escolhida encaixa na semana.'"></div>
 
       <div>
         <label class="block text-sm font-medium text-gray-300 mb-2">Notas Internas</label>
@@ -89,13 +98,36 @@
 <script>
 function createPlan() {
   return {
-    weekStart: '<?= date('Y-m-d') ?>',
-    weekEnd: '<?= date('Y-m-d', strtotime('+6 days')) ?>',
-    updateWeekEnd() {
-      if (!this.weekStart) return;
+    weekStart: '<?= e($defaultWeekStart) ?>',
+    title: <?= json_encode((string) old('title'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+    titleTouched: <?= old('title') ? 'true' : 'false' ?>,
+
+    init() { this.syncTitle(); },
+
+    get weekEnd() {
+      if (!this.weekStart) return '';
       const d = new Date(this.weekStart + 'T12:00:00');
       d.setDate(d.getDate() + 6);
-      this.weekEnd = d.toISOString().split('T')[0];
+      return d.toISOString().split('T')[0];
+    },
+
+    // Encaixa qualquer data na segunda-feira daquela semana (seg–dom sempre).
+    snapWeek() {
+      if (!this.weekStart) return;
+      const d = new Date(this.weekStart + 'T12:00:00');
+      d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+      this.weekStart = d.toISOString().split('T')[0];
+      this.syncTitle();
+    },
+
+    fmt(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : ''; },
+
+    // Preview do nome padrão — para de sobrescrever assim que o usuário digita.
+    syncTitle() {
+      if (this.titleTouched) return;
+      const sel  = this.$refs.client;
+      const name = sel && sel.value ? sel.selectedOptions[0].text.trim() : '';
+      this.title = name ? name.toUpperCase() + ' | ' + this.fmt(this.weekStart) + ' – ' + this.fmt(this.weekEnd) : '';
     }
   }
 }

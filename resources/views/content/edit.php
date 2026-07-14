@@ -41,18 +41,20 @@
                class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-4" x-data="editPlanWeek('<?= e($plan['week_start'] ?? '') ?>')">
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-2">
-            Início da Semana <span class="text-rose-400">*</span>
+            Semana (segunda) <span class="text-rose-400">*</span>
           </label>
-          <input aria-label="A partir de" type="date" name="week_start" value="<?= e($plan['week_start'] ?? '') ?>" required
+          <input aria-label="Semana (segunda-feira)" type="date" name="week_start" required
+                 x-model="weekStart" @change="snapWeek()"
                  class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
+          <p class="mt-1 text-xs text-gray-400">Ao salvar, a semana é ajustada para segunda–domingo.</p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-2">Fim da Semana</label>
-          <input type="date" name="week_end" value="<?= e($plan['week_end'] ?? '') ?>"
-                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
+          <label class="block text-sm font-medium text-gray-300 mb-2">Domingo</label>
+          <input aria-label="Domingo (derivado)" type="date" disabled :value="weekEnd"
+                 class="w-full rounded-xl bg-white/5 border border-white/10 text-gray-400 px-4 py-3 text-sm cursor-not-allowed">
         </div>
       </div>
 
@@ -76,5 +78,28 @@
     </div>
   </form>
 </div>
+
+<script>
+function editPlanWeek(initial) {
+  return {
+    weekStart: initial,
+
+    get weekEnd() {
+      if (!this.weekStart) return '';
+      const d = new Date(this.weekStart + 'T12:00:00');
+      d.setDate(d.getDate() + 6);
+      return d.toISOString().split('T')[0];
+    },
+
+    // Encaixa qualquer data na segunda-feira daquela semana (seg–dom sempre).
+    snapWeek() {
+      if (!this.weekStart) return;
+      const d = new Date(this.weekStart + 'T12:00:00');
+      d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+      this.weekStart = d.toISOString().split('T')[0];
+    }
+  }
+}
+</script>
 
 <?php view_end(); ?>
