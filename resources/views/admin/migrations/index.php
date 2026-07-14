@@ -47,9 +47,15 @@ $total      = count($migrations);
       </button>
     </form>
 
-    <form method="POST" action="/admin/migrations/rollback"
-          onsubmit="return confirm('Reverter a ÚLTIMA migration aplicada? Isso pode remover dados. Continuar?');">
+    <!-- Rollback: ação irreversível (pode apagar colunas/tabelas com dado de
+         cliente). O servidor exige a palavra digitada — o confirm() do navegador
+         sozinho é fácil demais de clicar sem ler (ADM-01). -->
+    <form method="POST" action="/admin/migrations/rollback" class="flex items-center gap-2"
+          onsubmit="return confirm('Reverter a ÚLTIMA migration aplicada? Isso pode APAGAR DADOS e não tem desfazer. Você tem backup?');">
       <?= csrf_field() ?>
+      <input type="text" name="confirmation" placeholder="Digite REVERTER"
+             autocomplete="off" spellcheck="false"
+             class="input-field w-40 text-sm py-2 uppercase placeholder:normal-case">
       <button type="submit" class="btn-secondary text-sm px-4 py-2.5 gap-2 text-rose-300 hover:text-rose-200">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 010 10h-2M3 10l4-4M3 10l4 4"/></svg>
         Reverter última

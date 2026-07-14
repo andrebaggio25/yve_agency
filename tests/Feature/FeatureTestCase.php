@@ -31,12 +31,15 @@ abstract class FeatureTestCase extends TestCase
 
     /** Tabelas limpas antes de cada teste (ordem irrelevante — usamos CASCADE). */
     private const TRUNCATE = [
-        'activity_logs', 'jobs', 'notifications',
+        'activity_logs', 'jobs', 'notification_jobs', 'notifications',
         'drive_files', 'drive_folders', 'google_drive_integrations',
         'payments', 'invoices', 'contracts',
         'content_plan_items', 'content_plans',
         'tasks', 'client_user_access', 'clients',
         'user_roles', 'users', 'agencies',
+        // platform_settings guarda o heartbeat do cron e o throttle de alerta
+        // (OBS-01) — sujeira entre testes faria um teste mentir para o outro.
+        'platform_settings',
     ];
 
     protected function setUp(): void
@@ -62,6 +65,7 @@ abstract class FeatureTestCase extends TestCase
         $this->router = new Router($container);
         $router       = $this->router;
         require dirname(__DIR__, 2) . '/routes/web.php';
+        require dirname(__DIR__, 2) . '/routes/api.php';
     }
 
     protected function tearDown(): void

@@ -146,6 +146,7 @@ class EmailService
                 'invoice_sent'           => 'Invoice ::invoice_number:: — ::invoice_title::',
                 'password_reset'         => 'Reset your password — ::app_name::',
                 'task_assigned'          => 'New task assigned to you — ::task_title::',
+                'health_alert'           => '[::app::] Alerta operacional — ação necessária',
             ],
             'es' => [
                 'plan_sent_for_approval' => 'Nuevo plan de contenido esperando tu aprobación — ::plan_title::',
@@ -154,6 +155,7 @@ class EmailService
                 'invoice_sent'           => 'Factura ::invoice_number:: — ::invoice_title::',
                 'password_reset'         => 'Restablece tu contraseña — ::app_name::',
                 'task_assigned'          => 'Nueva tarea asignada a ti — ::task_title::',
+                'health_alert'           => '[::app::] Alerta operacional — ação necessária',
             ],
             default => [
                 'plan_sent_for_approval' => 'Novo plano de conteúdo aguardando sua aprovação — ::plan_title::',
@@ -162,6 +164,7 @@ class EmailService
                 'invoice_sent'           => 'Fatura ::invoice_number:: — ::invoice_title::',
                 'password_reset'         => 'Redefinição de senha — ::app_name::',
                 'task_assigned'          => 'Nova tarefa atribuída a você — ::task_title::',
+                'health_alert'           => '[::app::] Alerta operacional — ação necessária',
             ],
         };
     }

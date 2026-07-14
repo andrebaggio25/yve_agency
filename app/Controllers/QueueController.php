@@ -10,6 +10,7 @@ use App\Core\Response;
 use App\Repositories\AutomationRepository;
 use App\Repositories\JobRepository;
 use App\Services\AutomationService;
+use App\Services\HealthService;
 use App\Services\NotificationService;
 use App\Services\AdsSyncService;
 use App\Services\OrganicSyncService;
@@ -29,6 +30,7 @@ class QueueController extends Controller
         private readonly AutomationService    $automations,
         private readonly DriveSyncService     $driveSync,
         private readonly JobRepository        $jobs,
+        private readonly HealthService        $health,
     ) {}
 
     public function run(Request $request): Response
@@ -125,6 +127,16 @@ class QueueController extends Controller
             if (!$job) break;
 
             if ($this->processJob($job)) $done++; else $failed++;
+        }
+
+        // OBS-01: heartbeat (o /health sabe se o cron parou) + alerta ao
+        // operador quando job morre ou sync congela. Nunca deixe a falha de
+        // um alerta derrubar o processamento da fila.
+        try {
+            $this->health->recordCronRun('work');
+            $this->health->checkAndAlert();
+        } catch (\Throwable $e) {
+            error_log('[queue] health/alerta falhou: ' . $e->getMessage());
         }
 
         return Response::json(['success' => true, 'done' => $done, 'failed' => $failed, 'timestamp' => date('c')]);

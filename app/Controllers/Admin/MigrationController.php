@@ -50,9 +50,35 @@ class MigrationController extends Controller
         return $this->redirect('/admin/migrations');
     }
 
+    /**
+     * Rollback — a única ação verdadeiramente destrutiva do painel: reverter
+     * uma migration pode **apagar colunas e tabelas com dados de clientes**, e
+     * não há backup automático.
+     *
+     * Guarda-corpo (ADM-01): antes só existia um `confirm()` no navegador —
+     * frontend, portanto burlável e fácil de clicar sem ler. Agora o servidor
+     * exige que o operador **digite** a palavra de confirmação. Não é
+     * burocracia: é o intervalo entre o impulso e o irreversível.
+     */
+    private const ROLLBACK_CONFIRMATION = 'REVERTER';
+
     public function rollback(Request $request): Response
     {
         Auth::requirePlatformAdmin();
+
+        $typed = trim((string) $request->post('confirmation', ''));
+
+        if (!hash_equals(self::ROLLBACK_CONFIRMATION, strtoupper($typed))) {
+            ActivityLogger::log('migrations_rollback_blocked', 'admin', Auth::id(), null, [
+                'reason' => 'confirmação ausente ou incorreta',
+            ]);
+
+            $this->withError(
+                'Rollback NÃO executado: digite ' . self::ROLLBACK_CONFIRMATION
+                . ' no campo de confirmação. Faça backup do banco antes — a operação pode apagar dados.'
+            );
+            return $this->redirect('/admin/migrations');
+        }
 
         $result = $this->migrations->rollback();
 

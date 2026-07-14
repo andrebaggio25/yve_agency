@@ -77,20 +77,38 @@ abstract class Repository
         return $this->query($sql, $params)->fetchAll();
     }
 
-    /** @param array<string,mixed> $data */
+    /**
+     * INSERT devolvendo o ID (INFRA-03).
+     *
+     * Usa `RETURNING id` no PostgreSQL. O `lastInsertId()` sem nome de sequência
+     * é frágil no PG — depende de a sequência ser inferida corretamente e pode
+     * devolver o ID errado (ou vazio) conforme o driver/pooler. `RETURNING` vem
+     * do próprio INSERT: é sempre o ID daquela linha.
+     *
+     * @param array<string,mixed> $data
+     */
     public function insert(array $data): int|string
     {
-        $cols        = array_keys($data);
+        $cols         = array_keys($data);
         $placeholders = array_map(fn($c) => ":{$c}", $cols);
 
+        $isPgsql = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'pgsql';
+
         $sql = sprintf(
-            'INSERT INTO %s (%s) VALUES (%s)',
+            'INSERT INTO %s (%s) VALUES (%s)%s',
             $this->table,
             implode(', ', $cols),
             implode(', ', $placeholders),
+            $isPgsql ? ' RETURNING id' : '',
         );
 
-        $this->query($sql, $this->prefixKeys($data));
+        $stmt = $this->query($sql, $this->prefixKeys($data));
+
+        if ($isPgsql) {
+            $id = $stmt->fetchColumn();
+            return $id === false ? 0 : (int) $id;
+        }
+
         return $this->pdo->lastInsertId();
     }
 
