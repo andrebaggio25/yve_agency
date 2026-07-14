@@ -508,6 +508,9 @@ $router->group([PortalMiddleware::class], function ($router) {
     $router->get('/portal/{portal_token}/drive/folders',               [PortalController::class, 'driveFolders']);
     $router->post('/portal/{portal_token}/drive/folders',              [PortalController::class, 'driveCreateFolder']);
     $router->post('/portal/{portal_token}/drive/upload',               [PortalController::class, 'driveUpload']);
+    // Upload direto browser→Drive (UP-01): sessão resumável + confirmação
+    $router->post('/portal/{portal_token}/drive/upload/session',       [PortalController::class, 'driveUploadSession']);
+    $router->post('/portal/{portal_token}/drive/upload/complete',      [PortalController::class, 'driveUploadComplete']);
     $router->post('/portal/{portal_token}/drive/file/{fileId}/delete', [PortalController::class, 'driveDeleteFile']);
     $router->post('/portal/{portal_token}/drive/file/restore',         [PortalController::class, 'driveRestoreFile']);
     $router->post('/portal/{portal_token}/drive/folder/{folderId}/delete', [PortalController::class, 'driveDeleteFolder']);

@@ -80,9 +80,10 @@ $jsI18n = [
     </label>
   </div>
 
-  <!-- Dica do que pode enviar -->
+  <!-- Dica do que pode enviar. O teto do servidor só vale no fallback via relay
+       (UP-01: o caminho normal envia direto pro Drive, sem limite prático). -->
   <p class="text-xs text-gray-500 mb-4">
-    <?= t('portal.files.accepted_hint') ?><?php if ($maxLabel !== ''): ?> · <?= t('portal.files.max_hint', ['max' => $maxLabel]) ?><?php endif; ?>
+    <?= t('portal.files.accepted_hint') ?>
   </p>
 
   <!-- Create folder inline -->
@@ -259,6 +260,8 @@ $jsI18n = [
 const _driveXhrs = {};
 let _driveUploadSeq = 0;
 const _DRIVE_MAX_CONCURRENT = 2;
+// Chunk do upload direto browser→Drive: o Google exige múltiplo de 256KB.
+const _DRIVE_CHUNK = 16 * 1024 * 1024;
 
 function driveManager(token, i18n, maxBytes) {
   return {
@@ -442,15 +445,12 @@ function driveManager(token, i18n, maxBytes) {
 
     enqueue(file) {
       const uid = ++_driveUploadSeq;
-      // Validação client-side: tipo e tamanho ANTES de enviar.
+      // Validação client-side: só o tipo. Tamanho não bloqueia mais aqui — o
+      // caminho direto browser→Drive não tem o teto do servidor; o limite
+      // (maxBytes) só vale se cairmos no fallback via relay PHP.
       const typeOk = !file.type || file.type.startsWith('image/') || file.type.startsWith('video/');
       if (!typeOk) {
         this.uploads.push({ uid, name: file.name, progress: 0, status: 'error', error: this.i18n.err_bad_type, eta: '' });
-        return;
-      }
-      if (this.maxBytes > 0 && file.size > this.maxBytes) {
-        const msg = this.i18n.err_too_large.replace(':max', this.i18n.max_label || this.humanSize(this.maxBytes));
-        this.uploads.push({ uid, name: file.name, progress: 0, status: 'error', error: msg, eta: '' });
         return;
       }
       this.uploads.push({ uid, name: file.name, progress: 0, status: 'queued', error: null, eta: '', startedAt: 0, file });
@@ -467,61 +467,220 @@ function driveManager(token, i18n, maxBytes) {
       }
     },
 
-    startUpload(entry) {
-      const uid = entry.uid;
-      const file = entry.file;
+    /**
+     * Orquestra um upload (UP-01): tenta o caminho DIRETO browser→Drive
+     * (sessão resumável, sem teto do servidor); se a sessão não puder ser
+     * criada, cai no relay PHP — que respeita maxBytes (limite do hosting).
+     */
+    async startUpload(entry) {
       entry.status = 'uploading';
       entry.startedAt = Date.now();
       this.activeCount++;
 
-      const form = new FormData();
-      form.append('folder_id', this.folderId ?? '');
-      form.append('file', file);
+      try {
+        const uploadUrl = await this.createUploadSession(entry.file);
+        if (uploadUrl) {
+          await this.uploadDirect(entry, uploadUrl);
+        } else if (this.maxBytes > 0 && entry.file.size > this.maxBytes) {
+          entry.status = 'error';
+          entry.error = this.i18n.err_too_large.replace(':max', this.i18n.max_label || this.humanSize(this.maxBytes));
+        } else {
+          await this.uploadRelay(entry);
+        }
+      } catch (e) {
+        if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn; }
+      } finally {
+        delete _driveXhrs[entry.uid];
+        this.activeCount = Math.max(0, this.activeCount - 1);
+        this.pumpQueue();
+      }
+    },
 
-      const xhr = new XMLHttpRequest();
-      _driveXhrs[uid] = xhr;
-      xhr.open('POST', `${this.base()}/drive/upload`, true);
-      xhr.setRequestHeader('Accept', 'application/json');
-      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    /** Pede ao servidor a session URI do upload resumável. Null = usar fallback relay. */
+    async createUploadSession(file) {
+      try {
+        const r = await fetch(`${this.base()}/drive/upload/session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({
+            name: file.name,
+            mime: file.type || 'application/octet-stream',
+            size: file.size,
+            folder_id: this.folderId,
+          }),
+        });
+        if (!r.ok) return null;
+        const d = await r.json();
+        return (d.success && d.upload_url) ? d.upload_url : null;
+      } catch { return null; }
+    },
 
-      xhr.upload.onprogress = (e) => {
-        if (!e.lengthComputable) return;
-        entry.progress = Math.round((e.loaded / e.total) * 100);
-        const elapsed = (Date.now() - entry.startedAt) / 1000;
-        const rate = e.loaded / Math.max(elapsed, 0.1);
-        const remain = (e.total - e.loaded) / Math.max(rate, 1);
-        entry.eta = this.formatEta(remain);
-      };
-      xhr.upload.onload = () => { if (entry.status === 'uploading') { entry.status = 'processing'; entry.eta = ''; } };
+    /** Envia os bytes em chunks direto pra session URI do Google (com retomada). */
+    async uploadDirect(entry, uploadUrl) {
+      const file = entry.file;
+      const total = file.size;
+      let offset = 0;
+      let attempts = 0;
 
-      const finish = () => { delete _driveXhrs[uid]; this.activeCount = Math.max(0, this.activeCount - 1); this.pumpQueue(); };
+      while (offset < total) {
+        if (entry.status === 'canceled') return;
 
-      xhr.onload = () => {
-        finish();
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const d = JSON.parse(xhr.responseText);
-            if (d.success) {
-              entry.status = 'done';
-              entry.progress = 100;
-              this.files.unshift(d.file);
-              setTimeout(() => { this.uploads = this.uploads.filter(u => u.uid !== uid); }, 1500);
-            } else {
-              entry.status = 'error';
-              entry.error = d.error || this.i18n.err_generic;
-            }
-          } catch { entry.status = 'error'; entry.error = this.i18n.err_invalid_response; }
-        } else if (xhr.status === 0) {
-          if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn; }
+        const end = Math.min(offset + _DRIVE_CHUNK, total);
+        const res = await this.putChunk(entry, uploadUrl, file.slice(offset, end), offset, end, total);
+
+        if (entry.status === 'canceled') return;
+
+        if (res.type === 'progress') { offset = res.next; attempts = 0; continue; }
+
+        if (res.type === 'done') {
+          entry.status = 'processing';
+          entry.eta = '';
+          await this.completeDirect(entry, res.file);
+          return;
+        }
+
+        // Chunk falhou: espera, pergunta ao Google quanto já foi gravado e retoma.
+        attempts++;
+        if (attempts > 3) { entry.status = 'error'; entry.error = this.i18n.err_conn; return; }
+        await new Promise(r => setTimeout(r, 1000 * attempts));
+        const committed = await this.probeOffset(uploadUrl, total);
+        if (committed !== null) offset = committed;
+      }
+    },
+
+    /** PUT de um chunk com Content-Range. 308 = continuar; 200/201 = terminou. */
+    putChunk(entry, url, blob, start, end, total) {
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        _driveXhrs[entry.uid] = xhr;
+        xhr.open('PUT', url, true);
+        xhr.setRequestHeader('Content-Range', `bytes ${start}-${end - 1}/${total}`);
+
+        xhr.upload.onprogress = (e) => {
+          if (!e.lengthComputable) return;
+          const sent = start + e.loaded;
+          entry.progress = Math.min(99, Math.round((sent / total) * 100));
+          const elapsed = (Date.now() - entry.startedAt) / 1000;
+          const rate = sent / Math.max(elapsed, 0.1);
+          entry.eta = this.formatEta((total - sent) / Math.max(rate, 1));
+        };
+
+        xhr.onload = () => {
+          if (xhr.status === 308) {
+            // Range: bytes=0-N → próximo byte é N+1. Header ilegível → assume o chunk inteiro.
+            const m = /-(\d+)$/.exec(xhr.getResponseHeader('Range') || '');
+            resolve({ type: 'progress', next: m ? (parseInt(m[1], 10) + 1) : end });
+          } else if (xhr.status === 200 || xhr.status === 201) {
+            let file = null;
+            try { file = JSON.parse(xhr.responseText); } catch {}
+            resolve(file && file.id ? { type: 'done', file } : { type: 'error' });
+          } else {
+            resolve({ type: 'error' });
+          }
+        };
+        xhr.onerror = () => resolve({ type: 'error' });
+        xhr.onabort = () => resolve({ type: 'error' });
+
+        xhr.send(blob);
+      });
+    },
+
+    /** Pergunta ao Google quantos bytes a sessão já tem (retomada pós-queda). */
+    probeOffset(url, total) {
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', url, true);
+        xhr.setRequestHeader('Content-Range', `bytes */${total}`);
+        xhr.onload = () => {
+          if (xhr.status === 308) {
+            const m = /-(\d+)$/.exec(xhr.getResponseHeader('Range') || '');
+            resolve(m ? (parseInt(m[1], 10) + 1) : 0);
+          } else {
+            resolve(null);
+          }
+        };
+        xhr.onerror = () => resolve(null);
+        xhr.send();
+      });
+    },
+
+    /** Registra no sistema o arquivo que o Drive confirmou (valida a pasta no servidor). */
+    async completeDirect(entry, driveFile) {
+      try {
+        const r = await fetch(`${this.base()}/drive/upload/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ drive_file_id: driveFile.id, folder_id: this.folderId }),
+        });
+        const d = await r.json();
+        if (r.ok && d.success) {
+          entry.status = 'done';
+          entry.progress = 100;
+          this.files.unshift(d.file);
+          setTimeout(() => { this.uploads = this.uploads.filter(u => u.uid !== entry.uid); }, 1500);
         } else {
           entry.status = 'error';
-          entry.error = this.i18n.err_generic;
-          try { const d = JSON.parse(xhr.responseText); if (d.error) entry.error = d.error; } catch {}
+          entry.error = d.error || this.i18n.err_generic;
         }
-      };
-      xhr.onerror = () => { finish(); if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn; } };
+      } catch {
+        entry.status = 'error';
+        entry.error = this.i18n.err_conn;
+      }
+    },
 
-      xhr.send(form);
+    /** Fallback: multipart via relay PHP (sujeito ao limite do servidor). */
+    uploadRelay(entry) {
+      return new Promise((resolve) => {
+        const uid = entry.uid;
+        const file = entry.file;
+
+        const form = new FormData();
+        form.append('folder_id', this.folderId ?? '');
+        form.append('file', file);
+
+        const xhr = new XMLHttpRequest();
+        _driveXhrs[uid] = xhr;
+        xhr.open('POST', `${this.base()}/drive/upload`, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+        xhr.upload.onprogress = (e) => {
+          if (!e.lengthComputable) return;
+          entry.progress = Math.round((e.loaded / e.total) * 100);
+          const elapsed = (Date.now() - entry.startedAt) / 1000;
+          const rate = e.loaded / Math.max(elapsed, 0.1);
+          const remain = (e.total - e.loaded) / Math.max(rate, 1);
+          entry.eta = this.formatEta(remain);
+        };
+        xhr.upload.onload = () => { if (entry.status === 'uploading') { entry.status = 'processing'; entry.eta = ''; } };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const d = JSON.parse(xhr.responseText);
+              if (d.success) {
+                entry.status = 'done';
+                entry.progress = 100;
+                this.files.unshift(d.file);
+                setTimeout(() => { this.uploads = this.uploads.filter(u => u.uid !== uid); }, 1500);
+              } else {
+                entry.status = 'error';
+                entry.error = d.error || this.i18n.err_generic;
+              }
+            } catch { entry.status = 'error'; entry.error = this.i18n.err_invalid_response; }
+          } else if (xhr.status === 0) {
+            if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn; }
+          } else {
+            entry.status = 'error';
+            entry.error = this.i18n.err_generic;
+            try { const d = JSON.parse(xhr.responseText); if (d.error) entry.error = d.error; } catch {}
+          }
+          resolve();
+        };
+        xhr.onerror = () => { if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn; } resolve(); };
+
+        xhr.send(form);
+      });
     },
 
     cancelUpload(entry) {

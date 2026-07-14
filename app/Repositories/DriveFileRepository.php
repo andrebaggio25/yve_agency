@@ -55,6 +55,15 @@ class DriveFileRepository extends Repository
         );
     }
 
+    /** Busca pelo ID do arquivo no Drive (dedupe do upload direto). */
+    public function findByDriveId(string $driveFileId, int $clientId): ?array
+    {
+        return $this->first(
+            "SELECT * FROM drive_files WHERE drive_file_id = :d AND client_id = :c LIMIT 1",
+            [':d' => $driveFileId, ':c' => $clientId]
+        );
+    }
+
     public function findForClient(int $id, int $clientId): ?array
     {
         return $this->first(

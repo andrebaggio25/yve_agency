@@ -310,20 +310,30 @@ class GoogleDriveApiService
     /**
      * Inicia uma sessão de upload resumável e devolve a session URI (Location).
      * O navegador faz o PUT dos bytes direto nessa URI.
+     *
+     * $origin: origem (scheme://host[:porta]) que fará os PUTs via CORS. O Google
+     * vincula a sessão a essa origem e passa a responder os preflights do
+     * navegador — é o que permite o upload direto browser→Drive sem passar os
+     * bytes pelo PHP (e, portanto, sem o teto de upload do hosting).
      */
-    public function initiateResumable(int $agencyId, string $parentDriveId, string $name, string $mime, int $size): string
+    public function initiateResumable(int $agencyId, string $parentDriveId, string $name, string $mime, int $size, ?string $origin = null): string
     {
         $token = $this->accessToken($agencyId);
+
+        $headers = [
+            'Authorization'           => 'Bearer ' . $token,
+            'Content-Type'            => 'application/json; charset=UTF-8',
+            'X-Upload-Content-Type'   => $mime ?: 'application/octet-stream',
+            'X-Upload-Content-Length' => (string) $size,
+        ];
+        if ($origin !== null && $origin !== '') {
+            $headers['Origin'] = $origin;
+        }
 
         $resp = (new Client(['timeout' => 30]))->post(
             'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true',
             [
-                'headers' => [
-                    'Authorization'           => 'Bearer ' . $token,
-                    'Content-Type'            => 'application/json; charset=UTF-8',
-                    'X-Upload-Content-Type'   => $mime ?: 'application/octet-stream',
-                    'X-Upload-Content-Length' => (string) $size,
-                ],
+                'headers' => $headers,
                 'body' => json_encode([
                     'name'    => $name,
                     'parents' => [$parentDriveId],
@@ -464,7 +474,7 @@ class GoogleDriveApiService
         return empty($data['trashed']);
     }
 
-    /** Metadados do arquivo após o upload (thumbnail, link de visualização). */
+    /** Metadados do arquivo após o upload (thumbnail, link de visualização, pastas-pai). */
     public function fileMeta(int $agencyId, string $fileId): array
     {
         $token = $this->accessToken($agencyId);
@@ -473,11 +483,42 @@ class GoogleDriveApiService
             "https://www.googleapis.com/drive/v3/files/{$fileId}",
             [
                 'headers' => ['Authorization' => 'Bearer ' . $token],
-                'query'   => ['fields' => 'id,name,mimeType,size,thumbnailLink,webViewLink'],
+                'query'   => ['fields' => 'id,name,mimeType,size,thumbnailLink,webViewLink,parents'],
             ]
         );
 
         return json_decode((string) $resp->getBody(), true) ?? [];
+    }
+
+    /**
+     * True se os metadados do Drive apontam $parentId como pasta-pai direta.
+     * Usado para confirmar que um upload direto (browser→Drive) realmente caiu
+     * na pasta do cliente antes de registrá-lo no banco.
+     */
+    public static function metaHasParent(array $meta, string $parentId): bool
+    {
+        $parents = $meta['parents'] ?? [];
+        return is_array($parents) && in_array($parentId, $parents, true);
+    }
+
+    /**
+     * Extrai a origem (scheme://host[:porta]) de uma URL — formato que o Google
+     * espera no header Origin da sessão resumável. Null se a URL for inválida.
+     */
+    public static function originFromUrl(?string $url): ?string
+    {
+        if ($url === null || trim($url) === '') {
+            return null;
+        }
+        $p = parse_url(trim($url));
+        if (empty($p['scheme']) || empty($p['host'])) {
+            return null;
+        }
+        $origin = $p['scheme'] . '://' . $p['host'];
+        if (!empty($p['port'])) {
+            $origin .= ':' . $p['port'];
+        }
+        return $origin;
     }
 
     // ── Internos ─────────────────────────────────────────────────────────────
