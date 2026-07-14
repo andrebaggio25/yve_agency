@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
+use App\Repositories\AgencyRepository;
 use App\Repositories\WhatsAppInstanceRepository;
 use App\Services\EvolutionApiService;
 use App\Support\Auth;
@@ -16,6 +17,7 @@ class WhatsAppController extends Controller
     public function __construct(
         private readonly WhatsAppInstanceRepository $instanceRepo,
         private readonly EvolutionApiService        $evolution,
+        private readonly AgencyRepository           $agencies,
     ) {}
 
     // ── Settings page ─────────────────────────────────────────────────────────
@@ -140,9 +142,6 @@ class WhatsAppController extends Controller
 
     private function fetchAgency(int $id): ?array
     {
-        $stmt = \App\Core\Database::connection()->prepare("SELECT * FROM agencies WHERE id = :id LIMIT 1");
-        $stmt->execute([':id' => $id]);
-        $row = $stmt->fetch();
-        return $row ?: null;
+        return $this->agencies->find($id);
     }
 }

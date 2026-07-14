@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repositories\AutomationRepository;
+use App\Repositories\JobRepository;
 use App\Services\AutomationService;
 use App\Services\NotificationService;
 use App\Services\AdsSyncService;
@@ -28,6 +28,7 @@ class QueueController extends Controller
         private readonly AutomationRepository $automationRepo,
         private readonly AutomationService    $automations,
         private readonly DriveSyncService     $driveSync,
+        private readonly JobRepository        $jobs,
     ) {}
 
     public function run(Request $request): Response
@@ -87,20 +88,14 @@ class QueueController extends Controller
     {
         if ($resp = $this->guard($request)) return $resp;
 
-        $pdo   = Database::connection();
-        $rules = $this->automationRepo->dueScheduledRules();
+        $rules  = $this->automationRepo->dueScheduledRules();
         $queued = 0;
 
         foreach ($rules as $rule) {
-            $payload = json_encode([
+            $this->jobs->enqueue((int) $rule['agency_id'], 'automations', [
                 'job'  => \App\Jobs\RunAutomationRuleJob::class,
                 'data' => ['rule_id' => (int) $rule['id']],
             ]);
-
-            $pdo->prepare("
-                INSERT INTO jobs (agency_id, queue, payload, available_at, status, created_at, updated_at)
-                VALUES (:a, 'automations', :payload, NOW(), 'pending', NOW(), NOW())
-            ")->execute([':a' => $rule['agency_id'], ':payload' => $payload]);
 
             $next = $this->automations->computeNext(
                 $rule['frequency'] ?? null,
@@ -122,15 +117,14 @@ class QueueController extends Controller
     {
         if ($resp = $this->guard($request)) return $resp;
 
-        $pdo   = Database::connection();
         $limit = min((int) $request->query('limit', '25'), 50);
         $done = 0; $failed = 0;
 
         for ($i = 0; $i < $limit; $i++) {
-            $job = $this->reserveJob($pdo);
+            $job = $this->jobs->reserveNext();
             if (!$job) break;
 
-            if ($this->processJob($pdo, $job)) $done++; else $failed++;
+            if ($this->processJob($job)) $done++; else $failed++;
         }
 
         return Response::json(['success' => true, 'done' => $done, 'failed' => $failed, 'timestamp' => date('c')]);
@@ -149,57 +143,29 @@ class QueueController extends Controller
         return null;
     }
 
-    private function reserveJob(\PDO $pdo): ?array
+    private function processJob(array $job): bool
     {
-        $pdo->beginTransaction();
-        $stmt = $pdo->prepare("
-            SELECT * FROM jobs
-            WHERE status = 'pending' AND available_at <= NOW() AND attempts < max_attempts
-            ORDER BY available_at ASC
-            LIMIT 1
-            FOR UPDATE SKIP LOCKED
-        ");
-        $stmt->execute();
-        $job = $stmt->fetch();
-
-        if (!$job) { $pdo->rollBack(); return null; }
-
-        $pdo->prepare("UPDATE jobs SET status = 'reserved', reserved_at = NOW(), attempts = attempts + 1 WHERE id = :id")
-            ->execute([':id' => $job['id']]);
-        $pdo->commit();
-
-        $job['attempts'] = (int) $job['attempts'] + 1;
-        return $job;
-    }
-
-    private function processJob(\PDO $pdo, array $job): bool
-    {
-        $payload = json_decode($job['payload'], true) ?? [];
+        $payload = json_decode((string) $job['payload'], true) ?? [];
         $class   = $payload['job'] ?? null;
 
         if (!$class || !class_exists($class)) {
-            $pdo->prepare("UPDATE jobs SET status = 'failed', last_error = :e, updated_at = NOW() WHERE id = :id")
-                ->execute([':e' => "Job class [{$class}] not found.", ':id' => $job['id']]);
+            $this->jobs->markFailed($job['id'], "Job class [{$class}] not found.");
             return false;
         }
 
         try {
             (new $class())->handle($payload['data'] ?? []);
-            $pdo->prepare("UPDATE jobs SET status = 'done', updated_at = NOW() WHERE id = :id")
-                ->execute([':id' => $job['id']]);
+            $this->jobs->markDone($job['id']);
             return true;
         } catch (\Throwable $e) {
-            $attempts = (int) $job['attempts'];
+            $attempts    = (int) $job['attempts'];
             $maxAttempts = (int) ($job['max_attempts'] ?? 3);
 
             if ($attempts >= $maxAttempts) {
-                $pdo->prepare("UPDATE jobs SET status = 'failed', last_error = :e, updated_at = NOW() WHERE id = :id")
-                    ->execute([':e' => $e->getMessage(), ':id' => $job['id']]);
+                $this->jobs->markFailed($job['id'], $e->getMessage());
             } else {
-                $backoff = (int) (pow(2, $attempts) * 10);
-                $available = date('Y-m-d H:i:s', time() + $backoff);
-                $pdo->prepare("UPDATE jobs SET status = 'pending', available_at = :av, last_error = :e, updated_at = NOW() WHERE id = :id")
-                    ->execute([':av' => $available, ':e' => $e->getMessage(), ':id' => $job['id']]);
+                // Backoff exponencial: 20s, 40s, 80s…
+                $this->jobs->retryLater($job['id'], (int) (pow(2, $attempts) * 10), $e->getMessage());
             }
             return false;
         }

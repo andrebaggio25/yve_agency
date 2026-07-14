@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Core\Controller;
-use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
+use App\Repositories\AgencyRepository;
 use App\Repositories\SubscriptionRepository;
 use App\Services\BillingService;
 
@@ -16,6 +16,7 @@ class SubscriptionPlanController extends Controller
     public function __construct(
         private readonly SubscriptionRepository $repo,
         private readonly BillingService         $billing,
+        private readonly AgencyRepository       $agencies,
     ) {}
 
     public function plans(Request $request): Response
@@ -103,11 +104,7 @@ class SubscriptionPlanController extends Controller
 
     private function findAgency(int $id): ?array
     {
-        $pdo  = \App\Core\Database::connection();
-        $stmt = $pdo->prepare("SELECT id, name FROM agencies WHERE id = :id LIMIT 1");
-        $stmt->execute([':id' => $id]);
-        $row = $stmt->fetch();
-        return $row ?: null;
+        return $this->agencies->findBasic($id);
     }
 
     private function planData(Request $request): array

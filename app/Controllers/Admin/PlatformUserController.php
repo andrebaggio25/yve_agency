@@ -5,24 +5,22 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Core\Controller;
-use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
+use App\Repositories\AgencyRepository;
+use App\Repositories\PlatformUserRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Support\Auth;
-use PDO;
 
 class PlatformUserController extends Controller
 {
-    private PDO $pdo;
-
     public function __construct(
-        private readonly UserRepository $userRepo,
-        private readonly AuthService    $authService,
-    ) {
-        $this->pdo = Database::connection();
-    }
+        private readonly UserRepository         $userRepo,
+        private readonly AuthService            $authService,
+        private readonly PlatformUserRepository $platformUsers,
+        private readonly AgencyRepository       $agencies,
+    ) {}
 
     // ------------------------------------------------------------------ index
 
@@ -33,34 +31,8 @@ class PlatformUserController extends Controller
         $search   = trim((string) $request->query('q', ''));
         $agencyId = (int) $request->query('agency_id', 0);
 
-        $where  = ["u.is_platform_admin = FALSE"];
-        $params = [];
-
-        if ($search !== '') {
-            $where[]      = "(u.name ILIKE :q OR u.email ILIKE :q)";
-            $params[':q'] = "%{$search}%";
-        }
-        if ($agencyId > 0) {
-            $where[]       = "u.agency_id = :aid";
-            $params[':aid'] = $agencyId;
-        }
-
-        $stmt = $this->pdo->prepare("
-            SELECT u.id, u.name, u.email, u.status, u.created_at,
-                   a.name AS agency_name, a.id AS agency_id,
-                   STRING_AGG(r.name, ', ' ORDER BY r.name) AS roles
-            FROM users u
-            LEFT JOIN agencies a    ON a.id = u.agency_id
-            LEFT JOIN user_roles ur ON ur.user_id = u.id
-            LEFT JOIN roles r       ON r.id = ur.role_id
-            WHERE " . implode(' AND ', $where) . "
-            GROUP BY u.id, a.name, a.id
-            ORDER BY a.name, u.name
-        ");
-        $stmt->execute($params);
-        $users = $stmt->fetchAll();
-
-        $agencies = $this->pdo->query("SELECT id, name FROM agencies ORDER BY name")->fetchAll();
+        $users    = $this->platformUsers->search($search, $agencyId);
+        $agencies = $this->agencies->allForSelect();
 
         return $this->view('admin.users.index', compact('users', 'agencies', 'search', 'agencyId'));
     }
@@ -71,8 +43,8 @@ class PlatformUserController extends Controller
     {
         Auth::requirePlatformAdmin();
 
-        $agencies = $this->pdo->query("SELECT id, name FROM agencies ORDER BY name")->fetchAll();
-        $roles    = $this->pdo->query("SELECT id, name, slug FROM roles WHERE agency_id IS NULL ORDER BY name")->fetchAll();
+        $agencies = $this->agencies->allForSelect();
+        $roles    = $this->platformUsers->globalRoles();
 
         return $this->view('admin.users.form', ['user' => null, 'userRoles' => [], 'agencies' => $agencies, 'roles' => $roles]);
     }
@@ -104,18 +76,12 @@ class PlatformUserController extends Controller
             return $this->redirect('/admin/usuarios/novo');
         }
 
-        $stmt = $this->pdo->prepare("
-            INSERT INTO users (agency_id, name, email, password_hash, status, created_at, updated_at)
-            VALUES (:agency_id, :name, :email, :hash, 'active', NOW(), NOW())
-            RETURNING id
-        ");
-        $stmt->execute([
-            ':agency_id' => $agencyId,
-            ':name'      => $name,
-            ':email'     => $email,
-            ':hash'      => password_hash($password, PASSWORD_ARGON2ID),
-        ]);
-        $userId = (int) $stmt->fetchColumn();
+        $userId = $this->platformUsers->create(
+            $agencyId,
+            $name,
+            $email,
+            password_hash($password, PASSWORD_ARGON2ID)
+        );
 
         if ($roleIds) {
             $this->userRepo->syncRoles($userId, $roleIds);
@@ -137,12 +103,9 @@ class PlatformUserController extends Controller
             return $this->redirect('/admin/usuarios');
         }
 
-        $agencies = $this->pdo->query("SELECT id, name FROM agencies ORDER BY name")->fetchAll();
-        $roles    = $this->pdo->query("SELECT id, name, slug FROM roles WHERE agency_id IS NULL ORDER BY name")->fetchAll();
-
-        $urStmt = $this->pdo->prepare("SELECT role_id FROM user_roles WHERE user_id = :id");
-        $urStmt->execute([':id' => $user['id']]);
-        $userRoles = array_column($urStmt->fetchAll(), 'role_id');
+        $agencies  = $this->agencies->allForSelect();
+        $roles     = $this->platformUsers->globalRoles();
+        $userRoles = $this->platformUsers->roleIdsOf((int) $user['id']);
 
         return $this->view('admin.users.form', compact('user', 'agencies', 'roles', 'userRoles'));
     }
@@ -172,19 +135,12 @@ class PlatformUserController extends Controller
             return $this->redirect("/admin/usuarios/{$id}/editar");
         }
 
-        // check email uniqueness (excluding self)
-        $taken = $this->pdo->prepare("SELECT id FROM users WHERE email = :email AND id != :id LIMIT 1");
-        $taken->execute([':email' => $email, ':id' => $id]);
-        if ($taken->fetchColumn()) {
+        if ($this->platformUsers->emailTaken($email, $id)) {
             $this->withError("E-mail \"{$email}\" já está em uso por outro usuário.");
             return $this->redirect("/admin/usuarios/{$id}/editar");
         }
 
-        $this->pdo->prepare("
-            UPDATE users SET name = :name, email = :email, agency_id = :agency_id, updated_at = NOW()
-            WHERE id = :id
-        ")->execute([':name' => $name, ':email' => $email, ':agency_id' => $agencyId, ':id' => $id]);
-
+        $this->platformUsers->updateProfile($id, $name, $email, $agencyId);
         $this->userRepo->syncRoles($id, $roleIds);
 
         $this->withSuccess('Usuário atualizado.');
@@ -252,8 +208,7 @@ class PlatformUserController extends Controller
         }
 
         $newStatus = $user['status'] === 'active' ? 'inactive' : 'active';
-        $this->pdo->prepare("UPDATE users SET status = :status, updated_at = NOW() WHERE id = :id")
-            ->execute([':status' => $newStatus, ':id' => $id]);
+        $this->platformUsers->setStatus($id, $newStatus);
 
         $label = $newStatus === 'active' ? 'ativado' : 'inativado';
         $this->withSuccess("Usuário {$user['name']} {$label}.");
@@ -264,15 +219,6 @@ class PlatformUserController extends Controller
 
     private function findUser(int $id): ?array
     {
-        $stmt = $this->pdo->prepare("
-            SELECT u.*, a.name AS agency_name
-            FROM users u
-            LEFT JOIN agencies a ON a.id = u.agency_id
-            WHERE u.id = :id AND u.is_platform_admin = FALSE
-            LIMIT 1
-        ");
-        $stmt->execute([':id' => $id]);
-        $row = $stmt->fetch();
-        return $row ?: null;
+        return $this->platformUsers->find($id);
     }
 }

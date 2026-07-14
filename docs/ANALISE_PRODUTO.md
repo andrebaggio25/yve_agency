@@ -191,7 +191,7 @@ Formato: **SWOT compacto** (Forças / Fraquezas / Oportunidades / Ameaças) + pl
 ### 2.18 Dashboard — 6.0
 
 - **S:** carrega rápido, mostra planos recentes + resumo financeiro condicionado a permissão.
-- **W:** **SQL direto no controller** (`DashboardController` monta PDO na mão — única violação da invariante nº 1 encontrada); métricas rasas (contadores); não é acionável (o que preciso fazer hoje?).
+- **W:** ~~SQL direto no controller~~ ✅ resolvido no ARCH-01 (2026-07-14). **Correção do diagnóstico:** não era só o Dashboard — havia SQL cru em **9 controllers** (Report, FinancialReport, Task, Settings, WhatsApp, Queue, Admin\Tenant, Admin\PlatformUser); todos extraídos para repositórios/service, com teste de arquitetura travando a regressão. Restam: métricas rasas (contadores); não é acionável (o que preciso fazer hoje?).
 - **O:** dashboard orientado a ação: aprovações paradas, faturas vencendo, tarefas atrasadas, sync quebrado — tudo já existe no banco.
 - **Ação:** ARCH-01 (mover SQL para repository) · PROD-08 (dashboard acionável "meu dia").
 
