@@ -16,11 +16,12 @@ $statusMeta = [
 ];
 $fallback = ['label' => '—', 'dot' => 'bg-gray-500', 'cls' => 'border-white/10 bg-white/[0.03]'];
 
-// Grade: começa no domingo da semana do dia 1 e vai até fechar a última semana.
+// Grade: começa na SEGUNDA da semana do dia 1 e fecha no domingo da última —
+// o mesmo eixo seg–dom das planificações semanais.
 $firstTs   = strtotime($firstDay);
 $lastTs    = strtotime($lastDay);
-$gridStart = strtotime('-' . (int) date('w', $firstTs) . ' days', $firstTs);
-$gridEnd   = strtotime('+' . (6 - (int) date('w', $lastTs)) . ' days', $lastTs);
+$gridStart = strtotime('-' . ((int) date('N', $firstTs) - 1) . ' days', $firstTs);
+$gridEnd   = strtotime('+' . (7 - (int) date('N', $lastTs)) . ' days', $lastTs);
 $today     = date('Y-m-d');
 $monthNum  = (int) date('n', $firstTs);
 
@@ -83,7 +84,7 @@ $qs = static function (array $extra) use ($filters, $month): string {
 <div class="overflow-x-auto">
   <div class="min-w-[46rem]">
     <div class="grid grid-cols-7 gap-px mb-px">
-      <?php foreach (['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as $dow): ?>
+      <?php foreach (['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'] as $dow): ?>
         <div class="px-2 py-2 text-center text-xs uppercase tracking-wide text-gray-400"><?= e($dow) ?></div>
       <?php endforeach; ?>
     </div>
