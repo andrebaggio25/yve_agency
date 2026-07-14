@@ -236,7 +236,9 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->post('/tasks/{id}/status',       [TaskController::class, 'updateStatus'], [CsrfMiddleware::class]);
     $router->delete('/tasks/{id}',            [TaskController::class, 'destroy'],      [CsrfMiddleware::class]);
     // Automações
-    $router->get('/automations',           [AutomationController::class, 'index']);
+    $router->get('/automations',            [AutomationController::class, 'index']);
+    $router->get('/automations/deliveries', [AutomationController::class, 'deliveries']);
+    $router->get('/automacoes/entregas',    [AutomationController::class, 'deliveries']);
     $router->get('/automations/clients',   [AutomationController::class, 'matrix']);
     $router->post('/automations/clients',  [AutomationController::class, 'saveMatrix'], [CsrfMiddleware::class]);
     $router->put('/automations/{key}',     [AutomationController::class, 'update'],     [CsrfMiddleware::class]);

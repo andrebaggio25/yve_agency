@@ -18,16 +18,22 @@ class JobRepository extends Repository
 {
     protected string $table = 'jobs';
 
-    /** Enfileira um job. $payload = ['job' => Classe::class, 'data' => [...]]. */
-    public function enqueue(int $agencyId, string $queue, array $payload): void
+    /**
+     * Enfileira um job. $payload = ['job' => Classe::class, 'data' => [...]].
+     *
+     * `$availableAt` (opcional) adia a execução — é o que permite **espaçar**
+     * envios de WhatsApp em vez de dispará-los em rajada (INT-02).
+     */
+    public function enqueue(int $agencyId, string $queue, array $payload, ?string $availableAt = null): void
     {
         $this->query(
             "INSERT INTO jobs (agency_id, queue, payload, available_at, status, created_at, updated_at)
-             VALUES (:a, :q, :p, NOW(), 'pending', NOW(), NOW())",
+             VALUES (:a, :q, :p, COALESCE(:av::timestamptz, NOW()), 'pending', NOW(), NOW())",
             [
-                ':a' => $agencyId,
-                ':q' => $queue,
-                ':p' => (string) json_encode($payload),
+                ':a'  => $agencyId,
+                ':q'  => $queue,
+                ':p'  => (string) json_encode($payload),
+                ':av' => $availableAt,
             ]
         );
     }

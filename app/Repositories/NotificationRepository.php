@@ -65,8 +65,14 @@ class NotificationRepository extends Repository
         );
     }
 
-    // ── Job queue ─────────────────────────────────────────────────────────────
+    // ── Registro de entrega (antes: fila própria — ver INFRA-01) ─────────────
+    //
+    // `notification_jobs` deixou de ser fila: a fila real agora é a `jobs`
+    // (SKIP LOCKED + backoff + alerta). Aqui fica o HISTÓRICO de entrega — o que
+    // foi enviado, pra quem, por qual canal, com que resultado. É a fonte da
+    // timeline do OBS-02 e do "a cliente diz que não recebeu" do suporte.
 
+    /** Registra a entrega a ser feita (status `pending`) e devolve o ID. */
     public function enqueue(array $data): int
     {
         $stmt = $this->pdo->prepare(
@@ -87,14 +93,107 @@ class NotificationRepository extends Repository
         return (int) $stmt->fetchColumn();
     }
 
-    public function pendingJobs(int $limit = 10): array
+    public function findDelivery(int $id): ?array
     {
-        $safeLimit = max(1, (int) $limit);
-        return $this->all(
-            "SELECT * FROM notification_jobs
-             WHERE status = 'pending' AND (next_try_at IS NULL OR next_try_at <= NOW())
-             ORDER BY created_at ASC LIMIT {$safeLimit}",
+        return $this->first("SELECT * FROM notification_jobs WHERE id = :id LIMIT 1", [':id' => $id]);
+    }
+
+    /**
+     * Entregas pendentes SEM job correspondente na fila `jobs`.
+     * Existe para o resgate do legado (INFRA-01): registros enfileirados pela
+     * fila antiga que ficariam órfãos após a migração.
+     */
+    public function orphanPendingDeliveries(int $limit = 100): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT nj.* FROM notification_jobs nj
+             WHERE nj.status = 'pending'
+               AND NOT EXISTS (
+                   SELECT 1 FROM jobs j
+                   WHERE j.queue = 'notifications'
+                     AND j.status IN ('pending', 'reserved')
+                     AND j.payload::jsonb -> 'data' ->> 'notification_id' = nj.id::text
+               )
+             ORDER BY nj.created_at ASC
+             LIMIT :lim"
         );
+        $stmt->bindValue(':lim', max(1, $limit), \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Histórico de entregas da agência (OBS-02): o que saiu, pra quem, quando.
+     * @param array{channel?:string,status?:string} $filters
+     */
+    public function deliveriesByAgency(int $agencyId, array $filters = [], int $limit = 100): array
+    {
+        $where  = ['agency_id = :aid'];
+        $params = [':aid' => $agencyId];
+
+        if (!empty($filters['channel'])) {
+            $where[]           = 'channel = :ch';
+            $params[':ch']     = $filters['channel'];
+        }
+        if (!empty($filters['status'])) {
+            $where[]           = 'status = :st';
+            $params[':st']     = $filters['status'];
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM notification_jobs WHERE ' . implode(' AND ', $where) .
+            ' ORDER BY created_at DESC LIMIT :lim'
+        );
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->bindValue(':lim', max(1, $limit), \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    /** Contadores por status (cabeçalho da timeline). */
+    public function deliveryStats(int $agencyId, int $days = 30): array
+    {
+        $row = $this->first(
+            "SELECT
+                COUNT(*)                                  AS total,
+                COUNT(*) FILTER (WHERE status = 'sent')    AS sent,
+                COUNT(*) FILTER (WHERE status = 'failed')  AS failed,
+                COUNT(*) FILTER (WHERE status = 'pending') AS pending
+             FROM notification_jobs
+             WHERE agency_id = :aid AND created_at >= NOW() - (:d || ' days')::interval",
+            [':aid' => $agencyId, ':d' => (string) $days]
+        ) ?? [];
+
+        return [
+            'total'   => (int) ($row['total']   ?? 0),
+            'sent'    => (int) ($row['sent']    ?? 0),
+            'failed'  => (int) ($row['failed']  ?? 0),
+            'pending' => (int) ($row['pending'] ?? 0),
+        ];
+    }
+
+    /**
+     * INT-02 — quando o último WhatsApp desta agência está agendado.
+     * Serve para espaçar os envios: WhatsApp bane número que dispara em rajada,
+     * e o número é o telefone da agência, não um recurso descartável.
+     */
+    public function lastScheduledWhatsAppAt(int $agencyId): ?string
+    {
+        $row = $this->first(
+            "SELECT MAX(j.available_at) AS last_at
+             FROM jobs j
+             WHERE j.agency_id = :aid
+               AND j.queue = 'notifications'
+               AND j.status = 'pending'
+               AND j.payload::jsonb -> 'data' ->> 'channel' = 'whatsapp'",
+            [':aid' => $agencyId]
+        );
+
+        return $row['last_at'] ?? null;
     }
 
     public function markJobSent(int $jobId): void

@@ -35,6 +35,16 @@ O `/queue/work` (que já roda pelo cron) verifica a cada execução e envia e-ma
 
 Throttle de **1 alerta por hora**, de propósito: alerta que repete a cada minuto vira ruído e é ignorado — o que dá no mesmo que não ter alerta.
 
+### Onde ver o que foi enviado
+
+`/automations/deliveries` (menu Automações → **Ver entregas**) mostra tudo que saiu por WhatsApp e e-mail nos últimos 30 dias: destinatário, canal, situação e **o motivo do erro** quando falhou. É a primeira tela a abrir quando alguém disser *"não recebi"*.
+
+### Fila (INFRA-01)
+
+Existe **uma** fila: a tabela `jobs`. Notificações, automações e ClickUp passam por ela — mesma reserva concorrente (`SKIP LOCKED`), mesmo backoff, mesmo alerta ao esgotar tentativas.
+`notification_jobs` **não é mais fila**: é o registro de entrega que alimenta a tela acima.
+Os dois endpoints de cron (`/queue/run` e `/queue/work`) processam a mesma fila — manter os dois configurados é inofensivo.
+
 ### O que checar quando o alerta chegar
 
 1. `GET /api/health?token=…` → qual check está `ok: false`.

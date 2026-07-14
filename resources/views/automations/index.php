@@ -5,7 +5,11 @@
     <h1 class="text-xl font-semibold text-white">Automações</h1>
     <p class="text-sm text-gray-400 mt-0.5">Ative as automações da agência e configure a agenda. Para ligar por cliente, use as preferências por cliente.</p>
   </div>
-  <a href="/automations/clients" class="btn-secondary text-sm px-4 py-2">Preferências por cliente →</a>
+  <div class="flex items-center gap-2 flex-wrap">
+    <!-- OBS-02: automação que ninguém vê acontecer parece que não existe -->
+    <a href="/automations/deliveries" class="btn-secondary text-sm px-4 py-2">Ver entregas →</a>
+    <a href="/automations/clients" class="btn-secondary text-sm px-4 py-2">Preferências por cliente →</a>
+  </div>
 </div>
 
 <div class="space-y-3">

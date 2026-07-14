@@ -14,9 +14,34 @@ use App\Support\Auth;
 class AutomationController extends Controller
 {
     public function __construct(
-        private readonly AutomationService $automations,
-        private readonly ClientRepository  $clients,
+        private readonly AutomationService      $automations,
+        private readonly ClientRepository       $clients,
+        private readonly \App\Repositories\NotificationRepository $deliveries,
     ) {}
+
+    /**
+     * OBS-02 — histórico de entregas: o que foi enviado, pra quem, por qual
+     * canal, com que resultado.
+     *
+     * Antes, responder "a cliente diz que não recebeu o lembrete" exigia
+     * consultar o banco na mão. E automação que ninguém vê acontecer parece que
+     * não existe — isto também é argumento de venda.
+     */
+    public function deliveries(Request $request): Response
+    {
+        Auth::requirePermission('automations.view');
+        $agencyId = (int) Auth::agencyId();
+
+        $filters = [
+            'channel' => (string) $request->query('channel', ''),
+            'status'  => (string) $request->query('status', ''),
+        ];
+
+        $deliveries = $this->deliveries->deliveriesByAgency($agencyId, array_filter($filters));
+        $stats      = $this->deliveries->deliveryStats($agencyId);
+
+        return $this->view('automations.deliveries', compact('deliveries', 'stats', 'filters'));
+    }
 
     public function index(Request $request): Response
     {

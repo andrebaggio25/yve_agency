@@ -4,16 +4,28 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Repositories\JobRepository;
 use App\Repositories\NotificationRepository;
 use App\Repositories\UserRepository;
 
 class NotificationService
 {
+    /**
+     * INT-02 — espaçamento mínimo entre WhatsApps da MESMA agência.
+     *
+     * O WhatsApp bane número que dispara em rajada, e o número é o telefone da
+     * agência — não um recurso descartável. Uma automação para 20 clientes hoje
+     * tentaria os 20 envios o mais rápido possível: exatamente o padrão punido.
+     * 8s ≈ 7 msg/min, ritmo humano e seguro.
+     */
+    private const WHATSAPP_MIN_INTERVAL_SECONDS = 8;
+
     public function __construct(
         private readonly NotificationRepository $repo,
         private readonly EvolutionApiService    $whatsapp,
         private readonly EmailService           $email,
         private readonly UserRepository         $users,
+        private readonly JobRepository          $jobs,
     ) {}
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -45,41 +57,95 @@ class NotificationService
     }
 
     /**
-     * Process pending jobs from the queue (called by cron endpoint).
-     * Returns count of jobs processed.
+     * Registra a entrega e a enfileira na fila única `jobs` (INFRA-01).
+     *
+     * Antes, o envio ia para uma fila própria (`notification_jobs`), sem
+     * `SKIP LOCKED`, sem backoff e — o pior — **fora do alerta do OBS-01**: a
+     * fila que mais importa ao cliente era a única não vigiada. Agora o envio é
+     * um job comum; `notification_jobs` continua como registro de entrega.
      */
-    public function processQueue(int $limit = 10): int
+    public function queueDelivery(array $data): int
     {
-        $jobs = $this->repo->pendingJobs($limit);
-        $processed = 0;
+        $agencyId = (int) $data['agency_id'];
+        $channel  = (string) $data['channel'];
 
-        foreach ($jobs as $job) {
-            $payload = json_decode($job['payload'], true) ?? [];
-            $result  = match ($job['channel']) {
-                'whatsapp' => $this->whatsapp->sendText(
-                    (int) $job['agency_id'],
-                    $job['recipient'],
-                    $this->renderWhatsAppMessage($job['template'], $payload, $job['locale'])
-                ),
-                'email' => $this->email->send(
-                    $job['recipient'],
-                    $payload['to_name'] ?? '',
-                    $job['template'],
-                    $payload,
-                    $job['locale']
-                ),
-                default => ['success' => false, 'error' => 'Unknown channel'],
-            };
+        $deliveryId = $this->repo->enqueue($data);
 
-            if ($result['success']) {
-                $this->repo->markJobSent((int) $job['id']);
-            } else {
-                $this->repo->markJobFailed((int) $job['id'], $result['error'] ?? 'Unknown error');
-            }
-            $processed++;
+        $this->jobs->enqueue(
+            $agencyId,
+            'notifications',
+            [
+                'job'  => \App\Jobs\SendNotificationJob::class,
+                'data' => ['notification_id' => $deliveryId, 'channel' => $channel],
+            ],
+            $channel === 'whatsapp' ? $this->nextWhatsAppSlot($agencyId) : null,
+        );
+
+        return $deliveryId;
+    }
+
+    /**
+     * INT-02 — próximo horário livre para um WhatsApp desta agência.
+     * Os envios se enfileiram espaçados em vez de sair todos de uma vez.
+     */
+    private function nextWhatsAppSlot(int $agencyId): ?string
+    {
+        $lastAt = $this->repo->lastScheduledWhatsAppAt($agencyId);
+        if ($lastAt === null) {
+            return null; // nada na fila: pode sair agora
         }
 
-        return $processed;
+        $next = strtotime($lastAt) + self::WHATSAPP_MIN_INTERVAL_SECONDS;
+
+        return $next <= time() ? null : date('Y-m-d H:i:s', $next);
+    }
+
+    /**
+     * Executa uma entrega (chamado pelo SendNotificationJob).
+     * @return array{success:bool,error?:string}
+     */
+    public function deliver(array $delivery): array
+    {
+        $payload = json_decode((string) $delivery['payload'], true) ?? [];
+
+        return match ($delivery['channel']) {
+            'whatsapp' => $this->whatsapp->sendText(
+                (int) $delivery['agency_id'],
+                $delivery['recipient'],
+                $this->renderWhatsAppMessage($delivery['template'], $payload, $delivery['locale'])
+            ),
+            'email' => $this->email->send(
+                $delivery['recipient'],
+                $payload['to_name'] ?? '',
+                $delivery['template'],
+                $payload,
+                $delivery['locale']
+            ),
+            default => ['success' => false, 'error' => 'Canal desconhecido: ' . $delivery['channel']],
+        };
+    }
+
+    /**
+     * Resgata entregas pendentes que ficaram sem job na fila (legado da fila
+     * antiga, ou job perdido). Chamado pelo cron — barato e idempotente.
+     */
+    public function rescueOrphanDeliveries(int $limit = 100): int
+    {
+        $rescued = 0;
+
+        foreach ($this->repo->orphanPendingDeliveries($limit) as $delivery) {
+            $this->jobs->enqueue(
+                (int) $delivery['agency_id'],
+                'notifications',
+                [
+                    'job'  => \App\Jobs\SendNotificationJob::class,
+                    'data' => ['notification_id' => (int) $delivery['id'], 'channel' => $delivery['channel']],
+                ],
+            );
+            $rescued++;
+        }
+
+        return $rescued;
     }
 
     // ── In-app ────────────────────────────────────────────────────────────────
@@ -131,7 +197,7 @@ class NotificationService
             $locale = $client['language'] ?? 'pt';
 
             if (!empty($client['whatsapp']) && ($client['notify_whatsapp'] ?? true)) {
-                $this->repo->enqueue([
+                $this->queueDelivery([
                     'agency_id' => $agencyId,
                     'channel'   => 'whatsapp',
                     'recipient' => $client['whatsapp'],
@@ -176,7 +242,7 @@ class NotificationService
 
         // WhatsApp to client (confirmation)
         if ($client && !empty($client['whatsapp']) && ($client['notify_whatsapp'] ?? true)) {
-            $this->repo->enqueue([
+            $this->queueDelivery([
                 'agency_id' => $agencyId,
                 'channel'   => 'whatsapp',
                 'recipient' => $client['whatsapp'],
@@ -367,7 +433,7 @@ class NotificationService
         if (!$client || empty($client['whatsapp']) || !($client['notify_whatsapp'] ?? true)) {
             return;
         }
-        $this->repo->enqueue([
+        $this->queueDelivery([
             'agency_id' => $agencyId,
             'channel'   => 'whatsapp',
             'recipient' => $client['whatsapp'],

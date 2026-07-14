@@ -33,14 +33,28 @@ class QueueController extends Controller
         private readonly HealthService        $health,
     ) {}
 
+    /**
+     * Compatibilidade: era o cron da fila de notificações (que tinha mecanismo
+     * próprio). Com a fila unificada (INFRA-01), notificação é um job comum —
+     * então este endpoint agora **processa a fila única**, igual ao /queue/work.
+     * Mantido para não quebrar o cron já configurado nos hostings.
+     *
+     * Também resgata entregas pendentes sem job (legado da fila antiga).
+     */
     public function run(Request $request): Response
     {
         if ($resp = $this->guard($request)) return $resp;
 
-        $limit     = min((int) $request->query('limit', '10'), 50);
-        $processed = $this->notifications->processQueue($limit);
+        $rescued   = $this->notifications->rescueOrphanDeliveries();
+        $processed = $this->drainQueue(min((int) $request->query('limit', '25'), 50));
 
-        return Response::json(['success' => true, 'processed' => $processed, 'timestamp' => date('c')]);
+        return Response::json([
+            'success'   => true,
+            'rescued'   => $rescued,
+            'done'      => $processed['done'],
+            'failed'    => $processed['failed'],
+            'timestamp' => date('c'),
+        ]);
     }
 
     public function syncAds(Request $request): Response
@@ -119,7 +133,22 @@ class QueueController extends Controller
     {
         if ($resp = $this->guard($request)) return $resp;
 
-        $limit = min((int) $request->query('limit', '25'), 50);
+        $r = $this->drainQueue(min((int) $request->query('limit', '25'), 50));
+
+        return Response::json([
+            'success'   => true,
+            'done'      => $r['done'],
+            'failed'    => $r['failed'],
+            'timestamp' => date('c'),
+        ]);
+    }
+
+    /**
+     * Processa um lote da fila e mantém o heartbeat/alerta (OBS-01).
+     * @return array{done:int,failed:int}
+     */
+    private function drainQueue(int $limit): array
+    {
         $done = 0; $failed = 0;
 
         for ($i = 0; $i < $limit; $i++) {
@@ -129,9 +158,8 @@ class QueueController extends Controller
             if ($this->processJob($job)) $done++; else $failed++;
         }
 
-        // OBS-01: heartbeat (o /health sabe se o cron parou) + alerta ao
-        // operador quando job morre ou sync congela. Nunca deixe a falha de
-        // um alerta derrubar o processamento da fila.
+        // Heartbeat (o /health sabe se o cron parou) + alerta quando job morre
+        // ou sync congela. Nunca deixe a falha de um alerta derrubar a fila.
         try {
             $this->health->recordCronRun('work');
             $this->health->checkAndAlert();
@@ -139,7 +167,7 @@ class QueueController extends Controller
             error_log('[queue] health/alerta falhou: ' . $e->getMessage());
         }
 
-        return Response::json(['success' => true, 'done' => $done, 'failed' => $failed, 'timestamp' => date('c')]);
+        return ['done' => $done, 'failed' => $failed];
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
