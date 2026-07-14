@@ -81,6 +81,45 @@ class ContentPlanRepository extends Repository
         );
     }
 
+    /**
+     * Itens do cliente no intervalo — só de planos que já chegaram a ele.
+     * Rascunho NUNCA aparece no portal: o cliente não pode ver (nem aprovar)
+     * o que a agência ainda está montando.
+     */
+    public function itemsBetweenForClient(int $clientId, int $agencyId, string $from, string $to): array
+    {
+        return $this->all(
+            "SELECT i.id, i.publish_date, i.publish_time, i.platform, i.content_type,
+                    i.title, i.status, i.content_plan_id,
+                    cp.title AS plan_title
+             FROM content_plan_items i
+             JOIN content_plans cp ON cp.id = i.content_plan_id
+             WHERE cp.client_id = :client_id AND cp.agency_id = :agency_id
+               AND cp.status != 'draft'
+               AND i.publish_date BETWEEN :from AND :to
+             ORDER BY i.publish_date, i.publish_time NULLS LAST, i.sort_order",
+            [':client_id' => $clientId, ':agency_id' => $agencyId, ':from' => $from, ':to' => $to]
+        );
+    }
+
+    /**
+     * Plano vizinho (semana anterior/seguinte) visível ao cliente — navegação
+     * ← → do portal. $direction vem de allowlist no controller.
+     */
+    public function findAdjacentForClient(int $clientId, string $weekStart, string $direction): ?array
+    {
+        $op    = $direction === 'prev' ? '<' : '>';
+        $order = $direction === 'prev' ? 'DESC' : 'ASC';
+
+        return $this->first(
+            "SELECT id, title, week_start, week_end
+             FROM content_plans
+             WHERE client_id = :client_id AND status != 'draft' AND week_start {$op} :ws
+             ORDER BY week_start {$order} LIMIT 1",
+            [':client_id' => $clientId, ':ws' => $weekStart]
+        );
+    }
+
     public function allByClient(int $clientId, int $agencyId): array
     {
         return $this->all(

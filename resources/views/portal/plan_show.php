@@ -18,6 +18,26 @@ $platformColors   = ['instagram' => '#E1306C', 'tiktok' => '#010101', 'youtube' 
 $videoTypes       = ['Reels / Vídeo', 'reels', 'Story'];
 $planStatus       = $plan['status'];
 $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision', 'in_revision'], true);
+
+// Faixa da semana (seg→dom): contagem de posts por dia; o chip rola até o
+// primeiro post daquele dia.
+$weekDays = [];
+if (!empty($plan['week_start']) && !empty($plan['week_end'])) {
+    $cursor = strtotime((string) $plan['week_start']);
+    $endTs  = strtotime((string) $plan['week_end']);
+    while ($cursor !== false && $endTs !== false && $cursor <= $endTs && count($weekDays) < 14) {
+        $weekDays[] = date('Y-m-d', $cursor);
+        $cursor     = strtotime('+1 day', $cursor);
+    }
+}
+$dayCount = [];
+$dayFirst = [];
+foreach ($items as $it) {
+    $d = $it['publish_date'] ?? null;
+    if (!$d) continue;
+    $dayCount[$d] = ($dayCount[$d] ?? 0) + 1;
+    $dayFirst[$d] ??= (int) $it['id'];
+}
 ?>
 
 <nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
@@ -42,6 +62,56 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
 
   <?php if ($plan['description'] ?? null): ?>
   <p class="text-sm text-gray-400 mb-4 leading-relaxed"><?= e($plan['description']) ?></p>
+  <?php endif; ?>
+
+  <?php if (!empty($weekDays)): ?>
+  <!-- A semana num relance: seg→dom com a contagem de posts por dia -->
+  <div class="mb-4">
+    <p class="text-xs text-gray-400 mb-2">
+      <?= t('portal.plan.week_of', ['from' => date('d/m', strtotime($weekDays[0])), 'to' => date('d/m', strtotime(end($weekDays)))]) ?>
+    </p>
+    <div class="grid grid-cols-7 gap-1.5">
+      <?php foreach ($weekDays as $day):
+        $n       = $dayCount[$day] ?? 0;
+        $isToday = $day === date('Y-m-d');
+        $anchor  = $n > 0 ? '#item-' . $dayFirst[$day] : null;
+        $dowKey  = 'portal.dow.' . (int) date('N', strtotime($day));
+      ?>
+      <?php if ($anchor): ?>
+      <a href="<?= $anchor ?>" class="rounded-xl border px-1 py-2 text-center transition-all hover:border-brand-500/40
+                <?= $isToday ? 'border-brand-500/40 bg-brand-500/[0.06]' : 'border-white/[0.08] bg-white/[0.03]' ?>">
+      <?php else: ?>
+      <div class="rounded-xl border border-dashed px-1 py-2 text-center opacity-50
+                  <?= $isToday ? 'border-brand-500/40' : 'border-white/[0.08]' ?>">
+      <?php endif; ?>
+        <span class="block text-[10px] uppercase tracking-wide <?= $isToday ? 'text-brand-300' : 'text-gray-400' ?>"><?= e(t($dowKey)) ?></span>
+        <span class="block text-xs font-semibold <?= $n > 0 ? 'text-white' : 'text-gray-500' ?>"><?= date('d/m', strtotime($day)) ?></span>
+        <span class="block text-[10px] mt-0.5 <?= $n > 0 ? 'text-brand-300' : 'text-gray-500' ?>">
+          <?= $n > 0 ? t($n === 1 ? 'portal.plan.day_posts' : 'portal.plan.day_posts_plural', ['n' => $n]) : '—' ?>
+        </span>
+      <?php if ($anchor): ?></a><?php else: ?></div><?php endif; ?>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <?php if (!empty($prevPlan) || !empty($nextPlan)): ?>
+  <!-- Navegação entre semanas -->
+  <div class="flex items-center justify-between gap-2 text-sm border-t border-white/[0.06] pt-3">
+    <?php if (!empty($prevPlan)): ?>
+    <a href="/portal/<?= $token ?>/planos/<?= (int) $prevPlan['id'] ?>" class="text-gray-400 hover:text-white transition-colors">
+      <?= t('portal.plan.prev_week') ?>
+    </a>
+    <?php else: ?><span></span><?php endif; ?>
+    <a href="/portal/<?= $token ?>/planos/calendario" class="text-xs text-brand-300 hover:text-brand-200 transition-colors">
+      <?= t('portal.calendar.view') ?>
+    </a>
+    <?php if (!empty($nextPlan)): ?>
+    <a href="/portal/<?= $token ?>/planos/<?= (int) $nextPlan['id'] ?>" class="text-gray-400 hover:text-white transition-colors">
+      <?= t('portal.plan.next_week') ?>
+    </a>
+    <?php else: ?><span></span><?php endif; ?>
+  </div>
   <?php endif; ?>
 
   <!-- Ações de aprovação do plano -->
@@ -94,7 +164,7 @@ $canFeedback      = in_array($planStatus, ['sent', 'pending_approval', 'revision
         $youtubeId = $ytm[1] ?? null;
     }
   ?>
-  <div class="card overflow-hidden"
+  <div class="card overflow-hidden" id="item-<?= (int) $item['id'] ?>"
        x-data="portalItem(<?= $idx ?>, '<?= $token ?>', <?= $plan['id'] ?>, <?= $item['id'] ?>, <?= htmlspecialchars(json_encode($feedbacks), ENT_QUOTES) ?>, '<?= htmlspecialchars($itemStatus, ENT_QUOTES) ?>', <?= $youtubeId ? "'" . e($youtubeId) . "'" : 'null' ?>)"
        x-init="initYt()">
 

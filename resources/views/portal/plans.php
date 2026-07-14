@@ -24,9 +24,12 @@ $statusColors = [
 ];
 ?>
 
-<div class="mb-6">
-  <h1 class="text-xl font-semibold text-white"><?= t('portal.plans.title') ?></h1>
-  <p class="text-sm text-gray-400 mt-0.5"><?= t(count($plans) === 1 ? 'portal.plans.count' : 'portal.plans.count_plural', ['n' => count($plans)]) ?></p>
+<div class="flex items-start justify-between gap-4 mb-6 flex-wrap">
+  <div>
+    <h1 class="text-xl font-semibold text-white"><?= t('portal.plans.title') ?></h1>
+    <p class="text-sm text-gray-400 mt-0.5"><?= t(count($plans) === 1 ? 'portal.plans.count' : 'portal.plans.count_plural', ['n' => count($plans)]) ?></p>
+  </div>
+  <a href="/portal/<?= $token ?>/planos/calendario" class="btn-secondary text-sm px-4 py-2"><?= t('portal.calendar.view') ?></a>
 </div>
 
 <?php if (empty($plans)): ?>

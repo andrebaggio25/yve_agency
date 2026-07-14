@@ -99,6 +99,43 @@ class PortalController extends Controller
         return $this->view('portal.plans', compact('client', 'token', 'plans'));
     }
 
+    /**
+     * Calendário mensal de consulta: o cliente vê o mês inteiro, clica no
+     * criativo e cai na planificação semanal dele. Somente leitura, e nunca
+     * mostra rascunho (o filtro está no repositório).
+     */
+    public function plansCalendar(Request $request): Response
+    {
+        $client = PortalAuth::client();
+        $token  = PortalAuth::token();
+
+        // Mês pedido (YYYY-MM); valor inválido cai no mês atual.
+        $monthParam = (string) $request->query('month', '');
+        $month      = preg_match('/^\d{4}-\d{2}$/', $monthParam) ? $monthParam : date('Y-m');
+
+        $first = $month . '-01';
+        $last  = date('Y-m-t', strtotime($first));
+
+        $items = $this->planRepo->itemsBetweenForClient((int) $client['id'], (int) $client['agency_id'], $first, $last);
+
+        $byDay = [];
+        foreach ($items as $item) {
+            $byDay[(string) $item['publish_date']][] = $item;
+        }
+
+        return $this->view('portal.plans_calendar', [
+            'client'    => $client,
+            'token'     => $token,
+            'month'     => $month,
+            'firstDay'  => $first,
+            'lastDay'   => $last,
+            'byDay'     => $byDay,
+            'total'     => count($items),
+            'prevMonth' => date('Y-m', strtotime($first . ' -1 month')),
+            'nextMonth' => date('Y-m', strtotime($first . ' +1 month')),
+        ]);
+    }
+
     public function planShow(Request $request): Response
     {
         $client = PortalAuth::client();
@@ -118,7 +155,14 @@ class PortalController extends Controller
         }
         unset($item);
 
-        return $this->view('portal.plan_show', compact('client', 'token', 'plan', 'items'));
+        // Navegação semana ← → entre planos visíveis ao cliente.
+        $prevPlan = $nextPlan = null;
+        if (!empty($plan['week_start'])) {
+            $prevPlan = $this->planRepo->findAdjacentForClient((int) $client['id'], (string) $plan['week_start'], 'prev');
+            $nextPlan = $this->planRepo->findAdjacentForClient((int) $client['id'], (string) $plan['week_start'], 'next');
+        }
+
+        return $this->view('portal.plan_show', compact('client', 'token', 'plan', 'items', 'prevPlan', 'nextPlan'));
     }
 
     public function planApprove(Request $request): Response

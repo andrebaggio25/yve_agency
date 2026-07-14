@@ -507,6 +507,9 @@ $router->post('/webhook/clickup/{token}', [ClickUpWebhookController::class, 'han
 $router->group([PortalMiddleware::class], function ($router) {
     $router->get('/portal/{portal_token}',                              [PortalController::class, 'index']);
     $router->get('/portal/{portal_token}/planos',                      [PortalController::class, 'plans']);
+    // ANTES de /planos/{planId}: o router casa na ordem — depois dele,
+    // "calendario" viraria um planId e daria 404.
+    $router->get('/portal/{portal_token}/planos/calendario',           [PortalController::class, 'plansCalendar']);
     $router->get('/portal/{portal_token}/planos/{planId}',             [PortalController::class, 'planShow']);
     $router->post('/portal/{portal_token}/planos/{planId}/aprovar',    [PortalController::class, 'planApprove'],  [CsrfMiddleware::class]);
     $router->post('/portal/{portal_token}/planos/{planId}/revisao',    [PortalController::class, 'planRevision'], [CsrfMiddleware::class]);
