@@ -81,6 +81,17 @@ class ContentPlanRepository extends Repository
         );
     }
 
+    /** Clientes que JÁ têm plano na semana — o complemento é o radar de pauta faltando. */
+    public function clientIdsWithPlanForWeek(int $agencyId, string $weekStart): array
+    {
+        $rows = $this->all(
+            'SELECT DISTINCT client_id FROM content_plans WHERE agency_id = :agency_id AND week_start = :week_start',
+            [':agency_id' => $agencyId, ':week_start' => $weekStart]
+        );
+
+        return array_map('intval', array_column($rows, 'client_id'));
+    }
+
     /** Já existe plano do cliente para a semana? (guarda da auto-criação) */
     public function existsForClientWeek(int $clientId, string $weekStart): bool
     {

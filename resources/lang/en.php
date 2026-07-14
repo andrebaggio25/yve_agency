@@ -256,6 +256,10 @@ return [
     'portal.plans.items'               => ':n item',
     'portal.plans.items_plural'        => ':n items',
 
+    // Your week (dashboard)
+    'portal.home.your_week'            => 'Your week',
+    'portal.home.week_empty'           => 'No posts scheduled for this week.',
+
     // Monthly calendar (read-only)
     'portal.calendar.title'            => 'Month calendar',
     'portal.calendar.view'             => 'View calendar',

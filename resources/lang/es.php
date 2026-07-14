@@ -256,6 +256,10 @@ return [
     'portal.plans.items'               => ':n elemento',
     'portal.plans.items_plural'        => ':n elementos',
 
+    // Tu semana (dashboard)
+    'portal.home.your_week'            => 'Tu semana',
+    'portal.home.week_empty'           => 'Ninguna publicación planificada para esta semana.',
+
     // Calendario mensual (consulta)
     'portal.calendar.title'            => 'Calendario del mes',
     'portal.calendar.view'             => 'Ver calendario',

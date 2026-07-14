@@ -64,6 +64,38 @@
     </form>
   </div>
 
+  <!-- ── Radar: clientes sem plano na próxima semana ──────────────────────── -->
+  <?php if (!empty($radarPending)):
+    $radarFrom = date('d/m', strtotime($nextMonday));
+    $radarTo   = date('d/m', strtotime($nextMonday . ' +6 days'));
+    $canCreate = \App\Support\Auth::can('content.create');
+  ?>
+  <div class="mb-6 rounded-2xl border border-amber-500/20 bg-amber-500/[0.05] p-4" data-radar>
+    <div class="flex items-center gap-2 mb-2">
+      <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      <p class="text-sm font-semibold text-amber-300">
+        <?= count($radarPending) ?> cliente<?= count($radarPending) !== 1 ? 's' : '' ?> sem plano na próxima semana (<?= $radarFrom ?>–<?= $radarTo ?>)
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <?php foreach ($radarPending as $c): ?>
+        <?php if ($canCreate): ?>
+        <a href="/conteudo/criar?client_id=<?= (int) $c['id'] ?>"
+           class="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-gray-300 hover:text-white hover:border-amber-500/40 transition-all"
+           title="Criar plano da próxima semana para <?= e($c['name']) ?>">
+          <?= e($c['name']) ?>
+          <span class="text-amber-400">+ plano</span>
+        </a>
+        <?php else: ?>
+        <span class="inline-flex rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-gray-300"><?= e($c['name']) ?></span>
+        <?php endif; ?>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <?php endif; ?>
+
   <!-- ── Plans grid ────────────────────────────────────────────────────────── -->
   <?php if (empty($plans)): ?>
   <div class="flex flex-col items-center justify-center py-24 text-center">
@@ -132,7 +164,29 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-white/[0.04]">
-            <?php foreach ($plans as $plan):
+            <?php
+            // Agrupamento por semana: a lista vem em week_start DESC, então os
+            // grupos saem na ordem futuras → próxima → atual → anteriores.
+            $currentMonday = \App\Services\ContentPlanService::mondayOf(date('Y-m-d'));
+            $groupOf = static function (?string $ws) use ($currentMonday, $nextMonday): string {
+                if (!$ws) return 'Sem semana definida';
+                $label = date('d/m', strtotime($ws)) . ' – ' . date('d/m', strtotime($ws . ' +6 days'));
+                if ($ws === $currentMonday) return "Semana atual ({$label})";
+                if ($ws === $nextMonday) return "Próxima semana ({$label})";
+                return $ws > $nextMonday ? 'Semanas futuras' : 'Semanas anteriores';
+            };
+            $lastGroup = null;
+            foreach ($plans as $plan):
+              $group = $groupOf($plan['week_start'] ?? null);
+              if ($group !== $lastGroup):
+                $lastGroup = $group;
+            ?>
+            <tr>
+              <td colspan="6" class="px-4 pt-4 pb-1.5 text-xs font-semibold uppercase tracking-wide <?= str_starts_with($group, 'Semana atual') || str_starts_with($group, 'Próxima') ? 'text-brand-300' : 'text-gray-400' ?>">
+                <?= e($group) ?>
+              </td>
+            </tr>
+            <?php endif;
               $sc          = $statusColors[$plan['status']] ?? $statusColors['draft'];
               $statusLabel = \App\Services\ContentPlanService::statusLabel($plan['status']);
               $total       = (int) $plan['total_items'];

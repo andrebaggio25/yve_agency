@@ -37,8 +37,9 @@ $defaultWeekStart = \App\Services\ContentPlanService::mondayOf((string) old('wee
         <select aria-label="Cliente" name="client_id" required x-ref="client" @change="syncTitle(); checkTemplate()"
                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
           <option value="">Selecione um cliente...</option>
+          <?php $selectedClient = old('client_id', ($preselect ?? 0) ?: ''); ?>
           <?php foreach ($clientList as $c): ?>
-            <option value="<?= e($c['id']) ?>" <?= old('client_id') == $c['id'] ? 'selected' : '' ?>>
+            <option value="<?= e($c['id']) ?>" <?= $selectedClient == $c['id'] ? 'selected' : '' ?>>
               <?= e($c['name']) ?>
             </option>
           <?php endforeach; ?>

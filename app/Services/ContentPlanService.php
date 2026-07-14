@@ -81,6 +81,12 @@ class ContentPlanService
         return $this->repo->findByIdFull($id, $agencyId);
     }
 
+    /** Clientes que já têm plano na semana (radar de pauta na listagem). */
+    public function clientIdsWithPlanForWeek(int $agencyId, string $weekStart): array
+    {
+        return $this->repo->clientIdsWithPlanForWeek($agencyId, $weekStart);
+    }
+
     public function getWithItems(int $id, int $agencyId): ?array
     {
         $plan = $this->repo->findByIdFull($id, $agencyId);

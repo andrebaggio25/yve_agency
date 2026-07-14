@@ -82,9 +82,15 @@ class PortalController extends Controller
             'invoices_paid'  => count(array_filter($invoices, fn($i) => $i['status'] === 'paid')),
         ];
 
+        // "Sua semana": os posts da semana corrente (seg–dom), nunca de rascunho.
+        $weekMonday = ContentPlanService::mondayOf(date('Y-m-d'));
+        $weekSunday = ContentPlanService::sundayOf($weekMonday);
+        $weekItems  = $this->planRepo->itemsBetweenForClient($clientId, $agencyId, $weekMonday, $weekSunday);
+
         return $this->view('portal.index', compact(
             'client', 'token', 'plans', 'invoices', 'stats',
-            'adsSummary', 'organicSummary', 'since', 'until'
+            'adsSummary', 'organicSummary', 'since', 'until',
+            'weekMonday', 'weekSunday', 'weekItems'
         ));
     }
 

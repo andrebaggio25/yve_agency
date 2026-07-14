@@ -72,6 +72,61 @@ $statusColors = [
   </div>
 </div>
 
+<!-- Sua semana: os posts planejados de segunda a domingo -->
+<?php
+$weekDays = [];
+$cursor = strtotime($weekMonday);
+for ($i = 0; $i < 7; $i++) {
+    $weekDays[] = date('Y-m-d', $cursor);
+    $cursor = strtotime('+1 day', $cursor);
+}
+$itemsByDay = [];
+foreach ($weekItems as $wi) {
+    $itemsByDay[$wi['publish_date']][] = $wi;
+}
+?>
+<div class="mb-6">
+  <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+    <h2 class="text-sm font-semibold text-gray-300">
+      <?= t('portal.home.your_week') ?>
+      <span class="font-normal text-gray-400">· <?= t('portal.plan.week_of', ['from' => date('d/m', strtotime($weekMonday)), 'to' => date('d/m', strtotime($weekSunday))]) ?></span>
+    </h2>
+    <a href="/portal/<?= $token ?>/planos/calendario" class="text-xs text-brand-300 hover:text-brand-200 transition-colors">
+      <?= t('portal.calendar.view') ?> →
+    </a>
+  </div>
+
+  <?php if (empty($weekItems)): ?>
+  <div class="card-solid p-4 text-center text-sm text-gray-400"><?= t('portal.home.week_empty') ?></div>
+  <?php else: ?>
+  <div class="overflow-x-auto pb-1">
+    <div class="grid grid-cols-7 gap-1.5 min-w-[42rem]">
+      <?php foreach ($weekDays as $day):
+        $dayItems = $itemsByDay[$day] ?? [];
+        $isToday  = $day === date('Y-m-d');
+      ?>
+      <div class="rounded-xl border p-2 min-h-[5.5rem] <?= $isToday ? 'border-brand-500/40 bg-brand-500/[0.05]' : 'border-white/[0.07] bg-white/[0.02]' ?>">
+        <p class="text-[10px] uppercase tracking-wide mb-1.5 <?= $isToday ? 'text-brand-300' : 'text-gray-400' ?>">
+          <?= e(t('portal.dow.' . (int) date('N', strtotime($day)))) ?> <?= date('d/m', strtotime($day)) ?>
+        </p>
+        <?php if (empty($dayItems)): ?>
+        <p class="text-[11px] text-gray-500">—</p>
+        <?php else: foreach ($dayItems as $wi): ?>
+        <a href="/portal/<?= $token ?>/planos/<?= (int) $wi['content_plan_id'] ?>#item-<?= (int) $wi['id'] ?>"
+           class="block mb-1 rounded-lg border border-white/[0.07] bg-white/[0.04] px-1.5 py-1 hover:border-brand-500/40 transition-all">
+          <span class="block text-[11px] text-gray-200 truncate"><?= e($wi['title'] ?: ($wi['content_type'] ?: 'Post')) ?></span>
+          <?php if (!empty($wi['publish_time'])): ?>
+          <span class="block text-[10px] text-gray-400"><?= substr($wi['publish_time'], 0, 5) ?></span>
+          <?php endif; ?>
+        </a>
+        <?php endforeach; endif; ?>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <?php endif; ?>
+</div>
+
 <!-- Ação urgente: planos pendentes -->
 <?php $pending = array_filter($plans, fn($p) => in_array($p['status'], ['sent', 'pending_approval'], true)); ?>
 <?php if (!empty($pending)): ?>

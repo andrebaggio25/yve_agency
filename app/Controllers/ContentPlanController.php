@@ -34,7 +34,17 @@ class ContentPlanController extends Controller
         $plans      = $this->service->list((int) $agencyId, $filters);
         $clientList = $this->accessibleClients((int) $agencyId);
 
-        return $this->view('content.index', compact('plans', 'clientList', 'filters'));
+        // Radar: clientes ativos sem plano na PRÓXIMA semana — o lembrete que
+        // evita segunda-feira sem pauta. (A auto-criação cobre quem tem a
+        // automação ligada; aqui aparece o que sobrou.)
+        $nextMonday  = ContentPlanService::mondayOf(date('Y-m-d', strtotime('+7 days')));
+        $withPlan    = $this->service->clientIdsWithPlanForWeek((int) $agencyId, $nextMonday);
+        $radarPending = array_values(array_filter(
+            $clientList,
+            fn($c) => !in_array((int) $c['id'], $withPlan, true)
+        ));
+
+        return $this->view('content.index', compact('plans', 'clientList', 'filters', 'radarPending', 'nextMonday'));
     }
 
     /**
@@ -120,8 +130,10 @@ class ContentPlanController extends Controller
 
         $agencyId   = (int) Auth::agencyId();
         $clientList = $this->accessibleClients($agencyId);
+        // Pré-seleção vinda do radar ("criar plano para o cliente X").
+        $preselect  = (int) $request->query('client_id', 0);
 
-        return $this->view('content.create', compact('clientList'));
+        return $this->view('content.create', compact('clientList', 'preselect'));
     }
 
     public function store(Request $request): Response
