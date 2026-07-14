@@ -19,7 +19,37 @@
 $agency = \App\Support\PortalAuth::agency();
 $agencyLogoUrl = $agency['logo_url'] ?? null;
 $clientLogoUrl = $client['logo_url'] ?? null;
+
+/**
+ * PROD-06 — white-label. O portal é a tela que a AGÊNCIA mostra para o cliente
+ * dela; a cor certa é a da agência, não a nossa. O FE-01 preparou o terreno:
+ * o acento é a variável CSS `--accent`, então basta reemiti-la aqui.
+ *
+ * A cor vem validada do banco (`#rrggbb`), mas é convertida em componentes
+ * numéricos ANTES de entrar no CSS — nada de string do banco indo direto para
+ * dentro de uma folha de estilo.
+ */
+$brandRgb = null;
+$hex = (string) ($agency['brand_color'] ?? '');
+if (preg_match('/^#([0-9a-f]{6})$/i', $hex, $m)) {
+    [$r, $g, $b] = sscanf($m[1], '%2x%2x%2x');
+    $brandRgb = sprintf('%d %d %d', $r, $g, $b);
+
+    // Tom de hover ~15% mais escuro (mesma leitura visual do tema padrão).
+    $dark = static fn (int $c): int => (int) max(0, round($c * 0.85));
+    $brandHover = sprintf('%d %d %d', $dark($r), $dark($g), $dark($b));
+}
 ?>
+
+<?php if ($brandRgb !== null): ?>
+<style>
+  :root {
+    --accent: <?= $brandRgb ?>;
+    --accent-hover: <?= $brandHover ?>;
+    --accent-soft: <?= $brandRgb ?>;
+  }
+</style>
+<?php endif; ?>
 
   <!-- Top nav -->
   <header class="flex-shrink-0 flex items-center justify-between px-4 sm:px-8 py-3"
@@ -33,7 +63,7 @@ $clientLogoUrl = $client['logo_url'] ?? null;
            class="h-9 w-auto max-w-[120px] object-contain rounded-lg flex-shrink-0">
       <?php else: ?>
       <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
-           style="background:#7c3aed;">
+           style="background:rgb(var(--accent));">
         <?= mb_strtoupper(mb_substr($client['name'] ?? 'C', 0, 1)) ?>
       </div>
       <?php endif; ?>
@@ -66,7 +96,7 @@ $clientLogoUrl = $client['logo_url'] ?? null;
           ? ($cpPath === $href)
           : str_starts_with($cpPath, $href);
         $cls = $isActive
-          ? 'px-3 py-2 rounded-lg text-violet-300 bg-violet-500/10 font-medium text-sm'
+          ? 'px-3 py-2 rounded-lg text-accent bg-accent-soft font-medium text-sm'
           : 'px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors text-sm';
       ?>
       <a href="<?= $href ?>" class="<?= $cls ?>"><?= $nav['label'] ?></a>
@@ -110,7 +140,7 @@ $clientLogoUrl = $client['logo_url'] ?? null;
       $isActive = ($href === "/portal/{$token}")
         ? ($cpPath === $href)
         : str_starts_with($cpPath, $href);
-      $cls = $isActive ? 'text-violet-400' : 'text-gray-600';
+      $cls = $isActive ? 'text-accent' : 'text-gray-600';
     ?>
     <a href="<?= $href ?>" class="flex-1 flex flex-col items-center py-3 gap-1 <?= $cls ?> transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

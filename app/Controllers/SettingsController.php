@@ -8,6 +8,7 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repositories\AgencyRepository;
+use App\Services\ImageUploadService;
 use App\Services\NotificationService;
 use App\Support\Auth;
 
@@ -16,6 +17,7 @@ class SettingsController extends Controller
     public function __construct(
         private readonly NotificationService $notifications,
         private readonly AgencyRepository    $agencies,
+        private readonly ImageUploadService  $images,
     ) {}
 
     // ── Agency settings ───────────────────────────────────────────────────────
@@ -40,6 +42,32 @@ class SettingsController extends Controller
             return $this->redirect('/configuracoes');
         }
 
+        $agency  = $this->agencies->find($agencyId);
+        $logoUrl = $agency['logo_url'] ?? null;
+
+        // Logotipo: arquivo enviado > remoção pedida > mantém o atual.
+        $upload = $request->file('logo_file');
+        if ($upload && (int) ($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            try {
+                $newUrl = $this->images->storeLogo($upload, 'agencia-' . $agencyId);
+                $this->images->deleteLogo($logoUrl);   // não deixa lixo acumulando
+                $logoUrl = $newUrl;
+            } catch (\RuntimeException $e) {
+                $this->withError($e->getMessage());
+                return $this->redirect('/configuracoes');
+            }
+        } elseif ($request->post('remove_logo')) {
+            $this->images->deleteLogo($logoUrl);
+            $logoUrl = null;
+        }
+
+        // PROD-06: cor da marca — validada, porque vai direto para o CSS do portal.
+        $brandColor = trim((string) $request->post('brand_color', ''));
+        if ($brandColor !== '' && !preg_match('/^#[0-9a-f]{6}$/i', $brandColor)) {
+            $this->withError('Cor da marca inválida.');
+            return $this->redirect('/configuracoes');
+        }
+
         $this->agencies->updateProfile($agencyId, [
             'name'            => $name,
             'legal_name'      => trim((string) $request->post('legal_name', '')) ?: null,
@@ -49,7 +77,8 @@ class SettingsController extends Controller
             'website'         => trim((string) $request->post('website', '')) ?: null,
             'timezone'        => trim((string) $request->post('timezone', 'America/Sao_Paulo')),
             'language'        => trim((string) $request->post('language', 'pt')),
-            'logo_url'        => trim((string) $request->post('logo_url', '')) ?: null,
+            'logo_url'        => $logoUrl,
+            'brand_color'     => $brandColor ?: null,
         ]);
 
         // Aplica o idioma imediatamente na sessão (antes derivava do user, que não tem a coluna)

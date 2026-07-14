@@ -144,6 +144,7 @@ class AgencyRepository extends Repository
                 timezone        = :timezone,
                 language        = :language,
                 logo_url        = :logo_url,
+                brand_color     = :brand_color,
                 updated_at      = NOW()
              WHERE id = :id",
             [
@@ -156,6 +157,7 @@ class AgencyRepository extends Repository
                 ':timezone'   => $data['timezone'] ?? 'America/Sao_Paulo',
                 ':language'   => $data['language'] ?? 'pt',
                 ':logo_url'   => $data['logo_url'] ?? null,
+                ':brand_color'=> $data['brand_color'] ?? null,
                 ':id'         => $id,
             ]
         );

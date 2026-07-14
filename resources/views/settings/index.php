@@ -10,7 +10,7 @@
 
   <!-- Formulário -->
   <div class="lg:col-span-2">
-    <form method="POST" action="/configuracoes" class="space-y-6">
+    <form method="POST" action="/configuracoes" class="space-y-6" enctype="multipart/form-data">
       <?= csrf_field() ?>
 
       <!-- Dados da agência -->
@@ -47,11 +47,51 @@
             <input type="url" name="website" value="<?= e($agency['website'] ?? '') ?>"
                    placeholder="https://www.agencia.com.br" class="input-field w-full">
           </div>
+          <!-- Upload de arquivo em vez de URL: pedir uma URL obrigava a pessoa a
+               hospedar a imagem em outro lugar antes de usar o sistema — e um
+               host externo que sai do ar faz o logo sumir do portal da cliente. -->
           <div class="sm:col-span-2">
-            <label class="label-field">URL do logotipo</label>
-            <input type="url" name="logo_url" value="<?= e($agency['logo_url'] ?? '') ?>"
-                   placeholder="https://cdn.agencia.com/logo.png" class="input-field w-full">
-            <p class="text-xs text-gray-500 mt-1">URL pública de uma imagem PNG/SVG do logo.</p>
+            <label class="label-field" for="logo_file">Logotipo</label>
+
+            <div class="flex items-center gap-4">
+              <?php if (!empty($agency['logo_url'])): ?>
+                <span class="h-14 w-14 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  <img src="<?= e($agency['logo_url']) ?>" alt="Logo atual" class="max-h-12 max-w-12 object-contain">
+                </span>
+              <?php endif; ?>
+
+              <div class="min-w-0 flex-1">
+                <input type="file" id="logo_file" name="logo_file" accept="image/png,image/jpeg,image/webp,image/gif"
+                       class="block w-full text-sm text-gray-400
+                              file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
+                              file:text-sm file:font-medium file:bg-violet-600 file:text-white
+                              hover:file:bg-violet-500 file:cursor-pointer cursor-pointer">
+                <p class="text-xs text-gray-500 mt-1.5">PNG, JPG, WEBP ou GIF · até 2 MB. Aparece no portal do cliente.</p>
+              </div>
+            </div>
+
+            <?php if (!empty($agency['logo_url'])): ?>
+              <label class="mt-2 inline-flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
+                <input type="checkbox" name="remove_logo" value="1" class="rounded border-white/20 bg-white/5">
+                Remover o logotipo atual
+              </label>
+            <?php endif; ?>
+          </div>
+
+          <!-- PROD-06: white-label — a cor da agência, não a nossa -->
+          <div class="sm:col-span-2">
+            <label class="label-field" for="brand_color">Cor da marca</label>
+            <div class="flex items-center gap-3">
+              <input type="color" id="brand_color" name="brand_color"
+                     value="<?= e($agency['brand_color'] ?? '#7c3aed') ?>"
+                     class="h-10 w-14 rounded-lg bg-white/5 border border-white/10 cursor-pointer p-1">
+              <div class="min-w-0">
+                <p class="text-xs text-gray-500">
+                  Usada nos botões e destaques do <strong class="text-gray-400">portal do cliente</strong>.
+                  Deixe no padrão se preferir o tema do sistema.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -108,13 +148,6 @@
 
   <!-- Sidebar: links rápidos -->
   <div class="space-y-4">
-
-    <?php if (!empty($agency['logo_url'])): ?>
-    <div class="card p-5 flex items-center gap-4">
-      <img src="<?= e($agency['logo_url']) ?>" alt="Logo" class="h-12 w-auto object-contain rounded">
-      <p class="text-sm text-gray-400">Logo atual</p>
-    </div>
-    <?php endif; ?>
 
     <!-- WhatsApp -->
     <div class="card p-5">

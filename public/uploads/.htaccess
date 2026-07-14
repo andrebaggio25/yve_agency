@@ -1,0 +1,32 @@
+# Defesa em profundidade: nada aqui pode ser executado.
+#
+# O ImageUploadService já valida o MIME pelo conteúdo e gera ele mesmo o nome
+# do arquivo (com extensão da allowlist), então um .php não deveria chegar aqui.
+# Mas esta pasta recebe upload de usuário e é servida pelo domínio público —
+# se qualquer validação falhar um dia, isto impede que o arquivo vire código.
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    <FilesMatch "\.(php|phtml|php3|php4|php5|php7|phps|pl|py|cgi|sh|asp|aspx)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# Apache 2.2
+<IfModule !mod_authz_core.c>
+    <FilesMatch "\.(php|phtml|php3|php4|php5|php7|phps|pl|py|cgi|sh|asp|aspx)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+php_flag engine off
+
+# Servir como arquivo, nunca interpretar (evita sniffing).
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set Content-Disposition "inline"
+</IfModule>
+
+Options -ExecCGI -Indexes
+AddHandler default-handler .php .phtml .php3 .php4 .php5 .php7 .phps

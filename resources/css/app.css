@@ -173,4 +173,13 @@
   .glow {
     box-shadow: 0 0 80px -20px rgb(var(--accent-soft) / 0.3);
   }
+
+  /* Utilitários do acento (PROD-06 — white-label).
+     Tailwind não resolve cor a partir de var CSS em runtime, então quem precisa
+     seguir a cor da AGÊNCIA (e não a do sistema) usa estas classes em vez de
+     `violet-*` hardcoded. É o que faz o portal ficar com a cara da agência. */
+  .bg-accent      { background-color: rgb(var(--accent)); }
+  .bg-accent-soft { background-color: rgb(var(--accent-soft) / 0.12); }
+  .text-accent    { color: rgb(var(--accent-soft)); }
+  .border-accent  { border-color: rgb(var(--accent-soft) / 0.35); }
 }

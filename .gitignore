@@ -10,6 +10,11 @@
 
 # public/css/app.css e public/js/vendor/* SÃO versionados de propósito:
 # o hosting compartilhado não roda `npm run build` no deploy (FE-01).
+
+# Logos enviados pelas agências: conteúdo de usuário, não código.
+/public/uploads/logos/*
+!/public/uploads/logos/.gitkeep
+!/public/uploads/.htaccess
 /storage/logs/*.log
 /storage/cache/*
 /storage/uploads/*
