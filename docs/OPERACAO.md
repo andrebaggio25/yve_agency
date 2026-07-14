@@ -75,16 +75,54 @@ O Postgres do Supabase tem **backup automático diário** com retenção conform
 
 ---
 
-## 3. Deploy
+## 3. Deploy (SSH — procedimento padrão)
 
-O hosting compartilhado **não roda `npm run build`**. Por isso `public/css/app.css` e `public/js/vendor/*` são **versionados**.
+O servidor é Hostinger compartilhada com **SSH habilitado**. O projeto inteiro vive dentro da pasta pública (o `.htaccess` da raiz redireciona tudo para `public/`).
 
-**Checklist:**
-1. `npm run build` local se mexeu em CSS/JS → commite `public/`.
-2. Suba o código (Git ou FTP) — **incluindo `public/css/` e `public/js/`**. Sem eles, o site vem sem estilo.
-3. Migrations pendentes → `/admin/migrations` → "Rodar pendentes".
-4. Hard refresh (Ctrl+Shift+R) para validar — o CSS/JS tem cache longo (o `?v=` do `asset()` cuida disso, mas o HTML pode estar em cache).
-5. `GET /api/health?token=…` → `status: ok`.
+### Antes de subir (na sua máquina)
+
+1. Mexeu em CSS/JS? **`npm run build`** e commite `public/css/app.css` + `public/js/`.
+   O servidor **não roda `npm`** — por isso os assets buildados são versionados.
+2. `composer test` + `composer analyse` verdes.
+3. `git push`.
+
+### No servidor
+
+```bash
+ssh -p 65002 uXXXXXXXX@IP          # dados em hPanel → Avançado → Acesso SSH
+cd ~/domains/agency.yvebeauty.com/public_html
+
+git pull origin main
+
+# --no-dev é OBRIGATÓRIO: sem ele você instala PHPStan/PHPUnit/CS-Fixer
+# (~40 MB de ferramenta de desenvolvimento) num servidor de produção.
+composer install --no-dev --optimize-autoloader
+
+php vendor/bin/phinx migrate        # ou pelo painel: /admin/migrations
+```
+
+> **PHP:** o projeto exige **8.3+**. O `php` padrão do SSH pode ser mais antigo que o do site.
+> Confira com `php -v`; se preciso, use o binário completo (`ls /usr/bin/php*`).
+
+> **`.env`:** está no `.gitignore` — o `git pull` não o toca. Um `head -3 .env` depois do pull dá paz de espírito.
+
+### Conferir que subiu de pé
+
+```bash
+curl -s "https://agency.yvebeauty.com/api/health?token=SEU_QUEUE_SECRET"
+```
+Espera-se `"status": "ok"` (ou `degraded`, se o cron ainda não rodou desde o deploy).
+
+Depois, no navegador: **hard refresh** (Ctrl+Shift+R) — CSS e JS têm cache longo.
+
+### Quando o deploy exige atenção extra
+
+| Mudou | Faça |
+|-------|------|
+| `composer.lock` (dependência nova) | `composer install --no-dev` — **sempre**; foi o que quase mordeu com o dompdf |
+| `database/migrations/` | rodar a migration (e **snapshot do banco antes**, se ela altera schema) |
+| `resources/css/` ou `tailwind.config.js` | `npm run build` **local** e commitar `public/css/app.css` |
+| `.env.example` | conferir se falta variável nova no `.env` de produção |
 
 ---
 
