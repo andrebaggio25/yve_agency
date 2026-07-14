@@ -500,20 +500,21 @@ $router->group([PortalMiddleware::class], function ($router) {
     $router->get('/portal/{portal_token}/planos/{planId}',             [PortalController::class, 'planShow']);
     $router->post('/portal/{portal_token}/planos/{planId}/aprovar',    [PortalController::class, 'planApprove'],  [CsrfMiddleware::class]);
     $router->post('/portal/{portal_token}/planos/{planId}/revisao',    [PortalController::class, 'planRevision'], [CsrfMiddleware::class]);
-    $router->post('/portal/{portal_token}/planos/{planId}/items/{itemId}/feedback', [PortalController::class, 'itemFeedback']);
+    $router->post('/portal/{portal_token}/planos/{planId}/items/{itemId}/feedback', [PortalController::class, 'itemFeedback'], [CsrfMiddleware::class]);
     $router->get('/portal/{portal_token}/faturas',                     [PortalController::class, 'invoices']);
     $router->get('/portal/{portal_token}/contratos',                   [PortalController::class, 'contracts']);
 
-    // Envio de conteúdos (Drive) — JSON, sem CSRF (igual itemFeedback; ver SEC-08)
+    // Envio de conteúdos (Drive). Toda mutação valida CSRF via X-CSRF-Token
+    // (SEC-08) — o token da URL sozinho não protegia contra POST cross-site.
     $router->get('/portal/{portal_token}/arquivos',                    [PortalDriveController::class, 'driveFiles']);
     $router->get('/portal/{portal_token}/drive/folders',               [PortalDriveController::class, 'driveFolders']);
-    $router->post('/portal/{portal_token}/drive/folders',              [PortalDriveController::class, 'driveCreateFolder']);
-    $router->post('/portal/{portal_token}/drive/upload',               [PortalDriveController::class, 'driveUpload']);
+    $router->post('/portal/{portal_token}/drive/folders',              [PortalDriveController::class, 'driveCreateFolder'],   [CsrfMiddleware::class]);
+    $router->post('/portal/{portal_token}/drive/upload',               [PortalDriveController::class, 'driveUpload'],         [CsrfMiddleware::class]);
     // Upload direto browser→Drive (UP-01): sessão resumável + confirmação
-    $router->post('/portal/{portal_token}/drive/upload/session',       [PortalDriveController::class, 'driveUploadSession']);
-    $router->post('/portal/{portal_token}/drive/upload/complete',      [PortalDriveController::class, 'driveUploadComplete']);
-    $router->post('/portal/{portal_token}/drive/file/{fileId}/delete', [PortalDriveController::class, 'driveDeleteFile']);
-    $router->post('/portal/{portal_token}/drive/file/restore',         [PortalDriveController::class, 'driveRestoreFile']);
-    $router->post('/portal/{portal_token}/drive/folder/{folderId}/delete', [PortalDriveController::class, 'driveDeleteFolder']);
+    $router->post('/portal/{portal_token}/drive/upload/session',       [PortalDriveController::class, 'driveUploadSession'],  [CsrfMiddleware::class]);
+    $router->post('/portal/{portal_token}/drive/upload/complete',      [PortalDriveController::class, 'driveUploadComplete'], [CsrfMiddleware::class]);
+    $router->post('/portal/{portal_token}/drive/file/{fileId}/delete', [PortalDriveController::class, 'driveDeleteFile'],     [CsrfMiddleware::class]);
+    $router->post('/portal/{portal_token}/drive/file/restore',         [PortalDriveController::class, 'driveRestoreFile'],    [CsrfMiddleware::class]);
+    $router->post('/portal/{portal_token}/drive/folder/{folderId}/delete', [PortalDriveController::class, 'driveDeleteFolder'], [CsrfMiddleware::class]);
     $router->get('/portal/{portal_token}/drive/file/{fileId}/raw',     [PortalDriveController::class, 'driveFileRaw']);
 });

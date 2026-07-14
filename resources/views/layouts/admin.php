@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= asset('/css/app.css') ?>">
+    <script src="<?= asset('/js/api.js') ?>"></script>
     <script defer src="<?= asset('/js/vendor/alpine.min.js') ?>"></script>
     <?= view_slot('head') ?>
 </head>

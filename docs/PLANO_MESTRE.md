@@ -26,14 +26,16 @@
 - **Ação:** mover para módulos em `public/js/` (ex.: `content-editor.js`, `drive-manager.js`); dados do PHP entram por `data-*`/`json_encode` com flags `JSON_HEX_*`; view fica < 400 linhas.
 - **Pronto quando:** as três views só têm markup + include do módulo; nenhuma regressão nos fluxos (validar com `visual-validation`).
 
-### FE-03 · Wrapper padrão de fetch (estados + erros) — `M` 🟠
-- **Ação:** `public/js/api.js` único: injeta `X-CSRF-Token`, checa `response.ok`, timeout, e devolve erro tipado; padrão de UI para loading/vazio/erro/sucesso documentado na skill `yve-frontend`. Migrar os `fetch` existentes.
-- **Pronto quando:** nenhum `fetch()` cru nas views; erro de rede mostra feedback visível (não `catch {}` silencioso).
+### FE-03 · Wrapper padrão de fetch (estados + erros) — `M` 🟠 · ✅ PARCIAL (2026-07-14)
+> **Feito:** `public/js/api.js` — injeta `X-CSRF-Token`, valida `response.ok`, timeout (30s padrão), converte erro do servidor em `ApiError` com mensagem legível (e `isNetwork` para distinguir queda de rede de erro de regra), trata resposta não-JSON (HTML de erro 500 não vira mais crash de parse) e 419 (“sessão expirou, atualize a página”). Carregado nos 3 layouts.
+> **Migrado:** todo o portal (`portal/files.php` e `portal/plan_show.php`) — que era onde os `catch {}` vazios mais doíam: a galeria ficava em branco sem dizer nada. Agora erro de carregamento mostra mensagem + botão “Tentar de novo”.
+> **Falta:** as views do painel (`content/show.php`, `tasks/*`, `clients/files.php`, `settings/whatsapp.php`, …). Elas funcionam hoje; migram junto do **FE-02**, que já vai mexer nesse JS — migrar agora sem cobertura visual seria risco sem ganho.
 
-### SEC-08 · CSRF nos endpoints de mutação do portal — `M` 🟠
-- **Problema:** `itemFeedback` e `/portal/{token}/drive/*` mutam estado só com o token da URL (follow-up do SEC-06).
-- **Ação:** double-submit cookie no portal (cookie + header `X-Portal-CSRF` verificados com `hash_equals`); aproveitar e mover mutações de "GET-like POST" para o wrapper FE-03.
-- **Pronto quando:** POST cross-site forjado contra o portal falha; fluxos de aprovação e upload seguem funcionando.
+### SEC-08 · CSRF nos endpoints de mutação do portal — `M` 🟠 · ✅ FEITO (2026-07-14)
+> **Risco fechado:** `itemFeedback` e os 6 endpoints de Drive do portal mutavam estado só com o capability-token da URL. Como esse token é compartilhado por e-mail/WhatsApp e viaja na URL, qualquer página hostil podia forjar um POST e **aprovar um plano ou apagar os arquivos do cliente** em nome dele.
+> **Solução (mais simples que o planejado):** o double-submit cookie era desnecessário — o portal **já tem sessão PHP anônima** (é dela que o `planApprove` tira o CSRF hoje). Bastou aplicar o `CsrfMiddleware` existente às 8 rotas, expor a `<meta name="csrf-token">` no layout do portal e deixar o `api.js` (FE-03) enviar o header. Menos código novo, mecanismo já testado.
+> **Cuidado embutido:** os PUTs da sessão resumável vão para o **Google** (cross-origin) e **não** levam o header — vazar o CSRF para terceiros seria um bug de segurança. Coberto na simulação do fluxo.
+> Travado por `MutationRoutesHaveCsrfTest`, que varre TODAS as rotas: qualquer rota nova de mutação sem CSRF quebra a suíte (webhooks e crons isentos, pois autenticam por HMAC/segredo próprio). Achado de brinde: **nenhuma outra rota do app estava sem CSRF**.
 
 ### ARCH-01 · Tirar SQL dos controllers — `M` 🟡 · ✅ FEITO (2026-07-14)
 > **Correção do diagnóstico:** a análise dizia "única violação (Dashboard)" — **errado**. O grep encontrou SQL cru em **9 controllers**: Dashboard, Report, FinancialReport, Task, Settings, WhatsApp, Queue, Admin\Tenant e Admin\PlatformUser (este último com `PDO` como propriedade).
@@ -92,7 +94,7 @@
 | Sprint | Foco | Itens |
 |--------|------|-------|
 | **1** ✅ | Dor nº 1 + base do frontend | ~~UP-01 · ARCH-01 · ARCH-03~~ **concluído 2026-07-14** |
-| **2** | Frontend vira produto | ~~FE-01~~ ✅ · ~~SEC-10 (parcial)~~ ✅ · **FE-03** · **SEC-08** |
+| **2** ✅ | Frontend vira produto | ~~FE-01 · SEC-10 (parcial) · FE-03 (parcial) · SEC-08~~ **concluído 2026-07-14** |
 | **3** | JS sustentável + rede de segurança | FE-02 (destrava o nonce da CSP) · QA-03 |
 | **4** | Confiabilidade | INT-01/02/03 · OBS-01/02 · INFRA-01/02/03 · DATA-01 · ADM-01 |
 | **5+** | Escala comercial | PROD-01(a) · PROD-08 · PROD-03 · PROD-06 · UX-04 · AUTH-01 · ARCH-02 |

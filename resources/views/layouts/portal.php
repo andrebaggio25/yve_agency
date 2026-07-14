@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- CSRF (SEC-08): o portal não tem login, mas tem sessão PHP anônima — é dela
+       que sai o token. O api.js envia isto como X-CSRF-Token em toda mutação. -->
+  <meta name="csrf-token" content="<?= csrf_token() ?>">
   <title><?= e(view_slot('title', $client['name'] ?? 'Portal')) ?> — Portal</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= asset('/css/app.css') ?>">
+  <script src="<?= asset('/js/api.js') ?>"></script>
   <script defer src="<?= asset('/js/vendor/alpine.min.js') ?>"></script>
 </head>
 <body class="min-h-full flex flex-col pb-16 sm:pb-0">

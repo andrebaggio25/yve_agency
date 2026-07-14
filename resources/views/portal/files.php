@@ -117,7 +117,13 @@ $jsI18n = [
     <!-- Loading -->
     <div x-show="loading" class="py-10 text-center text-sm text-gray-500" x-text="i18n.loading"></div>
 
-    <template x-if="!loading">
+    <!-- Erro ao carregar a lista (antes: falha silenciosa, lista em branco) -->
+    <div x-show="!loading && loadError" class="py-10 text-center" style="display:none">
+      <p class="text-sm text-rose-400 mb-3" x-text="loadError"></p>
+      <button @click="load(folderId)" class="btn-secondary text-sm px-4 py-2"><?= t('portal.files.retry') ?></button>
+    </div>
+
+    <template x-if="!loading && !loadError">
       <div>
         <!-- Empty -->
         <div x-show="folders.length === 0 && files.length === 0 && uploads.length === 0" class="py-12 text-center">
@@ -290,6 +296,7 @@ function driveManager(token, i18n, maxBytes) {
     queue: [],
     activeCount: 0,
     loading: false,
+    loadError: null,
     dragging: false,
     creatingFolder: false,
     newFolderName: '',
@@ -354,17 +361,18 @@ function driveManager(token, i18n, maxBytes) {
 
     async load(folderId) {
       this.loading = true;
+      this.loadError = null;
       this.folderId = folderId;
       try {
         const url = `${this.base()}/drive/folders` + (folderId ? `?folder_id=${folderId}` : '');
-        const r = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
-        const d = await r.json();
-        if (d.success) {
-          this.breadcrumb = d.breadcrumb || [];
-          this.folders = d.folders || [];
-          this.files = d.files || [];
-        }
-      } catch (e) {}
+        const d = await api.get(url);
+        this.breadcrumb = d.breadcrumb || [];
+        this.folders = d.folders || [];
+        this.files = d.files || [];
+      } catch (e) {
+        // Antes: catch vazio — a lista ficava em branco sem dizer nada.
+        this.loadError = e.message;
+      }
       this.loading = false;
     },
 
@@ -394,21 +402,14 @@ function driveManager(token, i18n, maxBytes) {
       if (!name || this.savingFolder) return;
       this.savingFolder = true;
       try {
-        const r = await fetch(`${this.base()}/drive/folders`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-          body: JSON.stringify({ parent_id: this.folderId, name }),
-        });
-        const d = await r.json();
-        if (d.success) {
-          this.folders.push(d.folder);
-          this.folders.sort((a, b) => a.name.localeCompare(b.name));
-          this.creatingFolder = false;
-          this.newFolderName = '';
-        } else {
-          alert(d.error || this.i18n.create_failed);
-        }
-      } catch (e) { alert(this.i18n.err_conn); }
+        const d = await api.post(`${this.base()}/drive/folders`, { parent_id: this.folderId, name });
+        this.folders.push(d.folder);
+        this.folders.sort((a, b) => a.name.localeCompare(b.name));
+        this.creatingFolder = false;
+        this.newFolderName = '';
+      } catch (e) {
+        this.showToast(e.message || this.i18n.create_failed, null);
+      }
       this.savingFolder = false;
     },
 
@@ -418,19 +419,13 @@ function driveManager(token, i18n, maxBytes) {
 
     async doDeleteFile(file) {
       try {
-        const r = await fetch(`${this.base()}/drive/file/${file.id}/delete`, {
-          method: 'POST',
-          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        });
-        const d = await r.json();
-        if (d.success) {
-          this.files = this.files.filter(f => f.id !== file.id);
-          // Toast com "Desfazer" (o arquivo foi pra lixeira do Drive).
-          this.showToast(this.i18n.deleted_file, d.restore || null);
-        } else {
-          alert(d.error || this.i18n.delete_failed);
-        }
-      } catch (e) { alert(this.i18n.err_conn); }
+        const d = await api.post(`${this.base()}/drive/file/${file.id}/delete`);
+        this.files = this.files.filter(f => f.id !== file.id);
+        // Toast com "Desfazer" (o arquivo foi pra lixeira do Drive).
+        this.showToast(this.i18n.deleted_file, d.restore || null);
+      } catch (e) {
+        this.showToast(e.message || this.i18n.delete_failed, null);
+      }
     },
 
     deleteFolder(folder) {
@@ -439,18 +434,12 @@ function driveManager(token, i18n, maxBytes) {
 
     async doDeleteFolder(folder) {
       try {
-        const r = await fetch(`${this.base()}/drive/folder/${folder.id}/delete`, {
-          method: 'POST',
-          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        });
-        const d = await r.json();
-        if (d.success) {
-          this.folders = this.folders.filter(f => f.id !== folder.id);
-          this.showToast(this.i18n.deleted_folder, null);
-        } else {
-          alert(d.error || this.i18n.delete_failed);
-        }
-      } catch (e) { alert(this.i18n.err_conn); }
+        await api.post(`${this.base()}/drive/folder/${folder.id}/delete`);
+        this.folders = this.folders.filter(f => f.id !== folder.id);
+        this.showToast(this.i18n.deleted_folder, null);
+      } catch (e) {
+        this.showToast(e.message || this.i18n.delete_failed, null);
+      }
     },
 
     // Confirmação nativa do app (substitui o confirm() do navegador).
@@ -485,22 +474,15 @@ function driveManager(token, i18n, maxBytes) {
       if (!r || this.toast.busy) return;
       this.toast.busy = true;
       try {
-        const resp = await fetch(`${this.base()}/drive/file/restore`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-          body: JSON.stringify(r),
-        });
-        const d = await resp.json();
-        if (d.success) {
-          // Reaparece na lista se ainda estamos na mesma pasta de origem.
-          const sameFolder = (r.folder_id ?? null) === (this.folderId ?? null);
-          if (sameFolder && d.file) this.files.unshift(d.file);
-          this.showToast(this.i18n.restored, null);
-        } else {
-          alert(d.error || this.i18n.restore_failed);
-          this.toast.busy = false;
-        }
-      } catch (e) { alert(this.i18n.err_conn); this.toast.busy = false; }
+        const d = await api.post(`${this.base()}/drive/file/restore`, r);
+        // Reaparece na lista se ainda estamos na mesma pasta de origem.
+        const sameFolder = (r.folder_id ?? null) === (this.folderId ?? null);
+        if (sameFolder && d.file) this.files.unshift(d.file);
+        this.showToast(this.i18n.restored, null);
+      } catch (e) {
+        this.showToast(e.message || this.i18n.restore_failed, null);
+        this.toast.busy = false;
+      }
     },
 
     onFiles(fileList) {
@@ -588,22 +570,16 @@ function driveManager(token, i18n, maxBytes) {
      */
     async createUploadSession(file) {
       try {
-        const r = await fetch(`${this.base()}/drive/upload/session`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-          body: JSON.stringify({
-            name: file.name,
-            mime: file.type || 'application/octet-stream',
-            size: file.size,
-            folder_id: this.folderId,
-          }),
-          signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(20000) : undefined,
-        });
-        if (!r.ok) return { diag: 'sessao:HTTP' + r.status };
-        const d = await r.json();
-        return (d.success && d.upload_url) ? { url: d.upload_url } : { diag: 'sessao:sem-url' };
+        const d = await api.post(`${this.base()}/drive/upload/session`, {
+          name: file.name,
+          mime: file.type || 'application/octet-stream',
+          size: file.size,
+          folder_id: this.folderId,
+        }, { timeout: 20000 });
+
+        return d.upload_url ? { url: d.upload_url } : { diag: 'sessao:sem-url' };
       } catch (e) {
-        return { diag: (e && e.name === 'TimeoutError') ? 'sessao:timeout' : 'sessao:rede' };
+        return { diag: 'sessao:' + (e.isNetwork ? 'rede' : 'HTTP' + e.status) };
       }
     },
 
@@ -711,25 +687,18 @@ function driveManager(token, i18n, maxBytes) {
     /** Registra no sistema o arquivo que o Drive confirmou (valida a pasta no servidor). */
     async completeDirect(entry, driveFile) {
       try {
-        const r = await fetch(`${this.base()}/drive/upload/complete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-          body: JSON.stringify({ drive_file_id: driveFile.id, folder_id: this.folderId }),
-          signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(30000) : undefined,
-        });
-        const d = await r.json();
-        if (r.ok && d.success) {
-          entry.status = 'done';
-          entry.progress = 100;
-          this.files.unshift(d.file);
-          setTimeout(() => { this.uploads = this.uploads.filter(u => u.uid !== entry.uid); }, 1500);
-        } else {
-          entry.status = 'error';
-          entry.error = d.error || this.i18n.err_generic;
-        }
-      } catch {
+        const d = await api.post(`${this.base()}/drive/upload/complete`, {
+          drive_file_id: driveFile.id,
+          folder_id: this.folderId,
+        }, { timeout: 30000 });
+
+        entry.status = 'done';
+        entry.progress = 100;
+        this.files.unshift(d.file);
+        setTimeout(() => { this.uploads = this.uploads.filter(u => u.uid !== entry.uid); }, 1500);
+      } catch (e) {
         entry.status = 'error';
-        entry.error = this.i18n.err_conn;
+        entry.error = e.message || this.i18n.err_generic;
       }
     },
 
@@ -748,6 +717,9 @@ function driveManager(token, i18n, maxBytes) {
         xhr.open('POST', `${this.base()}/drive/upload`, true);
         xhr.setRequestHeader('Accept', 'application/json');
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        // CSRF (SEC-08): este XHR não passa pelo api.js. Os PUTs da sessão
+        // resumável NÃO levam este header — vão pro Google (cross-origin).
+        xhr.setRequestHeader('X-CSRF-Token', document.querySelector('meta[name="csrf-token"]')?.content || '');
 
         xhr.upload.onprogress = (e) => {
           if (!e.lengthComputable) return;

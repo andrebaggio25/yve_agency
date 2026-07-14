@@ -387,6 +387,7 @@ return [
     'portal.files.ios_tip_text'        => 'Vídeos pesados guardados no iCloud podem travar na tela de seleção do iOS (antes do envio começar). Para esses: envie poucos por vez, ou salve o vídeo no app Arquivos (Compartilhar → Salvar em Arquivos) e selecione aqui pela opção "Escolher arquivos". Mantenha esta página aberta até concluir.',
     'portal.files.ios_tip_ok'          => 'Entendi',
     'portal.files.err_unreadable'      => 'Não foi possível ler o arquivo do dispositivo. Se o vídeo está no iCloud, abra o app Fotos, aguarde ele baixar por completo e tente de novo.',
+    'portal.files.retry'               => 'Tentar de novo',
     'portal.files.err_conn'            => 'Conexão interrompida. Verifique a internet e tente de novo.',
     'portal.files.err_generic'         => 'Não foi possível enviar. Tente novamente.',
     'portal.files.err_invalid_response'=> 'Resposta inesperada do servidor. Tente novamente.',

@@ -376,6 +376,7 @@ return [
     'portal.files.ios_tip_text'        => 'Los vídeos pesados guardados en iCloud pueden quedarse trabados en el selector de fotos de iOS (antes de que empiece la subida). Para esos: sube pocos a la vez, o guarda el vídeo en la app Archivos (Compartir → Guardar en Archivos) y selecciónalo aquí con "Elegir archivos". Mantén esta página abierta hasta terminar.',
     'portal.files.ios_tip_ok'          => 'Entendido',
     'portal.files.err_unreadable'      => 'No se pudo leer el archivo del dispositivo. Si el vídeo está en iCloud, abre la app Fotos, espera a que se descargue por completo e inténtalo de nuevo.',
+    'portal.files.retry'               => 'Intentar de nuevo',
     'portal.files.err_conn'            => 'Conexión interrumpida. Revisa tu internet e inténtalo de nuevo.',
     'portal.files.err_generic'         => 'No se pudo subir. Inténtalo de nuevo.',
     'portal.files.err_invalid_response'=> 'Respuesta inesperada del servidor. Inténtalo de nuevo.',

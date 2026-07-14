@@ -437,30 +437,23 @@ function portalItem(idx, token, planId, itemId, initialFeedbacks, initialStatus,
       if (!this.selectedType) return;
       this.sending = true;
       try {
-        const r = await fetch(
-          `/portal/${PORTAL_TOKEN}/planos/${PLAN_ID}/items/${itemId}/feedback`,
-          {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({
-              feedback_type: this.selectedType,
-              comment:       this.comment,
-              timecode:      this.timecode,
-            }),
-          }
-        );
-        const d = await r.json();
-        if (d.success) {
-          this.feedbacks.push(d.feedback);
-          const statusMap = { approved: 'approved', changes_requested: 'revision', rejected: 'rejected' };
-          if (statusMap[this.selectedType]) this.itemStatus = statusMap[this.selectedType];
-          this.selectedType = null;
-          this.comment      = '';
-          this.timecode     = '';
-        } else {
-          this.errorMsg = d.error ?? <?= json_encode(t('portal.plan.send_error'), JSON_UNESCAPED_UNICODE) ?>;
-        }
-      } catch { this.errorMsg = <?= json_encode(t('portal.plan.conn_error'), JSON_UNESCAPED_UNICODE) ?>; }
+        // api.js: injeta o X-CSRF-Token (SEC-08), valida response.ok e
+        // transforma erro do servidor em ApiError com mensagem legível.
+        const d = await api.post(`/portal/${PORTAL_TOKEN}/planos/${PLAN_ID}/items/${itemId}/feedback`, {
+          feedback_type: this.selectedType,
+          comment:       this.comment,
+          timecode:      this.timecode,
+        });
+
+        this.feedbacks.push(d.feedback);
+        const statusMap = { approved: 'approved', changes_requested: 'revision', rejected: 'rejected' };
+        if (statusMap[this.selectedType]) this.itemStatus = statusMap[this.selectedType];
+        this.selectedType = null;
+        this.comment      = '';
+        this.timecode     = '';
+      } catch (e) {
+        this.errorMsg = e.message || <?= json_encode(t('portal.plan.send_error'), JSON_UNESCAPED_UNICODE) ?>;
+      }
       this.sending = false;
     },
   };

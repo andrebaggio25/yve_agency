@@ -51,7 +51,17 @@ Regras:
 ## 3. JS — padrão do projeto
 
 - Alpine para interação de tela (`x-data` com função nomeada, como `driveManager()` em `portal/files.php`).
-- **Todo `fetch` valida `response.ok`** e envia `X-CSRF-Token` (meta tag `csrf-token` no layout) em mutação. Pós FE-03: usar o wrapper `public/js/api.js` — não escrever fetch cru.
+- **Nunca escreva `fetch` cru. Use `api` (`public/js/api.js`, já carregado nos layouts):**
+  ```js
+  try {
+    const data = await api.post('/rota', { campo: 1 });   // CSRF, response.ok e timeout já tratados
+  } catch (e) {
+    this.erro = e.message;        // mensagem do servidor ou "falha de conexão"
+    if (e.isNetwork) { /* vale oferecer "tentar de novo" */ }
+  }
+  ```
+  Ele injeta `X-CSRF-Token` (obrigatório em toda mutação, **inclusive no portal** — SEC-08), rejeita status != 2xx com `ApiError`, aplica timeout e trata resposta não-JSON. `catch {}` vazio é bug: erro silencioso foi exatamente o que fez o upload travar em 0% sem ninguém entender.
+- Exceção: requisição **cross-origin** (ex.: PUT direto pro Google no upload resumável) **não** passa pelo `api` e **não** leva o header de CSRF — vazar o token para terceiros seria falha de segurança.
 - Dados do PHP para o JS: `json_encode($x, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)` — nunca interpolar string crua em `<script>`.
 - `innerHTML` só com DOMPurify (ver `ia/show.php`). Preferir `textContent`/`x-text`.
 - Objetos não-reativos (XHR, Chart) ficam **fora** do estado do Alpine (registry externo — o Alpine "proxyar" um XHR quebra; já aconteceu).
