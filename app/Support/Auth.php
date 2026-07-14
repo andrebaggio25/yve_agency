@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Core\HttpException;
 use App\Core\Response;
 
 /**
@@ -136,15 +137,14 @@ class Auth
     // Guards — abortam a requisição se a condição não for satisfeita
     // -------------------------------------------------------------------------
 
+    // Os guards LANÇAM HttpException (o Router converte em Response). Antes
+    // faziam `send(); exit;` — o que matava o processo e tornava a autorização
+    // impossível de testar por HTTP. Comportamento para o usuário é idêntico.
+
     public static function requireLogin(): void
     {
         if (!self::check()) {
-            if (self::isAjax()) {
-                Response::json(['error' => 'Unauthenticated'], 401)->send();
-                exit;
-            }
-            Response::redirect('/login')->send();
-            exit;
+            throw HttpException::unauthenticated(self::isAjax());
         }
     }
 
@@ -156,12 +156,7 @@ class Auth
         if (self::isPlatformAdmin()) return;
 
         if (!self::can($permission)) {
-            if (self::isAjax()) {
-                Response::json(['error' => 'Forbidden'], 403)->send();
-                exit;
-            }
-            Response::view('errors.403', ['permission' => $permission], 403)->send();
-            exit;
+            throw HttpException::forbidden(self::isAjax(), ['permission' => $permission]);
         }
     }
 
@@ -170,12 +165,7 @@ class Auth
         self::requireLogin();
 
         if (!self::isPlatformAdmin()) {
-            if (self::isAjax()) {
-                Response::json(['error' => 'Forbidden'], 403)->send();
-                exit;
-            }
-            Response::view('errors.403', [], 403)->send();
-            exit;
+            throw HttpException::forbidden(self::isAjax());
         }
     }
 
@@ -184,12 +174,7 @@ class Auth
         self::requireLogin();
 
         if (!self::canAccessClient($clientId)) {
-            if (self::isAjax()) {
-                Response::json(['error' => 'Client access denied'], 403)->send();
-                exit;
-            }
-            Response::view('errors.403', [], 403)->send();
-            exit;
+            throw HttpException::forbidden(self::isAjax());
         }
     }
 

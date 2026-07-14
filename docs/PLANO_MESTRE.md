@@ -41,9 +41,12 @@
 > **Correção do diagnóstico:** a análise dizia "única violação (Dashboard)" — **errado**. O grep encontrou SQL cru em **9 controllers**: Dashboard, Report, FinancialReport, Task, Settings, WhatsApp, Queue, Admin\Tenant e Admin\PlatformUser (este último com `PDO` como propriedade).
 > **Feito:** 5 repositórios novos (`DashboardRepository`, `AgencyRepository`, `JobRepository`, `FinancialReportRepository`, `ExecutiveReportRepository`, `PlatformUserRepository`) + `TenantService` (provisionamento de tenant com admin, em transação — era regra de negócio no controller). Semântica preservada (inclusive o caso "cliente sem conta de anúncio → seção some" vs "sem métricas no período → zeros"). **`app/Controllers` não referencia mais `Database`, `PDO` nem `->prepare(`** — travado pelo teste de arquitetura `ControllerHasNoSqlTest`, que falha se alguém reintroduzir. 88 testes verdes, PHPStan 0.
 
-### QA-03 · Testes HTTP ponta a ponta dos fluxos críticos — `G` 🟡
-- **Ação:** banco PG de teste (schema via Phinx) + 5 testes: login+RBAC, aprovação pelo portal, upload (mock do Drive), criação de fatura, isolamento multi-tenant via HTTP.
-- **Pronto quando:** `composer test` cobre os cinco; CI-able.
+### QA-03 · Testes HTTP ponta a ponta dos fluxos críticos — `G` 🟡 · ✅ FEITO (2026-07-14)
+> **Banco de teste real:** `docker-compose.test.yml` (Postgres 16, porta 55432) + `composer db:test` (migrations reais). SQLite não serviria — o schema usa `JSONB`, `FILTER`, `SKIP LOCKED`, `TIMESTAMPTZ`; o teste passaria mentindo. **Guarda-corpo duplo:** `phinx.test.php` e o bootstrap **abortam se o host não for local** — teste jamais pode truncar produção (o `phinx.php` normal lê o `.env`, que aponta pro Supabase: armadilha real que encontrei ao montar isto).
+> **10 testes de feature** dirigindo o app de verdade (rota → middlewares → controller → banco): sem sessão → login; sem permissão → 403; com permissão → lista; **usuário da agência A não vê nem acessa cliente da B** (listagem e IDOR direto); tenant não entra no `/admin`; portal com token inválido/desativado → 403; portal abre só o cliente dono do token; **mutação do portal sem CSRF → 419** (trava o SEC-08 por HTTP).
+> **Mudança de arquitetura necessária:** os guards do `Auth` faziam `send(); exit;` — matavam o processo (e o PHPUnit). Agora lançam `HttpException`, que o `Router::handle()` converte em Response. Mesmo resultado ao usuário, fluxo íntegro e testável. `Router::handle()` (devolve a Response) separado do `dispatch()` (envia).
+> **Bug latente encontrado:** `partials/nav.php` declarava função global — o segundo render no mesmo processo morria com "Cannot redeclare". Em produção não aparecia (1 request = 1 processo); guardado com `function_exists`.
+> **Smoke test de navegador** (`npm run test:browser`, Playwright): abre as telas num Chromium real com a CSP real e **falha se houver erro de console ou se nenhum componente Alpine inicializar**. É o teste que teria pego sozinho os dois bugs que escaparam (CSP sem `unsafe-eval` e módulo com `defer`) — PHPUnit e PHPStan não os veem, porque o PHP responde 200 nos dois casos.
 
 ---
 
@@ -98,7 +101,7 @@
 |--------|------|-------|
 | **1** ✅ | Dor nº 1 + base do frontend | ~~UP-01 · ARCH-01 · ARCH-03~~ **concluído 2026-07-14** |
 | **2** ✅ | Frontend vira produto | ~~FE-01 · SEC-10 (parcial) · FE-03 (parcial) · SEC-08~~ **concluído 2026-07-14** |
-| **3** | JS sustentável + rede de segurança | FE-02 (destrava o nonce da CSP) · QA-03 |
+| **3** ✅ | JS sustentável + rede de segurança | ~~FE-02 · QA-03~~ **concluído 2026-07-14** |
 | **4** | Confiabilidade | INT-01/02/03 · OBS-01/02 · INFRA-01/02/03 · DATA-01 · ADM-01 |
 | **5+** | Escala comercial | PROD-01(a) · PROD-08 · PROD-03 · PROD-06 · UX-04 · AUTH-01 · ARCH-02 |
 | **6+** | Diferenciação | Marco D |

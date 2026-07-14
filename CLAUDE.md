@@ -15,6 +15,11 @@ php -S localhost:8000 router.php   # dev server
 npm install          # uma vez
 npm run build        # CSS purgado + vendor self-hosted → public/ (VERSIONADO)
 npm run dev          # watch do Tailwind
+npm run test:browser # smoke em Chromium real: falha se houver erro de console/CSP
+
+# Banco de teste (testes de feature; sem ele, eles se auto-skipam)
+docker compose -f docker-compose.test.yml up -d
+composer db:test     # migrations no banco de teste (NUNCA em produção)
 ```
 
 Não finalize nenhuma tarefa com teste vermelho, erro novo no PHPStan ou advisory novo no audit.

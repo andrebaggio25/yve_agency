@@ -20,10 +20,11 @@
         </include>
     </source>
 
+    <!-- O banco é decidido no tests/bootstrap.php: .env.testing (Postgres em
+         Docker) quando existir, senão SQLite em memória e os testes de feature
+         se auto-skipam. Não fixe DB_* aqui — sobrescreveria o .env.testing. -->
     <php>
         <env name="APP_ENV" value="testing"/>
-        <env name="DB_ADAPTER" value="sqlite"/>
-        <env name="DB_NAME" value=":memory:"/>
         <env name="APP_KEY" value="test-key-32-chars-long-padding00"/>
     </php>
 </phpunit>

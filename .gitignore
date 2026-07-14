@@ -3,6 +3,10 @@
 /.env
 /.env.*
 !/.env.example
+# .env.testing é versionado: aponta só para o Postgres local do docker-compose.test.yml
+# (sem segredo real) e o bootstrap recusa host não-local, para um teste jamais
+# poder truncar produção.
+!/.env.testing
 
 # public/css/app.css e public/js/vendor/* SÃO versionados de propósito:
 # o hosting compartilhado não roda `npm run build` no deploy (FE-01).

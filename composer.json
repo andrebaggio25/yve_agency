@@ -49,6 +49,8 @@
         "cs-fix": "vendor/bin/php-cs-fixer fix",
         "migrate": "vendor/bin/phinx migrate",
         "seed": "vendor/bin/phinx seed:run",
-        "rollback": "vendor/bin/phinx rollback"
+        "rollback": "vendor/bin/phinx rollback",
+        "db:test": "vendor/bin/phinx migrate -c phinx.test.php -e testing",
+        "test:feature": "vendor/bin/phpunit --testsuite Feature"
     }
 }

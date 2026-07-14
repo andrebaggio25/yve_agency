@@ -66,6 +66,18 @@ class Router
 
     public function dispatch(Request $request): void
     {
+        $this->handle($request)->send();
+    }
+
+    /**
+     * Resolve a rota e devolve a Response **sem enviá-la**.
+     *
+     * Separado do `dispatch()` para que os testes de feature (QA-03) possam
+     * exercitar o pipeline real — rota → middlewares → controller → banco — e
+     * inspecionar o resultado, em vez de dar `echo` na saída do PHPUnit.
+     */
+    public function handle(Request $request): Response
+    {
         $method = $request->method();
         $path   = $request->path();
 
@@ -87,14 +99,16 @@ class Router
             $request->setParams($params);
 
             try {
-                $this->runRoute($route, $request)->send();
+                return $this->runRoute($route, $request);
+            } catch (HttpException $e) {
+                // Guard de autorização abortou (401/403) — resposta já pronta.
+                return $e->getResponse();
             } catch (\Throwable $e) {
-                $this->handleError($e)->send();
+                return $this->handleError($e);
             }
-            return;
         }
 
-        $this->handleNotFound($request)->send();
+        return $this->handleNotFound($request);
     }
 
     // -------------------------------------------------------------------------

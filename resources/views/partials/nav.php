@@ -3,6 +3,11 @@ use App\Support\Auth;
 
 $cp = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 
+// function_exists: uma view pode ser renderizada mais de uma vez no mesmo
+// processo (os testes de feature fazem vários requests em sequência). Sem esta
+// guarda, o segundo render morre com "Cannot redeclare function navItem()".
+// Em produção nunca apareceu — 1 request = 1 processo — mas é frágil.
+if (!function_exists('navItem')):
 function navItem(string $href, string $icon, string $label, string $current, string $prefix = ''): string
 {
     $target  = $prefix ?: $href;
@@ -21,6 +26,7 @@ function navItem(string $href, string $icon, string $label, string $current, str
     </a>
     HTML;
 }
+endif;
 
 $icons = [
     'dashboard'   => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
