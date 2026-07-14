@@ -128,6 +128,7 @@
               <th class="text-left font-medium px-4 py-3">Período</th>
               <th class="text-left font-medium px-4 py-3">Progresso</th>
               <th class="text-left font-medium px-4 py-3">Situação</th>
+              <th class="text-right font-medium px-4 py-3"><span class="sr-only">Ações</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-white/[0.04]">
@@ -166,6 +167,22 @@
                   <span class="inline-block w-1.5 h-1.5 rounded-full <?= $sc['dot'] ?>"></span>
                   <?= $statusLabel ?>
                 </span>
+              </td>
+              <td class="px-4 py-3 text-right" onclick="event.stopPropagation()">
+                <?php if (\App\Support\Auth::can('content.create')):
+                  $nextFrom = date('d/m', strtotime($plan['week_start'] . ' +7 days'));
+                  $nextTo   = date('d/m', strtotime($plan['week_end'] . ' +7 days'));
+                ?>
+                <form method="POST" action="/conteudo/<?= e($plan['id']) ?>/duplicar" class="inline"
+                      onsubmit="return confirm('Planejar a semana de <?= $nextFrom ?> a <?= $nextTo ?> a partir da estrutura deste plano? A cópia nasce como rascunho, sem o conteúdo dos posts.')">
+                  <?= csrf_field() ?>
+                  <button type="submit" title="Planejar próxima semana a partir deste plano"
+                          aria-label="Planejar próxima semana — <?= e($plan['title']) ?>"
+                          class="rounded-lg p-1.5 text-gray-400 hover:text-brand-300 hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                  </button>
+                </form>
+                <?php endif; ?>
               </td>
             </tr>
             <?php endforeach; ?>

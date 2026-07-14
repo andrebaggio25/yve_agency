@@ -15,7 +15,8 @@ const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?
 const emptyModal = () => ({
   show: false, mode: 'add', editId: null,
   platform: '', content_type: '', publish_date: '', publish_time: '',
-  cover_url: '', caption: '', drive_url: '', assigned_to: '', images: []
+  cover_url: '', caption: '', drive_url: '', assigned_to: '', images: [],
+  title: '', theme: '', script: '', cta: ''
 });
 
 // Converte URLs de compartilhamento do Drive numa URL que funciona em <img>.
@@ -46,14 +47,45 @@ function contentShow(planId) {
     imgErr: false,
     sending: false,
     submitting: false,
+    view: 'week',   // 'week' (grade seg–dom) | 'list' (detalhe por post)
     toast: { show: false, msg: '', ok: true },
+
+    init() {
+      this.view = localStorage.getItem('yve_plan_view') === 'list' ? 'list' : 'week';
+      // Deep-link do calendário (#item-N): o detalhe vive na Lista.
+      if (location.hash.startsWith('#item-')) {
+        this.view = 'list';
+        this.$nextTick(() => this.scrollToItem(location.hash.slice(1)));
+      }
+    },
+
+    setView(v) {
+      this.view = v;
+      localStorage.setItem('yve_plan_view', v);
+    },
+
+    // Sem permissão de edição, o clique no chip da semana leva ao detalhe.
+    goToItem(id) {
+      this.setView('list');
+      this.$nextTick(() => this.scrollToItem(`item-${id}`));
+    },
+
+    scrollToItem(domId) {
+      const el = document.getElementById(domId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-brand-500/60');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-brand-500/60'), 2500);
+      }
+    },
 
     isVertical() { return isVerticalType(this.itemModal.content_type); },
     frameClass() { return previewFrameClass(this.itemModal.content_type); },
 
-    openAddPost() {
+    openAddPost(date = '') {
       this.itemModal = emptyModal();
       this.imgErr = false;
+      this.itemModal.publish_date = date;
       this.itemModal.show = true;
     },
 
@@ -70,6 +102,10 @@ function contentShow(planId) {
         drive_url:    item.drive_url     || '',
         assigned_to:  item.assigned_to   ? String(item.assigned_to) : '',
         images:       Array.isArray(item.images_list) ? [...item.images_list] : [],
+        title:        item.title         || '',
+        theme:        item.theme         || '',
+        script:       item.script        || '',
+        cta:          item.cta           || '',
       };
     },
 
@@ -93,6 +129,10 @@ function contentShow(planId) {
             drive_url:    this.itemModal.drive_url,
             assigned_to:  this.itemModal.assigned_to,
             images:       this.itemModal.images.filter(u => u.trim()),
+            title:        this.itemModal.title,
+            theme:        this.itemModal.theme,
+            script:       this.itemModal.script,
+            cta:          this.itemModal.cta,
           })
         });
         const d = await r.json();

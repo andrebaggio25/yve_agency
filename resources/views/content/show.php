@@ -46,6 +46,54 @@ $platforms = [
 ];
 $platformColors = array_column($platforms, 'color', 'id');
 $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
+
+// ── Grade semanal (seg→dom) ─────────────────────────────────────────────────
+// A semana do plano vira a superfície de organização: cada post cai no seu
+// dia, quantos couberem por dia. Itens legados fora do intervalo (planos
+// antigos) e itens sem data ganham faixas próprias — nada some da tela.
+$weekDays = [];
+$cursor   = strtotime((string) $plan['week_start']);
+$endTs    = strtotime((string) $plan['week_end']);
+while ($cursor !== false && $endTs !== false && $cursor <= $endTs && count($weekDays) < 14) {
+    $weekDays[] = date('Y-m-d', $cursor);
+    $cursor     = strtotime('+1 day', $cursor);
+}
+
+$dowShort = [1 => 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+
+$itemsByDay = [];
+$noDate     = [];
+$outOfWeek  = [];
+foreach ($plan['items'] as $it) {
+    $d = $it['publish_date'] ?? null;
+    if (!$d) {
+        $noDate[] = $it;
+    } elseif (in_array($d, $weekDays, true)) {
+        $itemsByDay[$d][] = $it;
+    } else {
+        $outOfWeek[] = $it;
+    }
+}
+$daysWithPost = count(array_intersect($weekDays, array_keys($itemsByDay)));
+
+// Payload mínimo que o modal de edição precisa (o item completo carrega
+// feedbacks inteiros — peso desnecessário num atributo).
+$modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
+    'id'           => $it['id'],
+    'platform'     => $it['platform'] ?? '',
+    'content_type' => $it['content_type'] ?? '',
+    'publish_date' => $it['publish_date'] ?? '',
+    'publish_time' => $it['publish_time'] ?? '',
+    'cover_url'    => $it['cover_url'] ?? '',
+    'caption'      => $it['caption'] ?? '',
+    'drive_url'    => $it['drive_url'] ?? '',
+    'assigned_to'  => $it['assigned_to'] ?? '',
+    'images_list'  => $it['images_list'] ?? [],
+    'title'        => $it['title'] ?? '',
+    'theme'        => $it['theme'] ?? '',
+    'script'       => $it['script'] ?? '',
+    'cta'          => $it['cta'] ?? '',
+], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES);
 ?>
 
 <div id="content-show"
@@ -131,16 +179,19 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         </form>
         <?php endif; ?>
 
-        <?php if (\App\Support\Auth::can('content.create')): ?>
-        <!-- PROD-05: duplicar evita refazer o mês do zero — o trabalho mais
-             repetitivo da rotina. A cópia nasce em rascunho, na semana seguinte. -->
+        <?php if (\App\Support\Auth::can('content.create')):
+          // PROD-05: a cópia leva só a ESTRUTURA e nasce em rascunho na
+          // segunda-feira seguinte — o atalho para não refazer a semana do zero.
+          $nextFrom = date('d/m', strtotime($plan['week_start'] . ' +7 days'));
+          $nextTo   = date('d/m', strtotime($plan['week_end'] . ' +7 days'));
+        ?>
         <form method="POST" action="/conteudo/<?= e($plan['id']) ?>/duplicar" class="inline"
-              onsubmit="return confirm('Duplicar a ESTRUTURA deste plano? A cópia leva as datas, plataformas, formatos e responsáveis — mas NÃO o conteúdo dos posts (legenda, roteiro, mídia), que você escreve do zero. Nasce como rascunho na semana seguinte.')">
+              onsubmit="return confirm('Planejar a semana de <?= $nextFrom ?> a <?= $nextTo ?> a partir deste plano? A cópia leva a grade (dias, horários, plataformas, formatos e responsáveis) — mas NÃO o conteúdo dos posts (legenda, roteiro, mídia), que você escreve do zero. Nasce como rascunho.')">
           <?= csrf_field() ?>
           <button type="submit"
                   class="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:border-white/20 transition-all">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-            Duplicar
+            Planejar próxima semana
           </button>
         </form>
         <?php endif; ?>
@@ -202,19 +253,117 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
 
   <!-- ── Posts section ──────────────────────────────────────────────────────── -->
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-    <h2 class="text-lg font-semibold text-white">
-      Posts
-      <span class="ml-2 rounded-full bg-brand-500/20 px-2.5 py-0.5 text-xs font-medium text-brand-300"><?= count($plan['items']) ?></span>
-    </h2>
-    <?php if ($canCreate): ?>
-    <button @click="openAddPost()"
-            class="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Adicionar Post
-    </button>
+    <div class="flex items-center gap-3 flex-wrap">
+      <h2 class="text-lg font-semibold text-white">
+        Posts
+        <span class="ml-2 rounded-full bg-brand-500/20 px-2.5 py-0.5 text-xs font-medium text-brand-300"><?= count($plan['items']) ?></span>
+      </h2>
+      <!-- O termômetro da semana: dia sem post é pauta faltando. -->
+      <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium <?= $daysWithPost >= 7 ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300' ?>">
+        <span class="inline-block w-1.5 h-1.5 rounded-full <?= $daysWithPost >= 7 ? 'bg-emerald-400' : 'bg-amber-400' ?>"></span>
+        <?= $daysWithPost ?> de 7 dias com post
+      </span>
+    </div>
+    <div class="flex items-center gap-2">
+      <!-- Toggle Semana | Lista (default Semana; persiste em localStorage) -->
+      <div class="flex items-center rounded-xl border border-white/10 bg-white/[0.03] p-0.5" role="group" aria-label="Modo de visualização">
+        <button type="button" @click="setView('week')"
+                :class="view === 'week' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'"
+                class="rounded-lg px-3 py-1.5 text-xs font-medium transition-all">Semana</button>
+        <button type="button" @click="setView('list')"
+                :class="view === 'list' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'"
+                class="rounded-lg px-3 py-1.5 text-xs font-medium transition-all">Lista</button>
+      </div>
+      <?php if ($canCreate): ?>
+      <button @click="openAddPost()"
+              class="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Adicionar Post
+      </button>
+      <?php endif; ?>
+    </div>
+  </div>
+
+  <!-- ── Visão Semana: 7 colunas seg→dom, N posts por dia ───────────────────── -->
+  <div x-show="view === 'week'" x-cloak>
+    <div class="overflow-x-auto pb-2">
+      <div class="grid grid-cols-7 gap-2 min-w-[56rem]">
+        <?php foreach ($weekDays as $day):
+          $dayItems = $itemsByDay[$day] ?? [];
+          $isToday  = $day === date('Y-m-d');
+          $dow      = $dowShort[(int) date('N', strtotime($day))] ?? '';
+        ?>
+        <div class="rounded-2xl border <?= $isToday ? 'border-brand-500/40 bg-brand-500/[0.04]' : 'border-white/5 bg-white/[0.02]' ?> p-2 flex flex-col min-h-[9rem]"
+             data-day="<?= e($day) ?>">
+          <div class="flex items-baseline justify-between px-1 pb-2">
+            <span class="text-xs font-semibold <?= $isToday ? 'text-brand-300' : 'text-gray-300' ?>"><?= $dow ?></span>
+            <span class="text-[11px] <?= $isToday ? 'text-brand-400' : 'text-gray-400' ?>"><?= date('d/m', strtotime($day)) ?></span>
+          </div>
+
+          <div class="space-y-1.5 flex-1">
+            <?php foreach ($dayItems as $item):
+              $isc    = $statusColors[$item['status']] ?? $statusColors['draft'];
+              $pColor = $platformColors[$item['platform'] ?? ''] ?? '#6b7280';
+              $chipTitle = trim((string) ($item['title'] ?: ($item['content_type'] ?? 'Post')));
+            ?>
+            <button type="button"
+                    <?php if ($canEdit): ?>@click="openEditPost(<?= $modalPayload($item) ?>)"<?php else: ?>@click="goToItem(<?= (int) $item['id'] ?>)"<?php endif; ?>
+                    class="w-full rounded-xl border border-white/5 bg-white/[0.04] p-2 text-left transition-all hover:border-brand-500/30 hover:bg-white/[0.08]"
+                    aria-label="<?= e($chipTitle . ' — ' . $dow . ' ' . date('d/m', strtotime($day))) ?>">
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 <?= $isc['dot'] ?>" title="<?= ContentPlanService::itemStatusLabel($item['status']) ?>"></span>
+                <?php if (!empty($item['publish_time'])): ?>
+                <span class="text-[10px] font-semibold text-gray-300"><?= substr($item['publish_time'], 0, 5) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($item['platform'])): ?>
+                <span class="ml-auto inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-semibold text-white" style="background:<?= $pColor ?>"><?= ucfirst(e($item['platform'])) ?></span>
+                <?php endif; ?>
+              </div>
+              <p class="text-[11px] text-gray-200 leading-snug line-clamp-2"><?= e($chipTitle ?: 'Post') ?></p>
+              <?php if (!empty($item['content_type'])): ?>
+              <p class="text-[10px] text-brand-400 mt-0.5"><?= e($item['content_type']) ?></p>
+              <?php endif; ?>
+            </button>
+            <?php endforeach; ?>
+          </div>
+
+          <?php if ($canCreate): ?>
+          <button type="button" @click="openAddPost('<?= e($day) ?>')"
+                  class="mt-1.5 w-full rounded-xl border border-dashed <?= empty($dayItems) ? 'border-white/15 py-4' : 'border-white/10 py-1.5' ?> text-xs text-gray-400 hover:text-brand-300 hover:border-brand-500/40 transition-all"
+                  aria-label="Adicionar post em <?= $dow ?> <?= date('d/m', strtotime($day)) ?>">
+            + Post
+          </button>
+          <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <?php if (!empty($noDate) || !empty($outOfWeek)): ?>
+    <div class="mt-3 rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-3">
+      <p class="text-xs font-medium text-amber-300 mb-2">
+        <?= !empty($outOfWeek) ? 'Posts sem data ou fora da semana do plano — clique para reagendar:' : 'Posts ainda sem dia definido — clique para encaixar na semana:' ?>
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <?php foreach (array_merge($noDate, $outOfWeek) as $item):
+          $chipTitle = trim((string) ($item['title'] ?: ($item['content_type'] ?? 'Post')));
+        ?>
+        <button type="button"
+                <?php if ($canEdit): ?>@click="openEditPost(<?= $modalPayload($item) ?>)"<?php else: ?>@click="goToItem(<?= (int) $item['id'] ?>)"<?php endif; ?>
+                class="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-gray-300 hover:text-white hover:border-brand-500/30 transition-all">
+          <?= e($chipTitle ?: 'Post') ?>
+          <?php if (!empty($item['publish_date'])): ?>
+          <span class="text-gray-400 ml-1"><?= date('d/m', strtotime($item['publish_date'])) ?></span>
+          <?php endif; ?>
+        </button>
+        <?php endforeach; ?>
+      </div>
+    </div>
     <?php endif; ?>
   </div>
 
+  <!-- ── Visão Lista (detalhe completo por post) ─────────────────────────────── -->
+  <div x-show="view === 'list'" x-cloak>
   <?php if (empty($plan['items'])): ?>
   <div class="rounded-2xl border border-dashed border-white/10 py-16 text-center">
     <div class="mx-auto mb-4 w-12 h-12 rounded-2xl bg-brand-500/10 flex items-center justify-center">
@@ -244,16 +393,11 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
     ?>
     <div class="item-card group rounded-2xl border border-white/5 bg-white/[0.03] transition-all duration-200 hover:border-brand-500/20 hover:bg-white/[0.05]"
          x-data="itemCard(<?= htmlspecialchars(json_encode($item), ENT_QUOTES) ?>)"
+         id="item-<?= (int) $item['id'] ?>"
          data-id="<?= $item['id'] ?>">
 
       <!-- Item header -->
       <div class="flex items-start gap-3 p-4 cursor-pointer" @click="expanded = !expanded">
-
-        <div class="hidden sm:flex flex-shrink-0 items-center justify-center w-6 h-6 mt-0.5 cursor-grab opacity-0 group-hover:opacity-40 hover:!opacity-70 transition-opacity text-gray-400">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM8 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM8 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/>
-          </svg>
-        </div>
 
         <!-- Status indicator -->
         <div class="flex-shrink-0 mt-0.5">
@@ -546,6 +690,7 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
     <?php endforeach; ?>
   </div>
   <?php endif; ?>
+  </div><!-- /visão lista -->
 
   <!-- ── Add / Edit Post Modal ──────────────────────────────────────────────── -->
   <div x-show="itemModal.show" x-transition.opacity
@@ -610,14 +755,30 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Data de Publicação</label>
+            <!-- min/max = semana do plano; a guarda real é o 422 do backend. -->
             <input type="date" aria-label="Data de publicação" x-model="itemModal.publish_date"
+                   min="<?= e($plan['week_start']) ?>" max="<?= e($plan['week_end']) ?>"
                    class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
-            <p class="text-xs text-gray-400 mt-1">Fuso: <?= e($clientTz) ?></p>
+            <p class="text-xs text-gray-400 mt-1">Semana: <?= date('d/m', strtotime($plan['week_start'])) ?>–<?= date('d/m', strtotime($plan['week_end'])) ?> · Fuso: <?= e($clientTz) ?></p>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Horário</label>
             <input type="time" aria-label="Horário de publicação" x-model="itemModal.publish_time"
                    class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+          </div>
+        </div>
+
+        <!-- Título + Tema (existiam no banco, mas a tela não capturava) -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Título do Post</label>
+            <input type="text" aria-label="Título do post" x-model="itemModal.title" placeholder="Ex: Bastidores do atendimento"
+                   class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Tema</label>
+            <input type="text" aria-label="Tema do post" x-model="itemModal.theme" placeholder="Ex: autoridade, engajamento..."
+                   class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
           </div>
         </div>
 
@@ -673,6 +834,18 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
           <label class="block text-xs font-medium text-gray-400 mb-1.5">Legenda</label>
           <textarea x-model="itemModal.caption" rows="4" placeholder="Texto da publicação..."
                     class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
+        </div>
+
+        <!-- Roteiro (vídeo) + CTA -->
+        <div x-show="itemModal.content_type === 'Reels / Vídeo' || itemModal.script" style="display:none">
+          <label class="block text-xs font-medium text-gray-400 mb-1.5">Roteiro</label>
+          <textarea x-model="itemModal.script" rows="3" placeholder="Roteiro do vídeo: ganchos, cenas, falas..."
+                    class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5">CTA (chamada para ação)</label>
+          <input type="text" aria-label="CTA" x-model="itemModal.cta" placeholder="Ex: Agende pelo link da bio"
+                 class="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
         </div>
 
         <!-- Drive link -->
