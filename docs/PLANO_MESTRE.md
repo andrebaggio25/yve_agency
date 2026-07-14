@@ -5,7 +5,9 @@
 > Atualizado: 2026-07-14 · Ciclo: 2026-07 (ciclo 2) · Anterior: [historico/PLANO_MESTRE_2026-07-06.md](historico/PLANO_MESTRE_2026-07-06.md)
 > Convenções: esforço **P** ≤2h · **M** = meio dia a 1 dia · **G** = vários dias. Ao fechar este roadmap, arquivar em `docs/historico/` e gerar o próximo com a skill `yve-analise-produto`.
 
-**Estado herdado do ciclo 1 (tudo ✅):** Marco 0 (SEC-01/02, DEP-01, BUG-01) · Marco 1 (SEC-03/04/05/06*/07, SCHEMA-01) · QA-01, QA-02, DRIVE-01, DRIVE-02 fase 1. Gates em 2026-07-14: 77 testes verdes, PHPStan nível 6 = 0 erros, audit limpo. (*SEC-06 parcial — portal virou SEC-08 abaixo.)
+**Estado herdado do ciclo 1 (tudo ✅):** Marco 0 (SEC-01/02, DEP-01, BUG-01) · Marco 1 (SEC-03/04/05/06*/07, SCHEMA-01) · QA-01, QA-02, DRIVE-01, DRIVE-02 fase 1. (*SEC-06 parcial — portal virou SEC-08 abaixo.)
+
+**Gates em 2026-07-14 (pós-ciclo Planificações Semanais):** 178 testes verdes · PHPStan nível 6 = 0 erros · audit limpo · smoke de browser (Chromium real) 100%. Migration nova: `content_plan_templates` (nº 27) — **rodar em produção por `/admin/migrations`**.
 
 ---
 
@@ -87,15 +89,49 @@
 
 ## Marco D — Diferenciação (pós-escala)
 
-> **CICLO PRÓPRIO PEDIDO (2026-07-14): realinhar Planificações.** O usuário quer
-> um plano específico para o módulo de conteúdo (planificações) — o coração do
-> uso diário da agência. Rodar a skill `yve-analise-produto` **focada nesse
-> módulo**: fluxo real de trabalho da equipe, o que a cliente vê, o que trava
-> hoje. Itens já mapeados que provavelmente entram nesse plano: PROD-04
-> (calendário), PROD-05 (duplicar plano), PROD-07 (orgânico ↔ plano), o tamanho
-> de `content/show.php` e o vocabulário de status. **Fazer depois de usar o
-> sistema por algumas semanas** — o log de irritação real vale mais que a
-> especulação.
+> **✅ CICLO PLANIFICAÇÕES SEMANAIS — CONCLUÍDO (2026-07-14).** Realinhamento
+> completo do módulo para o fluxo real da agência (planificação SEMPRE de
+> segunda a domingo), em 8 fases, commits `281f5fd`…`c46fa58`:
+>
+> - **CONT-00 · Bugs de produção no fluxo de aprovação** ✅ — (a) o portal só
+>   aprovava plano `pending_approval`, status que o envio **nunca grava**
+>   (`sent`) — o botão "Aprovar plano completo" não fazia nada e o KPI de
+>   pendentes ficava zerado; (b) o link de aprovação do WhatsApp apontava para
+>   a rota **interna** `/aprovacoes/{id}` (exige login) — cliente recebia link
+>   que não abria. Agora `ContentPlanService::portalPlanUrl()` monta o link
+>   público do portal em envio + lembretes.
+> - **CONT-01 · Semana seg–dom** ✅ — `mondayOf()/sundayOf()`: toda semana
+>   encaixa na segunda, domingo derivado; título automático
+>   `"CLIENTE X | dd/mm – dd/mm"`; `publish_date` do post validada contra a
+>   semana do plano (422); forms com snapping.
+> - **CONT-02 · Visão Semana no plano** ✅ — grade de 7 colunas como superfície
+>   principal (N posts/dia, "+ Post" com a data preenchida, contador "X de 7
+>   dias com post"), toggle Semana|Lista, deep-link `#item-N`; modal ganhou
+>   título/tema/roteiro/CTA (existiam no banco, a tela não pedia); "Duplicar"
+>   virou **"Planejar próxima semana"**.
+> - **CONT-03 · Calendários seg–dom** ✅ — o mensal interno abre na segunda; o
+>   portal ganhou **calendário mensal de consulta** (nunca mostra rascunho,
+>   clique abre o plano ancorado no criativo), faixa de chips da semana e
+>   navegação ← semana → (i18n pt/en/es).
+> - **CONT-04 · Modelo semanal por cliente** ✅ — `content_plan_templates`
+>   (migration 27; rodar em produção por `/admin/migrations`): "Salvar como
+>   modelo" captura a grade; criação de plano aplica nos weekdays certos.
+> - **CONT-05 · Auto-criação na aprovação** ✅ — automação
+>   `content.approved_create_next_plan` (por cliente, na matriz): aprovou a
+>   semana, nasce o rascunho da seguinte (modelo do cliente ou estrutura do
+>   plano aprovado); idempotente; criação manual antecipada vence; equipe
+>   avisada in-app.
+>
+> **Próximo ciclo do módulo (registrado, não iniciado):**
+> - **CONT-AVISOS · Padronizar avisos** — catálogo único de eventos × canais
+>   (whatsapp/email/inapp) × idioma; e-mail ganhar paridade com WhatsApp; a
+>   matriz de automações como fonte única. Desenhar junto com INT-01.
+> - **CONT-PORTAL · Coesão do portal** — dashboard do cliente mostrando "sua
+>   semana" (posts dos próximos 7 dias); item aprovado exibir quando foi
+>   publicado (fecha planejou→aprovou→publicou, conversa com PROD-07).
+> - **CONT-RADAR · Listagem agrupada por semana** — "Semana atual / Próxima /
+>   Passadas" destacando **clientes sem plano na próxima semana** — o radar do
+>   que a automação não cobriu.
 
 - **PROD-02 · IA→Ação com guardrails** — `G` · recomendação gera `ads_action` pré-preenchida; `ai_safety_rules` verificadas **em código** antes de executar na Meta. (Fases 7–8 do [PLANO_FASES.md](PLANO_FASES.md).)
 - **AI-01 · Metering de IA por agência** — `M` · tokens/custo por tenant, insumo de precificação.
