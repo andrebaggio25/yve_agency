@@ -10,6 +10,11 @@
       <p class="mt-1 text-sm text-gray-400"><?= count($plans) ?> plano<?= count($plans) !== 1 ? 's' : '' ?> encontrado<?= count($plans) !== 1 ? 's' : '' ?></p>
     </div>
     <?php if (\App\Support\Auth::can('content.create')): ?>
+    <a href="/conteudo/calendario"
+       class="rounded-lg border border-white/10 px-4 py-2 text-sm text-gray-300 hover:text-white hover:border-white/20 transition-colors inline-flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      Calendário
+    </a>
     <a href="/conteudo/criar"
        class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition-all hover:bg-violet-500 hover:scale-105 active:scale-95">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>

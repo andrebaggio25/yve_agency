@@ -110,6 +110,20 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
           Editar
         </a>
         <?php endif; ?>
+
+        <?php if (\App\Support\Auth::can('content.create')): ?>
+        <!-- PROD-05: duplicar evita refazer o mês do zero — o trabalho mais
+             repetitivo da rotina. A cópia nasce em rascunho, na semana seguinte. -->
+        <form method="POST" action="/conteudo/<?= e($plan['id']) ?>/duplicar" class="inline"
+              onsubmit="return confirm('Duplicar este plano com todos os itens? A cópia nasce como rascunho na semana seguinte, sem o histórico de aprovação.')">
+          <?= csrf_field() ?>
+          <button type="submit"
+                  class="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:border-white/20 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Duplicar
+          </button>
+        </form>
+        <?php endif; ?>
       </div>
     </div>
 

@@ -31,6 +31,12 @@ class ContentPlanService
         return $this->repo->allByAgency($agencyId, $filters);
     }
 
+    /** Itens com publicação no intervalo (PROD-04 — calendário). */
+    public function itemsBetween(int $agencyId, string $from, string $to, array $filters = []): array
+    {
+        return $this->repo->itemsBetween($agencyId, $from, $to, $filters);
+    }
+
     public function get(int $id, int $agencyId): ?array
     {
         return $this->repo->findByIdFull($id, $agencyId);
@@ -122,6 +128,105 @@ class ContentPlanService
     public function reorderItems(int $planId, array $ids): void
     {
         $this->repo->reorderItems($planId, $ids);
+    }
+
+    /**
+     * Duplica um plano com todos os itens (PROD-05).
+     *
+     * Montar o plano do mês seguinte era refazer tudo do zero — o trabalho mais
+     * repetitivo da rotina de uma social media. A cópia nasce em **rascunho**,
+     * com as datas deslocadas para a nova semana e **sem** o histórico do
+     * original: nada de status de aprovação, feedback da cliente ou datas de
+     * envio viajando junto (seria mentira dizer que a cliente aprovou o que ela
+     * nunca viu).
+     *
+     * @return array{success:bool,id?:int,error?:string}
+     */
+    public function duplicate(int $id, int $agencyId, int $userId, array $input = []): array
+    {
+        $plan = $this->getWithItems($id, $agencyId);
+        if (!$plan) {
+            return ['success' => false, 'error' => 'Plano não encontrado.'];
+        }
+
+        $weekStart = $input['week_start'] ?? $this->nextWeek((string) $plan['week_start']);
+        $title     = trim((string) ($input['title'] ?? '')) ?: $this->copyTitle((string) $plan['title']);
+
+        // Deslocamento aplicado a cada item, preservando a distribuição original
+        // (se o post caía na quarta, continua caindo na quarta).
+        $shiftDays = $this->daysBetween((string) $plan['week_start'], $weekStart);
+
+        $newId = $this->repo->createPlan([
+            'agency_id'  => $agencyId,
+            'client_id'  => (int) $plan['client_id'],
+            'title'      => $title,
+            'week_start' => $weekStart,
+            'week_end'   => $this->endOfWeek($weekStart),
+            'status'     => 'draft',   // nunca herda aprovação
+            'created_by' => $userId,
+            'notes'      => $plan['notes'] ?? null,
+        ]);
+
+        foreach ($plan['items'] ?? [] as $item) {
+            $this->repo->createItem([
+                'content_plan_id' => $newId,
+                'client_id'       => (int) $plan['client_id'],
+                'publish_date'    => $this->shiftDate($item['publish_date'] ?? null, $shiftDays),
+                'publish_time'    => $item['publish_time'] ?? null,
+                'platform'        => $item['platform'] ?? null,
+                'content_type'    => $item['content_type'] ?? null,
+                'title'           => $item['title'] ?? null,
+                'theme'           => $item['theme'] ?? null,
+                'caption'         => $item['caption'] ?? null,
+                'script'          => $item['script'] ?? null,
+                'cta'             => $item['cta'] ?? null,
+                'cover_url'       => $item['cover_url'] ?? null,
+                'images'          => $item['images'] ?? null,
+                'drive_url'       => $item['drive_url'] ?? null,
+                'drive_file_id'   => $item['drive_file_id'] ?? null,
+                'drive_file_type' => $item['drive_file_type'] ?? null,
+                'assigned_to'     => $item['assigned_to'] ?? null,
+                'sort_order'      => (int) ($item['sort_order'] ?? 0),
+                'status'          => 'draft',  // sem status/feedback do original
+            ]);
+        }
+
+        ActivityLogger::log('content_plan.duplicated', 'content', $userId, (int) $plan['client_id'], [
+            'source_plan_id' => $id,
+            'new_plan_id'    => $newId,
+            'items'          => count($plan['items'] ?? []),
+        ]);
+
+        return ['success' => true, 'id' => $newId];
+    }
+
+    /** Semana seguinte à do plano de origem (padrão ao duplicar). */
+    private function nextWeek(?string $weekStart): string
+    {
+        $base = $weekStart ?: date('Y-m-d');
+        return date('Y-m-d', strtotime($base . ' +7 days'));
+    }
+
+    /** "Plano de Julho" → "Plano de Julho (cópia)". */
+    private function copyTitle(string $title): string
+    {
+        return mb_substr($title . ' (cópia)', 0, 255);
+    }
+
+    private function daysBetween(?string $from, string $to): int
+    {
+        if (!$from) {
+            return 0;
+        }
+        return (int) round((strtotime($to) - strtotime($from)) / 86400);
+    }
+
+    private function shiftDate(?string $date, int $days): ?string
+    {
+        if (!$date) {
+            return null;
+        }
+        return date('Y-m-d', strtotime($date . " {$days} days"));
     }
 
     public function delete(int $id, int $agencyId): bool

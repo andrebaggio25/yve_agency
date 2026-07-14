@@ -36,11 +36,49 @@ class ContentPlanRepository extends Repository
                         (SELECT COUNT(*) FROM content_plan_items i WHERE i.content_plan_id = cp.id AND i.status = 'approved') AS approved_items
                  FROM content_plans cp
                  JOIN clients c ON c.id = cp.client_id
-                 JOIN users   u ON u.id = cp.created_by
+                 LEFT JOIN users u ON u.id = cp.created_by
                  WHERE {$cond}
                  ORDER BY cp.week_start DESC, cp.id DESC";
 
         return $this->all($sql, $params);
+    }
+
+    /**
+     * Itens de conteúdo com data de publicação num intervalo (PROD-04).
+     *
+     * O calendário é a visão que faltava: ninguém planeja conteúdo em lista —
+     * planeja olhando o mês, onde buracos e acúmulos ficam evidentes. Os dados
+     * já existiam; faltava a forma de ver.
+     *
+     * @param array{client_id?:int} $filters
+     */
+    public function itemsBetween(int $agencyId, string $from, string $to, array $filters = []): array
+    {
+        $where  = [
+            'cp.agency_id = :agency_id',
+            'i.publish_date BETWEEN :from AND :to',
+        ];
+        $params = [':agency_id' => $agencyId, ':from' => $from, ':to' => $to];
+
+        if (!empty($filters['client_id'])) {
+            $where[]              = 'cp.client_id = :client_id';
+            $params[':client_id'] = (int) $filters['client_id'];
+        }
+
+        return $this->all(
+            "SELECT i.id, i.publish_date, i.publish_time, i.platform, i.content_type,
+                    i.title, i.status, i.content_plan_id,
+                    cp.title AS plan_title,
+                    c.name   AS client_name,
+                    u.name   AS assigned_name
+             FROM content_plan_items i
+             JOIN content_plans cp ON cp.id = i.content_plan_id
+             JOIN clients c        ON c.id = cp.client_id
+             LEFT JOIN users u     ON u.id = i.assigned_to
+             WHERE " . implode(' AND ', $where) . "
+             ORDER BY i.publish_date, i.publish_time NULLS LAST, i.sort_order",
+            $params
+        );
     }
 
     public function allByClient(int $clientId, int $agencyId): array
@@ -51,13 +89,18 @@ class ContentPlanRepository extends Repository
                     (SELECT COUNT(*) FROM content_plan_items i WHERE i.content_plan_id = cp.id) AS total_items,
                     (SELECT COUNT(*) FROM content_plan_items i WHERE i.content_plan_id = cp.id AND i.status = 'approved') AS approved_items
              FROM content_plans cp
-             JOIN users u ON u.id = cp.created_by
+             LEFT JOIN users u ON u.id = cp.created_by
              WHERE cp.client_id = :client_id AND cp.agency_id = :agency_id AND cp.status != 'draft'
              ORDER BY cp.week_start DESC",
             [':client_id' => $clientId, ':agency_id' => $agencyId]
         );
     }
 
+    /**
+     * LEFT JOIN em `users`: `created_by` **não tem FK**, então aponta para um
+     * usuário que pode não existir mais (alguém saiu da equipe). Com INNER JOIN,
+     * o plano sumia da tela — 404 num plano que existe e aparece na listagem.
+     */
     public function findByIdFull(int $id, int $agencyId): ?array
     {
         return $this->first(
@@ -68,7 +111,7 @@ class ContentPlanRepository extends Repository
                     u.name         AS created_by_name
              FROM content_plans cp
              JOIN clients c ON c.id = cp.client_id
-             JOIN users   u ON u.id = cp.created_by
+             LEFT JOIN users u ON u.id = cp.created_by
              WHERE cp.id = :id AND cp.agency_id = :agency_id",
             [':id' => $id, ':agency_id' => $agencyId]
         );
@@ -80,7 +123,7 @@ class ContentPlanRepository extends Repository
             "SELECT cp.*, c.name AS client_name, u.name AS created_by_name
              FROM content_plans cp
              JOIN clients c ON c.id = cp.client_id
-             JOIN users   u ON u.id = cp.created_by
+             LEFT JOIN users u ON u.id = cp.created_by
              WHERE cp.id = :id AND cp.client_id = :client_id AND cp.status != 'draft'",
             [':id' => $id, ':client_id' => $clientId]
         );

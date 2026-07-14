@@ -146,13 +146,15 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->delete('/clients/{clientId}/access/{userId}', [ClientController::class, 'revokeAccess'], [CsrfMiddleware::class]);
     // Content plans
     $router->get('/content',                  [ContentPlanController::class, 'index']);
+    $router->get('/content/calendar',         [ContentPlanController::class, 'calendar']);
     $router->get('/content/new',              [ContentPlanController::class, 'create']);
     $router->post('/content',                 [ContentPlanController::class, 'store'],          [CsrfMiddleware::class]);
     $router->get('/content/{planId}',         [ContentPlanController::class, 'show']);
     $router->get('/content/{planId}/edit',    [ContentPlanController::class, 'edit']);
     $router->put('/content/{planId}',         [ContentPlanController::class, 'update'],         [CsrfMiddleware::class]);
     $router->delete('/content/{planId}',      [ContentPlanController::class, 'destroy'],        [CsrfMiddleware::class]);
-    $router->post('/content/{planId}/send',   [ContentPlanController::class, 'sendToApproval'], [CsrfMiddleware::class]);
+    $router->post('/content/{planId}/send',      [ContentPlanController::class, 'sendToApproval'], [CsrfMiddleware::class]);
+    $router->post('/content/{planId}/duplicate', [ContentPlanController::class, 'duplicate'],     [CsrfMiddleware::class]);
     $router->post('/content/{planId}/items',             [ContentPlanController::class, 'storeItem'],   [CsrfMiddleware::class]);
     $router->put('/content/{planId}/items/{itemId}',     [ContentPlanController::class, 'updateItem'],  [CsrfMiddleware::class]);
     $router->delete('/content/{planId}/items/{itemId}',  [ContentPlanController::class, 'destroyItem'], [CsrfMiddleware::class]);
@@ -317,6 +319,7 @@ $router->group([AuthMiddleware::class], function ($router) {
 
     // ── Planos de Conteúdo ────────────────────────────────────────────────────
     $router->get('/conteudo',                   [ContentPlanController::class, 'index']);
+    $router->get('/conteudo/calendario',        [ContentPlanController::class, 'calendar']);
     $router->get('/conteudo/novo',              [ContentPlanController::class, 'create']);
     $router->get('/conteudo/criar',             [ContentPlanController::class, 'create']);
     $router->post('/conteudo',                  [ContentPlanController::class, 'store'],          [CsrfMiddleware::class]);
@@ -324,7 +327,8 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/conteudo/{planId}/editar',   [ContentPlanController::class, 'edit']);
     $router->put('/conteudo/{planId}',          [ContentPlanController::class, 'update'],         [CsrfMiddleware::class]);
     $router->delete('/conteudo/{planId}',       [ContentPlanController::class, 'destroy'],        [CsrfMiddleware::class]);
-    $router->post('/conteudo/{planId}/enviar',  [ContentPlanController::class, 'sendToApproval'], [CsrfMiddleware::class]);
+    $router->post('/conteudo/{planId}/enviar',   [ContentPlanController::class, 'sendToApproval'], [CsrfMiddleware::class]);
+    $router->post('/conteudo/{planId}/duplicar', [ContentPlanController::class, 'duplicate'],     [CsrfMiddleware::class]);
 
     // Itens do plano
     $router->post('/conteudo/{planId}/items',              [ContentPlanController::class, 'storeItem'],   [CsrfMiddleware::class]);
