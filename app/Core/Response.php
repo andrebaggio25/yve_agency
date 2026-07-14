@@ -127,7 +127,9 @@ final class Response
             "img-src 'self' data: https:",
             "media-src 'self' https://drive.google.com blob:",
             "frame-src https://drive.google.com https://docs.google.com https://www.youtube.com https://www.youtube-nocookie.com",
-            "connect-src 'self'",
+            // googleapis.com: upload direto browser→Drive (UP-01) — os PUTs da
+            // sessão resumável saem do navegador direto pro Google.
+            "connect-src 'self' https://www.googleapis.com",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",

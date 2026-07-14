@@ -479,13 +479,22 @@ function driveManager(token, i18n, maxBytes) {
 
       try {
         const uploadUrl = await this.createUploadSession(entry.file);
+        let outcome = 'failed';
         if (uploadUrl) {
-          await this.uploadDirect(entry, uploadUrl);
-        } else if (this.maxBytes > 0 && entry.file.size > this.maxBytes) {
-          entry.status = 'error';
-          entry.error = this.i18n.err_too_large.replace(':max', this.i18n.max_label || this.humanSize(this.maxBytes));
-        } else {
-          await this.uploadRelay(entry);
+          outcome = await this.uploadDirect(entry, uploadUrl);
+        }
+        if (outcome === 'failed') {
+          if (this.maxBytes === 0 || entry.file.size <= this.maxBytes) {
+            // Transporte direto indisponível (rede/proxy): tenta o relay PHP.
+            entry.status = 'uploading';
+            entry.progress = 0;
+            entry.error = null;
+            entry.startedAt = Date.now();
+            await this.uploadRelay(entry);
+          } else {
+            entry.status = 'error';
+            entry.error = this.i18n.err_conn;
+          }
         }
       } catch (e) {
         if (entry.status !== 'canceled') { entry.status = 'error'; entry.error = this.i18n.err_conn; }
@@ -515,7 +524,11 @@ function driveManager(token, i18n, maxBytes) {
       } catch { return null; }
     },
 
-    /** Envia os bytes em chunks direto pra session URI do Google (com retomada). */
+    /**
+     * Envia os bytes em chunks direto pra session URI do Google (com retomada).
+     * Retorna: 'done' (terminou, sucesso ou erro já mostrado), 'canceled', ou
+     * 'failed' (transporte indisponível — o chamador pode cair no relay).
+     */
     async uploadDirect(entry, uploadUrl) {
       const file = entry.file;
       const total = file.size;
@@ -523,12 +536,12 @@ function driveManager(token, i18n, maxBytes) {
       let attempts = 0;
 
       while (offset < total) {
-        if (entry.status === 'canceled') return;
+        if (entry.status === 'canceled') return 'canceled';
 
         const end = Math.min(offset + _DRIVE_CHUNK, total);
         const res = await this.putChunk(entry, uploadUrl, file.slice(offset, end), offset, end, total);
 
-        if (entry.status === 'canceled') return;
+        if (entry.status === 'canceled') return 'canceled';
 
         if (res.type === 'progress') { offset = res.next; attempts = 0; continue; }
 
@@ -536,16 +549,17 @@ function driveManager(token, i18n, maxBytes) {
           entry.status = 'processing';
           entry.eta = '';
           await this.completeDirect(entry, res.file);
-          return;
+          return 'done';
         }
 
         // Chunk falhou: espera, pergunta ao Google quanto já foi gravado e retoma.
         attempts++;
-        if (attempts > 3) { entry.status = 'error'; entry.error = this.i18n.err_conn; return; }
+        if (attempts > 3) return 'failed';
         await new Promise(r => setTimeout(r, 1000 * attempts));
         const committed = await this.probeOffset(uploadUrl, total);
         if (committed !== null) offset = committed;
       }
+      return 'failed';
     },
 
     /** PUT de um chunk com Content-Range. 308 = continuar; 200/201 = terminou. */
