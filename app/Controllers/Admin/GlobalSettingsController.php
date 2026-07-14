@@ -40,6 +40,7 @@ class GlobalSettingsController extends Controller
             'ai_model',
             'openai_api_key',
             'anthropic_api_key',
+            'alert_email',
         ]);
 
         $instances = $this->instanceRepo->findAll();
@@ -69,6 +70,15 @@ class GlobalSettingsController extends Controller
         $openaiKey     = trim((string) $request->post('openai_api_key', ''));
         $anthropicKey  = trim((string) $request->post('anthropic_api_key', ''));
 
+        // OBS-01: destinatário dos alertas operacionais (job morto, sync parado).
+        // Validado aqui: um e-mail errado significa alerta que nunca chega —
+        // pior que não ter alerta, porque dá falsa sensação de cobertura.
+        $alertEmail = trim((string) $request->post('alert_email', ''));
+        if ($alertEmail !== '' && !filter_var($alertEmail, FILTER_VALIDATE_EMAIL)) {
+            $this->withError('E-mail de alertas inválido.');
+            return $this->redirect('/admin/configuracoes');
+        }
+
         $map = [
             'evolution_api_url'    => $evolutionUrl,
             'evolution_enabled'    => $evolutionEnabled,
@@ -81,6 +91,7 @@ class GlobalSettingsController extends Controller
             'meta_app_id'  => $metaAppId,
             'ai_provider'  => $aiProvider,
             'ai_model'     => $aiModel,
+            'alert_email'  => $alertEmail,
         ];
 
         // Só salva a API key se não for placeholder (campo mascarado)

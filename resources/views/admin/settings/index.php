@@ -97,6 +97,44 @@
     </div>
   </div>
 
+  <!-- Alertas operacionais (OBS-01) -->
+  <div class="card p-6 mb-6">
+    <div class="flex items-center gap-3 mb-1">
+      <span class="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      </span>
+      <div>
+        <h2 class="text-base font-semibold text-white">Alertas operacionais</h2>
+        <p class="text-xs text-gray-500">Quem recebe o aviso quando algo falha em silêncio</p>
+      </div>
+    </div>
+
+    <p class="text-sm text-gray-400 mt-3 mb-4 leading-relaxed">
+      Recebe e-mail quando um <strong class="text-gray-300">job falha definitivamente</strong> (trabalho que
+      ninguém fez) ou quando uma <strong class="text-gray-300">conta fica sem sincronizar há mais de 48h</strong>
+      (sync quebrado é silencioso — o cliente descobre no relatório errado).
+      No máximo <strong class="text-gray-300">1 alerta por hora</strong>.
+      Sem e-mail aqui, o alerta só vai para o log do servidor.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1.5">E-mail para alertas</label>
+        <input type="email" name="alert_email" value="<?= e($allSettings['alert_email'] ?? '') ?>"
+               placeholder="voce@suaagencia.com"
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors">
+        <p class="text-xs text-gray-600 mt-1.5">Exige o SMTP acima configurado e funcionando.</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1.5">Monitor externo (UptimeRobot etc.)</label>
+        <div class="rounded-xl border border-white/10 bg-black/30 px-4 py-2.5">
+          <code class="text-xs text-gray-400 break-all"><?= e(rtrim((string) env('APP_URL', ''), '/')) ?>/api/health</code>
+        </div>
+        <p class="text-xs text-gray-600 mt-1.5">Aponte um monitor para esta URL a cada 5 min. Detalhes: docs/OPERACAO.md.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Meta Ads API -->
   <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
     <h2 class="text-sm font-semibold text-white mb-1">Meta Ads API</h2>
