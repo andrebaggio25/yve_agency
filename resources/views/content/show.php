@@ -742,7 +742,12 @@ $postTypes = ['Reels / Vídeo', 'Feed Estático', 'Carrossel', 'Story'];
 
 </div><!-- /x-data -->
 
-<script src="<?= asset('/js/content-editor.js') ?>" defer></script>
+<!-- SEM defer, de propósito: o Alpine (defer, no <head>) executa ANTES de
+     qualquer script defer do body e chama Alpine.start() — se este módulo
+     ainda não tiver definido a função do x-data, o componente morre com
+     "ReferenceError: ... is not defined". Script clássico no body executa
+     durante o parse, portanto antes do Alpine. -->
+<script src="<?= asset('/js/content-editor.js') ?>"></script>
 
 <!-- Instagram preview modal -->
 <div x-data="instaPreview()"

@@ -1,0 +1,33 @@
+[      37ms] [WARNING] Alpine Expression Error: meuComponente is not defined
+
+Expression: "meuComponente()"
+
+ JSHandle@node @ http://localhost:8099/alpine.min.js:0
+[      37ms] [WARNING] Alpine Expression Error: msg is not defined
+
+Expression: "msg"
+
+ JSHandle@node @ http://localhost:8099/alpine.min.js:0
+[      39ms] ReferenceError: meuComponente is not defined
+    at [Alpine] meuComponente() (eval at <anonymous> (http://localhost:8099/alpine.min.js:5:665), <anonymous>:3:16)
+    at http://localhost:8099/alpine.min.js:5:1068
+    at nr (http://localhost:8099/alpine.min.js:1:5081)
+    at M (http://localhost:8099/alpine.min.js:5:143)
+    at Function.<anonymous> (http://localhost:8099/alpine.min.js:5:34008)
+    at r (http://localhost:8099/alpine.min.js:5:2323)
+    at n (http://localhost:8099/alpine.min.js:5:2353)
+    at lr (http://localhost:8099/alpine.min.js:5:2363)
+    at S (http://localhost:8099/alpine.min.js:5:5102)
+    at http://localhost:8099/alpine.min.js:5:4562
+[      39ms] ReferenceError: msg is not defined
+    at [Alpine] msg (eval at <anonymous> (http://localhost:8099/alpine.min.js:5:665), <anonymous>:3:32)
+    at http://localhost:8099/alpine.min.js:5:1068
+    at nr (http://localhost:8099/alpine.min.js:1:5081)
+    at http://localhost:8099/alpine.min.js:5:32986
+    at r (http://localhost:8099/alpine.min.js:5:18275)
+    at Object.en [as effect] (http://localhost:8099/alpine.min.js:5:18063)
+    at D (http://localhost:8099/alpine.min.js:1:398)
+    at http://localhost:8099/alpine.min.js:1:511
+    at Function.<anonymous> (http://localhost:8099/alpine.min.js:5:32979)
+    at r (http://localhost:8099/alpine.min.js:5:2323)
+[      39ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8099/favicon.ico:0

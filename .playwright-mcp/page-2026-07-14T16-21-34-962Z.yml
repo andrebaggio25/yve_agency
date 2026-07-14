@@ -1,0 +1,7 @@
+- generic [ref=f2e2]:
+  - paragraph [ref=f2e3]: "estado: pronto"
+  - button "Nova pasta" [active] [ref=f2e4]
+  - generic [ref=f2e5]:
+    - textbox [ref=f2e6]
+    - button "Criar" [ref=f2e7]
+  - list

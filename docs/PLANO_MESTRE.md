@@ -23,6 +23,7 @@
 
 ### FE-02 · Extrair JS inline das views gigantes — `G` 🟠 · ✅ FEITO (2026-07-14)
 > Três módulos em `public/js/`: **`content-editor.js`** (289 l., de `content/show.php` — que caiu de **1.183 → 908** linhas), **`drive-manager.js`** (527 l., de `portal/files.php` — **566 → 280**) e **`approvals.js`** (100 l., de `approvals/show.php` — **423 → 327**). Os valores que vinham do PHP (id do plano, nome do cliente) entram por **`data-*`** no container; **zero PHP dentro de JS**. O JS agora é cacheável pelo navegador, testável fora do PHP e legível.
+> **Bug introduzido e corrigido no mesmo dia:** os módulos saíram com `defer`. Scripts `defer` executam na **ordem do documento**, e o Alpine está no `<head>` — ou seja, `Alpine.start()` rodava **antes** de o módulo definir `driveManager()`/`approvalShow()`/`contentShow()`, e os componentes morriam com `ReferenceError`. Em produção: não dava para criar pasta no portal, nem ver preview na aprovação. Corrigido tirando o `defer` (script clássico no body executa durante o parse, antes de qualquer `defer`) e travado por `ScriptLoadOrderTest`. Reproduzido e validado no navegador com Playwright.
 > Restam `<script>` inline nas 18 views menores — não bloqueiam nada hoje (o nonce depende do Alpine CSP, ver SEC-10) e migram junto do FE-03 quando essas telas forem tocadas.
 
 ### FE-03 · Wrapper padrão de fetch (estados + erros) — `M` 🟠 · ✅ PARCIAL (2026-07-14)
