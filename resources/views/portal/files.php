@@ -20,6 +20,7 @@ $jsI18n = [
   'status_canceled'      => t('portal.files.status_canceled'),
   'status_error'         => t('portal.files.status_error'),
   'err_too_large'        => t('portal.files.err_too_large'),
+  'err_unreadable'       => t('portal.files.err_unreadable'),
   'err_conn'             => t('portal.files.err_conn'),
   'err_generic'          => t('portal.files.err_generic'),
   'err_invalid_response' => t('portal.files.err_invalid_response'),
@@ -261,6 +262,9 @@ let _driveUploadSeq = 0;
 const _DRIVE_MAX_CONCURRENT = 2;
 // Chunk do upload direto browser→Drive: o Google exige múltiplo de 256KB.
 const _DRIVE_CHUNK = 16 * 1024 * 1024;
+// Wake lock (fora do estado reativo): iOS congela o JS quando a tela apaga,
+// matando uploads longos — segurar a tela acesa enquanto houver envio ativo.
+let _driveWakeLock = null;
 
 function driveManager(token, i18n, maxBytes) {
   return {
@@ -286,6 +290,43 @@ function driveManager(token, i18n, maxBytes) {
 
     base() { return `/portal/${token}`; },
     rawUrl(file) { return `${this.base()}/drive/file/${file.id}/raw`; },
+
+    // Alpine chama init() automaticamente ao montar o componente.
+    init() {
+      // iOS: ao voltar pra página com envio ativo, readquire o wake lock
+      // (ele é liberado pelo sistema quando a aba sai de foco).
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && this.activeCount > 0) this.acquireWakeLock();
+      });
+      // Sair da página mata os envios — avisa antes.
+      window.addEventListener('beforeunload', (e) => {
+        if (this.activeCount > 0 || this.queue.length > 0) { e.preventDefault(); e.returnValue = ''; }
+      });
+    },
+
+    async acquireWakeLock() {
+      try {
+        if ('wakeLock' in navigator && !_driveWakeLock) {
+          _driveWakeLock = await navigator.wakeLock.request('screen');
+          _driveWakeLock.addEventListener('release', () => { _driveWakeLock = null; });
+        }
+      } catch {}
+    },
+    releaseWakeLock() {
+      try { _driveWakeLock && _driveWakeLock.release(); } catch {}
+      _driveWakeLock = null;
+    },
+
+    /**
+     * Confere que o arquivo é legível ANTES de abrir a sessão. No iOS, vídeo
+     * "otimizado" no iCloud vira um temporário que o WebKit pode invalidar —
+     * a leitura falha/trava e o upload morreria em silêncio.
+     */
+    fileReadable(file) {
+      const read = file.slice(0, 1024).arrayBuffer().then(() => true, () => false);
+      const timeout = new Promise(r => setTimeout(() => r(false), 15000));
+      return Promise.race([read, timeout]);
+    },
 
     async load(folderId) {
       this.loading = true;
@@ -471,8 +512,17 @@ function driveManager(token, i18n, maxBytes) {
       entry.status = 'uploading';
       entry.startedAt = Date.now();
       this.activeCount++;
+      this.acquireWakeLock();
 
       try {
+        // iOS/iCloud: valida a leitura antes de abrir sessão — falha vira
+        // mensagem clara em vez de upload morto no meio.
+        if (!(await this.fileReadable(entry.file))) {
+          entry.status = 'error';
+          entry.error = this.i18n.err_unreadable;
+          return;
+        }
+
         const sess = await this.createUploadSession(entry.file);
         let outcome = 'failed';
         let diag = sess.diag || '';
@@ -503,6 +553,7 @@ function driveManager(token, i18n, maxBytes) {
         delete _driveXhrs[entry.uid];
         this.activeCount = Math.max(0, this.activeCount - 1);
         this.pumpQueue();
+        if (this.activeCount === 0 && this.queue.length === 0) this.releaseWakeLock();
       }
     },
 

@@ -372,6 +372,7 @@ return [
     'portal.files.status_canceled'     => 'Cancelado',
     'portal.files.status_error'        => 'Error',
     'portal.files.err_too_large'       => 'Archivo demasiado grande (máximo :max).',
+    'portal.files.err_unreadable'      => 'No se pudo leer el archivo del dispositivo. Si el vídeo está en iCloud, abre la app Fotos, espera a que se descargue por completo e inténtalo de nuevo.',
     'portal.files.err_conn'            => 'Conexión interrumpida. Revisa tu internet e inténtalo de nuevo.',
     'portal.files.err_generic'         => 'No se pudo subir. Inténtalo de nuevo.',
     'portal.files.err_invalid_response'=> 'Respuesta inesperada del servidor. Inténtalo de nuevo.',
