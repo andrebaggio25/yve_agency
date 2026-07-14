@@ -38,16 +38,35 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertStringContainsString("frame-ancestors 'self'", $csp);
     }
 
-    /** SEC-10: com os assets self-hosted (FE-01), script só pode vir de 'self'. */
-    public function test_scripts_come_only_from_self_without_eval(): void
+    /** SEC-10/FE-01: nenhuma origem externa de script — os assets são self-hosted. */
+    public function test_scripts_come_only_from_self(): void
     {
         $csp = $this->csp();
 
         preg_match('/script-src([^;]*)/', $csp, $m);
         $scriptSrc = $m[1] ?? '';
 
-        $this->assertStringNotContainsString('unsafe-eval', $scriptSrc, "'unsafe-eval' voltou — era exigência do Tailwind CDN, que não existe mais.");
         $this->assertStringNotContainsString('cdn.', $scriptSrc, 'Script de CDN voltou — os assets são self-hosted (FE-01).');
+        $this->assertStringNotContainsString('http', $scriptSrc, 'Origem externa de script na CSP — só self é permitido.');
         $this->assertStringContainsString("'self'", $scriptSrc);
+    }
+
+    /**
+     * `'unsafe-eval'` precisa CONTINUAR na CSP enquanto usarmos o Alpine padrão.
+     *
+     * Regressão real: ao endurecer a CSP eu removi `unsafe-eval`, e o Alpine —
+     * que compila `x-data`/`@click`/`x-text` com `new AsyncFunction()` — parou
+     * de executar. Efeito em produção: menus, modais e o upload do portal
+     * mortos, com `EvalError` no console. Este teste existe para impedir que
+     * alguém "melhore" a CSP de novo sem antes migrar para `@alpinejs/csp`.
+     */
+    public function test_unsafe_eval_is_present_because_alpine_needs_it(): void
+    {
+        $this->assertStringContainsString(
+            "'unsafe-eval'",
+            $this->csp(),
+            "Sem 'unsafe-eval' o Alpine.js não avalia expressões e a UI inteira quebra. "
+            . 'Só remova junto com a migração para @alpinejs/csp (ver SEC-10 no PLANO_MESTRE).'
+        );
     }
 }

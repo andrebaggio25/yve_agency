@@ -113,13 +113,19 @@ final class Response
     /**
      * CSP do app (SEC-03 + SEC-10).
      *
-     * Depois do FE-01 (self-host de Tailwind/Alpine/Chart/marked), **nenhum
-     * script vem de CDN** — `script-src` é só `'self'`, e o `'unsafe-eval'`
-     * que o Tailwind-CDN exigia foi eliminado. O `'unsafe-inline'` continua
-     * porque várias views ainda têm `<script>` inline; sai quando o FE-02
-     * mover esse JS para arquivos (aí vira nonce).
+     * Depois do FE-01 (self-host), **nenhum script vem de CDN** — a allowlist
+     * de origens é só `'self'`. Ganho real: um CDN comprometido não executa
+     * mais nada aqui.
      *
-     * Exceções conscientes:
+     * `'unsafe-eval'` é **obrigatório**, não descuido: o Alpine.js avalia as
+     * expressões dos atributos (`x-data`, `@click`, `x-text`) com
+     * `new AsyncFunction()`. Sem ele, o Alpine morre e a interface inteira
+     * (menus, modais, upload) para de funcionar — verificado no navegador.
+     * Removê-lo exige migrar para o build `@alpinejs/csp`, que proíbe
+     * expressão inline e obrigaria a reescrever todas as views (ver SEC-10 no
+     * PLANO_MESTRE). `'unsafe-inline'` idem, enquanto houver `<script>` inline.
+     *
+     * Outras exceções conscientes:
      * - `style-src` inline: Tailwind/Alpine escrevem estilo inline em runtime.
      * - `img-src https:`: logo/thumbnail de agência e do Drive vêm de fora.
      * - `connect-src googleapis`: PUTs do upload direto pro Drive (UP-01).
@@ -129,7 +135,7 @@ final class Response
     {
         return implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' data: https://fonts.gstatic.com",
             "img-src 'self' data: https:",

@@ -21,10 +21,9 @@
 > **Acento tokenizado como var CSS `--accent`:** o painel da plataforma vira vermelho só com `data-theme="admin"` no `<body>`, com o mesmo CSS. Isso entrega de graça a base do **white-label por agência (PROD-06)**.
 > Travado por `NoRuntimeCdnTest` (nenhuma view pode voltar a usar CDN; assets buildados têm de estar commitados). Purge auditado: nenhuma classe é montada por concatenação, então nada some do build.
 
-### FE-02 · Extrair JS inline das views gigantes — `G` 🟠
-- **Arquivos:** `resources/views/content/show.php` (1.183 l.), `portal/files.php` (566 l.), `approvals/show.php` (423 l.).
-- **Ação:** mover para módulos em `public/js/` (ex.: `content-editor.js`, `drive-manager.js`); dados do PHP entram por `data-*`/`json_encode` com flags `JSON_HEX_*`; view fica < 400 linhas.
-- **Pronto quando:** as três views só têm markup + include do módulo; nenhuma regressão nos fluxos (validar com `visual-validation`).
+### FE-02 · Extrair JS inline das views gigantes — `G` 🟠 · ✅ FEITO (2026-07-14)
+> Três módulos em `public/js/`: **`content-editor.js`** (289 l., de `content/show.php` — que caiu de **1.183 → 908** linhas), **`drive-manager.js`** (527 l., de `portal/files.php` — **566 → 280**) e **`approvals.js`** (100 l., de `approvals/show.php` — **423 → 327**). Os valores que vinham do PHP (id do plano, nome do cliente) entram por **`data-*`** no container; **zero PHP dentro de JS**. O JS agora é cacheável pelo navegador, testável fora do PHP e legível.
+> Restam `<script>` inline nas 18 views menores — não bloqueiam nada hoje (o nonce depende do Alpine CSP, ver SEC-10) e migram junto do FE-03 quando essas telas forem tocadas.
 
 ### FE-03 · Wrapper padrão de fetch (estados + erros) — `M` 🟠 · ✅ PARCIAL (2026-07-14)
 > **Feito:** `public/js/api.js` — injeta `X-CSRF-Token`, valida `response.ok`, timeout (30s padrão), converte erro do servidor em `ApiError` com mensagem legível (e `isNetwork` para distinguir queda de rede de erro de regra), trata resposta não-JSON (HTML de erro 500 não vira mais crash de parse) e 419 (“sessão expirou, atualize a página”). Carregado nos 3 layouts.
@@ -59,7 +58,10 @@
 - **INFRA-03 · Padronizar `insert()` com `RETURNING id`** — `P` 🟡.
 - **DATA-01 · Backup e retenção documentados** — `P` 🟡 · política do Supabase + retenção de `activity_logs`.
 - **ADM-01 · Guard-rail no painel de migrations** — `P` 🟡 · aviso forte + registrar dump/backup antes de `rollback` em produção.
-- **SEC-10 · CSP estrita** — `M` 🟡 · ✅ **PARCIAL (2026-07-14)** · com o self-host do FE-01, `script-src` virou **`'self'` puro: `unsafe-eval` e todos os CDNs saíram** (era exigência do Tailwind-CDN). Resta `'unsafe-inline'`, porque várias views ainda têm `<script>` inline — **sai com o FE-02** (extrair o JS), aí vira nonce. Regressão travada por `ContentSecurityPolicyTest`.
+- **SEC-10 · CSP estrita** — `G` 🟡 · ⚠️ **PARCIAL — e um erro meu, registrado (2026-07-14)**
+  - **Entregue:** com o self-host do FE-01, `script-src` não tem mais **nenhuma origem externa** (`'self'` apenas). Ganho real: CDN comprometido não executa nada aqui.
+  - **Regressão que eu introduzi e corrigi:** ao endurecer a CSP, removi `'unsafe-eval'`. **O Alpine.js compila `x-data`/`@click`/`x-text` com `new AsyncFunction()` — sem `unsafe-eval` ele morre e a UI inteira (menus, modais, upload) para**, com `EvalError` no console. Descoberto ao testar a CSP real num navegador (Playwright), não por leitura de código. `'unsafe-eval'` foi restaurado e agora é **exigido** pelo `ContentSecurityPolicyTest` — com o porquê no teste, para ninguém "melhorar" a CSP de novo e quebrar tudo.
+  - **Para fechar de verdade** (fora do escopo deste ciclo): migrar para o build **`@alpinejs/csp`**, que não usa `eval` — mas proíbe expressão inline (`@click="n++"` vira `@click="increment()"`), exigindo reescrever as expressões de **todas** as views. Só então caem `unsafe-eval` e `unsafe-inline` (com nonce). É trabalho de ciclo próprio, com ganho de segurança moderado — decidir na próxima análise.
 
 ---
 
