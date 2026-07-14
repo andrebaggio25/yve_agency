@@ -106,7 +106,7 @@ O hosting compartilhado **não roda `npm run build`**. Por isso `public/css/app.
 
 **Decisão pendente:** quem hospeda a instância Evolution? É um serviço auto-hospedado — se ele cai, o WhatsApp para e **ninguém é avisado** (a menos que o alerta de job falho pegue). Documente aqui o endereço, quem administra e como reiniciar.
 
-**Risco a mitigar (INT-02):** WhatsApp bane número por volume/spam. Antes de usar com vários clientes, limite a cadência de envio por instância.
+**Proteção já ativa (INT-02):** os envios de WhatsApp saem **espaçados em 8s** por agência (~7 msg/min). Uma automação para 20 clientes leva ~2,5 min em vez de disparar tudo de uma vez — que é o padrão que faz o WhatsApp banir o número.
 
 ### ClickUp — INT-03
 
