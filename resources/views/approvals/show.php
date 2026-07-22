@@ -93,6 +93,9 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
       $iLabel = ContentPlanService::itemStatusLabel($item['status']);
       $parsed = $item['drive_parsed'] ?? ($item['drive_url'] ? $drive->parse($item['drive_url']) : null);
       $frameClass = ContentPlanService::previewFrameClass($item['content_type'] ?? null);
+      $videoFrame = ($parsed['file_type'] ?? null) === 'video'
+          ? ContentPlanService::videoFrameClass($item['content_type'] ?? null)
+          : 'aspect-video';
       $imagesList = $item['images_list'] ?? [];
     ?>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] overflow-hidden"
@@ -195,13 +198,15 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
               Abrir ↗
             </a>
           </div>
-          <div class="relative bg-black/30" style="padding-top: 56.25%">
-            <iframe src="<?= e($parsed['embed_url']) ?>"
-                    class="absolute inset-0 w-full h-full border-0"
-                    loading="lazy" allowfullscreen
-                    @load="loaded = true"></iframe>
-            <div x-show="!loaded" class="absolute inset-0 flex items-center justify-center">
-              <div class="w-8 h-8 rounded-full border-2 border-brand-500/30 border-t-brand-500 animate-spin"></div>
+          <div class="bg-black/30">
+            <div class="relative <?= $videoFrame ?>">
+              <iframe src="<?= e($parsed['embed_url']) ?>"
+                      class="absolute inset-0 w-full h-full border-0"
+                      loading="lazy" allowfullscreen
+                      @load="loaded = true"></iframe>
+              <div x-show="!loaded" class="absolute inset-0 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-full border-2 border-brand-500/30 border-t-brand-500 animate-spin"></div>
+              </div>
             </div>
           </div>
         </div>

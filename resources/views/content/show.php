@@ -407,6 +407,9 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
       if (mb_strlen($captionPreview) > 90) $captionPreview = mb_substr($captionPreview, 0, 90) . '…';
       $frameClass = ContentPlanService::previewFrameClass($item['content_type'] ?? null);
       $isVertical = ContentPlanService::previewRatio($item['content_type'] ?? null) === '9/16';
+      $videoFrame = ($parsedDrive['file_type'] ?? null) === 'video'
+          ? ContentPlanService::videoFrameClass($item['content_type'] ?? null)
+          : 'aspect-video';
     ?>
     <div class="item-card group rounded-2xl border border-white/5 bg-white/[0.03] transition-all duration-200 hover:border-brand-500/20 hover:bg-white/[0.05]"
          x-data="itemCard(<?= htmlspecialchars(json_encode($item), ENT_QUOTES) ?>)"
@@ -572,7 +575,7 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
               Abrir →
             </a>
           </div>
-          <div class="aspect-video">
+          <div class="<?= $videoFrame ?>">
             <iframe src="<?= e($parsedDrive['embed_url']) ?>"
                     class="w-full h-full border-0" loading="lazy" allowfullscreen></iframe>
           </div>

@@ -157,6 +157,7 @@ foreach ($items as $it) {
     $itemStatus  = $item['status'] ?? 'draft';
     $imagesList  = $item['images_list'] ?? [];
     $frameClass  = \App\Services\ContentPlanService::previewFrameClass($item['content_type'] ?? null);
+    $videoFrame  = \App\Services\ContentPlanService::videoFrameClass($item['content_type'] ?? null);
     // Detect YouTube URL for timecode auto-capture
     $youtubeId = null;
     if (!empty($item['drive_url'])) {
@@ -224,7 +225,7 @@ foreach ($items as $it) {
             <svg class="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="currentColor"><path d="M21.582 7.18a2.721 2.721 0 00-1.917-1.93C18.005 5 12 5 12 5s-6.004 0-7.665.25A2.721 2.721 0 002.418 7.18C2.17 8.847 2 10.423 2 12s.17 3.153.418 4.82a2.721 2.721 0 001.917 1.93C6 19 12 19 12 19s6.005 0 7.665-.25a2.721 2.721 0 001.917-1.93C21.83 15.153 22 13.577 22 12s-.17-3.153-.418-4.82zM9.954 15.22V8.78L15.477 12 9.954 15.22z"/></svg>
             <span class="text-xs text-gray-400">YouTube</span>
           </div>
-          <div class="aspect-video">
+          <div class="<?= $videoFrame ?>">
             <iframe id="yt-<?= $item['id'] ?>"
                     src="https://www.youtube.com/embed/<?= e($youtubeId) ?>?enablejsapi=1&origin=<?= urlencode(rtrim(env('APP_URL',''), '/')) ?>"
                     class="w-full h-full border-0" loading="lazy" allowfullscreen></iframe>
@@ -241,7 +242,7 @@ foreach ($items as $it) {
             <a href="<?= e($parsedDrive['original']) ?>" target="_blank" rel="noopener"
                class="ml-auto text-xs text-brand-400 hover:text-brand-300"><?= t('portal.plan.open_drive') ?></a>
           </div>
-          <div class="aspect-video">
+          <div class="<?= $videoFrame ?>">
             <iframe src="<?= e($parsedDrive['embed_url']) ?>"
                     class="w-full h-full border-0" loading="lazy" allowfullscreen></iframe>
           </div>

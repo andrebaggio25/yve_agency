@@ -768,4 +768,20 @@ class ContentPlanService
             ? 'aspect-[9/16] max-w-[15rem]'
             : 'aspect-[3/4] max-w-[20rem]';
     }
+
+    /**
+     * Classes do quadro do player de vídeo embutido (Drive/YouTube).
+     * Reels/Story são 9:16 — num quadro fixo 16:9 o player corta o vídeo
+     * vertical no mobile. A largura máxima segura o quadro 9:16 para ele
+     * não estourar a altura da tela no desktop; no celular vira full-width.
+     * 'reels' minúsculo cobre dado legado que o portal já aceita.
+     */
+    public static function videoFrameClass(?string $contentType): string
+    {
+        $vertical = in_array($contentType, ['Reels / Vídeo', 'reels', 'Story'], true);
+
+        return $vertical
+            ? 'aspect-[9/16] w-full max-w-[22rem] mx-auto'
+            : 'aspect-video';
+    }
 }
