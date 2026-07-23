@@ -15,7 +15,7 @@ Fonte canônica: `docs/PLANO_MESTRE.md` (**a verdade absoluta** — leia o item 
 
 ## Marco A — Fluxos redondos (prioridade atual · Sprint 5)
 
-- **CONT-06** 🟠 `G` — mídia do post sem colar URL (redesenhado 23/07 — `drive.file` NÃO enxerga o que editores sobem direto no Drive): (1) upload direto no modal do post via máquina do UP-01 (registra em `drive_files` e preenche o link) + picker da galeria; (2) upload na galeria interna (`clients/files.php`, hoje só leitura). DRIVE-03 (`drive.readonly` + verificação Google) é a escalação se o hábito dos editores não mudar. Pronto: post de carrossel completo sem digitar URL com arquivo novo + teste de escopo.
+- **CONT-06** ✅ fase 1 (23/07) — galeria interna com upload direto (UP-01) + criar pastas + Copiar link (`DriveUploadService` compartilhado, `drive-manager.js` parametrizado); colar URL nos posts segue valendo. **Fase 2 aberta (sem pressa):** picker de mídia dentro do modal do post. Lembrete: `drive.file` NÃO enxerga o que editores sobem direto no Drive — DRIVE-03 é a escalação.
 - **AUTO-01** 🟡 `P` — ativação guiada de automações: banner em `/automations` quando tudo inativo + "Ativar kit recomendado" (kit do AUTOMACOES.md; WhatsApp fica fora até INT-01) + `activity_logs`.
 - **TRAF-01** 🟠 `M` — automação `traffic.anomaly` (agency, daily): campanha ativa pausada na Meta, CPA ≥ 2× média 7d, sync falho → in-app ao gestor. Padrão `AbstractAutomation`, dedupe por campanha+dia, entra no catálogo + AUTOMACOES.md.
 - **QA-04** 🟡 `P` — smoke de navegador com `SMOKE_EMAIL/SMOKE_PASSWORD/PORTAL_TOKEN` para painel e portal não pularem.
