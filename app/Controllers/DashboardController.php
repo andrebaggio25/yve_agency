@@ -28,10 +28,23 @@ class DashboardController extends Controller
             ? $this->invoiceRepo->summaryByAgency($agencyId)
             : null;
 
+        // "Meu dia" (PROD-08): cada bloco respeita a permissão do módulo de origem.
+        $myDay = [
+            'stalled_approvals' => Auth::can('content.view')
+                ? $this->dashboardRepo->stalledApprovals($agencyId) : [],
+            'invoices_due'      => Auth::can('invoices.view')
+                ? $this->dashboardRepo->invoicesNeedingAttention($agencyId) : [],
+            'overdue_tasks'     => Auth::can('tasks.view')
+                ? $this->dashboardRepo->overdueTasks($agencyId) : [],
+            'broken_syncs'      => Auth::can('ads_metrics.view')
+                ? $this->dashboardRepo->brokenSyncs($agencyId) : [],
+        ];
+
         return $this->view('dashboard.index', [
             'stats'            => $this->dashboardRepo->statsByAgency($agencyId),
             'recent_plans'     => $this->dashboardRepo->recentPlans($agencyId),
             'financialSummary' => $financialSummary,
+            'myDay'            => $myDay,
             'user'             => Auth::user(),
         ]);
     }
