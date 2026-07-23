@@ -93,9 +93,7 @@ $pct         = $totalItems > 0 ? round(($approvedCount / $totalItems) * 100) : 0
       $iLabel = ContentPlanService::itemStatusLabel($item['status']);
       $parsed = $item['drive_parsed'] ?? ($item['drive_url'] ? $drive->parse($item['drive_url']) : null);
       $frameClass = ContentPlanService::previewFrameClass($item['content_type'] ?? null);
-      $videoFrame = ($parsed['file_type'] ?? null) === 'video'
-          ? ContentPlanService::videoFrameClass($item['content_type'] ?? null)
-          : 'aspect-video';
+      $videoFrame = ContentPlanService::videoFrameClass($item['content_type'] ?? null, $parsed['file_type'] ?? null);
       $imagesList = $item['images_list'] ?? [];
     ?>
     <div class="rounded-2xl border border-white/5 bg-white/[0.03] overflow-hidden"

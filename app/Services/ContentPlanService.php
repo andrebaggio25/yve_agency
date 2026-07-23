@@ -775,9 +775,17 @@ class ContentPlanService
      * vertical no mobile. A largura máxima segura o quadro 9:16 para ele
      * não estourar a altura da tela no desktop; no celular vira full-width.
      * 'reels' minúsculo cobre dado legado que o portal já aceita.
+     *
+     * $fileType: link genérico do Drive (/file/d/…) não revela o tipo e vira
+     * 'file' — nesse caso a proporção segue o tipo do post. Só arquivos
+     * claramente não-vídeo (documento, planilha, pasta…) forçam 16:9.
      */
-    public static function videoFrameClass(?string $contentType): string
+    public static function videoFrameClass(?string $contentType, ?string $fileType = null): string
     {
+        if ($fileType !== null && !in_array($fileType, ['video', 'file'], true)) {
+            return 'aspect-video';
+        }
+
         $vertical = in_array($contentType, ['Reels / Vídeo', 'reels', 'Story'], true);
 
         return $vertical
