@@ -302,6 +302,7 @@ return [
     'portal.plan.fb_comment'           => 'Comentario',
     'portal.plan.note_optional'        => 'Observación opcional...',
     'portal.plan.describe_change'      => 'Describe lo que hay que cambiar...',
+    'portal.plan.folder'               => 'Archivos de Drive',
     'portal.plan.video_excerpt'        => 'Fragmento del vídeo (opcional)',
     'portal.plan.capture'              => 'Capturar',
     'portal.plan.capture_title'        => 'Capturar el momento actual del vídeo',

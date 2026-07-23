@@ -302,6 +302,7 @@ return [
     'portal.plan.fb_comment'           => 'Comment',
     'portal.plan.note_optional'        => 'Optional note...',
     'portal.plan.describe_change'      => 'Describe what needs to change...',
+    'portal.plan.folder'               => 'Drive files',
     'portal.plan.video_excerpt'        => 'Video excerpt (optional)',
     'portal.plan.capture'              => 'Capture',
     'portal.plan.capture_title'        => 'Capture the current video moment',

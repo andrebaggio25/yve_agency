@@ -102,7 +102,8 @@ class GoogleDriveService
     private function buildEmbedUrl(string $fileId, string $fileType, string $driveType): string
     {
         return match ($driveType) {
-            'folder' => "https://drive.google.com/embeddedfolderview?id={$fileId}#list",
+            // #grid mostra miniaturas das fotos — é o preview do carrossel no portal.
+            'folder' => "https://drive.google.com/embeddedfolderview?id={$fileId}#grid",
             'docs'   => "https://docs.google.com/document/d/{$fileId}/preview",
             'sheets' => "https://docs.google.com/spreadsheets/d/{$fileId}/preview",
             'slides' => "https://docs.google.com/presentation/d/{$fileId}/preview",

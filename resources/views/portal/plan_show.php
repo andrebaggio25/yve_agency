@@ -231,6 +231,20 @@ foreach ($items as $it) {
                     class="w-full h-full border-0" loading="lazy" allowfullscreen></iframe>
           </div>
         </div>
+        <!-- Pasta do Drive — grade de miniaturas (fotos do carrossel etc.) -->
+        <?php elseif ($parsedDrive && $parsedDrive['valid'] && $parsedDrive['file_type'] === 'folder'): ?>
+        <div class="rounded-xl overflow-hidden border border-white/10 bg-black/30">
+          <div class="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+            <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            </svg>
+            <span class="text-xs text-gray-400"><?= t('portal.plan.folder') ?></span>
+            <a href="<?= e($parsedDrive['original']) ?>" target="_blank" rel="noopener"
+               class="ml-auto text-xs text-brand-400 hover:text-brand-300"><?= t('portal.plan.open_drive') ?></a>
+          </div>
+          <iframe src="<?= e($parsedDrive['embed_url']) ?>"
+                  class="w-full h-80 border-0 bg-white" loading="lazy"></iframe>
+        </div>
         <!-- Vídeo Drive -->
         <?php elseif ($parsedDrive && $parsedDrive['valid'] && ($isVideo || $parsedDrive['file_type'] === 'video')): ?>
         <div class="rounded-xl overflow-hidden border border-white/10 bg-black/30">
