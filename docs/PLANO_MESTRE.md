@@ -20,11 +20,15 @@
 
 ## Marco A — Fluxos redondos (o dia a dia da agência sem fricção)
 
-### CONT-06 · Seletor de mídia do Drive no modal do post — `G` 🟠
-> **Problema:** montar um post ainda é colar URLs do Drive na mão — capa, cada foto do carrossel, vídeo. É o último elo manual da esteira de conteúdo e a origem dos bugs recentes de preview (link de pasta vs arquivo, ordem errada, link não público).
-> **Ação:** no modal do post (`content/show.php` + `content-editor.js`), botão "Escolher do Drive" que lista os arquivos do cliente **já enviados pelo sistema** (tabela `drive_files`, que o app enxerga por `drive.file`) com miniaturas; selecionar preenche capa/carrossel/vídeo com os links certos, na ordem clicada (arrastar para reordenar). Colar URL continua possível (fallback).
-> **Arquivos:** `content/show.php`, `public/js/content-editor.js`, `DriveFileRepository` (listagem por cliente), rota GET nova (pt+en) com permissão `content.edit`.
-> **Pronto quando:** criar um post de carrossel completo sem digitar/colar nenhuma URL; ordem das fotos = ordem escolhida; teste de feature cobrindo a listagem escopada por agência/cliente.
+### CONT-06 · Mídia do post sem colar URL: upload no modal + galeria — `G` 🟠 · **redesenhado em 23/07**
+> **Problema:** montar um post ainda é colar URLs do Drive na mão — capa, cada foto do carrossel, vídeo. É o último elo manual da esteira e a origem dos bugs recentes de preview.
+> **Restrição confirmada no código (23/07):** o escopo OAuth é `drive.file` — o app **só enxerga arquivos que ele mesmo criou**. O que os editores sobem DIRETO na interface do Drive é invisível ao app: o botão "atualizar" (DriveSyncService) reconcilia de verdade contra o Drive (adiciona/remove/renomeia), mas **apenas sobre os arquivos criados pela plataforma**. Um picker só da galeria `drive_files` não mostraria a mídia dos editores — por isso o desenho mudou.
+> **Ação (2 frentes, ambas dentro do escopo atual):**
+> 1. **Upload direto no modal do post:** botão "Enviar arquivo" na capa/carrossel/vídeo que usa a máquina do UP-01 (browser→Drive resumável, qualquer tamanho) direto para a pasta do cliente, registra em `drive_files` e preenche o link na hora. O editor troca "arrastar pro Drive" por "arrastar pro post" — um passo a menos, e a mídia já nasce vinculada.
+> 2. **Upload no painel interno:** a galeria da equipe (`clients/files.php`) hoje é só leitura+sync — ganhar o mesmo upload do portal, para a equipe abastecer a pasta do cliente pela plataforma (aí sim o picker da galeria cobre tudo).
+> **Escalação (se o fluxo Drive-nativo dos editores for inegociável):** DRIVE-03 — escopo `drive.readonly` + verificação do Google (processo de semanas; escopo restrito). Só encarar se a mudança de hábito da frente 1 não colar.
+> **Arquivos:** `content/show.php`, `public/js/content-editor.js` (+ reuso do JS de upload do UP-01), `ClientFilesController`/`clients/files.php`, `DriveFileRepository`, rotas pt+en com `content.edit`.
+> **Pronto quando:** criar um post de carrossel completo sem digitar/colar URL, com arquivos que NÃO existiam antes na plataforma; ordem das fotos = ordem escolhida; teste de feature com escopo por agência/cliente.
 
 ### AUTO-01 · Ativação guiada de automações — `P` 🟡
 > **Problema:** as 13 automações nascem desligadas e a UI não orienta o que ligar ([AUTOMACOES.md](AUTOMACOES.md) documenta, mas o produto não guia).

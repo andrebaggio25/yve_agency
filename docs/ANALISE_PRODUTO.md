@@ -82,8 +82,8 @@ Commits desde o ciclo 2 (14/07): 40 — Sprints 1–4 concluídos + ciclo Planif
 
 ### 2.4 Drive / Upload — 8.5 (7.0 ↑)
 - **S:** UP-01 entregue e validado em produção: browser→Drive resumável (chunks 16MB, progresso, retomada, timeout por etapa), qualquer tipo de arquivo com proxy anti-XSS, mitigações iOS; galeria, lixeira, reconciliação.
-- **W:** adição manual direto no Drive não sincroniza (DRIVE-03 — exige `drive.readonly` + verificação Google); escopo `drive.file` impede listar pastas de terceiros (motivo do CONT-06 usar a galeria própria).
-- **Ação:** DRIVE-03 (decisão de produto adiada — ok) · CONT-06 consome esta fundação.
+- **W:** adição manual direto no Drive não sincroniza e **nunca vai aparecer no "atualizar"** — o escopo `drive.file` só enxerga o que o app criou (ressalva documentada no `DriveSyncService`); os editores sobem direto no Drive, então a galeria `drive_files` não representa a mídia real dos clientes.
+- **Ação:** CONT-06 redesenhado (upload no modal do post + upload no painel interno — a mídia passa a entrar pela plataforma) · DRIVE-03 (`drive.readonly` + verificação Google) fica como escalação se o hábito Drive-nativo dos editores não mudar.
 
 ### 2.5 Testes & Qualidade — 8.5 (7.0 ↑)
 - **S:** 188 testes/417 asserts com banco PG real (JSONB/SKIP LOCKED de verdade), guarda-corpo anti-produção, smoke de Chromium com CSP real (pega classe de bug invisível ao PHPUnit), testes de arquitetura.
