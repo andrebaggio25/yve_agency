@@ -158,6 +158,9 @@ foreach ($items as $it) {
     $imagesList  = $item['images_list'] ?? [];
     $frameClass  = \App\Services\ContentPlanService::previewFrameClass($item['content_type'] ?? null);
     $videoFrame  = \App\Services\ContentPlanService::videoFrameClass($item['content_type'] ?? null);
+    // Numeração do carrossel: a capa é a foto 1; images_list segue na ordem.
+    $slidesTotal = count($imagesList) + (!empty($item['cover_url']) ? 1 : 0);
+    $slideOffset = !empty($item['cover_url']) ? 1 : 0;
     // Detect YouTube URL for timecode auto-capture
     $youtubeId = null;
     if (!empty($item['drive_url'])) {
@@ -215,6 +218,11 @@ foreach ($items as $it) {
                class="absolute inset-0 w-full h-full object-cover"
                loading="lazy"
                onerror="this.parentElement.style.display='none'">
+          <?php if (!empty($imagesList)): ?>
+          <span class="absolute top-1.5 right-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+            1/<?= $slidesTotal ?>
+          </span>
+          <?php endif; ?>
         </div>
         <?php endif; ?>
 
@@ -277,17 +285,19 @@ foreach ($items as $it) {
         </a>
         <?php endif; ?>
 
-        <!-- Carrossel -->
+        <!-- Carrossel — fotos empilhadas, no tamanho da capa, na ordem de publicação -->
         <?php if (!empty($imagesList)): ?>
-        <div class="flex gap-3 overflow-x-auto pb-2">
+        <div class="space-y-3">
           <?php foreach ($imagesList as $slideIdx => $imgUrl): if (empty($imgUrl)) continue; ?>
-          <div class="relative flex-shrink-0 w-40 aspect-[3/4] overflow-hidden rounded-xl bg-black/30">
-            <img src="<?= e(\App\Services\GoogleDriveService::imageSrc($imgUrl)) ?>" alt="Slide <?= $slideIdx + 1 ?>"
-                 class="absolute inset-0 w-full h-full object-cover"
-                 loading="lazy"
-                 onerror="this.parentElement.style.display='none'">
-            <span class="absolute top-1.5 right-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
-              <?= $slideIdx + 1 ?>
+          <div class="relative w-full <?= $frameClass ?> overflow-hidden rounded-xl bg-black/30">
+            <a href="<?= e($imgUrl) ?>" target="_blank" rel="noopener">
+              <img src="<?= e(\App\Services\GoogleDriveService::imageSrc($imgUrl)) ?>" alt="Slide <?= $slideIdx + 1 + $slideOffset ?>"
+                   class="absolute inset-0 w-full h-full object-cover"
+                   loading="lazy"
+                   onerror="this.closest('.relative').style.display='none'">
+            </a>
+            <span class="absolute top-1.5 right-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white pointer-events-none">
+              <?= $slideIdx + 1 + $slideOffset ?>/<?= $slidesTotal ?>
             </span>
           </div>
           <?php endforeach; ?>
