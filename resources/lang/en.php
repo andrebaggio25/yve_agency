@@ -416,6 +416,8 @@ return [
     'portal.files.delete_failed'       => 'Could not delete',
     'portal.files.deleted_file'        => 'File moved to trash',
     'portal.files.deleted_folder'      => 'Folder moved to trash',
+    'portal.files.link_copied'         => 'Link copied!',
+    'portal.files.copy_link'           => 'Copy link',
     'portal.files.undo'                => 'Undo',
     'portal.files.restored'            => 'Restored',
     'portal.files.restore_failed'      => 'Could not restore',

@@ -10,13 +10,18 @@ use App\Core\Response;
 use App\Repositories\ClientRepository;
 use App\Repositories\DriveFolderRepository;
 use App\Repositories\DriveFileRepository;
+use App\Services\DriveUploadService;
 use App\Services\GoogleDriveApiService;
 use App\Services\DriveSyncService;
 use App\Support\Auth;
 
 /**
- * Galeria (lado agência) dos conteúdos enviados pelos clientes via portal.
- * Somente leitura: navega pastas, visualiza thumbnails, abre/baixa do Drive.
+ * Galeria (lado agência) dos conteúdos do cliente no Drive.
+ *
+ * Leitura (navegar/preview) + escrita (CONT-06): a equipe cria pastas e envia
+ * arquivos pela plataforma — mesma máquina de upload do portal (UP-01, via
+ * DriveUploadService), para o editor não precisar mais subir direto no Drive
+ * (que o app não enxerga, por causa do escopo drive.file).
  */
 class ClientFilesController extends Controller
 {
@@ -26,6 +31,7 @@ class ClientFilesController extends Controller
         private readonly DriveFileRepository   $fileRepo,
         private readonly GoogleDriveApiService $driveApi,
         private readonly DriveSyncService      $driveSync,
+        private readonly DriveUploadService    $uploads,
     ) {}
 
     public function index(Request $request): Response
@@ -38,7 +44,160 @@ class ClientFilesController extends Controller
             return Response::view('errors.404', [], 404);
         }
 
-        return $this->view('clients.files', compact('client'));
+        $connected      = $this->driveApi->isConnected((int) Auth::agencyId());
+        $maxUploadBytes = DriveUploadService::maxUploadBytes();
+
+        return $this->view('clients.files', compact('client', 'connected', 'maxUploadBytes'));
+    }
+
+    /** JSON: cria subpasta na pasta do cliente (equipe). */
+    public function createFolder(Request $request): Response
+    {
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $name     = trim((string) $request->input('name', ''));
+        $parentId = $request->input('parent_id', null);
+        $parentId = ($parentId === null || $parentId === '') ? null : (int) $parentId;
+
+        if ($name === '') {
+            return Response::json(['error' => 'Nome obrigatório'], 422);
+        }
+        if ($parentId !== null && !$this->folderRepo->findForClient($parentId, (int) $client['id'])) {
+            return Response::json(['error' => 'Pasta não encontrada'], 404);
+        }
+
+        try {
+            $folder = $this->uploads->createFolder($client, $parentId, $name);
+
+            return Response::json(['success' => true, 'folder' => $folder]);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao criar pasta: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /** JSON: abre a sessão resumável do upload direto browser→Drive (UP-01). */
+    public function uploadSession(Request $request): Response
+    {
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $name = trim((string) $request->input('name', ''));
+        $mime = trim((string) $request->input('mime', '')) ?: 'application/octet-stream';
+        $size = (int) $request->input('size', 0);
+
+        $folderId = $request->input('folder_id', null);
+        $folderId = ($folderId === null || $folderId === '') ? null : (int) $folderId;
+
+        if ($name === '' || $size <= 0) {
+            return Response::json(['error' => 'Arquivo inválido'], 422);
+        }
+        if ($folderId !== null && !$this->folderRepo->findForClient($folderId, (int) $client['id'])) {
+            return Response::json(['error' => 'Pasta não encontrada'], 404);
+        }
+
+        try {
+            $uploadUrl = $this->uploads->initiateSession($client, $folderId, $name, $mime, $size);
+            if ($uploadUrl === null) {
+                return Response::json(['error' => 'Upload direto indisponível'], 422);
+            }
+
+            return Response::json(['success' => true, 'upload_url' => $uploadUrl]);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao iniciar o envio: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /** JSON: confirma o upload direto (valida no Drive) e registra o arquivo. */
+    public function uploadComplete(Request $request): Response
+    {
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $driveFileId = trim((string) $request->input('drive_file_id', ''));
+        if ($driveFileId === '') {
+            return Response::json(['error' => 'Arquivo inválido'], 422);
+        }
+
+        $folderId = $request->input('folder_id', null);
+        $folderId = ($folderId === null || $folderId === '') ? null : (int) $folderId;
+        if ($folderId !== null && !$this->folderRepo->findForClient($folderId, (int) $client['id'])) {
+            return Response::json(['error' => 'Pasta não encontrada'], 404);
+        }
+
+        try {
+            $payload = $this->uploads->completeDirect($client, $folderId, $driveFileId, 'panel');
+            if ($payload === null) {
+                return Response::json(['error' => 'Arquivo não confirmado no Drive.'], 422);
+            }
+
+            return Response::json(['success' => true, 'file' => $payload]);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao confirmar o envio: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /** JSON: relay de upload (fallback multipart via PHP — sujeito ao teto do hosting). */
+    public function upload(Request $request): Response
+    {
+        @set_time_limit(0);
+
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $file = $request->file('file');
+        $err  = $file['error'] ?? UPLOAD_ERR_NO_FILE;
+        if (!$file || $err !== UPLOAD_ERR_OK) {
+            $msg = in_array($err, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
+                ? 'Arquivo maior que o limite do servidor.'
+                : 'Falha no envio do arquivo.';
+            return Response::json(['error' => $msg], 422);
+        }
+
+        $name = trim((string) ($file['name'] ?? 'arquivo'));
+        $mime = (string) ($file['type'] ?? 'application/octet-stream');
+        $size = (int) ($file['size'] ?? 0);
+        $tmp  = (string) ($file['tmp_name'] ?? '');
+
+        $folderId = $request->input('folder_id', null);
+        $folderId = ($folderId === null || $folderId === '') ? null : (int) $folderId;
+
+        if ($folderId !== null && !$this->folderRepo->findForClient($folderId, (int) $client['id'])) {
+            return Response::json(['error' => 'Pasta não encontrada'], 404);
+        }
+        if ($name === '' || $size <= 0 || !is_uploaded_file($tmp)) {
+            return Response::json(['error' => 'Arquivo inválido'], 422);
+        }
+
+        try {
+            $payload = $this->uploads->relayUpload($client, $folderId, $name, $mime, $tmp, $size, 'panel');
+
+            return Response::json(['success' => true, 'file' => $payload]);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao enviar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /** Guarda comum dos endpoints de escrita: permissão + cliente da agência. */
+    private function requireClient(Request $request): array|Response
+    {
+        Auth::requirePermission('clients.view');
+
+        $clientId = (int) $request->param('clientId');
+        $client   = $this->clientRepo->findByIdAndAgency($clientId, (int) Auth::agencyId());
+        if (!$client) {
+            return Response::json(['error' => 'Cliente não encontrado'], 404);
+        }
+
+        return $client;
     }
 
     public function folders(Request $request): Response

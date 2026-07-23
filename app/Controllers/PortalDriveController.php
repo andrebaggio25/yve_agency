@@ -10,6 +10,7 @@ use App\Core\Response;
 use App\Support\PortalAuth;
 use App\Repositories\DriveFolderRepository;
 use App\Repositories\DriveFileRepository;
+use App\Services\DriveUploadService;
 use App\Services\GoogleDriveApiService;
 use App\Services\GoogleDriveService;
 
@@ -32,6 +33,7 @@ class PortalDriveController extends Controller
         private readonly DriveFolderRepository $folderRepo,
         private readonly DriveFileRepository   $fileRepo,
         private readonly GoogleDriveApiService $driveApi,
+        private readonly DriveUploadService    $uploads,
     ) {}
 
     /** Página "Enviar conteúdos" do portal. */
@@ -40,36 +42,10 @@ class PortalDriveController extends Controller
         $client = PortalAuth::client();
         $token  = PortalAuth::token();
 
-        $connected     = $this->driveApi->isConnected((int) $client['agency_id']);
-        $maxUploadBytes = $this->maxUploadBytes();
+        $connected      = $this->driveApi->isConnected((int) $client['agency_id']);
+        $maxUploadBytes = DriveUploadService::maxUploadBytes();
 
         return $this->view('portal.files', compact('client', 'token', 'connected', 'maxUploadBytes'));
-    }
-
-    /** Maior arquivo que o servidor aceita por upload (min de upload_max_filesize/post_max_size). 0 = sem limite conhecido. */
-    private function maxUploadBytes(): int
-    {
-        $toBytes = static function (string $v): int {
-            $v = trim($v);
-            if ($v === '') {
-                return 0;
-            }
-            $num  = (int) $v;
-            $unit = strtolower(substr($v, -1));
-            return match ($unit) {
-                'g'     => $num * 1024 * 1024 * 1024,
-                'm'     => $num * 1024 * 1024,
-                'k'     => $num * 1024,
-                default => (int) $v,
-            };
-        };
-
-        $limits = array_filter([
-            $toBytes((string) ini_get('upload_max_filesize')),
-            $toBytes((string) ini_get('post_max_size')),
-        ], static fn (int $x): bool => $x > 0);
-
-        return $limits ? (int) min($limits) : 0;
     }
 
     /** JSON: lista subpastas + arquivos da pasta atual (folder_id opcional = raiz). */
@@ -108,7 +84,6 @@ class PortalDriveController extends Controller
     {
         $client   = PortalAuth::client();
         $clientId = (int) $client['id'];
-        $agencyId = (int) $client['agency_id'];
 
         $name     = trim((string) $request->input('name', ''));
         $parentId = $request->input('parent_id', null);
@@ -117,23 +92,14 @@ class PortalDriveController extends Controller
         if ($name === '') {
             return Response::json(['error' => 'Nome obrigatório'], 422);
         }
+        if ($parentId !== null && !$this->folderRepo->findForClient($parentId, $clientId)) {
+            return Response::json(['error' => 'Pasta não encontrada'], 404);
+        }
 
         try {
-            $parentDriveId = $this->resolveParentDriveId($client, $clientId, $agencyId, $parentId);
-            $driveFolderId = $this->driveApi->createFolder($agencyId, $name, $parentDriveId);
+            $folder = $this->uploads->createFolder($client, $parentId, $name);
 
-            $id = $this->folderRepo->create([
-                'agency_id'       => $agencyId,
-                'client_id'       => $clientId,
-                'parent_id'       => $parentId,
-                'drive_folder_id' => $driveFolderId,
-                'name'            => $name,
-            ]);
-
-            return Response::json([
-                'success' => true,
-                'folder'  => ['id' => $id, 'name' => $name],
-            ]);
+            return Response::json(['success' => true, 'folder' => $folder]);
         } catch (\Throwable $e) {
             return Response::json(['error' => 'Falha ao criar pasta: ' . $e->getMessage()], 500);
         }
@@ -149,7 +115,6 @@ class PortalDriveController extends Controller
 
         $client   = PortalAuth::client();
         $clientId = (int) $client['id'];
-        $agencyId = (int) $client['agency_id'];
 
         $file = $request->file('file');
         $err  = $file['error'] ?? UPLOAD_ERR_NO_FILE;
@@ -176,14 +141,7 @@ class PortalDriveController extends Controller
         }
 
         try {
-            $parentDriveId = $this->resolveParentDriveId($client, $clientId, $agencyId, $folderId);
-            $uploaded      = $this->driveApi->uploadToFolder($agencyId, $parentDriveId, $name, $mime, $tmp, $size);
-
-            $payload = $this->registerDriveFile(
-                $agencyId, $clientId, $folderId,
-                (string) $uploaded['id'], $name, $mime, $size,
-                $uploaded['thumbnailLink'] ?? null, $uploaded['webViewLink'] ?? null
-            );
+            $payload = $this->uploads->relayUpload($client, $folderId, $name, $mime, $tmp, $size, 'portal');
 
             return Response::json(['success' => true, 'file' => $payload]);
         } catch (\Throwable $e) {
@@ -201,7 +159,6 @@ class PortalDriveController extends Controller
     {
         $client   = PortalAuth::client();
         $clientId = (int) $client['id'];
-        $agencyId = (int) $client['agency_id'];
 
         $name = trim((string) $request->input('name', ''));
         $mime = trim((string) $request->input('mime', '')) ?: 'application/octet-stream';
@@ -217,15 +174,12 @@ class PortalDriveController extends Controller
             return Response::json(['error' => 'Pasta não encontrada'], 404);
         }
 
-        $origin = GoogleDriveApiService::originFromUrl(env('APP_URL', ''));
-        if ($origin === null) {
-            // Sem APP_URL válida não dá pra vincular o CORS — o front cai no relay.
-            return Response::json(['error' => 'Upload direto indisponível'], 422);
-        }
-
         try {
-            $parentDriveId = $this->resolveParentDriveId($client, $clientId, $agencyId, $folderId);
-            $uploadUrl     = $this->driveApi->initiateResumable($agencyId, $parentDriveId, $name, $mime, $size, $origin);
+            $uploadUrl = $this->uploads->initiateSession($client, $folderId, $name, $mime, $size);
+            if ($uploadUrl === null) {
+                // Sem APP_URL válida não dá pra vincular o CORS — o front cai no relay.
+                return Response::json(['error' => 'Upload direto indisponível'], 422);
+            }
 
             return Response::json(['success' => true, 'upload_url' => $uploadUrl]);
         } catch (\Throwable $e) {
@@ -242,7 +196,6 @@ class PortalDriveController extends Controller
     {
         $client   = PortalAuth::client();
         $clientId = (int) $client['id'];
-        $agencyId = (int) $client['agency_id'];
 
         $driveFileId = trim((string) $request->input('drive_file_id', ''));
         if ($driveFileId === '') {
@@ -255,91 +208,16 @@ class PortalDriveController extends Controller
             return Response::json(['error' => 'Pasta não encontrada'], 404);
         }
 
-        // Repetição do confirm (retry do front) não duplica o registro.
-        $existing = $this->fileRepo->findByDriveId($driveFileId, $clientId);
-        if ($existing) {
-            return Response::json(['success' => true, 'file' => $this->filePayload($existing)]);
-        }
-
         try {
-            $parentDriveId = $this->resolveParentDriveId($client, $clientId, $agencyId, $folderId);
-            $meta          = $this->driveApi->fileMeta($agencyId, $driveFileId);
-
-            if (empty($meta['id']) || !GoogleDriveApiService::metaHasParent($meta, $parentDriveId)) {
+            $payload = $this->uploads->completeDirect($client, $folderId, $driveFileId, 'portal');
+            if ($payload === null) {
                 return Response::json(['error' => 'Arquivo não confirmado no Drive.'], 422);
             }
-
-            // Fonte de verdade dos metadados é o Drive, não o navegador.
-            $name = (string) ($meta['name'] ?? 'arquivo');
-            $mime = (string) ($meta['mimeType'] ?? 'application/octet-stream');
-            $size = (int) ($meta['size'] ?? 0);
-
-            $payload = $this->registerDriveFile(
-                $agencyId, $clientId, $folderId,
-                $driveFileId, $name, $mime, $size,
-                $meta['thumbnailLink'] ?? null, $meta['webViewLink'] ?? null
-            );
 
             return Response::json(['success' => true, 'file' => $payload]);
         } catch (\Throwable $e) {
             return Response::json(['error' => 'Falha ao confirmar o envio: ' . $e->getMessage()], 500);
         }
-    }
-
-    /**
-     * Passo comum pós-upload (relay ou direto): permissão de preview best-effort,
-     * completa thumbnail/link se faltarem, grava em drive_files e monta o payload.
-     */
-    private function registerDriveFile(
-        int $agencyId,
-        int $clientId,
-        ?int $folderId,
-        string $driveFileId,
-        string $name,
-        string $mime,
-        int $size,
-        ?string $thumb,
-        ?string $webView,
-    ): array {
-        // Torna público-por-link pra habilitar o preview nativo do Google (best-effort).
-        try {
-            $this->driveApi->setAnyoneReader($agencyId, $driveFileId);
-        } catch (\Throwable) {
-            // segue mesmo se a permissão falhar — o proxy ainda funciona
-        }
-
-        if ($thumb === null || $webView === null) {
-            try {
-                $meta    = $this->driveApi->fileMeta($agencyId, $driveFileId);
-                $thumb   = $thumb   ?? ($meta['thumbnailLink'] ?? null);
-                $webView = $webView ?? ($meta['webViewLink'] ?? null);
-            } catch (\Throwable) {
-                // segue sem metadados extras
-            }
-        }
-
-        $id = $this->fileRepo->create([
-            'agency_id'      => $agencyId,
-            'client_id'      => $clientId,
-            'folder_id'      => $folderId,
-            'drive_file_id'  => $driveFileId,
-            'name'           => $name,
-            'mime_type'      => $mime ?: null,
-            'size_bytes'     => $size > 0 ? $size : null,
-            'thumbnail_link' => $thumb,
-            'web_view_link'  => $webView,
-            'uploaded_via'   => 'portal',
-        ]);
-
-        return $this->filePayload([
-            'id'             => $id,
-            'name'           => $name,
-            'mime_type'      => $mime,
-            'size_bytes'     => $size,
-            'thumbnail_link' => $thumb,
-            'web_view_link'  => $webView,
-            'drive_file_id'  => $driveFileId,
-        ]);
     }
 
     /** Exclui um arquivo (Drive + banco). Fallback: se já sumiu do Drive (404), remove do banco mesmo assim. */
@@ -527,21 +405,6 @@ class PortalDriveController extends Controller
 
     // ── helpers Drive ──────────────────────────────────────────────────────────
 
-    /** Resolve o ID da pasta no Drive que será o pai (raiz do cliente ou subpasta). */
-    private function resolveParentDriveId(array $client, int $clientId, int $agencyId, ?int $folderId): string
-    {
-        if ($folderId !== null) {
-            $folder = $this->folderRepo->findForClient($folderId, $clientId);
-            if (!$folder) {
-                throw new \RuntimeException('Pasta não encontrada.');
-            }
-            return $folder['drive_folder_id'];
-        }
-
-        // Raiz do cliente (cria sob demanda).
-        return $this->driveApi->ensureClientFolder($client, $agencyId);
-    }
-
     /** Monta o caminho (breadcrumb) subindo pelos parent_id. */
     private function buildBreadcrumb(array $folder, int $clientId): array
     {
@@ -559,16 +422,6 @@ class PortalDriveController extends Controller
 
     private function filePayload(array $f): array
     {
-        return [
-            'id'            => (int) ($f['id'] ?? 0),
-            'name'          => $f['name'] ?? '',
-            'mime_type'     => $f['mime_type'] ?? null,
-            'size_bytes'    => (int) ($f['size_bytes'] ?? 0),
-            'thumbnail'     => $f['thumbnail_link'] ?? null,
-            'web_view_link' => $f['web_view_link'] ?? null,
-            'drive_file_id' => $f['drive_file_id'] ?? null,
-            'is_image'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'image/'),
-            'is_video'      => str_starts_with((string) ($f['mime_type'] ?? ''), 'video/'),
-        ];
+        return DriveUploadService::filePayload($f);
     }
 }

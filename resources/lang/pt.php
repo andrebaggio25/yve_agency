@@ -427,6 +427,8 @@ return [
     'portal.files.delete_failed'       => 'Não foi possível excluir',
     'portal.files.deleted_file'        => 'Arquivo movido para a lixeira',
     'portal.files.deleted_folder'      => 'Pasta movida para a lixeira',
+    'portal.files.link_copied'         => 'Link copiado!',
+    'portal.files.copy_link'           => 'Copiar link',
     'portal.files.undo'                => 'Desfazer',
     'portal.files.restored'            => 'Restaurado',
     'portal.files.restore_failed'      => 'Não foi possível restaurar',

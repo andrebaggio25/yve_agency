@@ -416,6 +416,8 @@ return [
     'portal.files.delete_failed'       => 'No se pudo eliminar',
     'portal.files.deleted_file'        => 'Archivo movido a la papelera',
     'portal.files.deleted_folder'      => 'Carpeta movida a la papelera',
+    'portal.files.link_copied'         => '¡Enlace copiado!',
+    'portal.files.copy_link'           => 'Copiar enlace',
     'portal.files.undo'                => 'Deshacer',
     'portal.files.restored'            => 'Restaurado',
     'portal.files.restore_failed'      => 'No se pudo restaurar',

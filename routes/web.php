@@ -315,6 +315,11 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/clientes/{clientId}/conteudos/folders',          [ClientFilesController::class, 'folders'], [ClientAccessMiddleware::class]);
     $router->post('/clientes/{clientId}/conteudos/sync',            [ClientFilesController::class, 'sync'],     [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->get('/clientes/{clientId}/conteudos/file/{fileId}/raw',[ClientFilesController::class, 'raw'],      [ClientAccessMiddleware::class]);
+    // CONT-06: escrita pela equipe — mesmos sufixos do portal, máquina do UP-01
+    $router->post('/clientes/{clientId}/conteudos/folders',         [ClientFilesController::class, 'createFolder'],   [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/conteudos/upload',          [ClientFilesController::class, 'upload'],         [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/conteudos/upload/session',  [ClientFilesController::class, 'uploadSession'],  [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/conteudos/upload/complete', [ClientFilesController::class, 'uploadComplete'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
 
     // Acesso de usuários ao cliente
     $router->get('/clientes/{clientId}/acesso',                  [ClientController::class, 'accessIndex'],  [ClientAccessMiddleware::class]);

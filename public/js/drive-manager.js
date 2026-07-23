@@ -14,10 +14,23 @@ const _DRIVE_CHUNK = 16 * 1024 * 1024;
 // matando uploads longos — segurar a tela acesa enquanto houver envio ativo.
 let _driveWakeLock = null;
 
-function driveManager(token, i18n, maxBytes) {
+/**
+ * @param token    token do portal (modo portal) — ignorado quando opts.prefix vem preenchido
+ * @param opts     {prefix, syncUrl} — o painel interno (CONT-06) passa
+ *                 prefix='/clientes/{id}/conteudos' e reusa o componente inteiro;
+ *                 syncUrl habilita o botão "Sincronizar" (só existe no painel).
+ */
+function driveManager(token, i18n, maxBytes, opts = {}) {
+  const prefix  = opts.prefix || `/portal/${token}/drive`;
+  const syncUrl = opts.syncUrl || null;
+
   return {
     i18n,
     maxBytes: maxBytes || 0,
+    canSync: !!syncUrl,
+    syncing: false,
+    syncMsg: '',
+    syncOk: false,
     folderId: null,
     breadcrumb: [],
     folders: [],
@@ -38,8 +51,8 @@ function driveManager(token, i18n, maxBytes) {
     confirmBox: { open: false, message: '' },
     _confirmAction: null,
 
-    base() { return `/portal/${token}`; },
-    rawUrl(file) { return `${this.base()}/drive/file/${file.id}/raw`; },
+    base() { return prefix; },
+    rawUrl(file) { return `${this.base()}/file/${file.id}/raw`; },
 
     // Alpine chama init() automaticamente ao montar o componente.
     init() {
@@ -94,7 +107,7 @@ function driveManager(token, i18n, maxBytes) {
       this.loadError = null;
       this.folderId = folderId;
       try {
-        const url = `${this.base()}/drive/folders` + (folderId ? `?folder_id=${folderId}` : '');
+        const url = `${this.base()}/folders` + (folderId ? `?folder_id=${folderId}` : '');
         const d = await api.get(url);
         this.breadcrumb = d.breadcrumb || [];
         this.folders = d.folders || [];
@@ -132,7 +145,7 @@ function driveManager(token, i18n, maxBytes) {
       if (!name || this.savingFolder) return;
       this.savingFolder = true;
       try {
-        const d = await api.post(`${this.base()}/drive/folders`, { parent_id: this.folderId, name });
+        const d = await api.post(`${this.base()}/folders`, { parent_id: this.folderId, name });
         this.folders.push(d.folder);
         this.folders.sort((a, b) => a.name.localeCompare(b.name));
         this.creatingFolder = false;
@@ -143,13 +156,48 @@ function driveManager(token, i18n, maxBytes) {
       this.savingFolder = false;
     },
 
+    /** Reconcilia com o Drive (só painel interno — syncUrl vem das opts). */
+    async sync() {
+      if (!this.canSync || this.syncing) return;
+      this.syncing = true;
+      this.syncMsg = '';
+      try {
+        const d = await api.post(syncUrl);
+        const parts = [];
+        if (d.added)   parts.push(`${d.added} novo(s)`);
+        if (d.removed) parts.push(`${d.removed} removido(s)`);
+        if (d.renamed) parts.push(`${d.renamed} renomeado(s)`);
+        this.syncOk = true;
+        this.syncMsg = parts.length ? `Sincronizado: ${parts.join(', ')}.` : 'Tudo já estava atualizado.';
+        await this.load(this.folderId);
+      } catch (e) {
+        this.syncOk = false;
+        this.syncMsg = e.message || 'Não foi possível sincronizar.';
+      }
+      this.syncing = false;
+      setTimeout(() => { this.syncMsg = ''; }, 6000);
+    },
+
+    /** Copia o link do arquivo no Drive — pra colar no post (CONT-06). */
+    async copyLink(file) {
+      const url = file.web_view_link
+        || (file.drive_file_id ? `https://drive.google.com/file/d/${file.drive_file_id}/view` : '');
+      if (!url) return;
+      try {
+        await navigator.clipboard.writeText(url);
+        this.showToast(this.i18n.link_copied || 'Link copiado!', null);
+      } catch {
+        this.showToast(url, null); // clipboard bloqueado: mostra o link pra copiar na mão
+      }
+    },
+
     deleteFile(file) {
       this.askConfirm(this.i18n.confirm_delete_file.replace(':name', file.name), () => this.doDeleteFile(file));
     },
 
     async doDeleteFile(file) {
       try {
-        const d = await api.post(`${this.base()}/drive/file/${file.id}/delete`);
+        const d = await api.post(`${this.base()}/file/${file.id}/delete`);
         this.files = this.files.filter(f => f.id !== file.id);
         // Toast com "Desfazer" (o arquivo foi pra lixeira do Drive).
         this.showToast(this.i18n.deleted_file, d.restore || null);
@@ -164,7 +212,7 @@ function driveManager(token, i18n, maxBytes) {
 
     async doDeleteFolder(folder) {
       try {
-        await api.post(`${this.base()}/drive/folder/${folder.id}/delete`);
+        await api.post(`${this.base()}/folder/${folder.id}/delete`);
         this.folders = this.folders.filter(f => f.id !== folder.id);
         this.showToast(this.i18n.deleted_folder, null);
       } catch (e) {
@@ -204,7 +252,7 @@ function driveManager(token, i18n, maxBytes) {
       if (!r || this.toast.busy) return;
       this.toast.busy = true;
       try {
-        const d = await api.post(`${this.base()}/drive/file/restore`, r);
+        const d = await api.post(`${this.base()}/file/restore`, r);
         // Reaparece na lista se ainda estamos na mesma pasta de origem.
         const sameFolder = (r.folder_id ?? null) === (this.folderId ?? null);
         if (sameFolder && d.file) this.files.unshift(d.file);
@@ -300,7 +348,7 @@ function driveManager(token, i18n, maxBytes) {
      */
     async createUploadSession(file) {
       try {
-        const d = await api.post(`${this.base()}/drive/upload/session`, {
+        const d = await api.post(`${this.base()}/upload/session`, {
           name: file.name,
           mime: file.type || 'application/octet-stream',
           size: file.size,
@@ -417,7 +465,7 @@ function driveManager(token, i18n, maxBytes) {
     /** Registra no sistema o arquivo que o Drive confirmou (valida a pasta no servidor). */
     async completeDirect(entry, driveFile) {
       try {
-        const d = await api.post(`${this.base()}/drive/upload/complete`, {
+        const d = await api.post(`${this.base()}/upload/complete`, {
           drive_file_id: driveFile.id,
           folder_id: this.folderId,
         }, { timeout: 30000 });
@@ -444,7 +492,7 @@ function driveManager(token, i18n, maxBytes) {
 
         const xhr = new XMLHttpRequest();
         _driveXhrs[uid] = xhr;
-        xhr.open('POST', `${this.base()}/drive/upload`, true);
+        xhr.open('POST', `${this.base()}/upload`, true);
         xhr.setRequestHeader('Accept', 'application/json');
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         // CSRF (SEC-08): este XHR não passa pelo api.js. Os PUTs da sessão

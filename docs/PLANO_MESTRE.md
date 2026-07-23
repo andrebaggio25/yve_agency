@@ -20,7 +20,9 @@
 
 ## Marco A — Fluxos redondos (o dia a dia da agência sem fricção)
 
-### CONT-06 · Mídia do post sem colar URL: upload no modal + galeria — `G` 🟠 · **redesenhado em 23/07**
+### CONT-06 · Mídia do post sem colar URL: upload no modal + galeria — `G` 🟠 · ✅ **FASE 1 FEITA (2026-07-23, escopo decidido pelo dono)**
+> **Entregue:** a galeria interna do cliente (`/clientes/{id}/conteudos`) deixou de ser só leitura — a equipe agora **cria pastas e envia arquivos pela plataforma** (upload direto browser→Drive do UP-01, com progresso/retomada/drag-and-drop), mais botão **"Copiar link"** por arquivo para colar no post; colar URL nos posts continua funcionando (decisão: atender os dois hábitos). Por baixo: `DriveUploadService` unifica o caminho de escrita portal+painel (o `PortalDriveController` foi refatorado para delegar — zero duplicação), `drive-manager.js` virou componente parametrizável por endpoints, 4 rotas novas com CSRF+ClientAccess, 6 testes de feature (`PanelDriveWriteTest`). `uploaded_via='panel'` distingue a origem.
+> **Fase 2 (aberta, sem pressa):** seletor de mídia dentro do modal do post (escolher da galeria com miniaturas, preenchendo capa/carrossel/vídeo na ordem) — elimina até o copiar/colar. Fazer quando o fluxo da fase 1 estiver rodado na prática.
 > **Problema:** montar um post ainda é colar URLs do Drive na mão — capa, cada foto do carrossel, vídeo. É o último elo manual da esteira e a origem dos bugs recentes de preview.
 > **Restrição confirmada no código (23/07):** o escopo OAuth é `drive.file` — o app **só enxerga arquivos que ele mesmo criou**. O que os editores sobem DIRETO na interface do Drive é invisível ao app: o botão "atualizar" (DriveSyncService) reconcilia de verdade contra o Drive (adiciona/remove/renomeia), mas **apenas sobre os arquivos criados pela plataforma**. Um picker só da galeria `drive_files` não mostraria a mídia dos editores — por isso o desenho mudou.
 > **Ação (2 frentes, ambas dentro do escopo atual):**
