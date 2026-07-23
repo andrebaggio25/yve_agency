@@ -75,10 +75,10 @@ Commits desde o ciclo 2 (14/07): 40 — Sprints 1–4 concluídos + ciclo Planif
 
 ### 2.3 Portal do Cliente — 8.5 (7.5 ↑)
 - **S:** diferencial competitivo consolidado: CSRF em toda mutação (SEC-08), white-label com a cor da agência (PROD-06), calendário mensal de consulta, "Sua semana" no dashboard, aprovação por item com link direto, carrossel empilhado na ordem de publicação, vídeo Reels/Story em quadro 9:16, upload de qualquer tamanho.
-- **W:** item aprovado não mostra quando foi **publicado** (parte 2 pendente); token na URL segue sendo o modelo (aceito; PIN opcional nunca decidido).
+- **W:** item aprovado não mostra quando foi **publicado** (parte 2 pendente).
 - **O:** portal é a tela de venda — cada polimento aqui é argumento comercial direto.
-- **T:** link encaminhado a terceiros dá acesso total (design aceito; reavaliar PIN quando houver agência grande).
-- **Ação:** CONT-PORTAL p2 · SEC-09 (PIN opcional — decisão de produto, sem pressa).
+- **T:** link encaminhado a terceiros dá acesso total — **design confirmado pelo dono (23/07): sem PIN, capability-token é o modelo do produto** (SEC-09 encerrado). Mitigação existente: regenerar o token revoga o link antigo.
+- **Ação:** CONT-PORTAL p2.
 
 ### 2.4 Drive / Upload — 8.5 (7.0 ↑)
 - **S:** UP-01 entregue e validado em produção: browser→Drive resumável (chunks 16MB, progresso, retomada, timeout por etapa), qualquer tipo de arquivo com proxy anti-XSS, mitigações iOS; galeria, lixeira, reconciliação.
@@ -119,8 +119,8 @@ Commits desde o ciclo 2 (14/07): 40 — Sprints 1–4 concluídos + ciclo Planif
 ### 2.11 Financeiro — 8.0 (7.5 ↑)
 - **S:** contratos→faturas→pagamentos multi-moeda; recorrência automática idempotente; régua de cobrança em degraus; PDF real anexado no e-mail; DECIMAL em tudo.
 - **W:** recebimento manual (sem PIX/boleto no nível tenant→cliente); sem conciliação.
-- **O:** PROD-01a (Asaas/Mercado Pago na fatura) agora é **o** gateway que importa — o do tenant para os clientes dele (o billing SaaS é manual por decisão).
-- **Ação:** PROD-01a (candidato a item G do próximo sprint comercial).
+- **O:** PROD-01a (Asaas/Mercado Pago na fatura) fecharia o ciclo — **mas foi despriorizado por decisão do dono (23/07)**: régua automática avisa, baixa segue manual.
+- **Ação:** nenhuma neste ciclo; reavaliar PROD-01a quando o volume de faturas doer.
 
 ### 2.12 Infra — 8.0 (7.0 ↑)
 - **S:** fila única vigiada, `/api/health` real (banco, cron parado, jobs falhos, sync congelado), heartbeat, alerta e-mail com throttle, backup documentado.
@@ -147,8 +147,8 @@ Commits desde o ciclo 2 (14/07): 40 — Sprints 1–4 concluídos + ciclo Planif
 
 ### 2.20 ClickUp — 7.0 (=) · 2.22 WhatsApp — 6.5 (=)
 - Ambos com código pronto e **zero uso em produção**. Regra do método: integração não exercitada = quebrada até prova em contrário.
-- **Bloqueio real (não técnico):** INT-01 precisa de credenciais + decisão de quem hospeda a Evolution; INT-03 precisa da decisão tarefas nativas × ClickUp.
-- **Ação:** INT-01 · INT-03 — **os dois roteiros estão prontos em [OPERACAO.md §4](OPERACAO.md); só falta a decisão do dono.**
+- **Decisões tomadas (23/07):** o dono hospeda a Evolution → **INT-01 pronto para executar** (falta apontar a instância e rodar o roteiro de [OPERACAO.md §4](OPERACAO.md)); ClickUp **despriorizado** (INT-03 ⏸️ — tarefas nativas são o caminho padrão).
+- **Ação:** executar INT-01 no Sprint 6; ClickUp adormecido até algum tenant exigir.
 
 ### 2.21 Tarefas — 6.5 (=)
 - **S:** criação automática pós-aprovação + SLA + comentários. **W:** sem drag-and-drop, sem recorrência; decisão vs ClickUp pendente trava investimento.
@@ -173,8 +173,8 @@ Commits desde o ciclo 2 (14/07): 40 — Sprints 1–4 concluídos + ciclo Planif
 | **Google Drive** | Validada em produção (upload direto, proxy, reconciliação) | DRIVE-03 (fase 2) é decisão de produto |
 | **Meta Ads** | Sólida e agora vigiada (health/Meu dia) | TRAF-01 (alertas de negócio) |
 | **Instagram Orgânico** | Funcional, vigiada | PROD-07 fecha o ciclo com o plano |
-| **Evolution/WhatsApp** | Código pronto + rate limit; **nunca exercitada** | **INT-01 — bloqueada em decisão/credenciais do dono** |
-| **ClickUp** | Código pronto; nunca usada | **INT-03 — bloqueada na decisão tarefas × ClickUp** |
+| **Evolution/WhatsApp** | Código pronto + rate limit; **nunca exercitada** | **INT-01 pronto para executar** — dono hospeda a instância (decisão 23/07); falta apontar e rodar o roteiro |
+| **ClickUp** | Código pronto; nunca usada | ⏸️ despriorizada (decisão 23/07) — tarefas nativas são o caminho |
 | **OpenAI/Anthropic** | Funcional com fallback | AI-01 (metering) antes de escalar |
 | **SMTP** | Funcional; entregas visíveis na timeline | Paridade de eventos (CONT-AVISOS) |
 
@@ -183,8 +183,8 @@ Commits desde o ciclo 2 (14/07): 40 — Sprints 1–4 concluídos + ciclo Planif
 ## 4. Priorização mestre (visão de produto)
 
 1. **Fluxos redondos (o ciclo atual):** CONT-06 (mídia sem copiar/colar) → AUTO-01 (ativação guiada) → TRAF-01 (alerta de tráfego) → QA-04.
-2. **Validações que só dependem de decisão:** INT-01 (WhatsApp) + CONT-AVISOS → INT-03 (ClickUp × tarefas).
-3. **Escala comercial:** PROD-01a (PIX/boleto do tenant) → PROD-03 (hub 360°) → AUTH-01 (2FA) → ARCH-02/04.
+2. **Canal WhatsApp:** INT-01 (dono hospeda a Evolution — pronto para executar) + CONT-AVISOS. (ClickUp ⏸️ por decisão.)
+3. **Escala comercial:** PROD-03 (hub 360°) → AUTH-01 (2FA) → ARCH-02/04 → UX-03/05/06/07. (PROD-01a ⏸️ por decisão.)
 4. **Diferenciação (Marco D):** PROD-02 → AI-01 → PROD-07 → DRIVE-03.
 
 Sequência detalhada, esforços e critérios de pronto: [PLANO_MESTRE.md](PLANO_MESTRE.md).

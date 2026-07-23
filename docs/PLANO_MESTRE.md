@@ -9,9 +9,12 @@
 
 **Gates em 2026-07-23:** 188 testes verdes (banco PG real + smoke Chromium) · PHPStan nível 6 = 0 · audit limpo (dompdf/guzzle atualizados 23/07) · sem migration pendente.
 
-**Decisões de negócio registradas (2026-07-23):**
+**Decisões de negócio registradas (2026-07-23) — todas as pendências do ciclo decididas pelo dono:**
 1. **Billing SaaS é manual** — o dono cobra os tenants por fora; PROD-01 (gateway/trial/dunning) sai do caminho crítico. Reavaliar quando o volume de tenants doer.
-2. **Decisões em aberto que bloqueiam itens:** quem hospeda a Evolution + credenciais (→ INT-01); tarefas nativas × ClickUp (→ INT-03); provedor de recebimento Asaas × Mercado Pago (→ PROD-01a).
+2. **Evolution API: o dono hospeda a instância.** INT-01 está **destravado** — falta só executar o roteiro de validação com as credenciais da instância.
+3. **ClickUp: validação despriorizada** — não é necessária agora. Tarefas nativas são o caminho padrão por ora; INT-03 (e investimento em ClickUp) fica adormecido. UX-05 (kanban) destravado.
+4. **PROD-01a (PIX/boleto na fatura do cliente): sem integração por ora** — a régua de cobrança automática continua; o registro do pagamento segue manual.
+5. **Portal do cliente: SEM PIN** — decisão definitiva; o modelo capability-token na URL é o design do produto. SEC-09 encerrado (não entra em plano futuro).
 
 ---
 
@@ -43,10 +46,10 @@
 
 ---
 
-## Marco B — Validações pendentes (bloqueadas em decisão do dono, não em código)
+## Marco B — Validações e confiabilidade
 
-- **INT-01 · Validar Evolution/WhatsApp ponta a ponta** — `M` 🟠 ⏳ · roteiro pronto em [OPERACAO.md §4](OPERACAO.md) (5 passos, incluindo provocar erro e conferir o alerta OBS-01). **Bloqueio: decidir quem hospeda a instância + fornecer credenciais.** Ao concluir, liberar canal WhatsApp no AUTO-01 e desenhar CONT-AVISOS.
-- **INT-03 · Validar ClickUp com workspace real** — `M` 🟡 ⏳ · roteiro pronto (inclui teste de conflito). **Bloqueio: decisão de produto tarefas nativas × ClickUp** — investir nos dois é desperdício. A decisão também destrava/enterra UX-05 (drag-and-drop do kanban).
+- **INT-01 · Validar Evolution/WhatsApp ponta a ponta** — `M` 🟠 **PRONTO PARA EXECUTAR** · hospedagem decidida (o dono hospeda a instância — 23/07). Roteiro pronto em [OPERACAO.md §4](OPERACAO.md) (5 passos, incluindo provocar erro e conferir o alerta OBS-01). **Falta:** apontar a instância no `/settings/whatsapp` da agência e rodar o roteiro. Ao concluir, liberar o canal WhatsApp no AUTO-01 e desenhar CONT-AVISOS.
+- **INT-03 · Validar ClickUp** — ⏸️ **DESPRIORIZADO POR DECISÃO (2026-07-23):** validação desnecessária no momento; tarefas nativas são o caminho padrão. Reativar só se algum tenant exigir ClickUp.
 - **INFRA-02 · Medir PDO persistente vs pooler Supabase** — `P` 🟡 · medir sob carga leve; desligar `ATTR_PERSISTENT` se houver saturação.
 - **SEC-10 · CSP estrita (fechamento)** — `G` 🟡 · **adiado de novo conscientemente (23/07):** exige migrar ao build `@alpinejs/csp` e reescrever expressões de todas as views; custo alto, ganho moderado (script-src já é `'self'`). Reavaliar no ciclo 4.
 
@@ -55,7 +58,7 @@
 ## Marco C — Escala comercial
 
 - **PROD-01 · Billing SaaS real** — `G` ⏸️ **DESPRIORIZADO POR DECISÃO DE NEGÓCIO (2026-07-23):** cobrança dos tenants é manual. Reavaliar quando o volume doer. **ARCH-04** segue válido à parte.
-- **PROD-01a · Recebimento de faturas de clientes (PIX/boleto)** — `G` 🟠 · agora é **o** gateway que importa: o tenant recebendo dos clientes dele. Asaas ou Mercado Pago na fatura + recibo automático + baixa automática via webhook. **Decisão pendente: provedor.**
+- **PROD-01a · Recebimento de faturas de clientes (PIX/boleto)** — ⏸️ **DESPRIORIZADO POR DECISÃO (2026-07-23):** sem gateway por ora; a régua de cobrança automatiza o aviso e a baixa do pagamento segue manual. Reavaliar quando o volume de faturas doer.
 - **PROD-03 · Hub 360° do cliente** — `M` 🟡 · abas conteúdo/financeiro/tráfego/arquivos na ficha (dados já existem).
 - **AUTH-01 · 2FA TOTP** — `M` 🟡 · pré-requisito comum de agência maior; subiu de prioridade no ciclo 3.
 - **ARCH-02 · Unificar rotas pt/en por mapa de aliases** — `M` 🟡 · corta `routes/web.php` pela metade.
@@ -69,7 +72,7 @@
 - **PROD-02 · IA→Ação com guardrails** — `G` · recomendação gera `ads_action` pré-preenchida; `ai_safety_rules` verificadas **em código** antes de executar na Meta.
 - **AI-01 · Metering de IA por agência** — `M` · tokens/custo por tenant, insumo de precificação.
 - **PROD-07 · Vincular post orgânico ↔ item de plano** — `G` · fecha planejou→postou→performou. **Inclui CONT-PORTAL parte 2** (portal exibir a data/link de publicação do item).
-- **UX-05 · Drag-and-drop no kanban** — `M` · só se a decisão INT-03 mantiver tarefas nativas.
+- **UX-05 · Drag-and-drop no kanban** — `M` · destravado (23/07): tarefas nativas são o caminho padrão.
 - **DRIVE-03 · Sync fase 2 (adições manuais no Drive)** — `G` · exige `drive.readonly` + verificação Google — decisão de produto pendente.
 
 ---
@@ -79,11 +82,11 @@
 | Sprint | Foco | Itens |
 |--------|------|-------|
 | **5** | Fluxos redondos | CONT-06 · AUTO-01 · TRAF-01 · QA-04 |
-| **6** | Canais validados (assim que as decisões saírem) | INT-01 · CONT-AVISOS · INT-03 · INFRA-02 |
-| **7** | Escala comercial | PROD-01a · PROD-03 · AUTH-01 · ARCH-02/04 |
+| **6** | Canal WhatsApp validado | INT-01 · CONT-AVISOS · INFRA-02 |
+| **7** | Escala comercial | PROD-03 · AUTH-01 · ARCH-02/04 · UX-03/05/06/07 |
 | **8+** | Diferenciação | Marco D |
 
-**As 4 decisões que destravam o plano** (todas do dono, nenhuma de código): hospedagem da Evolution (INT-01) · tarefas × ClickUp (INT-03) · provedor PIX/boleto (PROD-01a) · PIN opcional do portal (SEC-09 — sem pressa).
+**Nenhuma decisão pendente:** as 4 decisões do ciclo foram tomadas em 23/07 (ver bloco no topo). O único insumo externo que falta é **apontar a instância Evolution hospedada pelo dono** no `/settings/whatsapp` para executar o INT-01.
 
 ---
 

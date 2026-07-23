@@ -11,7 +11,7 @@ Fonte canônica: `docs/PLANO_MESTRE.md` (**a verdade absoluta** — leia o item 
 - **Ciclo 1 (2026-07-06):** Marcos 0–1, QA-01/02, DRIVE-01/02. → `docs/historico/PLANO_MESTRE_2026-07-06.md`
 - **Ciclo 2 (2026-07-14→23):** Sprints 1–4: UP-01, FE-01/02/03(parcial), SEC-08, ARCH-01/03, QA-03, INT-02, OBS-01/02, INFRA-01/03, DATA-01, ADM-01, PROD-04/05/06/08, UX-02/04, ciclo Planificações Semanais (CONT-00…05, RADAR, PORTAL p1). → `docs/historico/PLANO_MESTRE_2026-07-14.md`
 
-**Decisão de negócio vigente:** billing SaaS dos tenants é **manual** (PROD-01 ⏸️). O gateway que importa agora é PROD-01a (tenant recebendo dos clientes dele).
+**Decisões de negócio vigentes (23/07):** billing SaaS manual (PROD-01 ⏸️) · PIX/boleto na fatura do cliente sem integração por ora (PROD-01a ⏸️) · ClickUp despriorizado, tarefas nativas são o caminho (INT-03 ⏸️, UX-05 destravado) · **o dono hospeda a Evolution** (INT-01 pronto para executar) · portal sem PIN (SEC-09 encerrado).
 
 ## Marco A — Fluxos redondos (prioridade atual · Sprint 5)
 
@@ -21,17 +21,17 @@ Fonte canônica: `docs/PLANO_MESTRE.md` (**a verdade absoluta** — leia o item 
 - **QA-04** 🟡 `P` — smoke de navegador com `SMOKE_EMAIL/SMOKE_PASSWORD/PORTAL_TOKEN` para painel e portal não pularem.
 - **CONT-AVISOS** 🟠 `M` — catálogo único eventos×canais×idioma + paridade e-mail + opt-out. **Desenhar junto com INT-01.**
 
-## Marco B — Validações (bloqueadas em decisão do dono)
-INT-01 WhatsApp e2e (falta: hospedagem Evolution + credenciais; roteiro em OPERACAO.md §4) · INT-03 ClickUp (falta: decisão tarefas × ClickUp) · INFRA-02 medir PDO persistente × pooler · SEC-10 CSP estrita (adiado — reavaliar ciclo 4).
+## Marco B — Validações e confiabilidade
+INT-01 WhatsApp e2e **pronto para executar** (dono hospeda; apontar instância em /settings/whatsapp e rodar OPERACAO.md §4) · INFRA-02 medir PDO persistente × pooler · SEC-10 CSP estrita (adiado — reavaliar ciclo 4). INT-03 ⏸️ por decisão.
 
 ## Marco C — Escala comercial
-PROD-01a PIX/boleto na fatura do cliente (decisão: Asaas × Mercado Pago) · PROD-03 hub 360° · AUTH-01 2FA · ARCH-02 aliases de rota · ARCH-04 gate único de checkLimit · UX-03 convite por e-mail · UX-06 prefs de notificação · UX-07 seletor de período.
+PROD-03 hub 360° · AUTH-01 2FA · ARCH-02 aliases de rota · ARCH-04 gate único de checkLimit · UX-03 convite por e-mail · UX-05 drag-and-drop no kanban (destravado) · UX-06 prefs de notificação · UX-07 seletor de período. PROD-01a ⏸️ por decisão.
 
 ## Marco D — Diferenciação
-PROD-02 IA→ação com guardrails em código · AI-01 metering de IA · PROD-07 orgânico↔plano (inclui CONT-PORTAL p2) · UX-05 drag-and-drop (só se tarefas nativas vencerem INT-03) · DRIVE-03 sync fase 2 (decisão de produto).
+PROD-02 IA→ação com guardrails em código · AI-01 metering de IA · PROD-07 orgânico↔plano (inclui CONT-PORTAL p2) · DRIVE-03 sync fase 2 (decisão de produto).
 
 ## Sequência
-Sprint 5 = CONT-06 + AUTO-01 + TRAF-01 + QA-04 · Sprint 6 = INT-01 + CONT-AVISOS + INT-03 + INFRA-02 · Sprint 7 = PROD-01a + PROD-03 + AUTH-01 + ARCH-02/04 · Sprint 8+ = Marco D.
+Sprint 5 = CONT-06 + AUTO-01 + TRAF-01 + QA-04 · Sprint 6 = INT-01 + CONT-AVISOS + INFRA-02 · Sprint 7 = PROD-03 + AUTH-01 + ARCH-02/04 + UX-03/05/06/07 · Sprint 8+ = Marco D.
 
 ## Como trabalhar um item
 1. Ler a entrada completa no `docs/PLANO_MESTRE.md` (problema + arquivos + pronto-quando).
