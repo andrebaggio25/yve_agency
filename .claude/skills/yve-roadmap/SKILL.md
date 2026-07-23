@@ -1,37 +1,37 @@
 ---
 name: yve-roadmap
-description: Use ao pegar qualquer item de correção, melhoria ou dívida técnica do backlog do YVE Agency — dá a um agente o contexto executável (problema, arquivos, correção, critério de pronto) de cada item do Plano Mestre vigente. Aciona em "corrija o UP-01", "pega o próximo item do roadmap", "vamos fazer o sprint 2", "o que falta pra fechar o MVP", "resolva o FE-01".
+description: Use ao pegar qualquer item de correção, melhoria ou dívida técnica do backlog do YVE Agency — dá a um agente o contexto executável (problema, arquivos, correção, critério de pronto) de cada item do Plano Mestre vigente. Aciona em "corrija o CONT-06", "pega o próximo item do roadmap", "vamos fazer o sprint 5", "o que falta no ciclo", "resolva o TRAF-01".
 ---
 
-# Roadmap do YVE Agency (ciclo 2 · 2026-07)
+# Roadmap do YVE Agency (ciclo 3 · 2026-07-23)
 
-Fonte canônica: `docs/PLANO_MESTRE.md` (**a verdade absoluta** — leia o item completo lá antes de executar). Este resumo existe para orientar a escolha. Ao pegar um item, carregue também `yve-arquitetura` + `yve-seguranca` (+ `yve-frontend` se tocar em tela). Feche sempre com `composer test` + `composer analyse` + `composer audit`, e marque ✅ no PLANO_MESTRE com data e uma linha.
+Fonte canônica: `docs/PLANO_MESTRE.md` (**a verdade absoluta** — leia o item completo lá antes de executar). Este resumo orienta a escolha. Ao pegar um item, carregue também `yve-arquitetura` + `yve-seguranca` (+ `yve-frontend` se tocar em tela). Feche sempre com `composer test` + `composer analyse` + `composer audit`, e marque ✅ no PLANO_MESTRE com data e uma linha. Automação nova entra no `config/automations.php` **e** no `docs/AUTOMACOES.md`.
 
-## Ciclo 1 (2026-07-06) — tudo concluído ✅
-Marco 0 (SEC-01/02, DEP-01, BUG-01) · Marco 1 (SEC-03/04/05/07, SCHEMA-01, SEC-06 parcial) · QA-01/02 · DRIVE-01/02-fase-1. Detalhes: `docs/historico/PLANO_MESTRE_2026-07-06.md`.
+## Ciclos anteriores — concluídos ✅
+- **Ciclo 1 (2026-07-06):** Marcos 0–1, QA-01/02, DRIVE-01/02. → `docs/historico/PLANO_MESTRE_2026-07-06.md`
+- **Ciclo 2 (2026-07-14→23):** Sprints 1–4: UP-01, FE-01/02/03(parcial), SEC-08, ARCH-01/03, QA-03, INT-02, OBS-01/02, INFRA-01/03, DATA-01, ADM-01, PROD-04/05/06/08, UX-02/04, ciclo Planificações Semanais (CONT-00…05, RADAR, PORTAL p1). → `docs/historico/PLANO_MESTRE_2026-07-14.md`
 
-## Marco A — Fechar o MVP (prioridade atual)
+**Decisão de negócio vigente:** billing SaaS dos tenants é **manual** (PROD-01 ⏸️). O gateway que importa agora é PROD-01a (tenant recebendo dos clientes dele).
 
-- **UP-01** 🔴 `G` — upload > 256MB: upload **direto browser→Drive** (sessão resumável iniciada com header `Origin`; JS envia chunks com `Content-Range` à session URI; confirmação grava `drive_files`; relay vira fallback). O teto de 256MB é da Hostinger compartilhada sobre o caminho relay — não é o Google nem exige migrar hosting. Arquivos: `GoogleDriveApiService::initiateResumable`, `PortalController`, `portal/files.php`, `routes/web.php`.
-- **FE-01** 🟠 `G` — tokens únicos + build Tailwind CLI (sai do CDN), self-host Alpine (pin) e Chart.js com SRI. Absorve o antigo PERF-01. Destrava SEC-10 (CSP estrita).
-- **FE-02** 🟠 `G` — extrair JS inline: `content/show.php` (1.183 l.), `portal/files.php` (566 l.), `approvals/show.php` → módulos em `public/js/`.
-- **FE-03** 🟠 `M` — wrapper `public/js/api.js` (X-CSRF-Token, `response.ok`, loading/erro padrão); migrar fetches.
-- **SEC-08** 🟠 `M` — CSRF (double-submit) nas mutações do portal (`itemFeedback`, `drive/*`).
-- **ARCH-01** 🟡 `P` — tirar o SQL do `DashboardController` (única violação da invariante "controller sem SQL").
-- **QA-03** 🟡 `G` — banco PG de teste + 5 testes HTTP ponta a ponta (login/RBAC, aprovação portal, upload mock, fatura, isolamento de tenant).
+## Marco A — Fluxos redondos (prioridade atual · Sprint 5)
 
-## Marco B — Confiabilidade
-INT-01 validar Evolution/WhatsApp ponta a ponta · INT-02 rate limit de envio · INT-03 validar ClickUp real · OBS-01 `/health` + alerta de job/sync falho · OBS-02 timeline de automações na UI · INFRA-01 worker na VPS + unificar filas `jobs`/`notification_jobs` · INFRA-02 medir PDO persistente vs pooler · INFRA-03 `RETURNING id` padrão · DATA-01 backup/retenção · ADM-01 guard-rail no painel de migrations · SEC-10 CSP com nonce.
+- **CONT-06** 🟠 `G` — seletor de mídia do Drive no modal do post: escolher capa/carrossel/vídeo dos arquivos já enviados (`drive_files`, miniaturas, ordem por clique/arrastar) em vez de colar URLs. Arquivos: `content/show.php`, `public/js/content-editor.js`, `DriveFileRepository`, rota GET pt+en com `content.edit`. Pronto: post de carrossel completo sem digitar URL + teste de escopo.
+- **AUTO-01** 🟡 `P` — ativação guiada de automações: banner em `/automations` quando tudo inativo + "Ativar kit recomendado" (kit do AUTOMACOES.md; WhatsApp fica fora até INT-01) + `activity_logs`.
+- **TRAF-01** 🟠 `M` — automação `traffic.anomaly` (agency, daily): campanha ativa pausada na Meta, CPA ≥ 2× média 7d, sync falho → in-app ao gestor. Padrão `AbstractAutomation`, dedupe por campanha+dia, entra no catálogo + AUTOMACOES.md.
+- **QA-04** 🟡 `P` — smoke de navegador com `SMOKE_EMAIL/SMOKE_PASSWORD/PORTAL_TOKEN` para painel e portal não pularem.
+- **CONT-AVISOS** 🟠 `M` — catálogo único eventos×canais×idioma + paridade e-mail + opt-out. **Desenhar junto com INT-01.**
+
+## Marco B — Validações (bloqueadas em decisão do dono)
+INT-01 WhatsApp e2e (falta: hospedagem Evolution + credenciais; roteiro em OPERACAO.md §4) · INT-03 ClickUp (falta: decisão tarefas × ClickUp) · INFRA-02 medir PDO persistente × pooler · SEC-10 CSP estrita (adiado — reavaliar ciclo 4).
 
 ## Marco C — Escala comercial
-PROD-01 billing SaaS (gateway+trial+dunning) com ARCH-04 (checkLimit centralizado) · PROD-01a PIX/boleto nas faturas de cliente · PROD-08 dashboard acionável · PROD-03 hub 360° do cliente · PROD-06 white-label do portal · UX-04 PDF real (dompdf) · AUTH-01 2FA · ARCH-02 aliases de rota pt/en · ARCH-03 extrair `PortalDriveController`.
+PROD-01a PIX/boleto na fatura do cliente (decisão: Asaas × Mercado Pago) · PROD-03 hub 360° · AUTH-01 2FA · ARCH-02 aliases de rota · ARCH-04 gate único de checkLimit · UX-03 convite por e-mail · UX-06 prefs de notificação · UX-07 seletor de período.
 
 ## Marco D — Diferenciação
-PROD-02 IA→ação com guardrails verificados em código · AI-01 metering de IA por tenant · PROD-04 calendário de conteúdo · PROD-05 duplicar plano · PROD-07 orgânico↔plano · DRIVE-03 sync de adições manuais (exige `drive.readonly` + verificação Google — decisão de produto) · UX-02/03/05/06/07.
+PROD-02 IA→ação com guardrails em código · AI-01 metering de IA · PROD-07 orgânico↔plano (inclui CONT-PORTAL p2) · UX-05 drag-and-drop (só se tarefas nativas vencerem INT-03) · DRIVE-03 sync fase 2 (decisão de produto).
 
 ## Sequência
-Sprint 1 = UP-01 + ARCH-01 + ARCH-03 · Sprint 2 = FE-01 + FE-03 + SEC-08 · Sprint 3 = FE-02 + QA-03 + SEC-10 · Sprint 4 = Marco B · Sprint 5+ = C · 6+ = D.
-**MVP fechado = fim do Sprint 3.**
+Sprint 5 = CONT-06 + AUTO-01 + TRAF-01 + QA-04 · Sprint 6 = INT-01 + CONT-AVISOS + INT-03 + INFRA-02 · Sprint 7 = PROD-01a + PROD-03 + AUTH-01 + ARCH-02/04 · Sprint 8+ = Marco D.
 
 ## Como trabalhar um item
 1. Ler a entrada completa no `docs/PLANO_MESTRE.md` (problema + arquivos + pronto-quando).

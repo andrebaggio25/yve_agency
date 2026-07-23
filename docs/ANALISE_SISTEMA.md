@@ -1,12 +1,14 @@
 # YVE Agency — Análise Técnica Completa do Sistema
 
 > Documento de engenharia sênior · Auditoria e documentação para preparação de comercialização
-> Data: 2026-07-06 · Revisado: 2026-07-14 (ciclo 2) · Stack: PHP 8.3 puro · PostgreSQL (Supabase) · Tailwind + Alpine.js
+> Data: 2026-07-06 · Revisado: 2026-07-14 (ciclo 2) · 2026-07-23 (ciclo 3) · Stack: PHP 8.3 puro · PostgreSQL (Supabase) · Tailwind + Alpine.js
 > Escopo: arquitetura, módulos, integrações, segurança, banco, frontend, testes e achados.
 
 Este documento é a **fotografia técnica** do sistema. Ele descreve o que existe, como funciona e onde estão os riscos. A análise de produto (SWOT + notas por módulo) está em [ANALISE_PRODUTO.md](ANALISE_PRODUTO.md); o roteiro vigente em [PLANO_MESTRE.md](PLANO_MESTRE.md). O guia funcional de uso está em [GUIA_SISTEMA.md](GUIA_SISTEMA.md).
 
 > **Nota do ciclo 2 (2026-07-14):** os achados 🔴/🟠 do §6 foram **corrigidos** nos Marcos 0–2 (ver histórico em [historico/PLANO_MESTRE_2026-07-06.md](historico/PLANO_MESTRE_2026-07-06.md)); permanecem abertos os itens 🟡 de polish (agora INFRA-01/02/03 e SEC-10 no plano vigente). O texto original foi mantido como registro do estado auditado.
+>
+> **Nota do ciclo 3 (2026-07-23):** fotografia atualizada nos números, não no texto: **188 testes / 417 asserts** (banco PG real via Docker + smoke de Chromium), PHPStan nível 6 = 0, audit limpo (dompdf 3.1.6 / guzzle 7.15.1). Mudanças estruturais desde o ciclo 2: upload direto browser→Drive em produção (UP-01), fila única de jobs com timeline de entregas (INFRA-01/OBS-02), `/api/health` + heartbeat + alerta (OBS-01), assets self-hosted purgados (FE-01), JS extraído das 3 views gigantes (FE-02), CSRF no portal (SEC-08), testes de arquitetura travando invariantes. Catálogo de automações agora documentado em [AUTOMACOES.md](AUTOMACOES.md). Estado por módulo: [ANALISE_PRODUTO.md](ANALISE_PRODUTO.md) (ciclo 3).
 
 ---
 
@@ -269,6 +271,10 @@ Em 2026-07-06 (auditoria):        38 testes · PHPStan 22 erros · 3 CVEs (guzzl
 Em 2026-07-14 (ciclo 2, medido):  77 testes, 140 asserts — 100% verde
                                   PHPStan nível 6 (v2.2.5): 0 erros
                                   composer audit: 0 advisories
+Em 2026-07-23 (ciclo 3, medido):  188 testes, 417 asserts — 100% verde
+                                  (feature com banco PG real + smoke Chromium)
+                                  PHPStan nível 6: 0 erros
+                                  composer audit: 0 advisories (dompdf 3.1.6 / guzzle 7.15.1)
 PHP runtime:     8.5.2 (composer.json exige >=8.3) ✓
 Secrets no git:  apenas .env.example versionado ✓ (.env/.env.production ignorados)
 ```

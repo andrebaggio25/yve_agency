@@ -68,6 +68,7 @@ public/index.php → Router → Pipeline(middlewares) → Controller → Service
 - [ANALISE_SISTEMA.md](docs/ANALISE_SISTEMA.md) — fotografia técnica (arquitetura, segurança, banco).
 - [GUIA_SISTEMA.md](docs/GUIA_SISTEMA.md) — guia funcional de uso.
 - [PLANO_FASES.md](docs/PLANO_FASES.md) — visão original das 12 fases do produto.
+- **[AUTOMACOES.md](docs/AUTOMACOES.md)** — catálogo das 13 automações: como funcionam, público (equipe/cliente), canais, como ativar, kit recomendado.
 - **[OPERACAO.md](docs/OPERACAO.md)** — manual de operação: monitoramento (`/api/health`), alertas, backup, deploy, validação de integrações.
 - [CRON.md](docs/CRON.md) · [EVOLUTION_API_INTEGRACAO.md](docs/EVOLUTION_API_INTEGRACAO.md) — operação.
 - `docs/historico/` — ciclos de análise/plano arquivados (padrão `NOME_AAAA-MM-DD.md`).
