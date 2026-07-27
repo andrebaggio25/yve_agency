@@ -51,7 +51,8 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
     confirmBox: { open: false, message: '' },
     _confirmAction: null,
     // Seleção múltipla (mover em lote) + navegador de pastas do modal "Mover para…".
-    selection: { files: [], folders: [] },
+    // Chaves no singular porque o tipo vem dos cliques como 'file'/'folder'.
+    selection: { file: [], folder: [] },
     movePicker: { open: false, folderId: null, folders: [], breadcrumb: [], loading: false, error: null, busy: false },
     // Modal de renomear (arquivo ou pasta).
     renameBox: { open: false, type: null, item: null, name: '', busy: false },
@@ -140,8 +141,8 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
       const i = list.indexOf(id);
       if (i >= 0) list.splice(i, 1); else list.push(id);
     },
-    selectionCount() { return this.selection.files.length + this.selection.folders.length; },
-    clearSelection() { this.selection = { files: [], folders: [] }; },
+    selectionCount() { return this.selection.file.length + this.selection.folder.length; },
+    clearSelection() { this.selection = { file: [], folder: [] }; },
 
     openMove() {
       if (this.selectionCount() === 0) return;
@@ -161,7 +162,7 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
         this.movePicker.breadcrumb = d.breadcrumb || [];
         // Pasta selecionada some da lista de destinos: mover pra dentro dela
         // mesma criaria um ciclo (o servidor também barra descendentes).
-        this.movePicker.folders = (d.folders || []).filter(f => !this.selection.folders.includes(f.id));
+        this.movePicker.folders = (d.folders || []).filter(f => !this.selection.folder.includes(f.id));
       } catch (e) {
         this.movePicker.error = e.message;
       }
@@ -179,8 +180,8 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
       this.movePicker.busy = true;
       try {
         const d = await api.post(`${this.base()}/move`, {
-          file_ids: this.selection.files,
-          folder_ids: this.selection.folders,
+          file_ids: this.selection.file,
+          folder_ids: this.selection.folder,
           target_folder_id: this.movePicker.folderId,
         });
         const errs = d.errors || [];
@@ -189,8 +190,8 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
         if ((this.movePicker.folderId ?? null) !== (this.folderId ?? null)) {
           const errFiles = new Set(errs.filter(x => x.type === 'file').map(x => x.id));
           const errFolders = new Set(errs.filter(x => x.type === 'folder').map(x => x.id));
-          this.files = this.files.filter(f => !this.selection.files.includes(f.id) || errFiles.has(f.id));
-          this.folders = this.folders.filter(f => !this.selection.folders.includes(f.id) || errFolders.has(f.id));
+          this.files = this.files.filter(f => !this.selection.file.includes(f.id) || errFiles.has(f.id));
+          this.folders = this.folders.filter(f => !this.selection.folder.includes(f.id) || errFolders.has(f.id));
         }
         this.clearSelection();
         this.movePicker.open = false;
