@@ -30,6 +30,11 @@ $jsI18n = [
   'confirm_delete_file'  => t('portal.files.confirm_delete_file'),
   'confirm_delete_folder'=> t('portal.files.confirm_delete_folder'),
   'delete_failed'        => t('portal.files.delete_failed'),
+  'home'                 => t('portal.files.home'),
+  'selected_count'       => t('portal.files.selected_count'),
+  'moved'                => t('portal.files.moved'),
+  'move_partial'         => t('portal.files.move_partial'),
+  'move_failed'          => t('portal.files.move_failed'),
   'deleted_file'         => t('portal.files.deleted_file'),
   'deleted_folder'       => t('portal.files.deleted_folder'),
   'restored'             => t('portal.files.restored'),
@@ -94,6 +99,18 @@ $driveOpts = [
       <input type="file" multiple class="hidden" @change="onFiles($event.target.files); $event.target.value=''">
     </label>
     <span class="text-xs text-gray-400">Depois de enviar, use "Copiar link" para colar no post.</span>
+  </div>
+
+  <!-- Barra de seleção (mover em lote) -->
+  <div x-show="selectionCount() > 0" x-transition class="card p-3 mb-4 flex items-center gap-3 flex-wrap" style="display:none">
+    <span class="text-sm text-gray-200 font-medium" x-text="i18n.selected_count.replace(':n', selectionCount())"></span>
+    <div class="flex items-center gap-2 ml-auto">
+      <button @click="openMove()" class="btn-primary text-sm px-3 py-2 inline-flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        <?= t('portal.files.move_to') ?>
+      </button>
+      <button @click="clearSelection()" class="btn-secondary text-sm px-3 py-2"><?= t('portal.files.cancel') ?></button>
+    </div>
   </div>
 
   <!-- Create folder inline -->
@@ -165,18 +182,36 @@ $driveOpts = [
         <!-- Folders -->
         <div x-show="folders.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
           <template x-for="folder in folders" :key="'f'+folder.id">
-            <button @click="goTo(folder.id)"
-                    class="flex items-center gap-2 rounded-xl bg-white/[0.03] border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.06] transition-all px-3 py-3 text-left">
-              <svg class="w-5 h-5 text-brand-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
-              <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
-            </button>
+            <div class="relative group">
+              <button @click="goTo(folder.id)"
+                      class="w-full flex items-center gap-2 rounded-xl bg-white/[0.03] border transition-all px-3 py-3 <?= $isConnected ? 'pr-9' : '' ?> text-left"
+                      :class="isSelected('folder', folder.id) ? 'border-brand-500/50 bg-brand-500/10' : 'border-white/5 hover:border-brand-500/30 hover:bg-white/[0.06]'">
+                <svg class="w-5 h-5 text-brand-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+                <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
+              </button>
+              <?php if ($isConnected): ?>
+              <button @click.stop="toggleSelect('folder', folder.id)" aria-label="<?= e(t('portal.files.select')) ?>"
+                      class="absolute top-1/2 -translate-y-1/2 right-2 w-5 h-5 rounded-md border flex items-center justify-center transition-all"
+                      :class="isSelected('folder', folder.id) ? 'select-check-on' : 'border-white/30 bg-black/40 text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100'">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </button>
+              <?php endif; ?>
+            </div>
           </template>
         </div>
 
         <!-- Files -->
         <div x-show="files.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
           <template x-for="file in files" :key="'x'+file.id">
-            <div class="group relative rounded-xl overflow-hidden bg-white/[0.03] border border-white/5 hover:border-brand-500/30 transition-all">
+            <div class="group relative rounded-xl overflow-hidden bg-white/[0.03] border transition-all"
+                 :class="isSelected('file', file.id) ? 'border-brand-500/50' : 'border-white/5 hover:border-brand-500/30'">
+              <?php if ($isConnected): ?>
+              <button @click.stop="toggleSelect('file', file.id)" aria-label="<?= e(t('portal.files.select')) ?>"
+                      class="absolute top-1.5 left-1.5 z-10 w-6 h-6 rounded-md border flex items-center justify-center transition-all"
+                      :class="isSelected('file', file.id) ? 'select-check-on' : 'bg-black/60 border-white/30 text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100'">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </button>
+              <?php endif; ?>
               <button @click="openPreview(file)" class="block w-full text-left">
                 <div class="aspect-square bg-black/30 flex items-center justify-center relative">
                   <template x-if="file.is_image">
@@ -220,6 +255,56 @@ $driveOpts = [
       <button @click="hideToast()" class="text-gray-400 hover:text-white flex-shrink-0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
+    </div>
+  </div>
+
+  <!-- Modal "Mover para…" (navega as pastas e escolhe o destino) -->
+  <div x-show="movePicker.open" x-transition.opacity @keydown.escape.window="closeMove()"
+       @click.self="closeMove()"
+       class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(0,0,0,.7); display:none">
+    <div class="w-full max-w-md rounded-2xl bg-[#1d1d29] border border-white/10 shadow-xl p-5">
+      <p class="text-sm font-semibold text-white mb-1"><?= t('portal.files.move_title') ?></p>
+      <p class="text-xs text-gray-400 mb-3" x-text="i18n.selected_count.replace(':n', selectionCount())"></p>
+
+      <div class="flex items-center gap-1.5 text-xs mb-2 flex-wrap">
+        <button @click="loadPicker(null)" class="text-gray-400 hover:text-white transition-colors"><?= t('portal.files.home') ?></button>
+        <template x-for="crumb in movePicker.breadcrumb" :key="'m'+crumb.id">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <button @click="loadPicker(crumb.id)" class="text-gray-400 hover:text-white transition-colors" x-text="crumb.name"></button>
+          </span>
+        </template>
+      </div>
+
+      <div class="rounded-xl border border-white/10 max-h-60 overflow-y-auto divide-y divide-white/5 mb-4">
+        <div x-show="movePicker.loading" class="py-6 text-center text-xs text-gray-400" x-text="i18n.loading"></div>
+        <div x-show="!movePicker.loading && movePicker.error" class="py-6 px-3 text-center" style="display:none">
+          <p class="text-xs text-rose-400 mb-2" x-text="movePicker.error"></p>
+          <button @click="loadPicker(movePicker.folderId)" class="btn-secondary text-xs px-3 py-1.5"><?= t('portal.files.retry') ?></button>
+        </div>
+        <template x-if="!movePicker.loading && !movePicker.error">
+          <div>
+            <p x-show="movePicker.folders.length === 0" class="py-6 px-3 text-center text-xs text-gray-400"><?= t('portal.files.move_no_subfolders') ?></p>
+            <template x-for="f in movePicker.folders" :key="'p'+f.id">
+              <button @click="loadPicker(f.id)" class="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-white/[0.04] transition-colors">
+                <svg class="w-4 h-4 text-brand-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+                <span class="text-sm text-gray-200 truncate flex-1" x-text="f.name"></span>
+                <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <p class="text-xs text-gray-400 min-w-0 truncate"><?= t('portal.files.move_dest') ?> <span class="text-gray-200 font-medium" x-text="pickerTargetName()"></span></p>
+        <div class="flex gap-2">
+          <button @click="closeMove()" class="btn-secondary text-sm px-4 py-2"><?= t('portal.files.cancel') ?></button>
+          <button @click="confirmMove()" :disabled="movePicker.busy || movePicker.loading"
+                  class="btn-primary text-sm px-4 py-2 disabled:opacity-50"
+                  x-text="movePicker.busy ? '<?= e(t('portal.files.moving')) ?>' : '<?= e(t('portal.files.move_here')) ?>'"></button>
+        </div>
+      </div>
     </div>
   </div>
 

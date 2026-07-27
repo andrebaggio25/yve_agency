@@ -50,6 +50,9 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
     _toastTimer: null,
     confirmBox: { open: false, message: '' },
     _confirmAction: null,
+    // Seleção múltipla (mover em lote) + navegador de pastas do modal "Mover para…".
+    selection: { files: [], folders: [] },
+    movePicker: { open: false, folderId: null, folders: [], breadcrumb: [], loading: false, error: null, busy: false },
 
     base() { return prefix; },
     rawUrl(file) { return `${this.base()}/file/${file.id}/raw`; },
@@ -123,7 +126,82 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
       this.uploads = [];
       this.queue = [];
       this.creatingFolder = false;
+      this.clearSelection();
       this.load(folderId);
+    },
+
+    // ── Seleção múltipla + mover (arquivos e pastas) ─────────────────────────
+
+    isSelected(type, id) { return this.selection[type].includes(id); },
+    toggleSelect(type, id) {
+      const list = this.selection[type];
+      const i = list.indexOf(id);
+      if (i >= 0) list.splice(i, 1); else list.push(id);
+    },
+    selectionCount() { return this.selection.files.length + this.selection.folders.length; },
+    clearSelection() { this.selection = { files: [], folders: [] }; },
+
+    openMove() {
+      if (this.selectionCount() === 0) return;
+      this.movePicker = { open: true, folderId: this.folderId, folders: [], breadcrumb: [], loading: false, error: null, busy: false };
+      this.loadPicker(this.folderId);
+    },
+    closeMove() { this.movePicker.open = false; },
+
+    /** Navega o mini-navegador de pastas do modal (reusa o endpoint /folders). */
+    async loadPicker(folderId) {
+      this.movePicker.loading = true;
+      this.movePicker.error = null;
+      this.movePicker.folderId = folderId;
+      try {
+        const url = `${this.base()}/folders` + (folderId ? `?folder_id=${folderId}` : '');
+        const d = await api.get(url);
+        this.movePicker.breadcrumb = d.breadcrumb || [];
+        // Pasta selecionada some da lista de destinos: mover pra dentro dela
+        // mesma criaria um ciclo (o servidor também barra descendentes).
+        this.movePicker.folders = (d.folders || []).filter(f => !this.selection.folders.includes(f.id));
+      } catch (e) {
+        this.movePicker.error = e.message;
+      }
+      this.movePicker.loading = false;
+    },
+
+    /** Nome da pasta de destino atual do modal (último nível do breadcrumb, ou a raiz). */
+    pickerTargetName() {
+      const bc = this.movePicker.breadcrumb;
+      return bc.length ? bc[bc.length - 1].name : (this.i18n.home || 'Início');
+    },
+
+    async confirmMove() {
+      if (this.movePicker.busy) return;
+      this.movePicker.busy = true;
+      try {
+        const d = await api.post(`${this.base()}/move`, {
+          file_ids: this.selection.files,
+          folder_ids: this.selection.folders,
+          target_folder_id: this.movePicker.folderId,
+        });
+        const errs = d.errors || [];
+        // Item movido sai da vista atual (foi para outra pasta) — a menos que o
+        // destino seja a própria pasta aberta (no-op) ou que ele tenha falhado.
+        if ((this.movePicker.folderId ?? null) !== (this.folderId ?? null)) {
+          const errFiles = new Set(errs.filter(x => x.type === 'file').map(x => x.id));
+          const errFolders = new Set(errs.filter(x => x.type === 'folder').map(x => x.id));
+          this.files = this.files.filter(f => !this.selection.files.includes(f.id) || errFiles.has(f.id));
+          this.folders = this.folders.filter(f => !this.selection.folders.includes(f.id) || errFolders.has(f.id));
+        }
+        this.clearSelection();
+        this.movePicker.open = false;
+        if (errs.length === 0) {
+          this.showToast(this.i18n.moved.replace(':n', d.moved), null);
+        } else {
+          const detail = errs[0].error ? ` ${errs[0].error}` : '';
+          this.showToast(this.i18n.move_partial.replace(':n', d.moved).replace(':e', errs.length) + detail, null);
+        }
+      } catch (e) {
+        this.showToast(e.message || this.i18n.move_failed, null);
+      }
+      this.movePicker.busy = false;
     },
 
     openPreview(file) { this.preview = { open: true, file }; },

@@ -461,6 +461,38 @@ class GoogleDriveApiService
         }
     }
 
+    /**
+     * Move um arquivo OU pasta para outra pasta (addParents/removeParents).
+     * No Drive não há cópia de bytes — é só uma troca de pai nos metadados.
+     */
+    public function move(int $agencyId, string $fileId, string $addParentId, string $removeParentId): void
+    {
+        if ($addParentId === $removeParentId) {
+            return;
+        }
+
+        $token = $this->accessToken($agencyId);
+
+        $resp = (new Client(['timeout' => 30, 'http_errors' => false]))->patch(
+            "https://www.googleapis.com/drive/v3/files/{$fileId}"
+            . '?supportsAllDrives=true'
+            . '&addParents=' . rawurlencode($addParentId)
+            . '&removeParents=' . rawurlencode($removeParentId),
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                    'Content-Type'  => 'application/json',
+                ],
+                'body' => '{}',
+            ]
+        );
+
+        $status = $resp->getStatusCode();
+        if ($status < 200 || $status >= 300) {
+            throw new RuntimeException('O Google Drive recusou mover o item (HTTP ' . $status . ').');
+        }
+    }
+
     /** True se o arquivo ainda existe no Drive (usado para detectar órfãos). */
     public function exists(int $agencyId, string $fileId): bool
     {

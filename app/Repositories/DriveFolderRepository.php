@@ -58,6 +58,15 @@ class DriveFolderRepository extends Repository
         );
     }
 
+    /** Muda o pai de uma pasta (parent_id NULL = raiz do cliente). */
+    public function updateParent(int $id, int $clientId, ?int $parentId): void
+    {
+        $this->query(
+            "UPDATE drive_folders SET parent_id = :p WHERE id = :id AND client_id = :c",
+            [':p' => $parentId, ':id' => $id, ':c' => $clientId]
+        );
+    }
+
     /** Renomeia uma pasta a partir do Drive (reconciliação). */
     public function updateName(int $id, int $clientId, string $name): void
     {

@@ -220,6 +220,33 @@ class PortalDriveController extends Controller
         }
     }
 
+    /** JSON: move arquivos e/ou pastas selecionados para outra pasta (ou raiz). */
+    public function driveMove(Request $request): Response
+    {
+        $client   = PortalAuth::client();
+        $clientId = (int) $client['id'];
+
+        $targetId = $request->input('target_folder_id', null);
+        $targetId = ($targetId === null || $targetId === '') ? null : (int) $targetId;
+        if ($targetId !== null && !$this->folderRepo->findForClient($targetId, $clientId)) {
+            return Response::json(['error' => t('portal.files.not_found')], 404);
+        }
+
+        $fileIds   = DriveUploadService::idList($request->input('file_ids', []));
+        $folderIds = DriveUploadService::idList($request->input('folder_ids', []));
+        if ($fileIds === [] && $folderIds === []) {
+            return Response::json(['error' => t('portal.files.move_none')], 422);
+        }
+
+        try {
+            $result = $this->uploads->moveItems($client, $fileIds, $folderIds, $targetId);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => t('portal.files.move_failed') . ': ' . $e->getMessage()], 500);
+        }
+
+        return Response::json(['success' => true, 'moved' => $result['moved'], 'errors' => $result['errors']]);
+    }
+
     /** Exclui um arquivo (Drive + banco). Fallback: se já sumiu do Drive (404), remove do banco mesmo assim. */
     public function driveDeleteFile(Request $request): Response
     {

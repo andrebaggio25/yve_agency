@@ -120,6 +120,110 @@ class DriveUploadService
         );
     }
 
+    /**
+     * Move em lote arquivos e/ou pastas para outra pasta do cliente (ou raiz,
+     * com $targetFolderId null) — Drive e banco. Item que falha não interrompe
+     * os demais: vira uma entrada em `errors` e o resto segue.
+     *
+     * @param list<int> $fileIds
+     * @param list<int> $folderIds
+     * @return array{moved:int, errors:list<array{type:string,id:int,name:string,error:string}>}
+     */
+    public function moveItems(array $client, array $fileIds, array $folderIds, ?int $targetFolderId): array
+    {
+        $clientId = (int) $client['id'];
+
+        // Destino resolvido antes de tocar em qualquer item: se falhar
+        // (Drive fora, pasta sumiu), nada foi movido pela metade.
+        $targetDriveId = $this->resolveParentDriveId($client, $targetFolderId);
+
+        $moved  = 0;
+        $errors = [];
+
+        foreach ($folderIds as $folderId) {
+            $folder = $this->folderRepo->findForClient($folderId, $clientId);
+            if (!$folder) {
+                $errors[] = ['type' => 'folder', 'id' => $folderId, 'name' => '', 'error' => 'Pasta não encontrada.'];
+                continue;
+            }
+            try {
+                $this->moveFolderRow($client, $folder, $targetFolderId, $targetDriveId);
+                $moved++;
+            } catch (\Throwable $e) {
+                $errors[] = ['type' => 'folder', 'id' => $folderId, 'name' => (string) $folder['name'], 'error' => $e->getMessage()];
+            }
+        }
+
+        foreach ($fileIds as $fileId) {
+            $file = $this->fileRepo->findForClient($fileId, $clientId);
+            if (!$file) {
+                $errors[] = ['type' => 'file', 'id' => $fileId, 'name' => '', 'error' => 'Arquivo não encontrado.'];
+                continue;
+            }
+            try {
+                $this->moveFileRow($client, $file, $targetFolderId, $targetDriveId);
+                $moved++;
+            } catch (\Throwable $e) {
+                $errors[] = ['type' => 'file', 'id' => $fileId, 'name' => (string) $file['name'], 'error' => $e->getMessage()];
+            }
+        }
+
+        return ['moved' => $moved, 'errors' => $errors];
+    }
+
+    private function moveFileRow(array $client, array $file, ?int $targetFolderId, string $targetDriveId): void
+    {
+        $currentFolderId = $file['folder_id'] !== null ? (int) $file['folder_id'] : null;
+        if ($currentFolderId === $targetFolderId) {
+            return; // já está no destino
+        }
+
+        $oldDriveId = $this->resolveParentDriveId($client, $currentFolderId);
+        $this->driveApi->move((int) $client['agency_id'], (string) $file['drive_file_id'], $targetDriveId, $oldDriveId);
+        $this->fileRepo->updateFolder((int) $file['id'], (int) $client['id'], $targetFolderId);
+    }
+
+    private function moveFolderRow(array $client, array $folder, ?int $targetFolderId, string $targetDriveId): void
+    {
+        $folderId = (int) $folder['id'];
+        $parentId = $folder['parent_id'] !== null ? (int) $folder['parent_id'] : null;
+
+        if ($parentId === $targetFolderId) {
+            return; // já está no destino
+        }
+        $this->assertTargetOutsideFolder((int) $client['id'], $folderId, $targetFolderId);
+
+        $oldDriveId = $this->resolveParentDriveId($client, $parentId);
+        $this->driveApi->move((int) $client['agency_id'], (string) $folder['drive_folder_id'], $targetDriveId, $oldDriveId);
+        $this->folderRepo->updateParent($folderId, (int) $client['id'], $targetFolderId);
+    }
+
+    /** Impede mover uma pasta para dentro dela mesma ou de um descendente (criaria um ciclo no breadcrumb e na sync). */
+    private function assertTargetOutsideFolder(int $clientId, int $folderId, ?int $targetFolderId): void
+    {
+        $cursor = $targetFolderId;
+        $guard  = 0;
+        while ($cursor !== null && $guard < 50) {
+            if ($cursor === $folderId) {
+                throw new \RuntimeException('Não é possível mover uma pasta para dentro dela mesma.');
+            }
+            $row    = $this->folderRepo->findForClient($cursor, $clientId);
+            $cursor = ($row && $row['parent_id'] !== null) ? (int) $row['parent_id'] : null;
+            $guard++;
+        }
+    }
+
+    /** Normaliza a lista de IDs vinda do navegador (só inteiros positivos, sem repetição). @return list<int> */
+    public static function idList(mixed $raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+        $ids = array_map('intval', array_filter($raw, 'is_numeric'));
+
+        return array_values(array_unique(array_filter($ids, static fn (int $i): bool => $i > 0)));
+    }
+
     /** Resolve o ID da pasta-pai no Drive (raiz do cliente, criada sob demanda, ou subpasta). */
     public function resolveParentDriveId(array $client, ?int $folderId): string
     {

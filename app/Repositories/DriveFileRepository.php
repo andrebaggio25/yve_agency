@@ -100,6 +100,15 @@ class DriveFileRepository extends Repository
         );
     }
 
+    /** Muda a pasta de um arquivo (folder_id NULL = raiz do cliente). */
+    public function updateFolder(int $id, int $clientId, ?int $folderId): void
+    {
+        $this->query(
+            "UPDATE drive_files SET folder_id = :f WHERE id = :id AND client_id = :c",
+            [':f' => $folderId, ':id' => $id, ':c' => $clientId]
+        );
+    }
+
     /** Remove todos os arquivos de uma pasta (usado na exclusão recursiva de pasta). */
     public function deleteByFolder(int $clientId, int $folderId): void
     {

@@ -155,6 +155,15 @@
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
+
+  /* Checkbox da seleção múltipla da galeria (estado marcado) — usa o acento
+     variável para o painel admin (vermelho) e o white-label herdarem a cor. */
+  .select-check-on {
+    background: rgb(var(--accent));
+    border-color: rgb(var(--accent));
+    color: rgb(var(--accent-fg));
+    opacity: 1;
+  }
 }
 
 @layer utilities {

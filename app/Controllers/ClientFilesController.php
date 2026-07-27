@@ -13,6 +13,7 @@ use App\Repositories\DriveFileRepository;
 use App\Services\DriveUploadService;
 use App\Services\GoogleDriveApiService;
 use App\Services\DriveSyncService;
+use App\Support\ActivityLogger;
 use App\Support\Auth;
 
 /**
@@ -184,6 +185,44 @@ class ClientFilesController extends Controller
         } catch (\Throwable $e) {
             return Response::json(['error' => 'Falha ao enviar: ' . $e->getMessage()], 500);
         }
+    }
+
+    /** JSON: move arquivos e/ou pastas selecionados para outra pasta (ou raiz). */
+    public function move(Request $request): Response
+    {
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $targetId = $request->input('target_folder_id', null);
+        $targetId = ($targetId === null || $targetId === '') ? null : (int) $targetId;
+        if ($targetId !== null && !$this->folderRepo->findForClient($targetId, (int) $client['id'])) {
+            return Response::json(['error' => 'Pasta de destino não encontrada'], 404);
+        }
+
+        $fileIds   = DriveUploadService::idList($request->input('file_ids', []));
+        $folderIds = DriveUploadService::idList($request->input('folder_ids', []));
+        if ($fileIds === [] && $folderIds === []) {
+            return Response::json(['error' => 'Nenhum item selecionado'], 422);
+        }
+
+        try {
+            $result = $this->uploads->moveItems($client, $fileIds, $folderIds, $targetId);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao mover: ' . $e->getMessage()], 500);
+        }
+
+        if ($result['moved'] > 0) {
+            ActivityLogger::log('drive.items_moved', 'drive', null, (int) $client['id'], [
+                'files'            => $fileIds,
+                'folders'          => $folderIds,
+                'target_folder_id' => $targetId,
+                'moved'            => $result['moved'],
+            ]);
+        }
+
+        return Response::json(['success' => true, 'moved' => $result['moved'], 'errors' => $result['errors']]);
     }
 
     /** Guarda comum dos endpoints de escrita: permissão + cliente da agência. */
