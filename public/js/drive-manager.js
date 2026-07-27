@@ -53,6 +53,8 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
     // Seleção múltipla (mover em lote) + navegador de pastas do modal "Mover para…".
     selection: { files: [], folders: [] },
     movePicker: { open: false, folderId: null, folders: [], breadcrumb: [], loading: false, error: null, busy: false },
+    // Modal de renomear (arquivo ou pasta).
+    renameBox: { open: false, type: null, item: null, name: '', busy: false },
 
     base() { return prefix; },
     rawUrl(file) { return `${this.base()}/file/${file.id}/raw`; },
@@ -267,6 +269,35 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
       } catch {
         this.showToast(url, null); // clipboard bloqueado: mostra o link pra copiar na mão
       }
+    },
+
+    // ── Renomear (arquivo ou pasta) ──────────────────────────────────────────
+
+    openRename(type, item) {
+      this.renameBox = { open: true, type, item, name: item.name, busy: false };
+      this.$nextTick(() => this.$refs.renameInput?.focus());
+    },
+    closeRename() { this.renameBox.open = false; },
+
+    async confirmRename() {
+      const name = this.renameBox.name.trim();
+      if (!name || this.renameBox.busy) return;
+      if (name === this.renameBox.item.name) { this.renameBox.open = false; return; }
+      this.renameBox.busy = true;
+      try {
+        const kind = this.renameBox.type; // 'file' | 'folder'
+        const d = await api.post(`${this.base()}/${kind}/${this.renameBox.item.id}/rename`, { name });
+        const newName = (d.file && d.file.name) || (d.folder && d.folder.name) || name;
+        const list = kind === 'file' ? this.files : this.folders;
+        const item = list.find(x => x.id === this.renameBox.item.id);
+        if (item) item.name = newName;
+        if (kind === 'folder') this.folders.sort((a, b) => a.name.localeCompare(b.name));
+        this.renameBox.open = false;
+        this.showToast(this.i18n.renamed, null);
+      } catch (e) {
+        this.showToast(e.message || this.i18n.rename_failed, null);
+      }
+      this.renameBox.busy = false;
     },
 
     deleteFile(file) {

@@ -38,6 +38,8 @@ $jsI18n = [
   'moved'                => t('portal.files.moved'),
   'move_partial'         => t('portal.files.move_partial'),
   'move_failed'          => t('portal.files.move_failed'),
+  'renamed'              => t('portal.files.renamed'),
+  'rename_failed'        => t('portal.files.rename_failed'),
   'max_label'            => $maxLabel,
 ];
 ?>
@@ -165,6 +167,10 @@ $jsI18n = [
                 <svg class="w-5 h-5 text-brand-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
                 <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
               </button>
+              <button @click.stop="openRename('folder', folder)" title="<?= e(t('portal.files.rename')) ?>"
+                      class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-400 hover:text-white transition-all p-1.5 flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
               <button @click="deleteFolder(folder)" :title="i18n.delete"
                       class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-400 hover:text-rose-400 transition-all p-1.5 flex-shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -226,6 +232,10 @@ $jsI18n = [
                   <span class="block text-sm text-gray-200 truncate" x-text="file.name"></span>
                   <span class="block text-[11px] text-gray-400" x-text="humanSize(file.size_bytes)"></span>
                 </span>
+              </button>
+              <button @click.stop="openRename('file', file)" title="<?= e(t('portal.files.rename')) ?>"
+                      class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-400 hover:text-white transition-all p-1.5 flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
               </button>
               <button @click="deleteFile(file)" :title="i18n.delete"
                       class="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-400 hover:text-rose-400 transition-all p-1.5 flex-shrink-0">
@@ -306,6 +316,24 @@ $jsI18n = [
                   class="btn-primary text-sm px-4 py-2 disabled:opacity-50"
                   x-text="movePicker.busy ? '<?= e(t('portal.files.moving')) ?>' : '<?= e(t('portal.files.move_here')) ?>'"></button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de renomear -->
+  <div x-show="renameBox.open" x-transition.opacity @keydown.escape.window="closeRename()"
+       @click.self="closeRename()"
+       class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(0,0,0,.7); display:none">
+    <div class="w-full max-w-sm rounded-2xl bg-[#1d1d29] border border-white/10 shadow-xl p-5">
+      <p class="text-sm font-semibold text-white mb-3"><?= t('portal.files.rename_title') ?></p>
+      <input x-ref="renameInput" type="text" x-model="renameBox.name"
+             @keydown.enter="confirmRename()"
+             class="w-full rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 mb-4">
+      <div class="flex justify-end gap-2">
+        <button @click="closeRename()" class="btn-secondary text-sm px-4 py-2"><?= t('portal.files.cancel') ?></button>
+        <button @click="confirmRename()" :disabled="!renameBox.name.trim() || renameBox.busy"
+                class="btn-primary text-sm px-4 py-2 disabled:opacity-50"
+                x-text="renameBox.busy ? '<?= e(t('portal.files.renaming')) ?>' : '<?= e(t('portal.files.rename_save')) ?>'"></button>
       </div>
     </div>
   </div>

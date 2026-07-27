@@ -35,6 +35,8 @@ $jsI18n = [
   'moved'                => t('portal.files.moved'),
   'move_partial'         => t('portal.files.move_partial'),
   'move_failed'          => t('portal.files.move_failed'),
+  'renamed'              => t('portal.files.renamed'),
+  'rename_failed'        => t('portal.files.rename_failed'),
   'deleted_file'         => t('portal.files.deleted_file'),
   'deleted_folder'       => t('portal.files.deleted_folder'),
   'restored'             => t('portal.files.restored'),
@@ -184,17 +186,27 @@ $driveOpts = [
           <template x-for="folder in folders" :key="'f'+folder.id">
             <div class="relative group">
               <button @click="goTo(folder.id)"
-                      class="w-full flex items-center gap-2 rounded-xl bg-white/[0.03] border transition-all px-3 py-3 <?= $isConnected ? 'pr-9' : '' ?> text-left"
+                      class="w-full flex items-center gap-2 rounded-xl bg-white/[0.03] border transition-all px-3 py-3 <?= $isConnected ? 'pr-24' : '' ?> text-left"
                       :class="isSelected('folder', folder.id) ? 'border-brand-500/50 bg-brand-500/10' : 'border-white/5 hover:border-brand-500/30 hover:bg-white/[0.06]'">
                 <svg class="w-5 h-5 text-brand-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
                 <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
               </button>
               <?php if ($isConnected): ?>
-              <button @click.stop="toggleSelect('folder', folder.id)" aria-label="<?= e(t('portal.files.select')) ?>"
-                      class="absolute top-1/2 -translate-y-1/2 right-2 w-5 h-5 rounded-md border flex items-center justify-center transition-all"
-                      :class="isSelected('folder', folder.id) ? 'select-check-on' : 'border-white/30 bg-black/40 text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100'">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-              </button>
+              <div class="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1">
+                <button @click.stop="openRename('folder', folder)" title="<?= e(t('portal.files.rename')) ?>"
+                        class="w-5 h-5 rounded-md bg-black/40 text-gray-300 hover:text-white flex items-center justify-center transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+                <button @click.stop="deleteFolder(folder)" title="<?= e(t('portal.files.delete')) ?>"
+                        class="w-5 h-5 rounded-md bg-black/40 text-gray-300 hover:text-rose-400 flex items-center justify-center transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+                <button @click.stop="toggleSelect('folder', folder.id)" aria-label="<?= e(t('portal.files.select')) ?>"
+                        class="w-5 h-5 rounded-md border flex items-center justify-center transition-all"
+                        :class="isSelected('folder', folder.id) ? 'select-check-on' : 'border-white/30 bg-black/40 text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100'">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                </button>
+              </div>
               <?php endif; ?>
             </div>
           </template>
@@ -234,11 +246,23 @@ $driveOpts = [
                   <p class="text-[10px] text-gray-400" x-text="humanSize(file.size_bytes)"></p>
                 </div>
               </button>
-              <!-- Copiar link (pra colar no post) -->
-              <button @click.stop="copyLink(file)" title="<?= e(t('portal.files.copy_link')) ?>"
-                      class="absolute top-1.5 right-1.5 w-7 h-7 rounded-lg bg-black/60 opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center text-gray-200 hover:text-white transition-all">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-              </button>
+              <!-- Ações: copiar link, renomear, excluir -->
+              <div class="absolute top-1.5 right-1.5 flex items-center gap-1">
+                <button @click.stop="copyLink(file)" title="<?= e(t('portal.files.copy_link')) ?>"
+                        class="w-7 h-7 rounded-lg bg-black/60 opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center text-gray-200 hover:text-white transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                </button>
+                <?php if ($isConnected): ?>
+                <button @click.stop="openRename('file', file)" title="<?= e(t('portal.files.rename')) ?>"
+                        class="w-7 h-7 rounded-lg bg-black/60 opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center text-gray-200 hover:text-white transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+                <button @click.stop="deleteFile(file)" title="<?= e(t('portal.files.delete')) ?>"
+                        class="w-7 h-7 rounded-lg bg-black/60 opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center text-gray-200 hover:text-rose-400 transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+                <?php endif; ?>
+              </div>
             </div>
           </template>
         </div>
@@ -252,9 +276,51 @@ $driveOpts = [
     <div class="flex items-center gap-3 rounded-xl bg-[#1d1d29] border border-white/10 shadow-lg px-4 py-3">
       <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
       <span class="text-sm text-gray-200 flex-1 truncate" x-text="toast.msg"></span>
+      <button x-show="toast.restore" @click="undoDelete()" :disabled="toast.busy"
+              class="text-sm font-semibold text-brand-300 hover:text-brand-200 disabled:opacity-50 flex-shrink-0"
+              x-text="i18n.undo"></button>
       <button @click="hideToast()" class="text-gray-400 hover:text-white flex-shrink-0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
+    </div>
+  </div>
+
+  <!-- Confirmação de exclusão (modal nativo do app) -->
+  <div x-show="confirmBox.open" x-transition.opacity @keydown.escape.window="confirmCancel()"
+       @click.self="confirmCancel()"
+       class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(0,0,0,.7); display:none">
+    <div class="w-full max-w-sm rounded-2xl bg-[#1d1d29] border border-white/10 shadow-xl p-5">
+      <div class="flex items-start gap-3 mb-5">
+        <span class="w-9 h-9 rounded-full bg-rose-500/15 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </span>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold text-white mb-1"><?= t('portal.files.confirm_title') ?></p>
+          <p class="text-sm text-gray-400 break-words" x-text="confirmBox.message"></p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button @click="confirmCancel()" class="btn-secondary text-sm px-4 py-2"><?= t('portal.files.cancel') ?></button>
+        <button @click="confirmYes()" class="text-sm px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium"><?= t('portal.files.delete') ?></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de renomear -->
+  <div x-show="renameBox.open" x-transition.opacity @keydown.escape.window="closeRename()"
+       @click.self="closeRename()"
+       class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(0,0,0,.7); display:none">
+    <div class="w-full max-w-sm rounded-2xl bg-[#1d1d29] border border-white/10 shadow-xl p-5">
+      <p class="text-sm font-semibold text-white mb-3"><?= t('portal.files.rename_title') ?></p>
+      <input x-ref="renameInput" type="text" x-model="renameBox.name"
+             @keydown.enter="confirmRename()"
+             class="w-full rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 mb-4">
+      <div class="flex justify-end gap-2">
+        <button @click="closeRename()" class="btn-secondary text-sm px-4 py-2"><?= t('portal.files.cancel') ?></button>
+        <button @click="confirmRename()" :disabled="!renameBox.name.trim() || renameBox.busy"
+                class="btn-primary text-sm px-4 py-2 disabled:opacity-50"
+                x-text="renameBox.busy ? '<?= e(t('portal.files.renaming')) ?>' : '<?= e(t('portal.files.rename_save')) ?>'"></button>
+      </div>
     </div>
   </div>
 

@@ -437,4 +437,10 @@ return [
     'portal.files.move_failed'         => 'No se pudo mover',
     'portal.files.moved'               => ':n elemento(s) movido(s).',
     'portal.files.move_partial'        => ':n movido(s), :e con error.',
+    'portal.files.rename'              => 'Renombrar',
+    'portal.files.rename_title'        => 'Renombrar',
+    'portal.files.rename_save'         => 'Guardar',
+    'portal.files.renaming'            => 'Guardando…',
+    'portal.files.renamed'             => 'Nombre actualizado.',
+    'portal.files.rename_failed'       => 'No se pudo renombrar',
 ];

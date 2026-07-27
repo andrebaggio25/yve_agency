@@ -493,6 +493,28 @@ class GoogleDriveApiService
         }
     }
 
+    /** Renomeia um arquivo ou pasta no Drive (o conteúdo não muda). */
+    public function rename(int $agencyId, string $fileId, string $name): void
+    {
+        $token = $this->accessToken($agencyId);
+
+        $resp = (new Client(['timeout' => 30, 'http_errors' => false]))->patch(
+            "https://www.googleapis.com/drive/v3/files/{$fileId}?supportsAllDrives=true",
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                    'Content-Type'  => 'application/json',
+                ],
+                'body' => json_encode(['name' => $name]),
+            ]
+        );
+
+        $status = $resp->getStatusCode();
+        if ($status < 200 || $status >= 300) {
+            throw new RuntimeException('O Google Drive recusou renomear o item (HTTP ' . $status . ').');
+        }
+    }
+
     /** True se o arquivo ainda existe no Drive (usado para detectar órfãos). */
     public function exists(int $agencyId, string $fileId): bool
     {

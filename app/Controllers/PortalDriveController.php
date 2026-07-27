@@ -247,48 +247,28 @@ class PortalDriveController extends Controller
         return Response::json(['success' => true, 'moved' => $result['moved'], 'errors' => $result['errors']]);
     }
 
-    /** Exclui um arquivo (Drive + banco). Fallback: se já sumiu do Drive (404), remove do banco mesmo assim. */
+    /** Exclui um arquivo (lixeira do Drive + banco). Devolve os dados do "Desfazer". */
     public function driveDeleteFile(Request $request): Response
     {
-        $client   = PortalAuth::client();
-        $clientId = (int) $client['id'];
-        $agencyId = (int) $client['agency_id'];
-        $fileId   = (int) $request->param('fileId');
-
-        $row = $this->fileRepo->findForClient($fileId, $clientId);
-        if (!$row) {
-            return Response::json(['error' => t('portal.files.not_found')], 404);
-        }
+        $client = PortalAuth::client();
+        $fileId = (int) $request->param('fileId');
 
         try {
-            $this->driveApi->delete($agencyId, (string) $row['drive_file_id']);
+            $restore = $this->uploads->deleteFile($client, $fileId);
         } catch (\Throwable $e) {
             return Response::json(['error' => t('portal.files.delete_failed') . ': ' . $e->getMessage()], 500);
         }
+        if ($restore === null) {
+            return Response::json(['error' => t('portal.files.not_found')], 404);
+        }
 
-        $this->fileRepo->deleteForClient($fileId, $clientId);
-
-        // Dados para o "Desfazer" instantâneo no portal (o arquivo está na lixeira).
-        return Response::json([
-            'success' => true,
-            'restore' => [
-                'drive_file_id'  => $row['drive_file_id'],
-                'name'           => $row['name'],
-                'mime_type'      => $row['mime_type'] ?? null,
-                'size_bytes'     => (int) ($row['size_bytes'] ?? 0),
-                'thumbnail_link' => $row['thumbnail_link'] ?? null,
-                'web_view_link'  => $row['web_view_link'] ?? null,
-                'folder_id'      => $row['folder_id'] !== null ? (int) $row['folder_id'] : null,
-            ],
-        ]);
+        return Response::json(['success' => true, 'restore' => $restore]);
     }
 
     /** Desfaz a exclusão de um arquivo: restaura da lixeira do Drive e recria o registro. */
     public function driveRestoreFile(Request $request): Response
     {
-        $client   = PortalAuth::client();
-        $clientId = (int) $client['id'];
-        $agencyId = (int) $client['agency_id'];
+        $client = PortalAuth::client();
 
         $driveFileId = trim((string) $request->input('drive_file_id', ''));
         if ($driveFileId === '') {
@@ -297,76 +277,82 @@ class PortalDriveController extends Controller
 
         $folderId = $request->input('folder_id', null);
         $folderId = ($folderId === null || $folderId === '') ? null : (int) $folderId;
-        if ($folderId !== null && !$this->folderRepo->findForClient($folderId, $clientId)) {
-            $folderId = null; // pasta original já não existe → restaura na raiz
-        }
 
         try {
-            $this->driveApi->restore($agencyId, $driveFileId);
+            $payload = $this->uploads->restoreFile($client, $driveFileId, $folderId, [
+                'name'           => $request->input('name'),
+                'mime_type'      => $request->input('mime_type'),
+                'size_bytes'     => $request->input('size_bytes'),
+                'thumbnail_link' => $request->input('thumbnail_link'),
+                'web_view_link'  => $request->input('web_view_link'),
+            ], 'portal');
         } catch (\Throwable $e) {
             return Response::json(['error' => t('portal.files.restore_failed') . ': ' . $e->getMessage()], 500);
         }
 
-        $name = trim((string) $request->input('name', 'arquivo')) ?: 'arquivo';
-        $id = $this->fileRepo->create([
-            'agency_id'      => $agencyId,
-            'client_id'      => $clientId,
-            'folder_id'      => $folderId,
-            'drive_file_id'  => $driveFileId,
-            'name'           => $name,
-            'mime_type'      => $request->input('mime_type') ?: null,
-            'size_bytes'     => ((int) $request->input('size_bytes', 0)) ?: null,
-            'thumbnail_link' => $request->input('thumbnail_link') ?: null,
-            'web_view_link'  => $request->input('web_view_link') ?: null,
-            'uploaded_via'   => 'portal',
-        ]);
-
-        return Response::json([
-            'success' => true,
-            'file'    => $this->filePayload([
-                'id'             => $id,
-                'name'           => $name,
-                'mime_type'      => $request->input('mime_type'),
-                'size_bytes'     => (int) $request->input('size_bytes', 0),
-                'thumbnail_link' => $request->input('thumbnail_link'),
-                'web_view_link'  => $request->input('web_view_link'),
-                'drive_file_id'  => $driveFileId,
-            ]),
-        ]);
+        return Response::json(['success' => true, 'file' => $payload]);
     }
 
     /** Exclui uma pasta e todo o conteúdo (Drive apaga em cascata; banco limpo recursivamente). */
     public function driveDeleteFolder(Request $request): Response
     {
         $client   = PortalAuth::client();
-        $clientId = (int) $client['id'];
-        $agencyId = (int) $client['agency_id'];
         $folderId = (int) $request->param('folderId');
 
-        $folder = $this->folderRepo->findForClient($folderId, $clientId);
-        if (!$folder) {
-            return Response::json(['error' => t('portal.files.not_found')], 404);
-        }
-
         try {
-            // No Drive, excluir a pasta remove o conteúdo junto. 404 = já sumiu (ok).
-            $this->driveApi->delete($agencyId, (string) $folder['drive_folder_id']);
+            $ok = $this->uploads->deleteFolder($client, $folderId);
         } catch (\Throwable $e) {
             return Response::json(['error' => t('portal.files.delete_failed') . ': ' . $e->getMessage()], 500);
         }
+        if (!$ok) {
+            return Response::json(['error' => t('portal.files.not_found')], 404);
+        }
 
-        $this->purgeFolderTree($clientId, $folderId);
         return Response::json(['success' => true]);
     }
 
-    /** Remove do banco a pasta e todos os descendentes (subpastas + arquivos). */
-    private function purgeFolderTree(int $clientId, int $folderId): void
+    /** JSON: renomeia um arquivo (Drive + banco). */
+    public function driveRenameFile(Request $request): Response
     {
-        foreach ($this->folderRepo->children($clientId, $folderId) as $child) {
-            $this->purgeFolderTree($clientId, (int) $child['id']);
+        $client = PortalAuth::client();
+
+        $name = trim((string) $request->input('name', ''));
+        if ($name === '') {
+            return Response::json(['error' => t('portal.files.rename_failed')], 422);
         }
-        $this->fileRepo->deleteByFolder($clientId, $folderId);
-        $this->folderRepo->deleteForClient($folderId, $clientId);
+
+        try {
+            $payload = $this->uploads->renameFile($client, (int) $request->param('fileId'), $name);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => t('portal.files.rename_failed') . ': ' . $e->getMessage()], 500);
+        }
+        if ($payload === null) {
+            return Response::json(['error' => t('portal.files.not_found')], 404);
+        }
+
+        return Response::json(['success' => true, 'file' => $payload]);
+    }
+
+    /** JSON: renomeia uma pasta (Drive + banco). */
+    public function driveRenameFolder(Request $request): Response
+    {
+        $client = PortalAuth::client();
+
+        $name = trim((string) $request->input('name', ''));
+        if ($name === '') {
+            return Response::json(['error' => t('portal.files.rename_failed')], 422);
+        }
+
+        try {
+            $payload = $this->uploads->renameFolder($client, (int) $request->param('folderId'), $name);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => t('portal.files.rename_failed') . ': ' . $e->getMessage()], 500);
+        }
+        if ($payload === null) {
+            return Response::json(['error' => t('portal.files.not_found')], 404);
+        }
+
+        return Response::json(['success' => true, 'folder' => $payload]);
     }
 
     /** Proxy de conteúdo (preview/thumbnail) — streama o arquivo do Drive mantendo-o privado. */

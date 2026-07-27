@@ -213,6 +213,137 @@ class DriveUploadService
         }
     }
 
+    /**
+     * Exclui um arquivo: lixeira do Drive + remoção do registro. Retorna os
+     * dados para o "Desfazer" (o arquivo fica recuperável na lixeira), ou
+     * null se o arquivo não pertence ao cliente.
+     */
+    public function deleteFile(array $client, int $fileId): ?array
+    {
+        $clientId = (int) $client['id'];
+
+        $row = $this->fileRepo->findForClient($fileId, $clientId);
+        if (!$row) {
+            return null;
+        }
+
+        $this->driveApi->delete((int) $client['agency_id'], (string) $row['drive_file_id']);
+        $this->fileRepo->deleteForClient($fileId, $clientId);
+
+        return [
+            'drive_file_id'  => $row['drive_file_id'],
+            'name'           => $row['name'],
+            'mime_type'      => $row['mime_type'] ?? null,
+            'size_bytes'     => (int) ($row['size_bytes'] ?? 0),
+            'thumbnail_link' => $row['thumbnail_link'] ?? null,
+            'web_view_link'  => $row['web_view_link'] ?? null,
+            'folder_id'      => $row['folder_id'] !== null ? (int) $row['folder_id'] : null,
+        ];
+    }
+
+    /**
+     * Desfaz a exclusão: restaura da lixeira do Drive e recria o registro.
+     * Se a pasta original já não existe, o arquivo volta para a raiz.
+     * @param array $meta name/mime_type/size_bytes/thumbnail_link/web_view_link (do payload do "Desfazer")
+     * @return array payload do arquivo restaurado
+     */
+    public function restoreFile(array $client, string $driveFileId, ?int $folderId, array $meta, string $via): array
+    {
+        $clientId = (int) $client['id'];
+        $agencyId = (int) $client['agency_id'];
+
+        if ($folderId !== null && !$this->folderRepo->findForClient($folderId, $clientId)) {
+            $folderId = null;
+        }
+
+        $this->driveApi->restore($agencyId, $driveFileId);
+
+        $name = trim((string) ($meta['name'] ?? '')) ?: 'arquivo';
+        $id   = $this->fileRepo->create([
+            'agency_id'      => $agencyId,
+            'client_id'      => $clientId,
+            'folder_id'      => $folderId,
+            'drive_file_id'  => $driveFileId,
+            'name'           => $name,
+            'mime_type'      => ($meta['mime_type'] ?? null) ?: null,
+            'size_bytes'     => ((int) ($meta['size_bytes'] ?? 0)) ?: null,
+            'thumbnail_link' => ($meta['thumbnail_link'] ?? null) ?: null,
+            'web_view_link'  => ($meta['web_view_link'] ?? null) ?: null,
+            'uploaded_via'   => $via,
+        ]);
+
+        return self::filePayload([
+            'id'             => $id,
+            'name'           => $name,
+            'mime_type'      => $meta['mime_type'] ?? null,
+            'size_bytes'     => (int) ($meta['size_bytes'] ?? 0),
+            'thumbnail_link' => $meta['thumbnail_link'] ?? null,
+            'web_view_link'  => $meta['web_view_link'] ?? null,
+            'drive_file_id'  => $driveFileId,
+        ]);
+    }
+
+    /**
+     * Exclui uma pasta e todo o conteúdo (o Drive apaga em cascata na lixeira;
+     * o banco é limpo recursivamente). False se a pasta não é do cliente.
+     */
+    public function deleteFolder(array $client, int $folderId): bool
+    {
+        $clientId = (int) $client['id'];
+
+        $folder = $this->folderRepo->findForClient($folderId, $clientId);
+        if (!$folder) {
+            return false;
+        }
+
+        $this->driveApi->delete((int) $client['agency_id'], (string) $folder['drive_folder_id']);
+        $this->purgeFolderTree($clientId, $folderId);
+
+        return true;
+    }
+
+    /** Remove do banco a pasta e todos os descendentes (subpastas + arquivos). */
+    private function purgeFolderTree(int $clientId, int $folderId): void
+    {
+        foreach ($this->folderRepo->children($clientId, $folderId) as $child) {
+            $this->purgeFolderTree($clientId, (int) $child['id']);
+        }
+        $this->fileRepo->deleteByFolder($clientId, $folderId);
+        $this->folderRepo->deleteForClient($folderId, $clientId);
+    }
+
+    /** Renomeia um arquivo (Drive + banco). Retorna o payload atualizado, ou null se não é do cliente. */
+    public function renameFile(array $client, int $fileId, string $name): ?array
+    {
+        $clientId = (int) $client['id'];
+
+        $row = $this->fileRepo->findForClient($fileId, $clientId);
+        if (!$row) {
+            return null;
+        }
+
+        $this->driveApi->rename((int) $client['agency_id'], (string) $row['drive_file_id'], $name);
+        $this->fileRepo->updateName($fileId, $clientId, $name);
+
+        return self::filePayload(array_merge($row, ['name' => $name]));
+    }
+
+    /** Renomeia uma pasta (Drive + banco). Retorna {id,name}, ou null se não é do cliente. */
+    public function renameFolder(array $client, int $folderId, string $name): ?array
+    {
+        $clientId = (int) $client['id'];
+
+        $row = $this->folderRepo->findForClient($folderId, $clientId);
+        if (!$row) {
+            return null;
+        }
+
+        $this->driveApi->rename((int) $client['agency_id'], (string) $row['drive_folder_id'], $name);
+        $this->folderRepo->updateName($folderId, $clientId, $name);
+
+        return ['id' => (int) $row['id'], 'name' => $name];
+    }
+
     /** Normaliza a lista de IDs vinda do navegador (só inteiros positivos, sem repetição). @return list<int> */
     public static function idList(mixed $raw): array
     {

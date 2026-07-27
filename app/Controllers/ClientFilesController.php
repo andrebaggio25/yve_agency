@@ -225,6 +225,158 @@ class ClientFilesController extends Controller
         return Response::json(['success' => true, 'moved' => $result['moved'], 'errors' => $result['errors']]);
     }
 
+    /** JSON: exclui um arquivo (lixeira do Drive + banco). Devolve os dados do "Desfazer". */
+    public function deleteFile(Request $request): Response
+    {
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $fileId = (int) $request->param('fileId');
+
+        try {
+            $restore = $this->uploads->deleteFile($client, $fileId);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao excluir: ' . $e->getMessage()], 500);
+        }
+        if ($restore === null) {
+            return Response::json(['error' => 'Arquivo não encontrado'], 404);
+        }
+
+        ActivityLogger::log('drive.file_deleted', 'drive', null, (int) $client['id'], [
+            'file_id' => $fileId,
+            'name'    => $restore['name'],
+        ]);
+
+        return Response::json(['success' => true, 'restore' => $restore]);
+    }
+
+    /** JSON: desfaz a exclusão de um arquivo (restaura da lixeira e recria o registro). */
+    public function restoreFile(Request $request): Response
+    {
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $driveFileId = trim((string) $request->input('drive_file_id', ''));
+        if ($driveFileId === '') {
+            return Response::json(['error' => 'Arquivo inválido'], 422);
+        }
+
+        $folderId = $request->input('folder_id', null);
+        $folderId = ($folderId === null || $folderId === '') ? null : (int) $folderId;
+
+        try {
+            $payload = $this->uploads->restoreFile($client, $driveFileId, $folderId, [
+                'name'           => $request->input('name'),
+                'mime_type'      => $request->input('mime_type'),
+                'size_bytes'     => $request->input('size_bytes'),
+                'thumbnail_link' => $request->input('thumbnail_link'),
+                'web_view_link'  => $request->input('web_view_link'),
+            ], 'panel');
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao restaurar: ' . $e->getMessage()], 500);
+        }
+
+        ActivityLogger::log('drive.file_restored', 'drive', null, (int) $client['id'], [
+            'drive_file_id' => $driveFileId,
+        ]);
+
+        return Response::json(['success' => true, 'file' => $payload]);
+    }
+
+    /** JSON: exclui uma pasta e todo o conteúdo (recuperável na lixeira do Drive). */
+    public function deleteFolder(Request $request): Response
+    {
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $folderId = (int) $request->param('folderId');
+
+        try {
+            $ok = $this->uploads->deleteFolder($client, $folderId);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao excluir: ' . $e->getMessage()], 500);
+        }
+        if (!$ok) {
+            return Response::json(['error' => 'Pasta não encontrada'], 404);
+        }
+
+        ActivityLogger::log('drive.folder_deleted', 'drive', null, (int) $client['id'], [
+            'folder_id' => $folderId,
+        ]);
+
+        return Response::json(['success' => true]);
+    }
+
+    /** JSON: renomeia um arquivo (Drive + banco). */
+    public function renameFile(Request $request): Response
+    {
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $name = trim((string) $request->input('name', ''));
+        if ($name === '') {
+            return Response::json(['error' => 'Nome obrigatório'], 422);
+        }
+
+        $fileId = (int) $request->param('fileId');
+
+        try {
+            $payload = $this->uploads->renameFile($client, $fileId, $name);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao renomear: ' . $e->getMessage()], 500);
+        }
+        if ($payload === null) {
+            return Response::json(['error' => 'Arquivo não encontrado'], 404);
+        }
+
+        ActivityLogger::log('drive.file_renamed', 'drive', null, (int) $client['id'], [
+            'file_id' => $fileId,
+            'name'    => $name,
+        ]);
+
+        return Response::json(['success' => true, 'file' => $payload]);
+    }
+
+    /** JSON: renomeia uma pasta (Drive + banco). */
+    public function renameFolder(Request $request): Response
+    {
+        $client = $this->requireClient($request);
+        if ($client instanceof Response) {
+            return $client;
+        }
+
+        $name = trim((string) $request->input('name', ''));
+        if ($name === '') {
+            return Response::json(['error' => 'Nome obrigatório'], 422);
+        }
+
+        $folderId = (int) $request->param('folderId');
+
+        try {
+            $payload = $this->uploads->renameFolder($client, $folderId, $name);
+        } catch (\Throwable $e) {
+            return Response::json(['error' => 'Falha ao renomear: ' . $e->getMessage()], 500);
+        }
+        if ($payload === null) {
+            return Response::json(['error' => 'Pasta não encontrada'], 404);
+        }
+
+        ActivityLogger::log('drive.folder_renamed', 'drive', null, (int) $client['id'], [
+            'folder_id' => $folderId,
+            'name'      => $name,
+        ]);
+
+        return Response::json(['success' => true, 'folder' => $payload]);
+    }
+
     /** Guarda comum dos endpoints de escrita: permissão + cliente da agência. */
     private function requireClient(Request $request): array|Response
     {

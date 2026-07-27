@@ -321,6 +321,11 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->post('/clientes/{clientId}/conteudos/upload/session',  [ClientFilesController::class, 'uploadSession'],  [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->post('/clientes/{clientId}/conteudos/upload/complete', [ClientFilesController::class, 'uploadComplete'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->post('/clientes/{clientId}/conteudos/move',            [ClientFilesController::class, 'move'],           [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/conteudos/file/{fileId}/delete',     [ClientFilesController::class, 'deleteFile'],   [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/conteudos/file/restore',             [ClientFilesController::class, 'restoreFile'],  [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/conteudos/folder/{folderId}/delete', [ClientFilesController::class, 'deleteFolder'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/conteudos/file/{fileId}/rename',     [ClientFilesController::class, 'renameFile'],   [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/conteudos/folder/{folderId}/rename', [ClientFilesController::class, 'renameFolder'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
 
     // Acesso de usuários ao cliente
     $router->get('/clientes/{clientId}/acesso',                  [ClientController::class, 'accessIndex'],  [ClientAccessMiddleware::class]);
@@ -542,5 +547,7 @@ $router->group([PortalMiddleware::class], function ($router) {
     $router->post('/portal/{portal_token}/drive/file/restore',         [PortalDriveController::class, 'driveRestoreFile'],    [CsrfMiddleware::class]);
     $router->post('/portal/{portal_token}/drive/folder/{folderId}/delete', [PortalDriveController::class, 'driveDeleteFolder'], [CsrfMiddleware::class]);
     $router->post('/portal/{portal_token}/drive/move',                 [PortalDriveController::class, 'driveMove'],           [CsrfMiddleware::class]);
+    $router->post('/portal/{portal_token}/drive/file/{fileId}/rename',     [PortalDriveController::class, 'driveRenameFile'],   [CsrfMiddleware::class]);
+    $router->post('/portal/{portal_token}/drive/folder/{folderId}/rename', [PortalDriveController::class, 'driveRenameFolder'], [CsrfMiddleware::class]);
     $router->get('/portal/{portal_token}/drive/file/{fileId}/raw',     [PortalDriveController::class, 'driveFileRaw']);
 });

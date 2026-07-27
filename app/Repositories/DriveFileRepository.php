@@ -100,6 +100,15 @@ class DriveFileRepository extends Repository
         );
     }
 
+    /** Renomeia um arquivo (o registro local; o Drive é renomeado pelo service). */
+    public function updateName(int $id, int $clientId, string $name): void
+    {
+        $this->query(
+            "UPDATE drive_files SET name = :n WHERE id = :id AND client_id = :c",
+            [':n' => $name, ':id' => $id, ':c' => $clientId]
+        );
+    }
+
     /** Muda a pasta de um arquivo (folder_id NULL = raiz do cliente). */
     public function updateFolder(int $id, int $clientId, ?int $folderId): void
     {

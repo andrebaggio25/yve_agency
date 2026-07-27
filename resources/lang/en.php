@@ -437,4 +437,10 @@ return [
     'portal.files.move_failed'         => 'Could not move',
     'portal.files.moved'               => ':n item(s) moved.',
     'portal.files.move_partial'        => ':n moved, :e failed.',
+    'portal.files.rename'              => 'Rename',
+    'portal.files.rename_title'        => 'Rename',
+    'portal.files.rename_save'         => 'Save',
+    'portal.files.renaming'            => 'Saving…',
+    'portal.files.renamed'             => 'Name updated.',
+    'portal.files.rename_failed'       => 'Could not rename',
 ];
