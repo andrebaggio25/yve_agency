@@ -27,6 +27,7 @@ $jsI18n = [
   'eta_seconds'          => t('portal.files.eta_seconds'),
   'eta_minutes'          => t('portal.files.eta_minutes'),
   'link_copied'          => t('portal.files.link_copied'),
+  'folder_link_copied'   => t('portal.files.folder_link_copied'),
   'confirm_delete_file'  => t('portal.files.confirm_delete_file'),
   'confirm_delete_folder'=> t('portal.files.confirm_delete_folder'),
   'delete_failed'        => t('portal.files.delete_failed'),
@@ -87,9 +88,17 @@ $driveOpts = [
     </template>
   </div>
 
-  <?php if ($isConnected): ?>
   <!-- Toolbar (CONT-06) -->
   <div class="flex items-center gap-2 mb-3 flex-wrap">
+    <?php /* Abrir a pasta no Drive: para quem prefere trabalhar direto lá em
+            vez de enviar arquivo por arquivo pela plataforma. Independe da
+            integração estar conectada — só do cliente já ter pasta. */ ?>
+    <button @click="copyFolderLink(currentDriveId)" x-show="currentDriveId" style="display:none"
+            class="btn-secondary text-sm px-3 py-2 inline-flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      <?= t('portal.files.copy_folder_link') ?>
+    </button>
+    <?php if ($isConnected): ?>
     <button @click="creatingFolder = true; $nextTick(() => $refs.folderInput?.focus())"
             class="btn-secondary text-sm px-3 py-2 inline-flex items-center gap-1.5">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11v4m-2-2h4"/></svg>
@@ -101,8 +110,10 @@ $driveOpts = [
       <input type="file" multiple class="hidden" @change="onFiles($event.target.files); $event.target.value=''">
     </label>
     <span class="text-xs text-gray-400">Depois de enviar, use "Copiar link" para colar no post.</span>
+    <?php endif; ?>
   </div>
 
+  <?php if ($isConnected): ?>
   <!-- Barra de seleção (mover em lote) -->
   <div x-show="selectionCount() > 0" x-transition class="card p-3 mb-4 flex items-center gap-3 flex-wrap" style="display:none">
     <span class="text-sm text-gray-200 font-medium" x-text="i18n.selected_count.replace(':n', selectionCount())"></span>
@@ -186,13 +197,18 @@ $driveOpts = [
           <template x-for="folder in folders" :key="'f'+folder.id">
             <div class="relative group">
               <button @click="goTo(folder.id)"
-                      class="w-full flex items-center gap-2 rounded-xl bg-white/[0.03] border transition-all px-3 py-3 <?= $isConnected ? 'pr-24' : '' ?> text-left"
+                      class="w-full flex items-center gap-2 rounded-xl bg-white/[0.03] border transition-all px-3 py-3 <?= $isConnected ? 'pr-28' : 'pr-10' ?> text-left"
                       :class="isSelected('folder', folder.id) ? 'border-brand-500/50 bg-brand-500/10' : 'border-white/5 hover:border-brand-500/30 hover:bg-white/[0.06]'">
                 <svg class="w-5 h-5 text-brand-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
                 <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
               </button>
-              <?php if ($isConnected): ?>
               <div class="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1">
+                <button @click.stop="copyFolderLink(folder.drive_folder_id)" x-show="folder.drive_folder_id"
+                        title="<?= e(t('portal.files.copy_folder_link')) ?>" style="display:none"
+                        class="w-5 h-5 rounded-md bg-black/40 text-gray-300 hover:text-white flex items-center justify-center transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                </button>
+                <?php if ($isConnected): ?>
                 <button @click.stop="openRename('folder', folder)" title="<?= e(t('portal.files.rename')) ?>"
                         class="w-5 h-5 rounded-md bg-black/40 text-gray-300 hover:text-white flex items-center justify-center transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -206,8 +222,8 @@ $driveOpts = [
                         :class="isSelected('folder', folder.id) ? 'select-check-on' : 'border-white/30 bg-black/40 text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100'">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                 </button>
+                <?php endif; ?>
               </div>
-              <?php endif; ?>
             </div>
           </template>
         </div>

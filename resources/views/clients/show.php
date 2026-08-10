@@ -19,13 +19,18 @@
         </div>
       </div>
     </div>
-    <?php if (\App\Support\Auth::can('clients.edit')): ?>
-    <div class="flex gap-2">
+    <div class="flex gap-2 flex-wrap">
+      <?php /* Galeria do Drive: quem produz conteúdo precisa entrar aqui — o
+              gate é drive_assets.view, não clients.edit (social media e designer
+              não editam cadastro, mas sobem conteúdo). */ ?>
+      <?php if (\App\Support\Auth::can('drive_assets.view')): ?>
       <a href="/clientes/<?= e($client['id']) ?>/conteudos"
          class="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 hover:border-white/20 hover:text-white transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
         Conteúdos
       </a>
+      <?php endif; ?>
+      <?php if (\App\Support\Auth::can('clients.edit')): ?>
       <a href="/clientes/<?= e($client['id']) ?>/acesso"
          class="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 hover:border-white/20 hover:text-white transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
@@ -36,8 +41,8 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         <?= t('common.edit') ?>
       </a>
+      <?php endif; ?>
     </div>
-    <?php endif; ?>
   </div>
 
   <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">

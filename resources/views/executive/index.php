@@ -8,6 +8,12 @@ $fmtMoney  = fn($v) => 'R$ ' . number_format((float)$v, 2, ',', '.');
 $fmtInt    = fn($v) => number_format((int)$v, 0, ',', '.');
 $fmtFloat  = fn($v, $d = 2) => number_format((float)$v, $d, ',', '.');
 $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' => 'Revisão', 'done' => 'Concluída'];
+
+// SEC: dinheiro só para quem tem permissão financeira. O controller já não
+// consulta os valores nesse caso — aqui é a segunda camada (view nunca imprime
+// o que não recebeu). Quem só faz conteúdo continua vendo a parte operacional.
+$canFin = (bool) ($canFin ?? false);
+$canAds = \App\Support\Auth::can('ads_metrics.view');
 ?>
 
 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -25,18 +31,30 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
 </div>
 
 <!-- ── Row 1: Main KPIs ─────────────────────────────────────────────────── -->
-<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
-  <?php
-  $kpis = [
-    ['Clientes Ativos',    count(array_filter($clients, fn($c) => $c['status'] === 'active')), null, 'text-brand-300'],
-    ['Faturado Total',     $fmtMoney($financialKpis['billed_total'] ?? 0), null, 'text-emerald-300'],
-    ['Recebido',           $fmtMoney($financialKpis['received_total'] ?? 0), null, 'text-green-300'],
-    ['Em Aberto',          $fmtMoney($financialKpis['pending_total'] ?? 0), null, 'text-yellow-300'],
-    ['Investimento Ads',   $fmtMoney($adsKpis['total_spend'] ?? 0), 'Período selecionado', 'text-blue-300'],
-    ['Planos Aguardando',  (int)($contentKpis['awaiting'] ?? 0), 'Aprovação pendente', 'text-orange-300'],
-  ];
-  foreach ($kpis as [$label, $value, $sub, $color]):
-  ?>
+<?php
+$kpis = [
+  ['Clientes Ativos',    count(array_filter($clients, fn($c) => $c['status'] === 'active')), null, 'text-brand-300'],
+];
+if ($canFin) {
+  $kpis[] = ['Faturado Total', $fmtMoney($financialKpis['billed_total'] ?? 0), null, 'text-emerald-300'];
+  $kpis[] = ['Recebido',       $fmtMoney($financialKpis['received_total'] ?? 0), null, 'text-green-300'];
+  $kpis[] = ['Em Aberto',      $fmtMoney($financialKpis['pending_total'] ?? 0), null, 'text-yellow-300'];
+}
+if ($canAds) {
+  $kpis[] = ['Investimento Ads', $fmtMoney($adsKpis['total_spend'] ?? 0), 'Período selecionado', 'text-blue-300'];
+}
+$kpis[] = ['Planos Aguardando', (int)($contentKpis['awaiting'] ?? 0), 'Aprovação pendente', 'text-orange-300'];
+
+// A grade acompanha a quantidade de cards: com o financeiro escondido sobram
+// 2, e um grid fixo de 6 colunas deixaria dois cards espremidos num canto.
+$kpiGrid = match (true) {
+  count($kpis) <= 2 => 'grid-cols-2',
+  count($kpis) <= 4 => 'grid-cols-2 md:grid-cols-4',
+  default           => 'grid-cols-2 md:grid-cols-3 xl:grid-cols-6',
+};
+?>
+<div class="grid <?= $kpiGrid ?> gap-3 mb-6">
+  <?php foreach ($kpis as [$label, $value, $sub, $color]): ?>
   <div class="card p-4">
     <p class="text-xs text-gray-400 mb-1"><?= $label ?></p>
     <p class="text-xl font-bold <?= $color ?>"><?= $value ?></p>
@@ -46,9 +64,10 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
 </div>
 
 <!-- ── Row 2: Revenue chart + Tasks + Organic ─────────────────────────── -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+<div class="grid grid-cols-1 <?= $canFin ? 'lg:grid-cols-3' : 'md:grid-cols-2' ?> gap-4 mb-6">
 
   <!-- Revenue trend -->
+  <?php if ($canFin): ?>
   <div class="card p-5 col-span-2">
     <h2 class="text-sm font-semibold text-gray-300 mb-4">Receita — últimos 12 meses</h2>
     <div style="height:220px" x-data x-init="
@@ -84,9 +103,10 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
       })
     "><canvas></canvas></div>
   </div>
+  <?php endif; ?>
 
   <!-- Tasks + Content summary -->
-  <div class="space-y-4">
+  <div class="<?= $canFin ? 'space-y-4' : 'contents' ?>">
     <!-- Tasks by status -->
     <div class="card p-5">
       <h2 class="text-sm font-semibold text-gray-300 mb-3">Tarefas</h2>
@@ -125,7 +145,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
 </div>
 
 <!-- ── Row 3: Ads KPIs ────────────────────────────────────────────────── -->
-<?php if (\App\Support\Auth::can('ads_metrics.view')): ?>
+<?php if ($canAds): ?>
 <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
   <?php
   $adsCards = [
@@ -153,9 +173,11 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
     <thead>
       <tr class="border-b border-white/[0.06]">
         <th class="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Cliente</th>
+        <?php if ($canFin): ?>
         <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Faturado</th>
         <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Recebido</th>
         <th class="text-right px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Pendente</th>
+        <?php endif; ?>
         <th class="text-center px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Planos Aguard.</th>
         <th class="text-center px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Tarefas Abertas</th>
         <th class="px-5 py-3"></th>
@@ -163,16 +185,18 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
     </thead>
     <tbody class="divide-y divide-white/[0.03]">
       <?php if (empty($clientSummary)): ?>
-      <tr><td colspan="7" class="px-5 py-10 text-center text-gray-400">Nenhum cliente ativo.</td></tr>
+      <tr><td colspan="<?= $canFin ? 7 : 4 ?>" class="px-5 py-10 text-center text-gray-400">Nenhum cliente ativo.</td></tr>
       <?php endif; ?>
       <?php foreach ($clientSummary as $cs): ?>
       <tr class="hover:bg-white/[0.02] transition-colors">
         <td class="px-5 py-3 font-medium text-white"><?= e($cs['name']) ?></td>
+        <?php if ($canFin): ?>
         <td class="px-5 py-3 text-right text-gray-300"><?= $fmtMoney($cs['invoiced']) ?></td>
         <td class="px-5 py-3 text-right text-emerald-400"><?= $fmtMoney($cs['paid']) ?></td>
         <td class="px-5 py-3 text-right <?= $cs['pending'] > 0 ? 'text-yellow-400' : 'text-gray-400' ?>">
           <?= $fmtMoney($cs['pending']) ?>
         </td>
+        <?php endif; ?>
         <td class="px-5 py-3 text-center">
           <?php if ($cs['plans_awaiting'] > 0): ?>
           <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold bg-orange-500/20 text-orange-300">
@@ -192,11 +216,17 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
           <?php endif; ?>
         </td>
         <td class="px-5 py-3 text-right">
+          <?php /* A rota do relatório por cliente passa por ClientAccessMiddleware:
+                  quem não tem acesso àquele cliente tomaria 403 ao clicar. */ ?>
+          <?php if (\App\Support\Auth::canAccessClient((int) $cs['id'])): ?>
           <a href="/relatorio-executivo/cliente/<?= $cs['id'] ?>?since=<?= e($since) ?>&until=<?= e($until) ?>"
              target="_blank"
              class="text-xs text-brand-400 hover:text-brand-300 font-medium">
             Relatório PDF →
           </a>
+          <?php else: ?>
+          <span class="text-xs text-gray-400">—</span>
+          <?php endif; ?>
         </td>
       </tr>
       <?php endforeach; ?>
@@ -206,7 +236,7 @@ $statusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'review' 
 </div>
 
 <!-- ── Row 5: Top campaigns ───────────────────────────────────────────── -->
-<?php if (!empty($topCampaigns) && \App\Support\Auth::can('ads_metrics.view')): ?>
+<?php if (!empty($topCampaigns) && $canAds): ?>
 <h2 class="text-sm font-semibold text-gray-300 mb-3">Top Campanhas no Período</h2>
 <div class="card overflow-hidden">
   <div class="overflow-x-auto">

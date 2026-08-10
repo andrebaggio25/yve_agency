@@ -99,6 +99,9 @@ class PortalDriveController extends Controller
         try {
             $folder = $this->uploads->createFolder($client, $parentId, $name);
 
+            // O portal é público por token: nada de ID interno do Drive aqui.
+            unset($folder['drive_folder_id']);
+
             return Response::json(['success' => true, 'folder' => $folder]);
         } catch (\Throwable $e) {
             return Response::json(['error' => 'Falha ao criar pasta: ' . $e->getMessage()], 500);

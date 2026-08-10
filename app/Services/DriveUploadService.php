@@ -27,7 +27,7 @@ class DriveUploadService
 
     /**
      * Cria a subpasta no Drive e registra no banco.
-     * @return array{id:int,name:string}
+     * @return array{id:int,name:string,drive_folder_id:string}
      */
     public function createFolder(array $client, ?int $parentId, string $name): array
     {
@@ -45,7 +45,9 @@ class DriveUploadService
             'name'            => $name,
         ]);
 
-        return ['id' => $id, 'name' => $name];
+        // drive_folder_id volta para o painel montar o "Copiar link da pasta"
+        // sem recarregar a galeria. O portal descarta o campo na resposta.
+        return ['id' => $id, 'name' => $name, 'drive_folder_id' => $driveFolderId];
     }
 
     /**

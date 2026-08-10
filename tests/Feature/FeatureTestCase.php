@@ -33,6 +33,7 @@ abstract class FeatureTestCase extends TestCase
     private const TRUNCATE = [
         'activity_logs', 'jobs', 'notification_jobs', 'notifications',
         'drive_files', 'drive_folders', 'google_drive_integrations',
+        'ad_daily_metrics', 'ad_accounts',
         'payments', 'invoices', 'contracts',
         'content_plan_items', 'content_plans', 'content_plan_templates',
         'automation_rules', 'client_automation_settings', 'automation_log',

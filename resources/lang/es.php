@@ -418,6 +418,8 @@ return [
     'portal.files.deleted_folder'      => 'Carpeta movida a la papelera',
     'portal.files.link_copied'         => '¡Enlace copiado!',
     'portal.files.copy_link'           => 'Copiar enlace',
+    'portal.files.copy_folder_link'    => 'Copiar enlace de la carpeta',
+    'portal.files.folder_link_copied'  => '¡Enlace de la carpeta copiado!',
     'portal.files.undo'                => 'Deshacer',
     'portal.files.restored'            => 'Restaurado',
     'portal.files.restore_failed'      => 'No se pudo restaurar',

@@ -160,6 +160,22 @@ class Auth
         }
     }
 
+    /**
+     * Exige **pelo menos uma** das permissões. Para tela que serve a papéis
+     * diferentes com permissões diferentes (ex.: o Relatório Executivo, que o
+     * financeiro alcança por `clients.view_basic` e a equipe por `clients.view`).
+     */
+    public static function requireAnyPermission(string ...$permissions): void
+    {
+        self::requireLogin();
+
+        if (self::isPlatformAdmin()) return;
+
+        if (!self::canAny(...$permissions)) {
+            throw HttpException::forbidden(self::isAjax(), ['permission' => implode(' | ', $permissions)]);
+        }
+    }
+
     public static function requirePlatformAdmin(): void
     {
         self::requireLogin();

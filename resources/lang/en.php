@@ -418,6 +418,8 @@ return [
     'portal.files.deleted_folder'      => 'Folder moved to trash',
     'portal.files.link_copied'         => 'Link copied!',
     'portal.files.copy_link'           => 'Copy link',
+    'portal.files.copy_folder_link'    => 'Copy folder link',
+    'portal.files.folder_link_copied'  => 'Folder link copied!',
     'portal.files.undo'                => 'Undo',
     'portal.files.restored'            => 'Restored',
     'portal.files.restore_failed'      => 'Could not restore',

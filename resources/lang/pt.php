@@ -429,6 +429,8 @@ return [
     'portal.files.deleted_folder'      => 'Pasta movida para a lixeira',
     'portal.files.link_copied'         => 'Link copiado!',
     'portal.files.copy_link'           => 'Copiar link',
+    'portal.files.copy_folder_link'    => 'Copiar link da pasta',
+    'portal.files.folder_link_copied'  => 'Link da pasta copiado!',
     'portal.files.undo'                => 'Desfazer',
     'portal.files.restored'            => 'Restaurado',
     'portal.files.restore_failed'      => 'Não foi possível restaurar',

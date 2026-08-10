@@ -32,6 +32,9 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
     syncMsg: '',
     syncOk: false,
     folderId: null,
+    // ID no Google Drive da pasta aberta (só o painel recebe do backend).
+    // Alimenta o "Copiar link da pasta"; fica null no portal do cliente.
+    currentDriveId: null,
     breadcrumb: [],
     folders: [],
     files: [],
@@ -112,10 +115,14 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
       this.loading = true;
       this.loadError = null;
       this.folderId = folderId;
+      // Zera antes de buscar: se a requisição falhar, o botão "copiar link da
+      // pasta" não pode continuar apontando para a pasta anterior.
+      this.currentDriveId = null;
       try {
         const url = `${this.base()}/folders` + (folderId ? `?folder_id=${folderId}` : '');
         const d = await api.get(url);
         this.breadcrumb = d.breadcrumb || [];
+        this.currentDriveId = d.folder_drive_id || null;
         this.folders = d.folders || [];
         this.files = d.files || [];
       } catch (e) {
@@ -269,6 +276,27 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
         this.showToast(this.i18n.link_copied || 'Link copiado!', null);
       } catch {
         this.showToast(url, null); // clipboard bloqueado: mostra o link pra copiar na mão
+      }
+    },
+
+    /** URL canônica de uma pasta no Drive. Vazia quando não há ID. */
+    driveFolderUrl(driveFolderId) {
+      return driveFolderId ? `https://drive.google.com/drive/folders/${encodeURIComponent(driveFolderId)}` : '';
+    },
+
+    /**
+     * Copia o link da PASTA no Drive — para abrir a pasta lá e trabalhar
+     * direto nela, em vez de subir arquivo por arquivo pela plataforma.
+     * Só o painel interno recebe o drive_folder_id; no portal não aparece.
+     */
+    async copyFolderLink(driveFolderId) {
+      const url = this.driveFolderUrl(driveFolderId);
+      if (!url) return;
+      try {
+        await navigator.clipboard.writeText(url);
+        this.showToast(this.i18n.folder_link_copied || this.i18n.link_copied || 'Link copiado!', null);
+      } catch {
+        this.showToast(url, null);
       }
     },
 

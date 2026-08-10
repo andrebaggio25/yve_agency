@@ -76,18 +76,23 @@ final class InitialDataSeeder extends AbstractSeed
                 'organic_metrics.view',
                 'content.view', 'tasks.view', 'tasks.create', 'tasks.edit',
             ]],
+            // clients.view_all: a equipe de conteúdo precisa alcançar a pasta
+            // de qualquer cliente da agência para subir/pegar material — sem
+            // isso o ClientAccessMiddleware barra a galeria e a lista vem vazia.
             ['slug' => 'social_media',    'name' => 'Social Media',             'permissions' => [
-                'dashboard.view', 'clients.view', 'content.view', 'content.create', 'content.edit',
+                'dashboard.view', 'clients.view', 'clients.view_all', 'content.view', 'content.create', 'content.edit',
                 'content.send_to_approval', 'approvals.view', 'drive_assets.view',
                 'organic_metrics.view', 'tasks.view', 'tasks.create', 'tasks.edit',
                 'whatsapp.view', 'email.view',
             ]],
             ['slug' => 'designer',        'name' => 'Designer',                 'permissions' => [
-                'dashboard.view', 'clients.view', 'content.view', 'drive_assets.view',
+                'dashboard.view', 'clients.view', 'clients.view_all', 'content.view', 'drive_assets.view',
                 'approvals.view', 'tasks.view',
             ]],
+            // clients.view_all: o financeiro fatura a carteira inteira — sem
+            // isso o relatório executivo por cliente (e o PDF) devolvia 403.
             ['slug' => 'financial',       'name' => 'Financeiro',               'permissions' => [
-                'dashboard.view', 'clients.view_basic', 'contracts.view', 'contracts.create',
+                'dashboard.view', 'clients.view_basic', 'clients.view_all', 'contracts.view', 'contracts.create',
                 'contracts.edit', 'contracts.send', 'invoices.view', 'invoices.create',
                 'invoices.edit', 'invoices.send', 'payments.view', 'payments.create',
                 'financial_reports.view', 'financial_reports.export',

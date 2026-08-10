@@ -40,6 +40,11 @@ $taskStatusLabels = ['todo' => 'A Fazer', 'in_progress' => 'Em Andamento', 'revi
 $priorityColors   = ['low' => '#6b7280', 'medium' => '#d97706', 'high' => '#dc2626', 'urgent' => '#c6a15b'];
 $invoiceStatusLabels = ['draft' => 'Rascunho', 'sent' => 'Enviada', 'paid' => 'Paga', 'overdue' => 'Atrasada', 'partial' => 'Parcial', 'cancelled' => 'Cancelada'];
 $invoiceStatusColors = ['paid' => '#059669', 'sent' => '#2563eb', 'overdue' => '#dc2626', 'partial' => '#d97706', 'draft' => '#9ca3af', 'cancelled' => '#9ca3af'];
+
+// SEC: o bloco financeiro (e o PDF gerado a partir deste HTML) só sai para
+// quem tem permissão financeira — o controller já não consulta os valores.
+$canFin = (bool) ($canFin ?? false);
+$canAds = (bool) ($canAds ?? false);
 ?>
 
 <div class="page">
@@ -69,6 +74,7 @@ $invoiceStatusColors = ['paid' => '#059669', 'sent' => '#2563eb', 'overdue' => '
   </div>
 
   <!-- ── Financial KPIs ─────────────────────────────────────────────── -->
+  <?php if ($canFin): ?>
   <p class="section-title">Financeiro</p>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
     <div class="kpi-card">
@@ -110,9 +116,10 @@ $invoiceStatusColors = ['paid' => '#059669', 'sent' => '#2563eb', 'overdue' => '
     </tbody>
   </table>
   <?php endif; ?>
+  <?php endif; /* $canFin */ ?>
 
   <!-- ── Ads Metrics ────────────────────────────────────────────────── -->
-  <?php if ($adMetrics && $adMetrics['impressions'] > 0): ?>
+  <?php if ($canAds && $adMetrics && $adMetrics['impressions'] > 0): ?>
   <p class="section-title">Tráfego Pago — <?= date('d/m/Y', strtotime($since)) ?> a <?= date('d/m/Y', strtotime($until)) ?></p>
   <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;margin-bottom:1.5rem">
     <?php foreach ([

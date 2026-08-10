@@ -20,6 +20,10 @@ class BillingController extends Controller
 
     public function index(Request $request): Response
     {
+        // Plano, limites e histórico de cobrança da agência: dado de dono,
+        // não de operação. Sem guarda, qualquer usuário logado abria a tela.
+        Auth::requirePermission('settings.manage');
+
         $agencyId     = (int) Auth::agencyId();
         $subscription = $this->billing->getSubscription($agencyId);
         $usage        = $this->billing->usageSummary($agencyId);

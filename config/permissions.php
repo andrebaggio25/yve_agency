@@ -13,6 +13,10 @@ return [
     // Clientes
     'clients.view'                => 'Ver clientes (próprios)',
     'clients.view_all'            => 'Ver todos os clientes',
+    // Usada pelo papel Financeiro: enxerga o cliente como referência de
+    // cobrança, sem abrir o cadastro. Faltava no catálogo — o seeder ignora
+    // slug inexistente (`if ($perm)`), então a permissão nunca era concedida.
+    'clients.view_basic'          => 'Ver dados básicos do cliente',
     'clients.create'              => 'Criar cliente',
     'clients.edit'                => 'Editar cliente',
     'clients.delete'              => 'Excluir cliente',

@@ -417,9 +417,13 @@ class ClientFilesController extends Controller
         return Response::json([
             'success'    => true,
             'breadcrumb' => $breadcrumb,
+            // ID da pasta aberta no Google Drive (raiz do cliente quando na
+            // raiz) — é o que alimenta o "Copiar link da pasta" na galeria.
+            'folder_drive_id' => $current['drive_folder_id'] ?? ($client['drive_folder_id'] ?: null),
             'folders'    => array_map(fn($f) => [
-                'id'   => (int) $f['id'],
-                'name' => $f['name'],
+                'id'              => (int) $f['id'],
+                'name'            => $f['name'],
+                'drive_folder_id' => $f['drive_folder_id'] ?? null,
             ], $this->folderRepo->children($clientId, $folderId)),
             'files'      => array_map(fn($f) => [
                 'id'            => (int) $f['id'],

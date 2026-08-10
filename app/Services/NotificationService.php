@@ -443,13 +443,30 @@ class NotificationService
 
     private function onTeamDailyDigest(int $agencyId, array $ctx): void
     {
+        // O trecho operacional vai para toda a equipe; a contagem de faturas
+        // em aberto é dado financeiro e sai num aviso separado, só para quem
+        // pode ver fatura (senão o digest vazava financeiro por dashboard.view).
         $body = sprintf(
-            "Hoje: %d tarefa(s) vencendo · %d aprovação(ões) pendente(s) · %d fatura(s) em aberto.",
+            "Hoje: %d tarefa(s) vencendo · %d aprovação(ões) pendente(s).",
             (int) ($ctx['tasks_today'] ?? 0),
             (int) ($ctx['plans_pending'] ?? 0),
-            (int) ($ctx['invoices_open'] ?? 0),
         );
         $this->inAppToPermission($agencyId, 'dashboard.view', 'digest.daily', 'Resumo do dia', $body, '/');
+
+        $invoicesOpen = (int) ($ctx['invoices_open'] ?? 0);
+        if ($invoicesOpen > 0) {
+            // Exige as DUAS permissões: o número é agregado da agência inteira.
+            // `invoices.view` sozinho alcançaria o papel Cliente — Financeiro,
+            // que veria a carteira de faturas dos outros clientes.
+            $this->inAppToAllPermissions(
+                $agencyId,
+                ['dashboard.view', 'invoices.view'],
+                'digest.daily_financial',
+                'Resumo do dia — financeiro',
+                sprintf('%d fatura(s) em aberto.', $invoicesOpen),
+                '/faturas',
+            );
+        }
     }
 
     // ── Automation helpers ─────────────────────────────────────────────────────
@@ -475,6 +492,43 @@ class NotificationService
             $this->repo->createNotification([
                 'agency_id'  => $agencyId,
                 'user_id'    => (int) $u['id'],
+                'type'       => $type,
+                'title'      => $title,
+                'body'       => $body,
+                'action_url' => $actionUrl,
+            ]);
+        }
+    }
+
+    /**
+     * Aviso in-app para quem tem **todas** as permissões da lista. Usado quando
+     * o conteúdo agrega dados da agência e uma permissão só não basta para
+     * separar equipe interna de usuário do cliente.
+     *
+     * @param list<string> $permissions
+     */
+    private function inAppToAllPermissions(int $agencyId, array $permissions, string $type, string $title, string $body, string $actionUrl): void
+    {
+        if ($permissions === []) {
+            return;
+        }
+
+        $eligible = null;
+        foreach ($permissions as $permission) {
+            $ids = array_map(
+                static fn(array $u): int => (int) $u['id'],
+                $this->users->findByAgencyAndPermission($agencyId, $permission)
+            );
+            $eligible = $eligible === null ? $ids : array_intersect($eligible, $ids);
+            if ($eligible === []) {
+                return;
+            }
+        }
+
+        foreach ((array) $eligible as $userId) {
+            $this->repo->createNotification([
+                'agency_id'  => $agencyId,
+                'user_id'    => (int) $userId,
                 'type'       => $type,
                 'title'      => $title,
                 'body'       => $body,
