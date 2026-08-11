@@ -50,6 +50,20 @@ class ClientGalleryAccessTest extends FeatureTestCase
         $this->assertStringNotContainsString("/clientes/{$client['id']}/editar", $body);
     }
 
+    public function test_lista_de_clientes_traz_atalho_direto_para_a_galeria(): void
+    {
+        $agencyId = $this->createAgency();
+        $client   = $this->createClient($agencyId, 'Cliente Zeta');
+        $user     = $this->createUser($agencyId);
+
+        $this->actingAs($user['id'], permissions: self::PERM_DESIGNER, clientIds: []);
+
+        $body = $this->get('/clientes')->getBody();
+
+        $this->assertStringContainsString('Cliente Zeta', $body);
+        $this->assertStringContainsString("/clientes/{$client['id']}/conteudos", $body);
+    }
+
     public function test_sem_drive_assets_view_o_link_da_galeria_nao_aparece(): void
     {
         $agencyId = $this->createAgency();

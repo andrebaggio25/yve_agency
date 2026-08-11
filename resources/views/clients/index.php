@@ -71,8 +71,8 @@
   <?php else: ?>
   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
     <?php foreach ($clients as $client): ?>
-    <a href="/clientes/<?= e($client['id']) ?>"
-       class="group flex flex-col rounded-2xl border border-white/5 bg-white/[0.03] p-5 transition-all hover:border-brand-500/30 hover:bg-white/[0.06] hover:-translate-y-0.5">
+    <div class="group flex flex-col rounded-2xl border border-white/5 bg-white/[0.03] p-5 transition-all hover:border-brand-500/30 hover:bg-white/[0.06] hover:-translate-y-0.5">
+      <a href="/clientes/<?= e($client['id']) ?>" class="flex flex-col flex-1">
       <div class="flex items-start justify-between mb-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-sm font-bold text-brand-300">
           <?= strtoupper(substr($client['name'], 0, 2)) ?>
@@ -99,7 +99,17 @@
         <span class="text-gray-400">·</span>
         <?= e($client['currency_code'] ?? 'BRL') ?>
       </div>
-    </a>
+      </a>
+      <?php /* Atalho para a galeria do Drive: quem produz conteúdo entra direto
+              na pasta do cliente, sem passar pela tela de detalhe. */ ?>
+      <?php if (\App\Support\Auth::can('drive_assets.view')): ?>
+      <a href="/clientes/<?= e($client['id']) ?>/conteudos"
+         class="mt-4 -mb-1 inline-flex items-center gap-1.5 self-start rounded-lg border border-white/10 px-2.5 py-1.5 text-xs font-medium text-gray-300 transition-all hover:border-brand-500/40 hover:text-white">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        Conteúdos
+      </a>
+      <?php endif; ?>
+    </div>
     <?php endforeach; ?>
   </div>
 
