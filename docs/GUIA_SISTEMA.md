@@ -201,6 +201,16 @@ Rascunho → Enviar para aprovação → Aprovado / Em revisão → Publicado
 **Tipos de conteúdo disponíveis:**  
 `feed`, `reels`, `story`, `carousel`, `tiktok`, `youtube`, `email`, `blog`
 
+**Reagendar um post (mudar a data, inclusive para outra semana)**
+
+A cliente aprovou o post e pediu para publicar depois? Não refaça o post. No card do post, use **Reagendar** (ou simplesmente troque a data no modal de edição).
+
+- Data na mesma semana: só a data muda.
+- Data em outra semana: o post **migra** para a planificação daquela semana, levando legenda, roteiro, CTA, capa, imagens, plataforma, formato, responsável e o histórico de feedback. É o mesmo post, não uma cópia.
+- Não existe planificação naquela semana? Ela é criada na hora, em rascunho, já com o post.
+- O status do post é preservado — adiar não desfaz a aprovação da cliente.
+- Semana de destino já aprovada pela cliente **não** aceita o post: reabra aquele plano ou escolha outra data.
+
 ---
 
 ### 6.4 Aprovações

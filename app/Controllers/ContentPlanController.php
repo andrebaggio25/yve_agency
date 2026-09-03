@@ -337,6 +337,94 @@ class ContentPlanController extends Controller
         return Response::json(['success' => $ok]);
     }
 
+    /**
+     * Consulta leve do modal de reagendamento: a semana da data escolhida já
+     * tem plano deste cliente? A tela precisa dizer "vai para o plano X" ou
+     * "vamos criar o plano da semana" ANTES de o usuário confirmar.
+     */
+    public function weekPlan(Request $request): Response
+    {
+        Auth::requirePermission('content.view');
+
+        $clientId = (int) $request->param('clientId');
+        $date     = trim((string) $request->query('date', ''));
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !strtotime($date)) {
+            return Response::json(['error' => 'Data inválida.'], 422);
+        }
+
+        $weekStart = ContentPlanService::mondayOf($date);
+        $plan      = $this->service->planForWeek($clientId, (int) Auth::agencyId(), $date);
+
+        return Response::json([
+            'week_start' => $weekStart,
+            'week_end'   => ContentPlanService::sundayOf($weekStart),
+            'exists'     => $plan !== null,
+            'plan_id'    => $plan ? (int) $plan['id'] : null,
+            'title'      => $plan['title']  ?? null,
+            'status'     => $plan['status'] ?? null,
+        ]);
+    }
+
+    /**
+     * Reagenda um post para outra data (CONT-REAG).
+     *
+     * Diferente de `updateItem`, aceita data fora da semana do plano: o post
+     * migra para o plano da semana de destino, que é criado na hora se ainda
+     * não existir. Todas as configurações do post vão junto — é a mesma linha
+     * mudando de plano, não uma cópia.
+     */
+    public function rescheduleItem(Request $request): Response
+    {
+        Auth::requirePermission('content.edit');
+
+        $itemId   = (int) $request->param('itemId');
+        $agencyId = (int) Auth::agencyId();
+        $date     = (string) ($request->post('publish_date') ?? '');
+        $hasTime  = $request->post('publish_time') !== null;
+
+        $result = $this->service->rescheduleItem(
+            $itemId,
+            $agencyId,
+            $date,
+            $hasTime ? (string) $request->post('publish_time') : null,
+            (int) Auth::id(),
+            $hasTime,
+        );
+
+        if ($request->wantsJson()) {
+            if (!$result['success']) {
+                return Response::json($result, 422);
+            }
+            $result['redirect'] = '/conteudo/' . $result['plan_id'] . '#item-' . $itemId;
+            return Response::json($result);
+        }
+
+        if (!$result['success']) {
+            $this->withError((string) ($result['error'] ?? 'Não foi possível reagendar o post.'));
+            return $this->redirect('/conteudo/' . (int) $request->param('planId'));
+        }
+
+        $this->withSuccess($this->rescheduleMessage($result));
+        return $this->redirect('/conteudo/' . $result['plan_id'] . '#item-' . $itemId);
+    }
+
+    /** @param array{created_plan?:bool,moved?:bool,week_start?:string} $result */
+    private function rescheduleMessage(array $result): string
+    {
+        if (empty($result['moved'])) {
+            return 'Data do post atualizada.';
+        }
+
+        $week = !empty($result['week_start'])
+            ? ' de ' . date('d/m', (int) strtotime((string) $result['week_start']))
+            : '';
+
+        return !empty($result['created_plan'])
+            ? "Post movido. A planificação da semana{$week} foi criada agora com este post."
+            : "Post movido para a planificação da semana{$week}.";
+    }
+
     public function destroyItem(Request $request): Response
     {
         Auth::requirePermission('content.delete');

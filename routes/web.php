@@ -151,6 +151,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->post('/content',                 [ContentPlanController::class, 'store'],          [CsrfMiddleware::class]);
     // Antes de /content/{planId}: "template" não pode virar planId.
     $router->get('/content/template/{clientId}', [ContentPlanController::class, 'clientTemplate']);
+    $router->get('/content/week-plan/{clientId}', [ContentPlanController::class, 'weekPlan']);
     $router->get('/content/{planId}',         [ContentPlanController::class, 'show']);
     $router->get('/content/{planId}/edit',    [ContentPlanController::class, 'edit']);
     $router->put('/content/{planId}',         [ContentPlanController::class, 'update'],         [CsrfMiddleware::class]);
@@ -161,6 +162,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->post('/content/{planId}/items',             [ContentPlanController::class, 'storeItem'],   [CsrfMiddleware::class]);
     $router->put('/content/{planId}/items/{itemId}',     [ContentPlanController::class, 'updateItem'],  [CsrfMiddleware::class]);
     $router->delete('/content/{planId}/items/{itemId}',  [ContentPlanController::class, 'destroyItem'], [CsrfMiddleware::class]);
+    $router->post('/content/{planId}/items/{itemId}/reschedule', [ContentPlanController::class, 'rescheduleItem'], [CsrfMiddleware::class]);
     $router->post('/content/{planId}/items/reorder',     [ContentPlanController::class, 'reorderItems'],[CsrfMiddleware::class]);
     // Approvals
     $router->get('/approvals',                          [ApprovalController::class, 'index']);
@@ -340,6 +342,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->post('/conteudo',                  [ContentPlanController::class, 'store'],          [CsrfMiddleware::class]);
     // Antes de /conteudo/{planId}: "modelo" não pode virar planId.
     $router->get('/conteudo/modelo/{clientId}', [ContentPlanController::class, 'clientTemplate']);
+    $router->get('/conteudo/semana/{clientId}', [ContentPlanController::class, 'weekPlan']);
     $router->get('/conteudo/{planId}',          [ContentPlanController::class, 'show']);
     $router->get('/conteudo/{planId}/editar',   [ContentPlanController::class, 'edit']);
     $router->put('/conteudo/{planId}',          [ContentPlanController::class, 'update'],         [CsrfMiddleware::class]);
@@ -352,6 +355,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->post('/conteudo/{planId}/items',              [ContentPlanController::class, 'storeItem'],   [CsrfMiddleware::class]);
     $router->put('/conteudo/{planId}/items/{itemId}',      [ContentPlanController::class, 'updateItem'],  [CsrfMiddleware::class]);
     $router->delete('/conteudo/{planId}/items/{itemId}',   [ContentPlanController::class, 'destroyItem'], [CsrfMiddleware::class]);
+    $router->post('/conteudo/{planId}/items/{itemId}/reagendar', [ContentPlanController::class, 'rescheduleItem'], [CsrfMiddleware::class]);
     $router->post('/conteudo/{planId}/items/reorder',      [ContentPlanController::class, 'reorderItems'],[CsrfMiddleware::class]);
 
     // ── Aprovações ────────────────────────────────────────────────────────────

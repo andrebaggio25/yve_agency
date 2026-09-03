@@ -98,10 +98,14 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
 
 <div id="content-show"
      data-plan-id="<?= (int) $plan['id'] ?>"
+     data-client-id="<?= (int) $plan['client_id'] ?>"
      data-client-name="<?= e($plan['client_name'] ?? 'agencia') ?>"
      data-client-username="<?= e(strtolower(preg_replace('/[^a-z0-9_.]/i', '', $plan['client_name'] ?? 'usuario'))) ?>"
+     data-week-start="<?= e((string) $plan['week_start']) ?>"
+     data-week-end="<?= e((string) $plan['week_end']) ?>"
      x-data="contentShow(<?= (int) $plan['id'] ?>)"
      @open-edit-post.window="openEditPost($event.detail.item)"
+     @open-reschedule.window="openReschedule($event.detail.item)"
      class="min-h-screen">
 
   <!-- ── Breadcrumb ──────────────────────────────────────────────────────────── -->
@@ -457,6 +461,11 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
                       title="Editar">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
               </button>
+              <button @click.stop="reschedule()"
+                      class="opacity-0 group-hover:opacity-100 rounded-lg p-1.5 text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+                      title="Reagendar">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </button>
               <button @click.stop="deleteItem()"
                       class="opacity-0 group-hover:opacity-100 rounded-lg p-1.5 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                       title="Excluir">
@@ -679,6 +688,12 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             Editar
           </button>
+          <button @click="reschedule()"
+                  class="inline-flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all"
+                  title="Mover este post para outra data — inclusive em outra semana">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Reagendar
+          </button>
           <button @click="deleteItem()"
                   class="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/20 px-3 py-1.5 text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-all">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -773,11 +788,21 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Data de Publicação</label>
-            <!-- min/max = semana do plano; a guarda real é o 422 do backend. -->
+            <!--
+              min/max = semana do plano ao ADICIONAR (a guarda real é o 422 do
+              backend). Ao EDITAR o campo fica livre: data de outra semana vira
+              um reagendamento — o post migra para a planificação daquela
+              semana em vez de a tela dizer "data inválida".
+            -->
             <input type="date" aria-label="Data de publicação" x-model="itemModal.publish_date"
-                   min="<?= e($plan['week_start']) ?>" max="<?= e($plan['week_end']) ?>"
-                   class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+                   :min="itemModal.mode === 'edit' ? null : '<?= e($plan['week_start']) ?>'"
+                   :max="itemModal.mode === 'edit' ? null : '<?= e($plan['week_end']) ?>'"
+                   class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2.5 text-sm [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-brand-500/50">
             <p class="text-xs text-gray-400 mt-1">Semana: <?= date('d/m', strtotime($plan['week_start'])) ?>–<?= date('d/m', strtotime($plan['week_end'])) ?> · Fuso: <?= e($clientTz) ?></p>
+            <p class="text-xs text-brand-300 mt-1"
+               x-show="itemModal.mode === 'edit' && itemModal.publish_date && (itemModal.publish_date < '<?= e($plan['week_start']) ?>' || itemModal.publish_date > '<?= e($plan['week_end']) ?>')">
+              Fora desta semana: ao salvar, o post vai para a planificação da semana escolhida (criada se ainda não existir).
+            </p>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Horário</label>
@@ -910,6 +935,107 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
             <span x-text="submitting ? 'Salvando...' : (itemModal.mode === 'edit' ? 'Salvar alterações' : 'Adicionar Post')"></span>
           </button>
           <button type="button" @click="itemModal.show = false"
+                  class="rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-400 hover:text-white transition-all">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Modal: Reagendar post ──────────────────────────────────────────────── -->
+  <!--
+    Trocar a data de um post que já existe. Se a nova data cair em outra
+    semana, o post MUDA de planificação — a da semana de destino, criada aqui
+    mesmo se ainda não existir. Tudo do post vai junto porque é a mesma linha
+    trocando de plano, não uma cópia.
+  -->
+  <div x-show="rescheduleModal.show" x-transition.opacity
+       class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+       style="display:none">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="rescheduleModal.show = false"></div>
+    <div class="relative w-full max-w-md rounded-2xl border border-white/10 bg-gray-950 shadow-2xl"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100">
+
+      <div class="flex items-center justify-between p-5 border-b border-white/5">
+        <div class="min-w-0">
+          <h3 class="text-base font-semibold text-white">Reagendar post</h3>
+          <p class="text-xs text-gray-400 truncate" x-text="rescheduleModal.label"></p>
+        </div>
+        <button @click="rescheduleModal.show = false" class="text-gray-400 hover:text-white transition-colors" aria-label="Fechar">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form @submit.prevent="submitReschedule()" class="p-5 space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="reschedule-date" class="block text-xs font-medium text-gray-400 mb-1.5">Nova data</label>
+            <input id="reschedule-date" type="date" required x-model="rescheduleModal.publish_date"
+                   @change="probeWeek()"
+                   class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2.5 text-sm [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+          </div>
+          <div>
+            <label for="reschedule-time" class="block text-xs font-medium text-gray-400 mb-1.5">Horário</label>
+            <input id="reschedule-time" type="time" x-model="rescheduleModal.publish_time"
+                   class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2.5 text-sm [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+          </div>
+        </div>
+
+        <!-- Atalhos: o pedido mais comum é "joga pra semana que vem". -->
+        <div class="flex flex-wrap gap-2">
+          <template x-for="shift in [7, 14, -7]" :key="shift">
+            <button type="button" @click="shiftDays(shift)"
+                    class="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-300 hover:text-white hover:bg-white/10 transition-all"
+                    x-text="shift > 0 ? ('+' + (shift / 7) + (shift === 7 ? ' semana' : ' semanas')) : '−1 semana'"></button>
+          </template>
+        </div>
+
+        <!-- Para onde o post vai: dito ANTES de confirmar, nunca depois. -->
+        <div class="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-xs" x-show="rescheduleModal.publish_date">
+          <template x-if="rescheduleModal.probing">
+            <p class="text-gray-400">Verificando a semana de destino...</p>
+          </template>
+          <template x-if="!rescheduleModal.probing && rescheduleModal.target">
+            <div class="space-y-1">
+              <p class="text-gray-400">
+                Semana <span class="text-white font-medium" x-text="rescheduleModal.target.week_label"></span>
+              </p>
+              <template x-if="rescheduleModal.target.same_plan">
+                <p class="text-gray-300">Continua nesta mesma planificação.</p>
+              </template>
+              <template x-if="!rescheduleModal.target.same_plan && rescheduleModal.target.exists">
+                <p class="text-gray-300">
+                  O post vai para a planificação
+                  <span class="text-white font-medium" x-text="rescheduleModal.target.title"></span>,
+                  levando legenda, mídia, responsável e histórico.
+                </p>
+              </template>
+              <template x-if="!rescheduleModal.target.same_plan && !rescheduleModal.target.exists">
+                <p class="text-brand-300">
+                  Ainda não existe planificação nessa semana. Ela será criada agora, em rascunho, já com este post.
+                </p>
+              </template>
+              <template x-if="rescheduleModal.target.status === 'approved' && !rescheduleModal.target.same_plan">
+                <p class="text-amber-300">
+                  Essa semana já foi aprovada pela cliente — reabra aquele plano ou escolha outra data.
+                </p>
+              </template>
+            </div>
+          </template>
+        </div>
+
+        <p x-show="rescheduleModal.error" x-text="rescheduleModal.error"
+           class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-300"></p>
+
+        <div class="flex gap-3 pt-1">
+          <button type="submit" :disabled="rescheduleModal.saving || !rescheduleModal.publish_date"
+                  class="flex-1 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-gray-950 transition-all hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            <span x-text="rescheduleModal.saving ? 'Movendo...' : 'Reagendar'"></span>
+          </button>
+          <button type="button" @click="rescheduleModal.show = false"
                   class="rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-400 hover:text-white transition-all">
             Cancelar
           </button>

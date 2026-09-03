@@ -499,6 +499,160 @@ class ContentPlanService
         }
     }
 
+    /** Plano do cliente na semana em que a data cai (para prever o destino do reagendamento). */
+    public function planForWeek(int $clientId, int $agencyId, string $date): ?array
+    {
+        return $this->repo->findByClientWeek($clientId, $agencyId, self::mondayOf($date));
+    }
+
+    // ── Reagendar post (CONT-REAG) ─────────────────────────────────────────────
+
+    /**
+     * Move um post para outra data — **inclusive fora da semana do plano**.
+     *
+     * O caso real: a cliente aprovou o post desta semana e pediu para publicar
+     * na próxima. Até aqui isso obrigava a recriar o post do zero no plano da
+     * semana seguinte (plataforma, formato, legenda, roteiro, CTA, capa,
+     * imagens, responsável, feedbacks) — trabalho manual e propenso a perder
+     * conteúdo. Agora o post **muda de plano**, levando tudo consigo: é a mesma
+     * linha, não uma cópia.
+     *
+     * Se a semana de destino ainda não tem plano, ele nasce aqui — em rascunho,
+     * vazio, só com o post que chegou. Não aplicamos o modelo semanal do cliente
+     * nesse caso: quem move um post não pediu uma grade nova de posts vazios.
+     *
+     * O status do post é preservado. Um post aprovado continua aprovado depois
+     * de adiado — o que mudou foi a data, não a decisão da cliente. Já a semana
+     * de destino **já aprovada** bloqueia a operação: enfiar um post novo num
+     * plano que a cliente fechou faria o sistema dizer que ela aprovou algo que
+     * nunca viu.
+     *
+     * @return array{success:bool,plan_id?:int,created_plan?:bool,moved?:bool,week_start?:string,error?:string}
+     */
+    public function rescheduleItem(
+        int $itemId,
+        int $agencyId,
+        string $newDate,
+        ?string $newTime = null,
+        ?int $userId = null,
+        bool $timeProvided = false,
+    ): array {
+        $newDate = trim($newDate);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $newDate) || !strtotime($newDate)) {
+            return ['success' => false, 'error' => 'Data inválida.'];
+        }
+
+        $item = $this->repo->findItem($itemId, $agencyId);
+        if (!$item) {
+            return ['success' => false, 'error' => 'Post não encontrado.'];
+        }
+
+        $sourcePlan = $this->repo->findByIdFull((int) $item['content_plan_id'], $agencyId);
+        if (!$sourcePlan) {
+            return ['success' => false, 'error' => 'Plano de origem não encontrado.'];
+        }
+
+        $fields = ['publish_date' => $newDate];
+        if ($timeProvided) {
+            $time = trim((string) $newTime);
+            if ($time !== '' && !preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $time)) {
+                return ['success' => false, 'error' => 'Horário inválido.'];
+            }
+            $fields['publish_time'] = $time === '' ? null : substr($time, 0, 5);
+        }
+
+        $clientId = (int) $sourcePlan['client_id'];
+
+        // Continua dentro da semana do próprio plano: é só trocar a data.
+        if (!empty($sourcePlan['week_start']) && !empty($sourcePlan['week_end'])
+            && $newDate >= $sourcePlan['week_start'] && $newDate <= $sourcePlan['week_end']) {
+            $this->repo->updateItem($itemId, $fields);
+            ActivityLogger::log('content_item.rescheduled', 'content', $userId, $clientId, [
+                'item_id' => $itemId,
+                'plan_id' => (int) $sourcePlan['id'],
+                'from'    => $item['publish_date'] ?? null,
+                'to'      => $newDate,
+                'moved'   => false,
+            ]);
+
+            return [
+                'success'      => true,
+                'plan_id'      => (int) $sourcePlan['id'],
+                'created_plan' => false,
+                'moved'        => false,
+                'week_start'   => (string) $sourcePlan['week_start'],
+            ];
+        }
+
+        $targetMonday = self::mondayOf($newDate);
+        $targetPlan   = $this->repo->findByClientWeek($clientId, $agencyId, $targetMonday);
+
+        // Plano legado com semana fora do padrão seg–dom pode cair em si mesmo.
+        if ($targetPlan && (int) $targetPlan['id'] === (int) $sourcePlan['id']) {
+            $this->repo->updateItem($itemId, $fields);
+            return [
+                'success'      => true,
+                'plan_id'      => (int) $sourcePlan['id'],
+                'created_plan' => false,
+                'moved'        => false,
+                'week_start'   => $targetMonday,
+            ];
+        }
+
+        $createdPlan = false;
+
+        if (!$targetPlan) {
+            $targetId = $this->repo->createPlan([
+                'agency_id'  => $agencyId,
+                'client_id'  => $clientId,
+                'title'      => self::defaultTitle((string) ($sourcePlan['client_name'] ?? ''), $targetMonday),
+                'week_start' => $targetMonday,
+                'week_end'   => self::sundayOf($targetMonday),
+                'status'     => 'draft',
+                'created_by' => $userId,
+            ]);
+            $createdPlan = true;
+
+            ActivityLogger::log('content_plan.created_for_reschedule', 'content', $userId, $clientId, [
+                'plan_id'        => $targetId,
+                'source_plan_id' => (int) $sourcePlan['id'],
+                'week_start'     => $targetMonday,
+            ]);
+        } else {
+            if (($targetPlan['status'] ?? '') === 'approved') {
+                $from = date('d/m', (int) strtotime($targetMonday));
+                $to   = date('d/m', (int) strtotime(self::sundayOf($targetMonday)));
+                return [
+                    'success' => false,
+                    'error'   => "A semana de destino ({$from} a {$to}) já foi aprovada pela cliente. "
+                               . 'Escolha outra semana ou reabra aquele plano antes de mover o post.',
+                ];
+            }
+            $targetId = (int) $targetPlan['id'];
+        }
+
+        $fields['sort_order'] = $this->repo->maxSortOrder($targetId) + 1;
+        $this->repo->moveItemToPlan($itemId, $targetId, $fields);
+
+        ActivityLogger::log('content_item.rescheduled', 'content', $userId, $clientId, [
+            'item_id'        => $itemId,
+            'source_plan_id' => (int) $sourcePlan['id'],
+            'plan_id'        => $targetId,
+            'from'           => $item['publish_date'] ?? null,
+            'to'             => $newDate,
+            'created_plan'   => $createdPlan,
+            'moved'          => true,
+        ]);
+
+        return [
+            'success'      => true,
+            'plan_id'      => $targetId,
+            'created_plan' => $createdPlan,
+            'moved'        => true,
+            'week_start'   => $targetMonday,
+        ];
+    }
+
     public function deleteItem(int $itemId, int $agencyId): bool
     {
         $ok = $this->repo->deleteItem($itemId, $agencyId);

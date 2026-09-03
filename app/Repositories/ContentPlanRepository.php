@@ -366,6 +366,64 @@ class ContentPlanRepository extends Repository
         return $map;
     }
 
+    // ── Reagendamento entre semanas (CONT-REAG) ───────────────────────────────
+
+    /** Plano do cliente para uma semana específica (a semana identifica o plano). */
+    public function findByClientWeek(int $clientId, int $agencyId, string $weekStart): ?array
+    {
+        return $this->first(
+            "SELECT cp.*, c.name AS client_name
+             FROM content_plans cp
+             JOIN clients c ON c.id = cp.client_id
+             WHERE cp.client_id = :client_id
+               AND cp.agency_id = :agency_id
+               AND cp.week_start = :week_start
+             ORDER BY cp.id ASC
+             LIMIT 1",
+            [':client_id' => $clientId, ':agency_id' => $agencyId, ':week_start' => $weekStart]
+        );
+    }
+
+    /** Última posição da grade do plano — o post movido entra no fim. */
+    public function maxSortOrder(int $planId): int
+    {
+        $row = $this->first(
+            'SELECT COALESCE(MAX(sort_order), -1) AS max_order FROM content_plan_items WHERE content_plan_id = :plan_id',
+            [':plan_id' => $planId]
+        );
+        return (int) ($row['max_order'] ?? -1);
+    }
+
+    /**
+     * Move o post para outro plano numa transação.
+     *
+     * O feedback do cliente viaja junto: `content_feedbacks` guarda o
+     * `content_plan_id` denormalizado e, sem atualizar, o histórico de
+     * aprovação do post ficaria pendurado na semana antiga.
+     *
+     * @param array<string,mixed> $fields campos do item a gravar junto (data, hora, ordem)
+     */
+    public function moveItemToPlan(int $itemId, int $targetPlanId, array $fields = []): bool
+    {
+        $own = $this->pdo->inTransaction() === false;
+        if ($own) $this->pdo->beginTransaction();
+
+        try {
+            $this->updateItem($itemId, array_merge($fields, ['content_plan_id' => $targetPlanId]));
+
+            $this->query(
+                'UPDATE content_feedbacks SET content_plan_id = :plan_id WHERE content_plan_item_id = :item_id',
+                ['plan_id' => $targetPlanId, 'item_id' => $itemId]
+            );
+
+            if ($own) $this->pdo->commit();
+            return true;
+        } catch (\Throwable $e) {
+            if ($own && $this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
     private function namedParams(array $data): array
     {
         $result = [];
