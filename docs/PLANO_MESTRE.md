@@ -5,13 +5,13 @@
 > Atualizado: 2026-10-31 · Ciclo: 2026-10 (ciclo 4) · Anterior: [historico/PLANO_MESTRE_2026-07-23.md](historico/PLANO_MESTRE_2026-07-23.md)
 > Convenções: esforço em **horas** (1 dev sênior com IA, incluindo testes e migration). **% feito** = quanto já existe no código hoje. **Núcleo** = fecha a meta do ciclo; o resto pode esperar. IDs nunca são reutilizados.
 
-**Status: 🟢 VIGENTE — aprovado pelo dono em 2026-11-01.** As 14 decisões estão registradas no fim deste arquivo. Execução começou pela Fase 0.
+**Status: 🟢 VIGENTE — aprovado pelo dono em 2026-11-01.** As 14 decisões estão registradas no fim deste arquivo. Fase 0 implementada na branch `hom` (02/11), em homologação local; ainda não foi para produção.
 
 **Meta do ciclo (pedido do dono, 31/10):** (1) terminar a integração Meta e ter uma central de gestão; (2) tarefas nível ClickUp com automações, lembretes e chat interno; (3) automações pela Evolution com o número central da agência — lembretes para a equipe, planificações e avisos para os clientes; (4) varredura total do que está cru.
 
 **Estado herdado do ciclo 3:** CONT-06 fase 1 ✅ (23/07) · CONT-07 ✅ (03/09) · galeria com mover/renomear/excluir/seleção múltipla ✅ · RBAC: financeiro fora dos papéis de conteúdo ✅. **Não executados:** AUTO-01, TRAF-01, QA-04, CONT-AVISOS, INT-01, INFRA-02, todo o Marco C/D — absorvidos abaixo.
 
-**Gates em 2026-10-31:** 244 testes / 536 asserts verdes **com** o banco Docker (sem ele: 10 erros) · PHPStan nível 6 = 0 · `composer audit` = **5 advisories (1 crítico)**.
+**Gates em 2026-11-02 (branch `hom`):** 564 testes / 1988 asserts verdes · suíte também verde em PHP 8.3 (561 testes, antes dos 3 últimos) · PHPStan nível 6 = 0 · `composer audit` limpo. Em 31/10 eram 244 testes e 5 advisories.
 
 **Totais revisados em 01/11 (após as decisões):** 77 entregas, ~928 h no total (incluindo INFRA-04 suspenso, que não conta no núcleo). Mudanças sobre os 838 h originais: FE-06 de 6 h para 40 h (D14: painel inteiro em 3 idiomas), AI-02 novo (18 h), META-03 e META-07 com +4 h cada (D2: rodar em fatias no cron da Hostinger), 8 itens novos achados na execução da F0 (30 h). Visão interativa: artifact "Plano YVE Agency ciclo 4".
 
@@ -138,6 +138,7 @@
 > **Pronto quando:** composer test sem banco: 0 erros; npm run test:browser sem nenhum pulado.
 
 ### Achados da execução da F0 (2026-11-02)
+> ✅ **BUG-11 · FEITO (2026-11-02), achado na varredura da homologação local:** o formulário de `/contratos/novo` nunca salvou (`$action` e `$method` sem definir, bug anterior a este ciclo); fatura e contrato inexistentes davam 500 e agora dão 404; Tráfego e Orgânico sem conta deixavam a seção aberta. `AllPagesRenderTest` abre toda tela e falha em aviso do PHP.
 > Os 15 itens originais estão ✅: 561 testes em PHP 8.3 e 8.5, PHPStan zerado, audit limpo. Estes ficaram fora do critério deles e entram como itens novos.
 > **SEC-19 · `4h`:** cards de `/financeiro`, `/financeiro/relatorios` e KPIs do dashboard somam a agência inteira, mesmo para quem não alcança todos os clientes. **Pronto quando:** perfil sem `clients.view_all` vê só a soma dos seus clientes, ou o dono decide que quem tem permissão de financeiro vê o total.
 > **SEC-20 · `1h`:** `DELETE /ia/{id}` apaga insight só com `ai_insights.view`. **Pronto quando:** exige permissão própria, com teste negativo.
