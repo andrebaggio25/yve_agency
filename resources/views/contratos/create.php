@@ -1,4 +1,7 @@
-<?php view_layout('app'); view_start('content'); ?>
+<?php view_layout('app'); view_start('content');
+$action = '/contratos';
+$method = 'POST';
+?>
 <div class="max-w-3xl mx-auto">
   <div class="mb-8">
     <a href="/contratos" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">← Contratos</a>

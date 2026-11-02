@@ -22,7 +22,7 @@
   <p class="text-gray-400 mb-4">Nenhuma conta orgânica conectada.</p>
   <a href="/organico/conectar" class="btn-primary px-6 py-2.5 text-sm">Conectar Instagram ou Facebook</a>
 </div>
-<?php return; endif; ?>
+<?php view_end(); return; endif; ?>
 
 <!-- Filtros -->
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">

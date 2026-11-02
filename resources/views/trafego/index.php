@@ -20,7 +20,7 @@
   <p class="text-gray-400 mb-4">Nenhuma conta de anúncios conectada ainda.</p>
   <a href="/trafego/contas/nova" class="btn-primary px-6 py-2.5 text-sm">Conectar conta Meta Ads</a>
 </div>
-<?php return; endif; ?>
+<?php view_end(); return; endif; ?>
 
 <!-- Filtros -->
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Core\HttpException;
 
 use App\Core\ValidationException;
 use App\Repositories\ContractRepository;
@@ -72,8 +73,7 @@ class InvoiceService
     {
         $invoice = $this->find($id);
         if (!$invoice) {
-            http_response_code(404);
-            throw new ValidationException(t('finance.invoice_not_found'));
+            throw HttpException::notFound(Auth::isAjax());
         }
 
         // A fatura é de um cliente: o escopo de agência não basta (SEC-11).

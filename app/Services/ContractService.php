@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Core\HttpException;
 use App\Core\ValidationException;
 use App\Repositories\ContractRepository;
 use App\Support\ActivityLogger;
@@ -51,8 +52,7 @@ class ContractService
     {
         $contract = $this->find($id);
         if (!$contract) {
-            http_response_code(404);
-            throw new ValidationException(t('finance.contract_not_found'));
+            throw HttpException::notFound(Auth::isAjax());
         }
 
         // O contrato é de um cliente: escopo de agência não basta (SEC-11).

@@ -3,9 +3,11 @@
 <?php
 $cs  = $contractSummary;
 $is  = $invoiceSummary;
+if (!function_exists('fmtBrl')):
 function fmtBrl(mixed $v): string {
     return 'R$ ' . number_format((float)$v, 2, ',', '.');
 }
+endif;
 $months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 $monthly = array_fill(1, 12, 0);
 foreach ($monthlyPayments as $row) {

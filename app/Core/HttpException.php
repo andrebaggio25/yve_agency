@@ -40,6 +40,17 @@ class HttpException extends \RuntimeException
         );
     }
 
+    /** 404 — o recurso não existe, ou é de outra agência e não deve parecer que existe. */
+    public static function notFound(bool $json): self
+    {
+        return new self(
+            $json
+                ? Response::json(['error' => 'Not found'], 404)
+                : Response::view('errors.404', [], 404),
+            'Not found'
+        );
+    }
+
     /** 401/redirect — não autenticado. */
     public static function unauthenticated(bool $json): self
     {

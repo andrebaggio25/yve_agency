@@ -3,7 +3,9 @@
 <?php
 $months  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 $maxVal  = max(array_values($monthlyMap)) ?: 1;
+if (!function_exists('fmtBrl')):
 function fmtBrl(mixed $v): string { return 'R$ ' . number_format((float)$v, 2, ',', '.'); }
+endif;
 ?>
 
 <div class="min-h-screen space-y-8">

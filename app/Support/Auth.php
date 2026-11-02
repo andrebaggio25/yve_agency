@@ -315,7 +315,7 @@ class Auth
     // Private
     // -------------------------------------------------------------------------
 
-    private static function isAjax(): bool
+    public static function isAjax(): bool
     {
         return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest'
             || str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
