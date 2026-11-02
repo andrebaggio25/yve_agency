@@ -21,10 +21,14 @@ class PortalWeekTest extends FeatureTestCase
         $stmt->execute([':a' => $agencyId, ':c' => $client['id'], ':t' => $title, ':ws' => $monday, ':s' => $status]);
         $planId = (int) $stmt->fetchColumn();
 
+        // "Hoje" é o do APP (PHP), não o do banco: o container do Postgres roda
+        // em UTC, então `CURRENT_DATE` já virava o dia seguinte depois das 21h
+        // de Brasília e o post caía fora da semana que o portal calcula — o
+        // teste falhava sozinho no fim da noite.
         $this->pdo->prepare(
             "INSERT INTO content_plan_items (content_plan_id, client_id, publish_date, publish_time, platform, content_type, title, status, created_at)
-             VALUES (:p, :c, CURRENT_DATE, '10:00', 'instagram', 'Story', :t, 'draft', NOW())"
-        )->execute([':p' => $planId, ':c' => $client['id'], ':t' => $title . ' — post de hoje']);
+             VALUES (:p, :c, :today, '10:00', 'instagram', 'Story', :t, 'draft', NOW())"
+        )->execute([':p' => $planId, ':c' => $client['id'], ':today' => date('Y-m-d'), ':t' => $title . ' — post de hoje']);
     }
 
     public function test_dashboard_mostra_o_post_da_semana_corrente(): void

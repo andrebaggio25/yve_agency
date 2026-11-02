@@ -23,6 +23,9 @@ class PaymentRepository extends Repository
             $where[] = 'i.client_id = :client_id';
             $params[':client_id'] = (int) $filters['client_id'];
         }
+        if (isset($filters['client_ids'])) {
+            $where[] = $this->clientIdsCondition((array) $filters['client_ids'], $params, 'i.client_id');
+        }
 
         $whereClause = implode(' AND ', $where);
 
@@ -39,7 +42,7 @@ class PaymentRepository extends Repository
     public function findByIdAndAgency(int $id, int $agencyId): ?array
     {
         return $this->first("
-            SELECT p.*, i.invoice_number, i.title AS invoice_title, cl.name AS client_name
+            SELECT p.*, i.client_id, i.invoice_number, i.title AS invoice_title, cl.name AS client_name
             FROM payments p
             JOIN invoices i  ON i.id = p.invoice_id
             JOIN clients  cl ON cl.id = i.client_id

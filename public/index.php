@@ -38,8 +38,11 @@ date_default_timezone_set('America/Sao_Paulo');
 // ─────────────────────────────────────────────────────────────────────────────
 // Secure session
 // ─────────────────────────────────────────────────────────────────────────────
+// X-Forwarded-Proto: a Hostinger termina o TLS antes do PHP. Forjar o header só
+// afeta o próprio cookie de quem forja, então aqui não precisa de proxy confiável.
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-    || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
+    || ($_SERVER['SERVER_PORT'] ?? 80) == 443
+    || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
 
 session_name(env('SESSION_NAME', 'yve_session'));
 ini_set('session.cookie_httponly', '1');

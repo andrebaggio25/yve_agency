@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\HttpException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Services\InvoiceService;
@@ -22,6 +23,22 @@ class InvoiceController extends Controller
         private PdfService      $pdf,
     ) {}
 
+    /**
+     * Clientes que o usuário pode escolher no formulário e no filtro. A agência
+     * toda só com `clients.view_all` (SEC-11): antes o seletor oferecia todo
+     * cliente da agência a quem não alcança nenhum — e o POST era aceito.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private function selectableClients(): array
+    {
+        return $this->clientService->listForUser(
+            (int) Auth::id(),
+            (int) Auth::agencyId(),
+            Auth::can('clients.view_all') || Auth::isPlatformAdmin(),
+        );
+    }
+
     public function index(Request $request): Response
     {
         Auth::requirePermission('invoices.view');
@@ -31,7 +48,7 @@ class InvoiceController extends Controller
         $filters   = $request->only('q', 'status', 'client_id');
         $page      = max(1, (int) $request->query('page', '1'));
         $paginated = $this->invoiceService->listPaginated($filters, $page, 25);
-        $clients   = $this->clientService->listForUser(Auth::id(), Auth::agencyId(), true);
+        $clients   = $this->selectableClients();
 
         return $this->view('faturas.index', compact('paginated', 'clients', 'filters'));
     }
@@ -40,7 +57,7 @@ class InvoiceController extends Controller
     {
         Auth::requirePermission('invoices.create');
 
-        $clients = $this->clientService->listForUser(Auth::id(), Auth::agencyId(), true);
+        $clients = $this->selectableClients();
         return $this->view('faturas.create', compact('clients'));
     }
 
@@ -56,8 +73,11 @@ class InvoiceController extends Controller
             $id = $this->invoiceService->create($input, $items);
             $this->withSuccess('Fatura criada com sucesso.');
             return $this->redirect('/faturas/' . $id);
+        } catch (HttpException $e) {
+            throw $e;                       // 403/404 do guard: quem responde é o Router
         } catch (\Throwable $e) {
-            $this->withError($e->getMessage());
+            $this->withFailure($e, 'faturas:store', 'finance.invoice_save_failed');
+            $this->withInput($input);
             return $this->redirect('/faturas/nova');
         }
     }
@@ -70,12 +90,38 @@ class InvoiceController extends Controller
         return $this->view('faturas.show', compact('invoice'));
     }
 
+    /**
+     * O seletor precisa conter o cliente do registro aberto, mesmo quando ele
+     * não aparece na lista (cliente arquivado não entra em seletor). Sem a
+     * opção dele nenhuma fica `selected`, o navegador marca a primeira e o
+     * POST reatribui a fatura a outro cliente, calado.
+     *
+     * @param array<int,array<string,mixed>> $clients
+     * @return array<int,array<string,mixed>>
+     */
+    private function withCurrentClient(array $clients, int $clientId): array
+    {
+        if ($clientId <= 0) {
+            return $clients;
+        }
+
+        foreach ($clients as $client) {
+            if ((int) $client['id'] === $clientId) {
+                return $clients;
+            }
+        }
+
+        $current = $this->clientService->findById($clientId, (int) Auth::agencyId());
+
+        return $current ? [...$clients, $current] : $clients;
+    }
+
     public function edit(Request $request): Response
     {
         Auth::requirePermission('invoices.edit');
 
         $invoice  = $this->invoiceService->findWithItems((int) $request->param('id'));
-        $clients  = $this->clientService->listForUser(Auth::id(), Auth::agencyId(), true);
+        $clients  = $this->withCurrentClient($this->selectableClients(), (int) $invoice['client_id']);
         $contracts = !empty($invoice['client_id'])
             ? $this->contractService->activeForClient((int) $invoice['client_id'])
             : [];
@@ -96,8 +142,10 @@ class InvoiceController extends Controller
             $this->invoiceService->update($id, $input, $items);
             $this->withSuccess('Fatura atualizada.');
             return $this->redirect('/faturas/' . $id);
+        } catch (HttpException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            $this->withError($e->getMessage());
+            $this->withFailure($e, 'faturas:update', 'finance.invoice_save_failed');
             return $this->redirect('/faturas/' . $id . '/editar');
         }
     }
@@ -109,8 +157,10 @@ class InvoiceController extends Controller
         try {
             $this->invoiceService->delete((int) $request->param('id'));
             $this->withSuccess('Fatura removida.');
+        } catch (HttpException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            $this->withError($e->getMessage());
+            $this->withFailure($e, 'faturas:destroy', 'finance.invoice_delete_failed');
         }
         return $this->redirect('/faturas');
     }
@@ -123,8 +173,10 @@ class InvoiceController extends Controller
         try {
             $this->invoiceService->markSent($id);
             $this->withSuccess('Fatura marcada como enviada.');
+        } catch (HttpException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            $this->withError($e->getMessage());
+            $this->withFailure($e, 'faturas:send', 'finance.invoice_save_failed');
         }
         return $this->redirect('/faturas/' . $id);
     }
@@ -180,7 +232,11 @@ class InvoiceController extends Controller
     {
         Auth::requirePermission('invoices.create');
 
-        $clientId  = (int) $request->param('clientId');
+        $clientId = (int) $request->param('clientId');
+        // Defesa em profundidade: a rota já passa pelo ClientAccessMiddleware,
+        // mas o endpoint devolve dado de cliente — guarda explícita (SEC-11).
+        Auth::requireClientAccess($clientId);
+
         $contracts = $this->contractService->activeForClient($clientId);
         return $this->json($contracts);
     }

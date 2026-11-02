@@ -19,6 +19,9 @@ class InvoiceRepository extends Repository
             $where[] = 'i.client_id = :client_id';
             $params[':client_id'] = (int) $filters['client_id'];
         }
+        if (isset($filters['client_ids'])) {
+            $where[] = $this->clientIdsCondition((array) $filters['client_ids'], $params, 'i.client_id');
+        }
         if (!empty($filters['status'])) {
             $where[] = 'i.status = :status';
             $params[':status'] = $filters['status'];
@@ -34,7 +37,10 @@ class InvoiceRepository extends Repository
             SELECT i.*, cl.name AS client_name, co.title AS contract_title
             FROM invoices i
             JOIN clients cl ON cl.id = i.client_id
-            LEFT JOIN contracts co ON co.id = i.contract_id
+            -- A agência no JOIN (SEC-16): `contract_id` chegava cru do POST e a
+            -- FK só exige que o contrato exista, então fatura apontando para
+            -- contrato de outra agência exibia o título dele aqui e no PDF.
+            LEFT JOIN contracts co ON co.id = i.contract_id AND co.agency_id = i.agency_id
             WHERE {$whereClause}
             ORDER BY i.created_at DESC
         ", $params);
@@ -48,6 +54,9 @@ class InvoiceRepository extends Repository
         if (!empty($filters['client_id'])) {
             $where[] = 'i.client_id = :client_id';
             $params[':client_id'] = (int) $filters['client_id'];
+        }
+        if (isset($filters['client_ids'])) {
+            $where[] = $this->clientIdsCondition((array) $filters['client_ids'], $params, 'i.client_id');
         }
         if (!empty($filters['status'])) {
             $where[] = 'i.status = :status';
@@ -75,7 +84,7 @@ class InvoiceRepository extends Repository
             SELECT i.*, cl.name AS client_name, co.title AS contract_title
             FROM invoices i
             JOIN clients cl ON cl.id = i.client_id
-            LEFT JOIN contracts co ON co.id = i.contract_id
+            LEFT JOIN contracts co ON co.id = i.contract_id AND co.agency_id = i.agency_id
             WHERE i.id = :id AND i.agency_id = :agency_id
             LIMIT 1
         ", [':id' => $id, ':agency_id' => $agencyId]);
@@ -106,6 +115,33 @@ class InvoiceRepository extends Repository
         );
         $next = (int) ($row['mx'] ?? 0) + 1;
         return str_pad((string) $next, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Fatura e itens gravam juntos ou não gravam (SEC-16): `syncItems` apaga os
+     * itens antigos e reinsere um por um, então um erro no meio deixava a fatura
+     * existente **sem item** e com total zerado — e `recalcTotals`, que é a
+     * última linha, nunca chegava a consertar. Mesma forma de
+     * `ContentPlanRepository::moveItemToPlan`: se alguém já abriu transação, não
+     * abrimos outra.
+     *
+     * @template T
+     * @param callable():T $fn
+     * @return T
+     */
+    public function transaction(callable $fn): mixed
+    {
+        $own = $this->pdo->inTransaction() === false;
+        if ($own) $this->pdo->beginTransaction();
+
+        try {
+            $result = $fn();
+            if ($own) $this->pdo->commit();
+            return $result;
+        } catch (\Throwable $e) {
+            if ($own && $this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
     public function create(array $data): int
@@ -219,7 +255,10 @@ class InvoiceRepository extends Repository
             ':description' => $item['description'],
             ':quantity'    => $qty,
             ':unit_price'  => $price,
-            ':total_price' => $qty * $price,
+            // Arredondar aqui: a coluna tem 2 casas e o produto em float chega
+            // com cauda (1.005 * 3), que o Postgres arredondaria sozinho — com
+            // o subtotal que o serviço validou ficando fora por um centavo.
+            ':total_price' => round($qty * $price, 2),
             ':sort_order'  => $item['sort_order'] ?? 0,
         ]);
         return (int) $stmt->fetchColumn();
@@ -253,15 +292,20 @@ class InvoiceRepository extends Repository
         ]);
     }
 
-    public function findByClient(int $clientId): array
+    /**
+     * Faturas de um cliente. A agência é **obrigatória** (SEC-16): quem chama é
+     * o portal, com o cliente já resolvido pelo token, e uma query de tabela
+     * multi-tenant sem `agency_id` depende de quem chama para não vazar.
+     */
+    public function findByClient(int $clientId, int $agencyId): array
     {
         return $this->all("
             SELECT i.*, c.name AS client_name
             FROM invoices i
-            LEFT JOIN clients c ON c.id = i.client_id
-            WHERE i.client_id = :client_id
+            LEFT JOIN clients c ON c.id = i.client_id AND c.agency_id = i.agency_id
+            WHERE i.client_id = :client_id AND i.agency_id = :agency_id
             ORDER BY i.due_date DESC
-        ", [':client_id' => $clientId]);
+        ", [':client_id' => $clientId, ':agency_id' => $agencyId]);
     }
 
     // ── Summary ───────────────────────────────────────────────────────────────
@@ -283,12 +327,22 @@ class InvoiceRepository extends Repository
         ", [':agency_id' => $agencyId]) ?? [];
     }
 
-    public function overdueToMark(int $agencyId): array
+    /**
+     * Marca as faturas vencidas da agência num só UPDATE (SEC-16) — era um
+     * SELECT + um UPDATE por fatura, a cada carga de `/financeiro` e `/faturas`.
+     * Mesma forma que a automação `billing.mark_overdue` já usava.
+     *
+     * @return int quantas faturas mudaram de situação
+     */
+    public function markOverdueByAgency(int $agencyId): int
     {
-        return $this->all("
-            SELECT id FROM invoices
+        $stmt = $this->pdo->prepare("
+            UPDATE invoices SET status = 'overdue', updated_at = NOW()
             WHERE agency_id = :agency_id AND status = 'sent'
               AND due_date < CURRENT_DATE
-        ", [':agency_id' => $agencyId]);
+        ");
+        $stmt->execute([':agency_id' => $agencyId]);
+
+        return $stmt->rowCount();
     }
 }

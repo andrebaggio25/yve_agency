@@ -9,6 +9,8 @@ Este documento é a **fotografia técnica** do sistema. Ele descreve o que exist
 > **Nota do ciclo 2 (2026-07-14):** os achados 🔴/🟠 do §6 foram **corrigidos** nos Marcos 0–2 (ver histórico em [historico/PLANO_MESTRE_2026-07-06.md](historico/PLANO_MESTRE_2026-07-06.md)); permanecem abertos os itens 🟡 de polish (agora INFRA-01/02/03 e SEC-10 no plano vigente). O texto original foi mantido como registro do estado auditado.
 >
 > **Nota do ciclo 3 (2026-07-23):** fotografia atualizada nos números, não no texto: **188 testes / 417 asserts** (banco PG real via Docker + smoke de Chromium), PHPStan nível 6 = 0, audit limpo (dompdf 3.1.6 / guzzle 7.15.1). Mudanças estruturais desde o ciclo 2: upload direto browser→Drive em produção (UP-01), fila única de jobs com timeline de entregas (INFRA-01/OBS-02), `/api/health` + heartbeat + alerta (OBS-01), assets self-hosted purgados (FE-01), JS extraído das 3 views gigantes (FE-02), CSRF no portal (SEC-08), testes de arquitetura travando invariantes. Catálogo de automações agora documentado em [AUTOMACOES.md](AUTOMACOES.md). Estado por módulo: [ANALISE_PRODUTO.md](ANALISE_PRODUTO.md) (ciclo 3).
+>
+> **Nota do ciclo 4 (2026-10-31): várias afirmações deste documento deixaram de ser verdade.** Medido hoje: 244 testes / 536 asserts verdes **com** o banco de teste (sem ele, 10 testes dão erro em vez de pular); PHPStan nível 6 = 0; **`composer audit` com 5 advisories** (1 crítico: `cakephp/database`). Corrigido na tabela de integrações abaixo: o token do orgânico **não** é cifrado e o Meta **não** trata expiração. A revisão do ciclo 4 achou furos de tenant e de RBAC que este documento não registra. Achados com arquivo e linha: [ANALISE_PRODUTO.md](ANALISE_PRODUTO.md) (ciclo 4).
 
 ---
 
@@ -136,8 +138,8 @@ O isolamento multi-tenant tem **duas camadas**:
 
 | Integração | Serviço | Autenticação | Segredos | Estado |
 |-----------|---------|--------------|----------|--------|
-| **Meta Marketing API** | MetaAdsService | OAuth (app id/secret globais) + token por conta | Token cifrado (`AdAccountRepository` usa `Secret`) | OK; trata expiração |
-| **Instagram Graph** | MetaOrganicService | Token por conta | Cifrado | OK |
+| **Meta Marketing API** | MetaAdsService | OAuth (app id/secret globais) + token por conta | Token cifrado (`AdAccountRepository` usa `Secret`) | ⚠️ ciclo 4: `token_expires_at` gravado e nunca lido; Graph v21.0 fixa (META-01/02) |
+| **Instagram Graph** | MetaOrganicService | Token colado à mão | ⚠️ **Texto puro** (`OrganicAccountRepository.php:90`, SEC-14) | Métricas depreciadas viram zero (META-06) |
 | **Google Drive** | GoogleDriveApiService (481 linhas) | OAuth por agência (refresh_token) | `access_token`/`refresh_token` cifrados | **Bem-feito** — escopo `drive.file`, upload via relay server-side, proxy de preview mantendo arquivo privado, lixeira + restore |
 | **Evolution API (WhatsApp)** | EvolutionApiService | API key global + instância por agência | Key em `platform_settings` | OK; webhook valida token + instance name |
 | **ClickUp** | ClickUpService | Token por agência | Cifrado (`ClickUpIntegrationRepository`) | OK; sync bidirecional, webhook com HMAC-SHA256 |

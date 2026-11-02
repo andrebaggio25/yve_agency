@@ -26,9 +26,8 @@ class AuthController extends Controller
     {
         $email    = trim((string) $request->post('email', ''));
         $password = (string) $request->post('password', '');
-        $remember = (bool)   $request->post('remember', false);
 
-        $result = $this->authService->attempt($email, $password, $remember);
+        $result = $this->authService->attempt($email, $password);
 
         if (!$result['success']) {
             $this->withError($result['message'])->withInput(['email' => $email]);
@@ -57,17 +56,22 @@ class AuthController extends Controller
 
     public function sendResetLink(Request $request): Response
     {
-        $email  = trim((string) $request->post('email', ''));
-        $result = $this->authService->sendPasswordResetLink($email);
+        $email = trim((string) $request->post('email', ''));
+        $this->authService->sendPasswordResetLink($email);
 
-        $this->withSuccess('Se o e-mail existir, você receberá um link em breve.');
+        // Mesma mensagem para e-mail existente ou não: a tela não confirma contas.
+        $this->withSuccess(t('auth.reset_link_sent'));
         return $this->redirect('/esqueci-senha');
     }
 
     public function showResetPassword(Request $request): Response
     {
-        $token = $request->param('token');
-        return $this->view('auth.reset-password', ['token' => $token]);
+        $token = (string) $request->param('token');
+
+        return $this->view('auth.reset-password', [
+            'token' => $token,
+            'valid' => $this->authService->isResetTokenValid($token),
+        ]);
     }
 
     public function resetPassword(Request $request): Response
@@ -76,8 +80,14 @@ class AuthController extends Controller
         $password = (string) $request->post('password', '');
         $confirm  = (string) $request->post('password_confirmation', '');
 
+        // O token volta na URL do redirect: só hexadecimal, para não virar injeção de caminho.
+        if (!ctype_xdigit($token)) {
+            $this->withError(t('auth.reset_link_invalid'));
+            return $this->redirect('/esqueci-senha');
+        }
+
         if ($password !== $confirm) {
-            $this->withError('As senhas não coincidem.');
+            $this->withError(t('auth.passwords_mismatch'));
             return $this->redirect('/redefinir-senha/' . $token);
         }
 
@@ -88,7 +98,7 @@ class AuthController extends Controller
             return $this->redirect('/redefinir-senha/' . $token);
         }
 
-        $this->withSuccess('Senha redefinida com sucesso. Faça login.');
+        $this->withSuccess(t('auth.password_reset_done'));
         return $this->redirect('/login');
     }
 }

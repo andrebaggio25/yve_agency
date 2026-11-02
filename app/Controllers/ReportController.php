@@ -36,8 +36,13 @@ class ReportController extends Controller
         [$since, $until] = $this->period($request);
         $canFin = self::canSeeMoney();
 
+        // A tela chama canAccessClient por linha do resumo: alimentar o cache
+        // de fronteira de tenant evita uma consulta por cliente (SEC-11).
+        $clients = $this->clientRepo->findByAgency($agencyId);
+        Auth::primeClientAgencies($clients);
+
         return $this->view('executive.index', [
-            'clients'       => $this->clientRepo->findByAgency($agencyId),
+            'clients'       => $clients,
             'since'         => $since,
             'until'         => $until,
             'canFin'        => $canFin,

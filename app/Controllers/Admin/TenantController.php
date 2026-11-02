@@ -10,6 +10,7 @@ use App\Core\Response;
 use App\Repositories\AgencyRepository;
 use App\Services\BillingService;
 use App\Services\TenantService;
+use App\Support\ActivityLogger;
 use App\Support\Auth;
 
 class TenantController extends Controller
@@ -68,11 +69,31 @@ class TenantController extends Controller
             );
         }
 
-        $name        = trim((string) $request->post('name', ''));
-        $email       = trim((string) $request->post('admin_email', ''));
-        $passDisplay = $result['password'] ?? '(senha definida pelo admin)';
+        $name  = trim((string) $request->post('name', ''));
+        $email = trim((string) $request->post('admin_email', ''));
 
-        $this->withSuccess("Tenant \"{$name}\" criado. Admin: {$email} / Senha: {$passDisplay}");
+        // Trilha do tenant recém-criado (SEC-15): a agência é o alvo da ação, e
+        // é na trilha dela que a criação precisa aparecer. **Nunca** a senha —
+        // nem a enviada no formulário, nem a gerada aqui.
+        ActivityLogger::log('admin.tenant_created', 'admin', Auth::id(), null, [
+            'agency_id'   => $agencyId,
+            'name'        => $name,
+            'admin_email' => $email,
+            'plan_id'     => $planId ?: null,
+        ], $agencyId);
+
+        // Senha gerada aparece uma única vez nesta resposta. Não passa por flash,
+        // que a gravaria em texto puro no arquivo de sessão.
+        if (!empty($result['password'])) {
+            return $this->view('admin.tenants.created', [
+                'agencyId' => $agencyId,
+                'name'     => $name,
+                'email'    => $email,
+                'password' => (string) $result['password'],
+            ]);
+        }
+
+        $this->withSuccess("Tenant \"{$name}\" criado. Admin: {$email}");
         return $this->redirect('/admin/tenants/' . $agencyId . '/editar');
     }
 
@@ -109,13 +130,22 @@ class TenantController extends Controller
             return $this->redirect('/admin/tenants/' . $id . '/editar');
         }
 
+        $status = (string) $request->post('status', 'active');
+
         $this->agencies->updateAdmin($id, [
             'name'          => $name,
             'country'       => (string) $request->post('country', 'BR'),
             'currency_code' => (string) $request->post('currency_code', 'BRL'),
             'timezone'      => (string) $request->post('timezone', 'America/Sao_Paulo'),
-            'status'        => (string) $request->post('status', 'active'),
+            'status'        => $status,
         ]);
+
+        ActivityLogger::log('admin.tenant_updated', 'admin', Auth::id(), null, [
+            'agency_id'     => $id,
+            'name'          => $name,
+            'status_before' => $agency['status'] ?? null,
+            'status'        => $status,
+        ], $id);
 
         $this->withSuccess('Tenant atualizado.');
         return $this->redirect('/admin/tenants/' . $id . '/editar');
@@ -140,6 +170,13 @@ class TenantController extends Controller
         }
 
         $this->agencies->deleteById($id);
+
+        // A agência deixou de existir: a linha fica na trilha do tenant pelo id
+        // (activity_logs.agency_id não tem FK, então não cascateia com ela).
+        ActivityLogger::log('admin.tenant_deleted', 'admin', Auth::id(), null, [
+            'agency_id' => $id,
+            'name'      => $agency['name'] ?? null,
+        ], $id);
 
         $this->withSuccess('Tenant excluído.');
         return $this->redirect('/admin/tenants');

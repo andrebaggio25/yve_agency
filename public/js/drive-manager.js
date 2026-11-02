@@ -261,6 +261,9 @@ function driveManager(token, i18n, maxBytes, opts = {}) {
       } catch (e) {
         this.syncOk = false;
         this.syncMsg = e.message || 'Não foi possível sincronizar.';
+        // BUG-03: o sync pode ter parado no meio (trava de "Drive vazio com
+        // galeria cheia") — recarrega para a tela refletir o que foi aplicado.
+        await this.load(this.folderId);
       }
       this.syncing = false;
       setTimeout(() => { this.syncMsg = ''; }, 6000);

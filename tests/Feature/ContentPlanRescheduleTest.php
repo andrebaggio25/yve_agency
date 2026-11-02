@@ -57,7 +57,7 @@ class ContentPlanRescheduleTest extends FeatureTestCase
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedPlanWithItem($agencyId);
 
-        $this->actingAs($user['id'], permissions: ['content.edit', 'content.view']);
+        $this->actingAs($user['id'], permissions: ['content.edit', 'content.view', 'clients.view_all']);
 
         $response = $this->reschedule($seed['plan'], $seed['item'], ['publish_date' => '2026-07-15']);
         $this->assertSame(302, $response->getStatus());
@@ -107,7 +107,7 @@ class ContentPlanRescheduleTest extends FeatureTestCase
         $stmt->execute([':a' => $agencyId, ':c' => $seed['client']]);
         $targetId = (int) $stmt->fetchColumn();
 
-        $this->actingAs($user['id'], permissions: ['content.edit']);
+        $this->actingAs($user['id'], permissions: ['content.edit', 'clients.view_all']);
         $this->reschedule($seed['plan'], $seed['item'], ['publish_date' => '2026-07-16', 'publish_time' => '19:00']);
 
         $item = $this->pdo->query("SELECT * FROM content_plan_items WHERE id = {$seed['item']}")->fetch();
@@ -127,7 +127,7 @@ class ContentPlanRescheduleTest extends FeatureTestCase
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedPlanWithItem($agencyId);
 
-        $this->actingAs($user['id'], permissions: ['content.edit']);
+        $this->actingAs($user['id'], permissions: ['content.edit', 'clients.view_all']);
         $this->reschedule($seed['plan'], $seed['item'], ['publish_date' => '2026-07-10']);
 
         $item = $this->pdo->query("SELECT * FROM content_plan_items WHERE id = {$seed['item']}")->fetch();
@@ -151,7 +151,7 @@ class ContentPlanRescheduleTest extends FeatureTestCase
              VALUES (:i, :p, :c, :u, 'approved', 'Pode publicar', NOW())"
         )->execute([':i' => $seed['item'], ':p' => $seed['plan'], ':c' => $seed['client'], ':u' => $user['id']]);
 
-        $this->actingAs($user['id'], permissions: ['content.edit']);
+        $this->actingAs($user['id'], permissions: ['content.edit', 'clients.view_all']);
         $this->reschedule($seed['plan'], $seed['item'], ['publish_date' => '2026-07-15']);
 
         $newPlanId = (int) $this->pdo->query(
@@ -176,7 +176,7 @@ class ContentPlanRescheduleTest extends FeatureTestCase
              VALUES (:a, :c, 'Semana 13/07', '2026-07-13', '2026-07-19', 'approved', NOW(), NOW())"
         )->execute([':a' => $agencyId, ':c' => $seed['client']]);
 
-        $this->actingAs($user['id'], permissions: ['content.edit']);
+        $this->actingAs($user['id'], permissions: ['content.edit', 'clients.view_all']);
         $this->reschedule($seed['plan'], $seed['item'], ['publish_date' => '2026-07-15']);
 
         $item = $this->pdo->query("SELECT * FROM content_plan_items WHERE id = {$seed['item']}")->fetch();
@@ -190,7 +190,7 @@ class ContentPlanRescheduleTest extends FeatureTestCase
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedPlanWithItem($agencyId);
 
-        $this->actingAs($user['id'], permissions: ['content.edit']);
+        $this->actingAs($user['id'], permissions: ['content.edit', 'clients.view_all']);
         $this->reschedule($seed['plan'], $seed['item'], ['publish_date' => 'amanhã']);
 
         $item = $this->pdo->query("SELECT * FROM content_plan_items WHERE id = {$seed['item']}")->fetch();
@@ -203,7 +203,7 @@ class ContentPlanRescheduleTest extends FeatureTestCase
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedPlanWithItem($agencyId);
 
-        $this->actingAs($user['id'], permissions: ['content.view']);
+        $this->actingAs($user['id'], permissions: ['content.view', 'clients.view_all']);
 
         $this->assertSame(403, $this->reschedule($seed['plan'], $seed['item'], ['publish_date' => '2026-07-15'])->getStatus());
         $this->assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM content_plans')->fetchColumn());
@@ -216,7 +216,7 @@ class ContentPlanRescheduleTest extends FeatureTestCase
         $user    = $this->createUser($agencyA, 'a@test.com');
         $seedB   = $this->seedPlanWithItem($agencyB);
 
-        $this->actingAs($user['id'], permissions: ['content.edit']);
+        $this->actingAs($user['id'], permissions: ['content.edit', 'clients.view_all']);
         $this->reschedule($seedB['plan'], $seedB['item'], ['publish_date' => '2026-07-15']);
 
         $item = $this->pdo->query("SELECT * FROM content_plan_items WHERE id = {$seedB['item']}")->fetch();

@@ -30,8 +30,14 @@ class BrandingTest extends FeatureTestCase
 
     protected function tearDown(): void
     {
-        array_map('unlink', glob($this->tmpDir . '/*') ?: []);
-        @rmdir($this->tmpDir);
+        // Sem banco o `parent::setUp()` pula o teste antes de `$tmpDir` existir —
+        // e o tearDown roda de qualquer jeito. Sem o isset, o "skipped" virava
+        // Error de propriedade tipada e a suíte sem Docker ficava vermelha.
+        if (isset($this->tmpDir)) {
+            array_map('unlink', glob($this->tmpDir . '/*') ?: []);
+            @rmdir($this->tmpDir);
+        }
+
         parent::tearDown();
     }
 

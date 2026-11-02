@@ -29,6 +29,9 @@ if (!in_array($host, ['127.0.0.1', 'localhost', 'db', 'postgres'], true)) {
     exit(1);
 }
 
+// Migrations que cifram dados (Secret) precisam da chave; só a chave de teste entra aqui.
+$_ENV['APP_KEY'] = $env['APP_KEY'] ?? '';
+
 return [
     'paths' => [
         'migrations' => '%%PHINX_CONFIG_DIR%%/database/migrations',

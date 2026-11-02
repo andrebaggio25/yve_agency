@@ -17,6 +17,14 @@ $priorityColors = [
 ];
 $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média', 'low' => 'Baixa'];
 $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['due_date']) < strtotime('today');
+
+// BUG-06: status/prioridade fora do vocabulário (linha antiga, ou status vindo
+// do mapa do ClickUp) estourava "Undefined array key" nas tabelas acima e saía
+// sem rótulo nenhum. Agora mostra o valor cru num selo neutro.
+$statusClass   = $statusColors[$task['status']]     ?? 'bg-gray-500/15 text-gray-300';
+$statusLabel   = $statusLabels[$task['status']]     ?? $task['status'];
+$priorityClass = $priorityColors[$task['priority']] ?? 'text-gray-400 bg-gray-500/10';
+$priorityLabel = $priorityLabels[$task['priority']] ?? $task['priority'];
 ?>
 
 <nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
@@ -29,11 +37,11 @@ $overdue = $task['due_date'] && $task['status'] !== 'done' && strtotime($task['d
   <div class="card p-6 mb-4">
     <!-- Badges topo -->
     <div class="flex items-center gap-2 mb-4 flex-wrap">
-      <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium <?= $statusColors[$task['status']] ?>">
-        <?= $statusLabels[$task['status']] ?>
+      <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium <?= $statusClass ?>">
+        <?= e($statusLabel) ?>
       </span>
-      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <?= $priorityColors[$task['priority']] ?>">
-        <?= $priorityLabels[$task['priority']] ?>
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <?= $priorityClass ?>">
+        <?= e($priorityLabel) ?>
       </span>
       <?php if ($overdue): ?>
       <span class="text-xs text-red-400 font-semibold">⚠ Atrasada</span>
@@ -217,7 +225,11 @@ function planChat(entityId, entityType = 'content_plan') {
         },
         chatDate(dt) {
             if (!dt) return '';
-            const d = new Date(dt);
+            // "2026-10-31 12:00:00" não é data válida no Safari/iOS (vira
+            // "Invalid Date" na tela). Com o T no meio, todo navegador lê —
+            // mesmo tratamento do planChat de content-editor.js.
+            const d = new Date(String(dt).replace(' ', 'T'));
+            if (isNaN(d.getTime())) return '';
             return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
                 + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         },

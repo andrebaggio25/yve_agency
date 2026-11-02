@@ -10,6 +10,35 @@ class AdsActionRepository extends Repository
 {
     protected string $table = 'ads_actions';
 
+    /**
+     * Nome do alvo só quando ele está mesmo na conta da solicitação (SEC-13).
+     * `campaigns`, `ad_sets` e `ads` não têm agency_id: com LEFT JOIN só pelo id,
+     * uma linha antiga apontando para outra agência exibia o nome de lá. Fora da
+     * conta o nome vem nulo, e a tela mostra o traço de "sem alvo".
+     *
+     * O id usado aqui é o `a.id` do JOIN com `ad_accounts`, que já confere a
+     * agência: numa linha legada apontando para conta alheia ele é nulo, então
+     * nem a conta nem o alvo dentro dela têm nome para exibir.
+     */
+    private const TARGET_NAMES = "
+                (SELECT c.name FROM campaigns c
+                  WHERE c.id = aa.campaign_id AND c.ad_account_id = a.id) AS campaign_name,
+                (SELECT s.name FROM ad_sets s
+                   JOIN campaigns sc ON sc.id = s.campaign_id
+                  WHERE s.id = aa.ad_set_id AND sc.ad_account_id = a.id) AS ad_set_name,
+                (SELECT ad.name FROM ads ad
+                   JOIN ad_sets   asx ON asx.id = ad.ad_set_id
+                   JOIN campaigns ac  ON ac.id = asx.campaign_id
+                  WHERE ad.id = aa.ad_id AND ac.ad_account_id = a.id) AS ad_name";
+
+    /**
+     * A conta também carrega a agência da própria solicitação, e o JOIN é à
+     * esquerda de propósito: a linha legada continua na lista (dá para rejeitar)
+     * só sem o nome da conta alheia — e o contador de pendentes, que não faz
+     * JOIN, segue batendo com o que a tela mostra.
+     */
+    private const ACCOUNT_JOIN = 'LEFT JOIN ad_accounts a ON a.id = aa.ad_account_id AND a.agency_id = aa.agency_id';
+
     public function create(array $data): int
     {
         $stmt = $this->pdo->prepare("
@@ -63,18 +92,13 @@ class AdsActionRepository extends Repository
             SELECT
                 aa.*,
                 a.name  AS account_name,
-                c.name  AS campaign_name,
-                s.name  AS ad_set_name,
-                ad.name AS ad_name,
+                " . self::TARGET_NAMES . ",
                 ru.name AS requested_by_name,
                 au.name AS approved_by_name
             FROM ads_actions aa
-            JOIN ad_accounts a ON a.id = aa.ad_account_id
-            LEFT JOIN campaigns c  ON c.id  = aa.campaign_id
-            LEFT JOIN ad_sets   s  ON s.id  = aa.ad_set_id
-            LEFT JOIN ads       ad ON ad.id = aa.ad_id
-            LEFT JOIN users ru ON ru.id = aa.requested_by
-            LEFT JOIN users au ON au.id = aa.approved_by
+            " . self::ACCOUNT_JOIN . "
+            LEFT JOIN users ru ON ru.id = aa.requested_by AND ru.agency_id = aa.agency_id
+            LEFT JOIN users au ON au.id = aa.approved_by  AND au.agency_id = aa.agency_id
             WHERE {$whereClause}
             ORDER BY aa.created_at DESC
         ", $params);
@@ -86,16 +110,11 @@ class AdsActionRepository extends Repository
             SELECT
                 aa.*,
                 a.name  AS account_name,
-                c.name  AS campaign_name,
-                s.name  AS ad_set_name,
-                ad.name AS ad_name,
+                " . self::TARGET_NAMES . ",
                 ru.name AS requested_by_name
             FROM ads_actions aa
-            JOIN ad_accounts a ON a.id = aa.ad_account_id
-            LEFT JOIN campaigns c  ON c.id  = aa.campaign_id
-            LEFT JOIN ad_sets   s  ON s.id  = aa.ad_set_id
-            LEFT JOIN ads       ad ON ad.id = aa.ad_id
-            LEFT JOIN users ru ON ru.id = aa.requested_by
+            " . self::ACCOUNT_JOIN . "
+            LEFT JOIN users ru ON ru.id = aa.requested_by AND ru.agency_id = aa.agency_id
             WHERE aa.id = :id AND aa.agency_id = :agency_id
             LIMIT 1
         ", [':id' => $id, ':agency_id' => $agencyId]);

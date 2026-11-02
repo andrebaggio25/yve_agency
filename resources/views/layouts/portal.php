@@ -104,7 +104,7 @@ if (preg_match('/^#([0-9a-f]{6})$/i', $hex, $m)) {
           ? 'px-3 py-2 rounded-lg text-accent bg-accent-soft font-medium text-sm'
           : 'px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors text-sm';
       ?>
-      <a href="<?= $href ?>" class="<?= $cls ?>"><?= $nav['label'] ?></a>
+      <a href="<?= e($href) ?>" class="<?= $cls ?>"><?= $nav['label'] ?></a>
       <?php endforeach; ?>
     </nav>
   </header>
@@ -147,7 +147,7 @@ if (preg_match('/^#([0-9a-f]{6})$/i', $hex, $m)) {
         : str_starts_with($cpPath, $href);
       $cls = $isActive ? 'text-accent' : 'text-gray-400';
     ?>
-    <a href="<?= $href ?>" class="flex-1 flex flex-col items-center py-3 gap-1 <?= $cls ?> transition-colors">
+    <a href="<?= e($href) ?>" class="flex-1 flex flex-col items-center py-3 gap-1 <?= $cls ?> transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="<?= $isActive ? '2' : '1.5' ?>" d="<?= $nav['icon'] ?>"/>
       </svg>

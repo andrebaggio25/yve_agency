@@ -15,14 +15,19 @@ use App\Core\Response;
 class RateLimitMiddleware implements Middleware
 {
     public function __construct(
-        private readonly int    $maxAttempts = 5,
-        private readonly int    $decaySeconds = 60,
+        protected readonly int    $maxAttempts = 5,
+        protected readonly int    $decaySeconds = 60,
     ) {}
 
     public function handle(Request $request, \Closure $next): Response
     {
-        $key  = 'rate_limit_' . md5($request->ip() . $request->path());
-        $file = storage_path('framework/' . $key . '.json');
+        $bucket = $this->bucket($request);
+        if ($bucket === null) {
+            // Requisição que não entra na contagem (ver PortalRateLimitMiddleware).
+            return $next($request);
+        }
+
+        $file = storage_path('framework/' . $bucket['key'] . '.json');
 
         // Abre com lock exclusivo para tornar o read-modify-write atômico —
         // sem isso, requisições concorrentes subcontam as tentativas (race).
@@ -40,26 +45,20 @@ class RateLimitMiddleware implements Middleware
             $data = ['attempts' => 0, 'reset_at' => 0];
         }
 
-        if (($data['attempts'] ?? 0) >= $this->maxAttempts) {
+        if (($data['attempts'] ?? 0) >= $bucket['max']) {
             $remaining = (int) ($data['reset_at'] ?? 0) - time();
             if ($remaining > 0) {
                 flock($fp, LOCK_UN);
                 fclose($fp);
-                if ($request->wantsJson()) {
-                    return Response::json([
-                        'error'       => 'Too many requests',
-                        'retry_after' => $remaining,
-                    ], 429);
-                }
-                return Response::view('errors.429', ['retry_after' => $remaining], 429);
+                return $this->tooManyRequests($request, $remaining);
             }
             // Janela de decaimento passou — zera.
-            $data = ['attempts' => 0, 'reset_at' => time() + $this->decaySeconds];
+            $data = ['attempts' => 0, 'reset_at' => time() + $bucket['decay']];
         }
 
         $data['attempts'] = (int) ($data['attempts'] ?? 0) + 1;
         if (($data['reset_at'] ?? 0) === 0) {
-            $data['reset_at'] = time() + $this->decaySeconds;
+            $data['reset_at'] = time() + $bucket['decay'];
         }
 
         ftruncate($fp, 0);
@@ -70,5 +69,34 @@ class RateLimitMiddleware implements Middleware
         fclose($fp);
 
         return $next($request);
+    }
+
+    /**
+     * Cesta desta requisição: arquivo de estado, teto e janela em segundos.
+     * `null` = não contar (a subclasse do portal usa isso para deixar a leitura
+     * passar). Chave por IP + path: o login tem um contador por rota.
+     *
+     * @return array{key:string,max:int,decay:int}|null
+     */
+    protected function bucket(Request $request): ?array
+    {
+        return [
+            'key'   => 'rate_limit_' . md5($request->ip() . $request->path()),
+            'max'   => $this->maxAttempts,
+            'decay' => $this->decaySeconds,
+        ];
+    }
+
+    /** Resposta de estouro (a subclasse do portal traduz e usa a tela dele). */
+    protected function tooManyRequests(Request $request, int $retryAfter): Response
+    {
+        if ($request->wantsJson()) {
+            return Response::json([
+                'error'       => 'Too many requests',
+                'retry_after' => $retryAfter,
+            ], 429);
+        }
+
+        return Response::view('errors.429', ['retry_after' => $retryAfter], 429);
     }
 }

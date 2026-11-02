@@ -15,6 +15,18 @@ class ClientService
         private readonly ?NotificationService $notifications = null,
     ) {}
 
+    /**
+     * Link PÚBLICO do portal do cliente (token na URL). O cliente não tem
+     * login: toda rota interna — /executive-report, /aprovacoes/{id} — leva ele
+     * para a tela de login. Sem token (portal desligado) não existe link.
+     */
+    public static function portalUrl(?string $portalToken): ?string
+    {
+        if (!$portalToken) return null;
+
+        return rtrim((string) env('APP_URL', ''), '/') . '/portal/' . $portalToken;
+    }
+
     public function listForUser(int $userId, int $agencyId, bool $canSeeAll): array
     {
         if ($canSeeAll) {
@@ -115,11 +127,9 @@ class ClientService
             $client['portal_token'] = $token;
         }
 
-        $portalUrl = rtrim((string) env('APP_URL', ''), '/') . '/portal/' . $client['portal_token'];
-
         $this->notifications?->notifyEvent('client.onboarding', $agencyId, [
             'client'     => $client,
-            'portal_url' => $portalUrl,
+            'portal_url' => self::portalUrl((string) $client['portal_token']),
         ]);
         $this->automations->markRan($agencyId, $clientId, 'client.onboarding', $dedupe);
     }
@@ -146,16 +156,23 @@ class ClientService
         $client = $this->findById($clientId, $agencyId);
         if (!$client) return;
 
+        // SEC-15: dar ou tirar o acesso ao portal é a mesma ação sensível que
+        // `PortalController::adminTogglePortal` já registrava — só que por aqui
+        // ela vem no meio do formulário de edição do cliente e passava calada
+        // (o `client_updated` não diz que o link do portal nasceu ou morreu).
+        // Só grava quando algo muda de fato: o checkbox vem em todo salvamento.
         if ($enable && empty($client['portal_token'])) {
             $this->clientRepo->updateById($clientId, [
                 'portal_token' => bin2hex(random_bytes(16)),
                 'updated_at'   => date('Y-m-d H:i:s'),
             ]);
+            ActivityLogger::log('portal_access_granted', 'clients', null, $clientId);
         } elseif (!$enable && !empty($client['portal_token'])) {
             $this->clientRepo->updateById($clientId, [
                 'portal_token' => null,
                 'updated_at'   => date('Y-m-d H:i:s'),
             ]);
+            ActivityLogger::log('portal_access_revoked', 'clients', null, $clientId);
         }
     }
 
@@ -230,16 +247,25 @@ class ClientService
         return $this->clientRepo->findUsersByAgency($agencyId);
     }
 
-    public function grantAccess(int $clientId, int $userId, string $level, int $agencyId): void
+    /** Falso quando cliente ou usuário não são da agência (SEC-11). */
+    public function grantAccess(int $clientId, int $userId, string $level, int $agencyId): bool
     {
-        $this->clientRepo->upsertAccess($clientId, $userId, $level);
+        if (!$this->clientRepo->upsertAccess($clientId, $userId, $level, $agencyId)) {
+            return false;
+        }
+
         ActivityLogger::log('client_access_granted', 'clients', null, $clientId, ['user_id' => $userId]);
+        return true;
     }
 
-    public function revokeAccess(int $clientId, int $userId, int $agencyId): void
+    public function revokeAccess(int $clientId, int $userId, int $agencyId): bool
     {
-        $this->clientRepo->deleteAccess($clientId, $userId);
+        if (!$this->clientRepo->deleteAccess($clientId, $userId, $agencyId)) {
+            return false;
+        }
+
         ActivityLogger::log('client_access_revoked', 'clients', null, $clientId, ['user_id' => $userId]);
+        return true;
     }
 
     private function validate(array $data): array

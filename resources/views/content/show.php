@@ -11,6 +11,11 @@ $canEdit  = Auth::can('content.edit');
 $canSend  = Auth::can('content.send_to_approval');
 $canCreate= Auth::can('content.create');
 
+// Semana fechada com a cliente (BUG-05): o backend recusa post novo e exclusão
+// de post num plano aprovado — a tela não oferece o que levaria erro.
+$planClosed = ($plan['status'] ?? '') === 'approved';
+$canAddPost = $canCreate && !$planClosed;
+
 $statusColors = [
   'draft'    => ['bg' => 'bg-gray-500/15',   'text' => 'text-gray-300',   'ring' => 'ring-gray-500/30',   'dot' => 'bg-gray-400'],
   'sent'     => ['bg' => 'bg-blue-500/15',   'text' => 'text-blue-300',   'ring' => 'ring-blue-500/30',   'dot' => 'bg-blue-400'],
@@ -106,6 +111,7 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
      x-data="contentShow(<?= (int) $plan['id'] ?>)"
      @open-edit-post.window="openEditPost($event.detail.item)"
      @open-reschedule.window="openReschedule($event.detail.item)"
+     @plan-toast.window="showToast($event.detail.msg, $event.detail.ok)"
      class="min-h-screen">
 
   <!-- ── Breadcrumb ──────────────────────────────────────────────────────────── -->
@@ -295,12 +301,19 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
                 :class="view === 'list' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'"
                 class="rounded-lg px-3 py-1.5 text-xs font-medium transition-all">Lista</button>
       </div>
-      <?php if ($canCreate): ?>
+      <?php if ($canAddPost): ?>
       <button @click="openAddPost()"
               class="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Adicionar Post
       </button>
+      <?php endif; ?>
+      <?php if ($planClosed && $canCreate): ?>
+      <!-- Por que o botão de adicionar sumiu. -->
+      <span class="inline-flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-xs text-emerald-300">
+        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <?= e(t('content.plan_closed_hint')) ?>
+      </span>
       <?php endif; ?>
     </div>
   </div>
@@ -348,7 +361,7 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
             <?php endforeach; ?>
           </div>
 
-          <?php if ($canCreate): ?>
+          <?php if ($canAddPost): ?>
           <button type="button" @click="openAddPost('<?= e($day) ?>')"
                   class="mt-1.5 w-full rounded-xl border border-dashed <?= empty($dayItems) ? 'border-white/15 py-4' : 'border-white/10 py-1.5' ?> text-xs text-gray-400 hover:text-brand-300 hover:border-brand-500/40 transition-all"
                   aria-label="Adicionar post em <?= $dow ?> <?= date('d/m', strtotime($day)) ?>">
@@ -393,7 +406,7 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
       </svg>
     </div>
     <p class="text-gray-400 text-sm mb-3">Nenhum post neste plano.</p>
-    <?php if ($canCreate): ?>
+    <?php if ($canAddPost): ?>
     <button @click="openAddPost()" class="text-sm text-brand-400 hover:text-brand-300 transition-colors">
       Adicionar primeiro post →
     </button>
@@ -466,11 +479,13 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
                       title="Reagendar">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
               </button>
+              <?php if (!$planClosed): ?>
               <button @click.stop="deleteItem()"
                       class="opacity-0 group-hover:opacity-100 rounded-lg p-1.5 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                       title="Excluir">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               </button>
+              <?php endif; ?>
               <?php endif; ?>
               <?php if ($parsedDrive && $parsedDrive['valid']): ?>
               <span class="flex-shrink-0 rounded-full p-1 bg-brand-500/10">
@@ -694,12 +709,19 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             Reagendar
           </button>
+          <?php if (!$planClosed): ?>
           <button @click="deleteItem()"
                   class="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/20 px-3 py-1.5 text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-all">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             Excluir
           </button>
+          <?php endif; ?>
           <!-- Quick status change -->
+          <?php /* Sem "Aprovado" e fora de semana fechada (BUG-05): aprovar é decisão do
+                   fluxo de aprovação (portal ou tela de Aprovações, com autor e data), e
+                   em plano aprovado o status do post não muda mais. O backend recusa as
+                   duas coisas; aqui o menu só deixa de oferecer o que não vai passar. */ ?>
+          <?php if (!$planClosed): ?>
           <div class="relative ml-auto" x-data="{open:false}">
             <button @click="open = !open"
                     class="inline-flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all">
@@ -708,7 +730,7 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
             </button>
             <div x-show="open" @click.away="open=false" x-transition
                  class="absolute right-0 bottom-full mb-1 w-40 rounded-xl border border-white/10 bg-gray-900 shadow-2xl py-1 z-10">
-              <?php foreach (['draft'=>'Rascunho','revision'=>'Revisão','approved'=>'Aprovado','rejected'=>'Rejeitado'] as $s => $l): ?>
+              <?php foreach (['draft'=>'Rascunho','revision'=>'Revisão','rejected'=>'Rejeitado'] as $s => $l): ?>
               <button @click="changeStatus('<?= $s ?>'); open=false"
                       class="w-full px-3 py-2 text-xs text-left text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
                 <?= $l ?>
@@ -716,6 +738,7 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
               <?php endforeach; ?>
             </div>
           </div>
+          <?php endif; ?>
         </div>
         <?php endif; ?>
       </div>
@@ -1020,7 +1043,7 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
               </template>
               <template x-if="rescheduleModal.target.status === 'approved' && !rescheduleModal.target.same_plan">
                 <p class="text-amber-300">
-                  Essa semana já foi aprovada pela cliente — reabra aquele plano ou escolha outra data.
+                  Essa semana já foi aprovada pela cliente — escolha outra data.
                 </p>
               </template>
             </div>

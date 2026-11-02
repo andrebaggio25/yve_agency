@@ -10,10 +10,15 @@ class CampaignRepository extends Repository
 {
     protected string $table = 'campaigns';
 
-    public function listByAccount(int $adAccountId, array $filters = []): array
+    /**
+     * `campaigns` não tem agency_id: a agência vem pela conta de anúncios, e o
+     * id da conta chega pela URL (SEC-13) — sem o JOIN abaixo, trocar o número
+     * na rota listava as campanhas de outra agência.
+     */
+    public function listByAccount(int $adAccountId, int $agencyId, array $filters = []): array
     {
-        $where  = ['c.ad_account_id = :account_id'];
-        $params = [':account_id' => $adAccountId];
+        $where  = ['c.ad_account_id = :account_id', 'a.agency_id = :agency_id'];
+        $params = [':account_id' => $adAccountId, ':agency_id' => $agencyId];
 
         if (!empty($filters['status'])) {
             $where[] = 'c.status = :status';
@@ -28,9 +33,19 @@ class CampaignRepository extends Repository
         return $this->all("
             SELECT c.*
             FROM campaigns c
+            JOIN ad_accounts a ON a.id = c.ad_account_id
             WHERE {$whereClause}
             ORDER BY c.name
         ", $params);
+    }
+
+    /** Campanha dentro de uma conta específica — alvo de ação validado (SEC-13). */
+    public function findByIdAndAccount(int $id, int $adAccountId): ?array
+    {
+        return $this->first(
+            "SELECT * FROM campaigns WHERE id = :id AND ad_account_id = :account_id LIMIT 1",
+            [':id' => $id, ':account_id' => $adAccountId]
+        );
     }
 
     public function listByAgency(int $agencyId, array $filters = []): array
@@ -53,7 +68,7 @@ class CampaignRepository extends Repository
                    cl.name AS client_name
             FROM campaigns c
             JOIN ad_accounts a ON a.id = c.ad_account_id
-            LEFT JOIN clients cl ON cl.id = a.client_id
+            LEFT JOIN clients cl ON cl.id = a.client_id AND cl.agency_id = a.agency_id
             WHERE {$whereClause}
             ORDER BY c.name
         ", $params);

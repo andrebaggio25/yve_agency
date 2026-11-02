@@ -250,7 +250,11 @@ class ClientController extends Controller
         $userId      = (int) $request->post('user_id');
         $accessLevel = (string) $request->post('access_level', 'standard');
 
-        $this->clientService->grantAccess($clientId, $userId, $accessLevel, Auth::agencyId());
+        // O user_id vem do POST: quem não é da agência não entra (SEC-11).
+        if (!$this->clientService->grantAccess($clientId, $userId, $accessLevel, (int) Auth::agencyId())) {
+            $this->withError(t('clients.access_invalid_pair'));
+            return $this->redirect("/clientes/{$clientId}/acesso");
+        }
 
         $this->withSuccess('Acesso concedido.');
         return $this->redirect("/clientes/{$clientId}/acesso");
@@ -263,7 +267,10 @@ class ClientController extends Controller
         $clientId = (int) $request->param('clientId');
         $userId   = (int) $request->param('userId');
 
-        $this->clientService->revokeAccess($clientId, $userId, Auth::agencyId());
+        if (!$this->clientService->revokeAccess($clientId, $userId, (int) Auth::agencyId())) {
+            $this->withError(t('clients.access_invalid_pair'));
+            return $this->redirect("/clientes/{$clientId}/acesso");
+        }
 
         $this->withSuccess('Acesso removido.');
         return $this->redirect("/clientes/{$clientId}/acesso");

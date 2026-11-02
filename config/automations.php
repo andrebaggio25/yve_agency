@@ -132,13 +132,15 @@ return [
     // ── Relatórios & insights ───────────────────────────────────────────────
     'report.client_monthly' => [
         'label'       => 'Relatório mensal ao cliente',
-        'description' => 'No início de cada mês, envia ao cliente o link do relatório executivo.',
+        'description' => 'No início de cada mês, envia ao cliente o link do painel dele com os números do mês.',
         'trigger'     => 'schedule',
         'applies_to'  => 'client',
         'frequency'   => 'monthly',
         'day'         => '1',
         'time'        => '08:00',
-        'channels'    => ['email'],
+        // O envio real é por WhatsApp; o catálogo dizia só 'email' e a tela
+        // mentia sobre o canal (BUG-07). Paridade de e-mail é o WPP-01.
+        'channels'    => ['whatsapp', 'email'],
         'handler'     => \App\Automations\ClientMonthlyReport::class,
     ],
     'digest.team_daily' => [

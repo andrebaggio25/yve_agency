@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Repositories\RoleRepository;
 use App\Support\ActivityLogger;
+use App\Support\Auth;
 
 class RoleService
 {
@@ -32,6 +33,14 @@ class RoleService
         if (empty($data['slug'])) $errors['slug'] = 'Slug obrigatório.';
         if ($errors) return ['success' => false, 'errors' => $errors];
 
+        if ($agencyId !== null && $this->roleRepo->slugTaken(trim($data['slug']), $agencyId)) {
+            return ['success' => false, 'errors' => ['slug' => t('roles.slug_taken')]];
+        }
+
+        if (!Auth::canGrant($permissionSlugs)) {
+            return ['success' => false, 'errors' => ['permissions' => t('roles.cannot_grant')]];
+        }
+
         $roleId = $this->roleRepo->insert([
             'agency_id'  => $agencyId,
             'name'       => trim($data['name']),
@@ -52,6 +61,17 @@ class RoleService
         $role = $this->roleRepo->findByIdAndAgency($id, (int) $agencyId);
         if (!$role) return ['success' => false, 'errors' => ['id' => 'Perfil não encontrado.']];
 
+        // Perfil do sistema é compartilhado por todas as agências: editar aqui mudaria
+        // o acesso de todas elas. Só o dono da plataforma mexe (decisão D10).
+        if (!self::isEditable($role)) {
+            return ['success' => false, 'errors' => ['id' => t('roles.system_readonly')]];
+        }
+
+        $added = array_values(array_diff($permissionSlugs, $this->roleRepo->permissionSlugs($id)));
+        if (!Auth::canGrant($added)) {
+            return ['success' => false, 'errors' => ['permissions' => t('roles.cannot_grant')]];
+        }
+
         $this->roleRepo->updateById($id, [
             'name'        => trim($data['name'] ?? $role['name']),
             'description' => $data['description'] ?? $role['description'],
@@ -62,6 +82,12 @@ class RoleService
 
         ActivityLogger::log('role_updated', 'roles', null, null, ['role_id' => $id]);
         return ['success' => true];
+    }
+
+    /** @param array<string, mixed> $role */
+    public static function isEditable(array $role): bool
+    {
+        return $role['agency_id'] !== null || Auth::isPlatformAdmin();
     }
 
     public function delete(int $id, ?int $agencyId): void

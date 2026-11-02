@@ -10,7 +10,19 @@ use App\Core\Response;
 use App\Repositories\AgencyRepository;
 use App\Repositories\SubscriptionRepository;
 use App\Services\BillingService;
+use App\Support\ActivityLogger;
+use App\Support\Auth;
 
+/**
+ * Planos e assinaturas do SaaS (só o dono da plataforma).
+ *
+ * Toda rota deste controller está no grupo `PlatformAdminMiddleware` de
+ * `routes/web.php`, mas era o **único** controller de `/admin` sem a guarda no
+ * método (SEC-15): os irmãos — tenants, usuários da plataforma, configurações
+ * globais, migrations — chamam `Auth::requirePlatformAdmin()` em cada um. Uma
+ * rota registrada no grupo errado, ou um `$router->group` futuro mal fechado,
+ * abriria preço de plano e assinatura de tenant para qualquer usuário logado.
+ */
 class SubscriptionPlanController extends Controller
 {
     public function __construct(
@@ -21,6 +33,8 @@ class SubscriptionPlanController extends Controller
 
     public function plans(Request $request): Response
     {
+        Auth::requirePlatformAdmin();
+
         $plans         = $this->repo->allPlans();
         $subscriptions = $this->repo->allSubscriptions();
 
@@ -34,18 +48,34 @@ class SubscriptionPlanController extends Controller
 
     public function createPlan(Request $request): Response
     {
+        Auth::requirePlatformAdmin();
+
         return $this->view('admin.billing.plan_form', ['plan' => null]);
     }
 
     public function storePlan(Request $request): Response
     {
-        $this->repo->createPlan($this->planData($request));
+        Auth::requirePlatformAdmin();
+
+        $data = $this->planData($request);
+        $this->repo->createPlan($data);
+
+        ActivityLogger::log('admin.plan_created', 'admin', null, null, [
+            'slug'          => $data['slug'],
+            'name'          => $data['name'],
+            'price_monthly' => $data['price_monthly'],
+            'price_yearly'  => $data['price_yearly'],
+            'is_active'     => $data['is_active'],
+        ]);
+
         $this->withSuccess('Plano criado.');
         return $this->redirect('/admin/planos');
     }
 
     public function editPlan(Request $request): Response
     {
+        Auth::requirePlatformAdmin();
+
         $plan = $this->repo->findPlanById((int) $request->param('id'));
         if (!$plan) return Response::view('errors.404', [], 404);
 
@@ -58,14 +88,28 @@ class SubscriptionPlanController extends Controller
 
     public function updatePlan(Request $request): Response
     {
-        $id = (int) $request->param('id');
-        $this->repo->updatePlan($id, $this->planData($request));
+        Auth::requirePlatformAdmin();
+
+        $id   = (int) $request->param('id');
+        $data = $this->planData($request);
+        $this->repo->updatePlan($id, $data);
+
+        ActivityLogger::log('admin.plan_updated', 'admin', null, null, [
+            'plan_id'       => $id,
+            'slug'          => $data['slug'],
+            'price_monthly' => $data['price_monthly'],
+            'price_yearly'  => $data['price_yearly'],
+            'is_active'     => $data['is_active'],
+        ]);
+
         $this->withSuccess('Plano atualizado.');
         return $this->redirect('/admin/planos');
     }
 
     public function subscriptions(Request $request): Response
     {
+        Auth::requirePlatformAdmin();
+
         $tenants = $this->repo->allAgenciesWithSubscription();
         $plans   = $this->repo->allPlans();
 
@@ -74,6 +118,8 @@ class SubscriptionPlanController extends Controller
 
     public function editSubscription(Request $request): Response
     {
+        Auth::requirePlatformAdmin();
+
         $agencyId = (int) $request->param('agencyId');
         $existing = $this->repo->findActiveByAgency($agencyId);
         $plans    = $this->repo->allPlans();
@@ -89,6 +135,8 @@ class SubscriptionPlanController extends Controller
 
     public function updateSubscription(Request $request): Response
     {
+        Auth::requirePlatformAdmin();
+
         $agencyId     = (int) $request->param('agencyId');
         $planId       = (int) $request->post('plan_id', 0);
         $billingCycle = $request->post('billing_cycle', 'monthly');
@@ -96,6 +144,16 @@ class SubscriptionPlanController extends Controller
 
         if ($planId) {
             $this->billing->assignPlan($agencyId, $planId, $billingCycle, $status);
+
+            // O admin da plataforma não tem `agency_id`: a trilha é a do tenant
+            // cuja assinatura mudou, senão a linha cairia na agência 0 (SEC-15).
+            ActivityLogger::log('admin.subscription_changed', 'admin', null, null, [
+                'agency_id'     => $agencyId,
+                'plan_id'       => $planId,
+                'billing_cycle' => $billingCycle,
+                'status'        => $status,
+            ], $agencyId);
+
             $this->withSuccess('Assinatura atualizada.');
         }
 

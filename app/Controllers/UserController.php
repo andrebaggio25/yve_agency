@@ -106,7 +106,12 @@ class UserController extends Controller
         Auth::requirePermission('users.delete');
 
         $id = (int) $request->param('id');
-        $this->userService->delete($id, Auth::agencyId());
+        $result = $this->userService->delete($id, Auth::agencyId());
+
+        if (!$result['success']) {
+            $this->withErrors($result['errors']);
+            return $this->redirect('/usuarios');
+        }
 
         $this->withSuccess('Usuário removido.');
         return $this->redirect('/usuarios');

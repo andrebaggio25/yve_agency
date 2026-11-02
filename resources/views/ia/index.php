@@ -7,10 +7,14 @@
     <p class="text-sm text-gray-400 mt-0.5">Análises e recomendações geradas por inteligência artificial</p>
   </div>
   <div class="flex gap-3">
+    <?php if (\App\Support\Auth::can('ai.recommend_ads_action')): ?>
     <a href="/ia/recomendacoes" class="btn-secondary text-sm px-4 py-2">
       <span class="mr-1">⚡</span> Recomendações de ação
     </a>
+    <?php endif; ?>
+    <?php if (\App\Support\Auth::can('ai.generate_report')): ?>
     <a href="/ia/gerar" class="btn-primary text-sm px-4 py-2">+ Gerar insight</a>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -42,7 +46,9 @@
   </div>
   <p class="text-gray-400 mb-2">Nenhum insight gerado ainda.</p>
   <p class="text-sm text-gray-400 mb-5">Conecte uma conta de anúncios e gere seu primeiro insight.</p>
+  <?php if (\App\Support\Auth::can('ai.generate_report')): ?>
   <a href="/ia/gerar" class="btn-primary px-6 py-2.5 text-sm">Gerar primeiro insight</a>
+  <?php endif; ?>
 </div>
 <?php else: ?>
 <div class="space-y-3">
@@ -61,7 +67,7 @@
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 flex-wrap mb-2">
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $tc['bg'] ?> <?= $tc['text'] ?>">
-            <?= $tc['label'] ?>
+            <?= e($tc['label']) ?>
           </span>
           <?php if ($i['account_name']): ?>
           <span class="text-xs text-gray-400"><?= e($i['account_name']) ?></span>

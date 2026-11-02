@@ -37,7 +37,9 @@ class PdfTest extends FeatureTestCase
         $client   = $this->createClient($agencyId, 'Padaria da Esquina');
         $invoice  = $this->seedInvoice($agencyId, (int) $client['id']);
 
-        $this->actingAs($user['id'], permissions: ['invoices.view']);
+        // `clients.view_all` como no papel Financeiro do seeder: desde o SEC-11
+        // a fatura só abre para quem alcança o cliente dela.
+        $this->actingAs($user['id'], permissions: ['invoices.view', 'clients.view_all']);
 
         $response = $this->get('/faturas/' . $invoice . '/pdf');
         $headers  = $response->getHeaders();

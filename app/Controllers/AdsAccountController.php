@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
+use App\Support\ActivityLogger;
 use App\Support\Auth;
 use App\Repositories\AdAccountRepository;
 use App\Repositories\ClientRepository;
@@ -144,6 +145,18 @@ class AdsAccountController extends Controller
         ]);
     }
 
+    /**
+     * `client_id` chega do formulário (SEC-13): sem conferir a agência, a conta
+     * nasce com o `agency_id` da sessão e o cliente de outra — a lista de contas,
+     * o painel de tráfego e o insight gerado a partir dela passam a exibir o nome
+     * dele. 0/vazio é "sem cliente" e é válido.
+     */
+    private function clienteForaDaAgencia(int $clientId): bool
+    {
+        return $clientId > 0
+            && !$this->clientRepo->findByIdAndAgency($clientId, (int) Auth::agencyId());
+    }
+
     public function oauthSave(Request $request): Response
     {
         Auth::requirePermission('ads_metrics.view');
@@ -165,10 +178,15 @@ class AdsAccountController extends Controller
             return $this->redirect('/trafego/contas/nova');
         }
 
+        if ($this->clienteForaDaAgencia($clientId)) {
+            $this->withError(t('ads.client_out_of_agency'));
+            return $this->redirect('/trafego/contas/nova');
+        }
+
         // Strip 'act_' prefix
         $cleanId = ltrim($accountId, 'act_');
 
-        $this->repo->create([
+        $id = $this->repo->create([
             'agency_id'           => Auth::agencyId(),
             'client_id'           => $clientId ?: null,
             'platform'            => 'meta',
@@ -180,6 +198,15 @@ class AdsAccountController extends Controller
             'token_expires_at'    => $expiresAt,
             'sync_days_back'      => $syncDays,
             'created_by'          => Auth::id(),
+        ]);
+
+        // SEC-15: conectar conta de anúncios é o que habilita gastar o dinheiro
+        // do cliente. O **token nunca** entra no log.
+        ActivityLogger::log('ads_account.connected', 'ads', null, $clientId ?: null, [
+            'ad_account_id'       => $id,
+            'platform'            => 'meta',
+            'platform_account_id' => $cleanId,
+            'via'                 => 'oauth',
         ]);
 
         $this->withSuccess('Conta Meta Ads conectada via OAuth com sucesso!');
@@ -206,6 +233,12 @@ class AdsAccountController extends Controller
             return $this->redirect('/trafego/contas/nova');
         }
 
+        // Antes de qualquer chamada à Meta: cliente alheio nem gasta a conversa.
+        if ($this->clienteForaDaAgencia($clientId)) {
+            $this->withError(t('ads.client_out_of_agency'));
+            return $this->redirect('/trafego/contas/nova');
+        }
+
         try {
             $longToken  = $this->meta->exchangeForLongLivedToken($token);
             $finalToken = $longToken['access_token'] ?? $token;
@@ -224,7 +257,7 @@ class AdsAccountController extends Controller
             return $this->redirect('/trafego/contas/nova');
         }
 
-        $this->repo->create([
+        $id = $this->repo->create([
             'agency_id'           => $agencyId,
             'client_id'           => $clientId ?: null,
             'platform'            => 'meta',
@@ -236,6 +269,13 @@ class AdsAccountController extends Controller
             'token_expires_at'    => $expiresAt,
             'sync_days_back'      => (int) $request->post('sync_days_back', 30),
             'created_by'          => Auth::id(),
+        ]);
+
+        ActivityLogger::log('ads_account.connected', 'ads', null, $clientId ?: null, [
+            'ad_account_id'       => $id,
+            'platform'            => 'meta',
+            'platform_account_id' => $accountId,
+            'via'                 => 'token',
         ]);
 
         $this->withSuccess('Conta conectada com sucesso!');
@@ -266,8 +306,21 @@ class AdsAccountController extends Controller
     public function destroy(Request $request): Response
     {
         Auth::requirePermission('ads_metrics.view');
-        $id = (int) $request->param('id');
-        $this->repo->deleteById($id, Auth::agencyId());
+        $id       = (int) $request->param('id');
+        $agencyId = (int) Auth::agencyId();
+
+        // Lido antes só para a trilha: o DELETE já é escopado por agência.
+        $account = $this->repo->findByIdAndAgency($id, $agencyId);
+        $this->repo->deleteById($id, $agencyId);
+
+        if ($account) {
+            ActivityLogger::log('ads_account.disconnected', 'ads', null, (int) ($account['client_id'] ?? 0) ?: null, [
+                'ad_account_id'       => $id,
+                'platform'            => $account['platform'] ?? null,
+                'platform_account_id' => $account['platform_account_id'] ?? null,
+            ]);
+        }
+
         $this->withSuccess('Conta removida.');
         return $this->redirect('/trafego/contas');
     }

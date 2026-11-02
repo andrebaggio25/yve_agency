@@ -39,7 +39,7 @@ class ContentPlanShowTest extends FeatureTestCase
         $agencyId = $this->createAgency();
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedPlanWithItems($agencyId);
-        $this->actingAs($user['id'], permissions: ['content.view']);
+        $this->actingAs($user['id'], permissions: ['content.view', 'clients.view_all']);
 
         $response = $this->get('/conteudo/' . $seed['plan']);
 
@@ -56,7 +56,7 @@ class ContentPlanShowTest extends FeatureTestCase
         $agencyId = $this->createAgency();
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedPlanWithItems($agencyId);
-        $this->actingAs($user['id'], permissions: ['content.view']);
+        $this->actingAs($user['id'], permissions: ['content.view', 'clients.view_all']);
 
         $body = $this->get('/conteudo/' . $seed['plan'])->getBody();
 
@@ -76,7 +76,7 @@ class ContentPlanShowTest extends FeatureTestCase
         $agencyId = $this->createAgency();
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedPlanWithItems($agencyId);
-        $this->actingAs($user['id'], permissions: ['content.view']);
+        $this->actingAs($user['id'], permissions: ['content.view', 'clients.view_all']);
 
         $body = $this->get('/conteudo/' . $seed['plan'])->getBody();
 

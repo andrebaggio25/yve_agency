@@ -106,8 +106,8 @@ class DashboardRepository extends Repository
                     c.name AS client_name, u.name AS assigned_name,
                     (CURRENT_DATE - t.due_date) AS days_late
              FROM tasks t
-             LEFT JOIN clients c ON c.id = t.client_id
-             LEFT JOIN users   u ON u.id = t.assigned_to
+             LEFT JOIN clients c ON c.id = t.client_id   AND c.agency_id = t.agency_id
+             LEFT JOIN users   u ON u.id = t.assigned_to AND u.agency_id = t.agency_id
              WHERE t.agency_id = :aid
                AND t.status <> 'done'
                AND t.due_date IS NOT NULL

@@ -31,8 +31,8 @@ class ContentPlanController extends Controller
             'week_start' => $request->query('week_start'),
         ];
 
-        $plans      = $this->service->list((int) $agencyId, $filters);
         $clientList = $this->accessibleClients((int) $agencyId);
+        $plans      = $this->service->list((int) $agencyId, $this->scopeToAccessible($filters, $clientList));
 
         // Radar: clientes ativos sem plano na PRÓXIMA semana — o lembrete que
         // evita segunda-feira sem pauta. (A auto-criação cobre quem tem a
@@ -53,9 +53,70 @@ class ContentPlanController extends Controller
      */
     private function accessibleClients(int $agencyId): array
     {
-        return Auth::can('clients.view_all')
+        $clients = Auth::can('clients.view_all')
             ? $this->clients->findByAgency($agencyId)
             : $this->clients->findByUserAccess((int) Auth::id(), $agencyId);
+
+        // As linhas já trazem agency_id: alimenta o cache de fronteira de tenant
+        // para os `canAccessClient` da tela não custarem uma consulta cada.
+        Auth::primeClientAgencies($clients);
+
+        return $clients;
+    }
+
+    /**
+     * Recorta a consulta aos clientes que o usuário alcança (SEC-11): sem isto,
+     * `?client_id=` de um cliente alheio devolvia a planificação dele para quem
+     * não tem `clients.view_all`. Quem tem enxerga a agência inteira.
+     *
+     * @param array<string,mixed>            $filters
+     * @param array<int,array<string,mixed>> $clientList
+     * @return array<string,mixed>
+     */
+    private function scopeToAccessible(array $filters, array $clientList): array
+    {
+        if (Auth::can('clients.view_all') || Auth::isPlatformAdmin()) {
+            return $filters;
+        }
+
+        $filters['client_ids'] = array_map(fn($c) => (int) $c['id'], $clientList);
+        return $filters;
+    }
+
+    /**
+     * Plano dentro da agência **e** do alcance do usuário (SEC-11). Escopo de
+     * agência não basta: sem `clients.view_all`, só os clientes com acesso
+     * explícito. Null = responde 404, como plano inexistente.
+     *
+     * @return array<string,mixed>|null
+     */
+    private function reachablePlan(int $planId, int $agencyId): ?array
+    {
+        $plan = $this->service->get($planId, $agencyId);
+
+        return $plan && Auth::canAccessClient((int) $plan['client_id']) ? $plan : null;
+    }
+
+    /**
+     * Idem para o post: o alcance vem do plano do PRÓPRIO item, não do planId
+     * da URL — o service resolve o item só pelo id, então um planId permitido
+     * com itemId alheio passaria.
+     */
+    private function canReachItem(int $itemId, int $agencyId): bool
+    {
+        $item = $this->service->getItem($itemId, $agencyId);
+
+        return $item !== null && Auth::canAccessClient((int) $item['client_id']);
+    }
+
+    /** Negativa padrão das rotas de plano: 404 na tela, JSON no fetch. */
+    private function planNotFound(Request $request): Response
+    {
+        if ($request->wantsJson()) {
+            return Response::json(['success' => false, 'error' => 'Plano não encontrado.'], 404);
+        }
+
+        return $this->view('errors.404', [], 404);
     }
 
     public function show(Request $request): Response
@@ -66,7 +127,9 @@ class ContentPlanController extends Controller
         $agencyId = (int) Auth::agencyId();
         $plan     = $this->service->getWithItems($planId, $agencyId);
 
-        if (!$plan) return $this->view('errors.404', [], 404);
+        if (!$plan || !Auth::canAccessClient((int) $plan['client_id'])) {
+            return $this->view('errors.404', [], 404);
+        }
 
         $teamMembers = $this->users->findByAgency($agencyId);
 
@@ -93,8 +156,14 @@ class ContentPlanController extends Controller
         $first = $month . '-01';
         $last  = date('Y-m-t', strtotime($first));
 
-        $filters  = ['client_id' => $request->query('client_id')];
-        $items    = $this->service->itemsBetween($agencyId, $first, $last, array_filter($filters));
+        $filters    = ['client_id' => $request->query('client_id')];
+        $clientList = $this->accessibleClients($agencyId);
+        $items      = $this->service->itemsBetween(
+            $agencyId,
+            $first,
+            $last,
+            $this->scopeToAccessible(array_filter($filters), $clientList),
+        );
 
         // Agrupa por dia — a view só desenha.
         $byDay = [];
@@ -110,7 +179,7 @@ class ContentPlanController extends Controller
             'firstDay'   => $first,
             'lastDay'    => $last,
             'byDay'      => $byDay,
-            'clientList' => $this->accessibleClients($agencyId),
+            'clientList' => $clientList,
             'filters'    => $filters,
             'total'      => count($items),
         ]);
@@ -166,9 +235,9 @@ class ContentPlanController extends Controller
 
         $planId   = (int) $request->param('planId');
         $agencyId = (int) Auth::agencyId();
-        $plan     = $this->service->get($planId, $agencyId);
+        $plan     = $this->reachablePlan($planId, $agencyId);
 
-        if (!$plan) return $this->view('errors.404', [], 404);
+        if (!$plan) return $this->planNotFound($request);
 
         $clientList = $this->accessibleClients($agencyId);
         return $this->view('content.edit', compact('plan', 'clientList'));
@@ -180,10 +249,29 @@ class ContentPlanController extends Controller
 
         $planId   = (int) $request->param('planId');
         $agencyId = (int) Auth::agencyId();
-        $input    = $request->only(['title', 'week_start', 'notes']);
-        $this->service->update($planId, $agencyId, $input);
 
-        $this->withSuccess('Plano atualizado.');
+        if (!$this->reachablePlan($planId, $agencyId)) return $this->planNotFound($request);
+
+        $input = $request->only(['title', 'week_start', 'notes']);
+
+        try {
+            $result = $this->service->update($planId, $agencyId, $input);
+        } catch (\InvalidArgumentException $e) {
+            // Semana de plano já aprovado: o formulário nem oferece o campo,
+            // mas POST solto (ou aba velha) chega aqui.
+            $this->withError($e->getMessage());
+            return $this->redirect("/conteudo/{$planId}");
+        }
+
+        // Antes confirmava "Plano atualizado." mesmo quando nada foi gravado
+        // (formulário sem campo preenchido): a tela dizia que salvou e o plano
+        // continuava igual.
+        if (!$result['success']) {
+            $this->withError(t('content.plan_update_failed'));
+        } else {
+            $this->withSuccess($result['week_moved'] ? t('content.plan_week_moved') : t('content.plan_updated'));
+        }
+
         return $this->redirect("/conteudo/{$planId}");
     }
 
@@ -193,7 +281,10 @@ class ContentPlanController extends Controller
 
         $planId   = (int) $request->param('planId');
         $agencyId = (int) Auth::agencyId();
-        $ok       = $this->service->send($planId, $agencyId);
+
+        if (!$this->reachablePlan($planId, $agencyId)) return $this->planNotFound($request);
+
+        $ok = $this->service->send($planId, $agencyId);
 
         if ($request->wantsJson()) {
             return Response::json(['success' => $ok]);
@@ -217,6 +308,8 @@ class ContentPlanController extends Controller
 
         $planId   = (int) $request->param('planId');
         $agencyId = (int) Auth::agencyId();
+
+        if (!$this->reachablePlan($planId, $agencyId)) return $this->planNotFound($request);
 
         $result = $this->service->duplicate($planId, $agencyId, (int) Auth::id(), [
             'week_start' => $request->post('week_start') ?: null,
@@ -243,7 +336,10 @@ class ContentPlanController extends Controller
 
         $planId   = (int) $request->param('planId');
         $agencyId = (int) Auth::agencyId();
-        $ok       = $this->service->saveTemplateFromPlan($planId, $agencyId, (int) Auth::id());
+
+        if (!$this->reachablePlan($planId, $agencyId)) return $this->planNotFound($request);
+
+        $ok = $this->service->saveTemplateFromPlan($planId, $agencyId, (int) Auth::id());
 
         if ($ok) {
             $this->withSuccess('Modelo semanal do cliente salvo. Novos planos deste cliente já nascem com esta grade.');
@@ -274,7 +370,10 @@ class ContentPlanController extends Controller
 
         $planId   = (int) $request->param('planId');
         $agencyId = (int) Auth::agencyId();
-        $ok       = $this->service->delete($planId, $agencyId);
+
+        if (!$this->reachablePlan($planId, $agencyId)) return $this->planNotFound($request);
+
+        $ok = $this->service->delete($planId, $agencyId);
 
         if ($request->wantsJson()) {
             return Response::json(['success' => $ok]);
@@ -296,7 +395,10 @@ class ContentPlanController extends Controller
 
         $planId   = (int) $request->param('planId');
         $agencyId = (int) Auth::agencyId();
-        $input    = $request->only([
+
+        if (!$this->reachablePlan($planId, $agencyId)) return $this->planNotFound($request);
+
+        $input = $request->only([
             'publish_date', 'publish_time', 'content_type', 'platform', 'title', 'theme',
             'caption', 'script', 'cta', 'drive_url', 'cover_url', 'images', 'assigned_to', 'sort_order',
         ]);
@@ -320,10 +422,12 @@ class ContentPlanController extends Controller
     {
         Auth::requirePermission('content.edit');
 
-        $planId   = (int) $request->param('planId');
         $itemId   = (int) $request->param('itemId');
         $agencyId = (int) Auth::agencyId();
-        $input    = $request->only([
+
+        if (!$this->canReachItem($itemId, $agencyId)) return $this->planNotFound($request);
+
+        $input = $request->only([
             'publish_date', 'publish_time', 'content_type', 'platform', 'title', 'theme',
             'caption', 'script', 'cta', 'drive_url', 'cover_url', 'images', 'assigned_to', 'status', 'sort_order',
         ]);
@@ -380,8 +484,11 @@ class ContentPlanController extends Controller
 
         $itemId   = (int) $request->param('itemId');
         $agencyId = (int) Auth::agencyId();
-        $date     = (string) ($request->post('publish_date') ?? '');
-        $hasTime  = $request->post('publish_time') !== null;
+
+        if (!$this->canReachItem($itemId, $agencyId)) return $this->planNotFound($request);
+
+        $date    = (string) ($request->post('publish_date') ?? '');
+        $hasTime = $request->post('publish_time') !== null;
 
         $result = $this->service->rescheduleItem(
             $itemId,
@@ -431,7 +538,15 @@ class ContentPlanController extends Controller
 
         $itemId   = (int) $request->param('itemId');
         $agencyId = (int) Auth::agencyId();
-        $ok       = $this->service->deleteItem($itemId, $agencyId);
+
+        if (!$this->canReachItem($itemId, $agencyId)) return $this->planNotFound($request);
+
+        try {
+            $ok = $this->service->deleteItem($itemId, $agencyId);
+        } catch (\InvalidArgumentException $e) {
+            // Plano já aprovado pela cliente (BUG-05): a razão volta para a tela.
+            return Response::json(['success' => false, 'error' => $e->getMessage()], 422);
+        }
 
         return Response::json(['success' => $ok]);
     }
@@ -444,7 +559,7 @@ class ContentPlanController extends Controller
         $ids    = $request->json('ids', []);
         if (!is_array($ids)) return Response::json(['success' => false], 422);
 
-        if (!$this->service->get($planId, (int) Auth::agencyId())) {
+        if (!$this->reachablePlan($planId, (int) Auth::agencyId())) {
             return Response::json(['success' => false, 'error' => 'Plano não encontrado.'], 404);
         }
 

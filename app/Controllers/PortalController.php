@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
+use App\Support\ActivityLogger;
 use App\Support\Auth;
 use App\Support\PortalAuth;
 use App\Repositories\ClientRepository;
@@ -51,7 +52,7 @@ class PortalController extends Controller
         $agencyId  = (int) $client['agency_id'];
 
         $plans    = $this->planRepo->allByClient($clientId, $agencyId);
-        $invoices = $this->invoiceRepo->findByClient($clientId);
+        $invoices = $this->invoiceRepo->findByClient($clientId, $agencyId);
 
         // Ads metrics for this client (last 30 days)
         $since = date('Y-m-d', strtotime('-30 days'));
@@ -156,7 +157,9 @@ class PortalController extends Controller
         $items = $this->planRepo->getItems($planId);
         foreach ($items as &$item) {
             $item['drive_parsed'] = !empty($item['drive_url']) ? $this->drive->parse($item['drive_url']) : null;
-            $item['feedbacks']    = $this->planRepo->getFeedbacks((int) $item['id']);
+            // Só o que o cliente escreveu: a nota interna da equipe (gravada na
+            // tela de Aprovações) não é para o portal.
+            $item['feedbacks']    = $this->planRepo->getFeedbacks((int) $item['id'], clientVisibleOnly: true);
             $item['images_list']  = is_string($item['images'] ?? null) ? (json_decode($item['images'], true) ?? []) : ($item['images'] ?? []);
         }
         unset($item);
@@ -227,6 +230,16 @@ class PortalController extends Controller
             return Response::json(['error' => 'Plano não encontrado'], 404);
         }
 
+        // Semana fechada não recebe mais feedback — a mesma régua da tela
+        // interna (`ApprovalController::feedback`). `findByIdForClient` só tira
+        // o rascunho, e a view (que esconde o formulário em plano aprovado) não
+        // é re-renderizada: aprovar o último post FECHA o plano e o formulário
+        // continua na tela, então o clique seguinte ("pedir alteração") punha
+        // um post em revisão dentro de um plano "Aprovado".
+        if (($plan['status'] ?? '') === 'approved') {
+            return Response::json(['error' => t('approval.plan_closed'), 'plan_closed' => true], 409);
+        }
+
         $item = $this->planRepo->findItemForClient($itemId, (int) $client['id']);
         if (!$item || (int) $item['content_plan_id'] !== $planId) {
             return Response::json(['error' => 'Item não encontrado'], 404);
@@ -249,7 +262,9 @@ class PortalController extends Controller
 
         $feedbackId = $this->planService->addFeedback(
             $itemId, $planId, (int) $client['id'], null,
-            $type, $comment ?: null, $timecodeSeconds, 'client'
+            $type, $comment ?: null, $timecodeSeconds, 'client',
+            // Sem sessão aqui: a agência da trilha vem do plano (SEC-15).
+            agencyId: (int) $plan['agency_id'],
         );
 
         $author   = $client['name'] ?? 'Cliente';
@@ -263,8 +278,14 @@ class PortalController extends Controller
             'comment'           => 'Comentário',
         ];
 
+        // Este feedback pode ter sido o último pendente: aí o plano inteiro
+        // fechou agora. A tela avisada recarrega — sem isso o formulário dos
+        // outros posts fica na tela de um plano que já não aceita feedback.
+        $planClosed = ($this->planRepo->findByIdForClient($planId, (int) $client['id'])['status'] ?? '') === 'approved';
+
         return Response::json([
-            'success'  => true,
+            'success'     => true,
+            'plan_closed' => $planClosed,
             'feedback' => [
                 'id'            => $feedbackId,
                 'feedback_type' => $type,
@@ -286,7 +307,7 @@ class PortalController extends Controller
     {
         $client   = PortalAuth::client();
         $token    = PortalAuth::token();
-        $invoices = $this->invoiceRepo->findByClient((int) $client['id']);
+        $invoices = $this->invoiceRepo->findByClient((int) $client['id'], (int) $client['agency_id']);
 
         return $this->view('portal.invoices', compact('client', 'token', 'invoices'));
     }
@@ -297,29 +318,33 @@ class PortalController extends Controller
     {
         $client    = PortalAuth::client();
         $token     = PortalAuth::token();
-        $contracts = $this->contractRepo->findByClient((int) $client['id']);
+        $contracts = $this->contractRepo->findByClient((int) $client['id'], (int) $client['agency_id']);
 
         return $this->view('portal.contracts', compact('client', 'token', 'contracts'));
     }
 
     // ------------------------------------------------ agency admin: manage portal
 
+    // Ligar/desligar o portal e trocar o link do cliente é mudança de cadastro,
+    // não leitura: exige clients.edit (SEC-11) e fica na trilha de auditoria.
+
     public function adminRegenerateToken(Request $request): Response
     {
-        Auth::requirePermission('clients.view');
+        Auth::requirePermission('clients.edit');
         $clientId = (int) $request->param('clientId');
         $client   = $this->clientRepo->findByIdAndAgency($clientId, (int) Auth::agencyId());
 
         if (!$client) return Response::view('errors.404', [], 404);
 
         $this->clientRepo->regeneratePortalToken($clientId);
+        ActivityLogger::log('portal_token_regenerated', 'clients', null, $clientId);
         $this->withSuccess('Link do portal regenerado.');
         return $this->redirect('/clientes/' . $clientId);
     }
 
     public function adminTogglePortal(Request $request): Response
     {
-        Auth::requirePermission('clients.view');
+        Auth::requirePermission('clients.edit');
         $clientId = (int) $request->param('clientId');
         $client   = $this->clientRepo->findByIdAndAgency($clientId, (int) Auth::agencyId());
 
@@ -327,6 +352,7 @@ class PortalController extends Controller
 
         $enabled = !(bool) $client['portal_enabled'];
         $this->clientRepo->setPortalEnabled($clientId, $enabled);
+        ActivityLogger::log($enabled ? 'portal_enabled' : 'portal_disabled', 'clients', null, $clientId);
         $this->withSuccess($enabled ? 'Portal ativado.' : 'Portal desativado.');
         return $this->redirect('/clientes/' . $clientId);
     }

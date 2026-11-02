@@ -29,8 +29,13 @@ class RepositoryScopeTest extends TestCase
     private function repo(): object
     {
         // Subclasse anônima que expõe os membros protegidos para o teste.
+        // O construtor vazio é de propósito: `Repository::__construct()` abre
+        // conexão, e o escopo por agência é decidido só pela sessão — sem o
+        // override, este teste unitário morria com "Connection refused" em
+        // quem não tem o Postgres de teste no ar.
         return new class extends Repository {
             protected string $table = 'dummy';
+            public function __construct() {}
             public function scope(): string { return $this->agencyScope(); }
             /** @return array<string,mixed> */
             public function bound(): array { $p = []; $this->bindAgency($p); return $p; }

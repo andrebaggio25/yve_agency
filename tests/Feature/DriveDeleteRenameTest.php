@@ -184,7 +184,7 @@ class DriveDeleteRenameTest extends FeatureTestCase
         $agencyId = $this->createAgency();
         $client   = $this->createClient($agencyId);
         $user     = $this->createUser($agencyId);
-        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all']);
+        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all', 'content.edit']);
 
         return [$client, $agencyId];
     }

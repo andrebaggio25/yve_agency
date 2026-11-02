@@ -125,8 +125,31 @@ class ClientRepository extends Repository
         );
     }
 
-    public function upsertAccess(int $clientId, int $userId, string $level): void
+    /**
+     * Cliente e usuário são da MESMA agência, e dela? (SEC-11)
+     *
+     * O par vem do formulário (cliente na URL, user_id no POST): sem esta
+     * verificação, dava para vincular usuário de outra agência ao cliente — ou
+     * conceder acesso a cliente de outra agência.
+     */
+    public function accessPairInAgency(int $clientId, int $userId, int $agencyId): bool
     {
+        return (bool) $this->first(
+            'SELECT 1 AS ok
+               FROM clients c
+               JOIN users u ON u.agency_id = c.agency_id
+              WHERE c.id = :cid AND u.id = :uid AND c.agency_id = :aid
+              LIMIT 1',
+            [':cid' => $clientId, ':uid' => $userId, ':aid' => $agencyId],
+        );
+    }
+
+    public function upsertAccess(int $clientId, int $userId, string $level, int $agencyId): bool
+    {
+        if (!$this->accessPairInAgency($clientId, $userId, $agencyId)) {
+            return false;
+        }
+
         $existing = $this->first(
             'SELECT id FROM client_user_access WHERE client_id = :cid AND user_id = :uid',
             [':cid' => $clientId, ':uid' => $userId],
@@ -140,14 +163,20 @@ class ClientRepository extends Repository
         } else {
             $this->insertAccess($clientId, $userId, $level);
         }
+
+        return true;
     }
 
-    public function deleteAccess(int $clientId, int $userId): void
+    public function deleteAccess(int $clientId, int $userId, int $agencyId): bool
     {
-        $this->query(
-            'DELETE FROM client_user_access WHERE client_id = :cid AND user_id = :uid',
-            [':cid' => $clientId, ':uid' => $userId],
+        $stmt = $this->query(
+            'DELETE FROM client_user_access
+              WHERE client_id = :cid AND user_id = :uid
+                AND EXISTS (SELECT 1 FROM clients c WHERE c.id = :cid AND c.agency_id = :aid)',
+            [':cid' => $clientId, ':uid' => $userId, ':aid' => $agencyId],
         );
+
+        return $stmt->rowCount() > 0;
     }
 
     public function findAccess(int $clientId, int $agencyId): array

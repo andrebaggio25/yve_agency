@@ -259,6 +259,22 @@ function t(string $key, array $replace = []): string
     return Lang::t($key, $replace);
 }
 
+/**
+ * Translate a key with plural: a string `singular|plural` (convenção já usada
+ * em `approval.plans_count` e `approval.feedbacks`). `:count` é substituído nas
+ * duas formas. Sem o `|`, devolve a string como está.
+ *
+ * Usage: tc('approval.feedbacks', 3) → "3 feedbacks"
+ *
+ * @param array<string,string|int|float> $replace
+ */
+function tc(string $key, int $count, array $replace = []): string
+{
+    $forms = explode('|', t($key, $replace + ['count' => $count]));
+
+    return $forms[$count === 1 ? 0 : 1] ?? $forms[0];
+}
+
 /** Get/set the current locale */
 function locale(?string $set = null): string
 {

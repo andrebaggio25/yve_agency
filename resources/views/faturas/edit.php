@@ -20,6 +20,9 @@
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Cliente <span class="text-red-400">*</span></label>
           <select aria-label="Cliente" name="client_id" required class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
+            <?php /* Opção vazia de propósito: sem ela o navegador marca a primeira
+                      da lista e salvar reatribuiria a fatura a outro cliente (SEC-11). */ ?>
+            <option value="">Selecione...</option>
             <?php foreach ($clients as $cl): ?>
             <option value="<?= $cl['id'] ?>" <?= (string)$invoice['client_id'] === (string)$cl['id'] ? 'selected' : '' ?>><?= e($cl['name']) ?></option>
             <?php endforeach; ?>
@@ -44,11 +47,29 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">Status</label>
+          <?php
+          // Situação derivada (paga, parcial, vencida) não é escolha de
+          // formulário, mas precisa estar aqui marcada: sem a opção atual o
+          // navegador marcava "Rascunho" e salvar só o título devolvia fatura
+          // paga para rascunho, calado (SEC-16).
+          $statusOptions = ['draft' => 'Rascunho', 'sent' => 'Enviada', 'cancelled' => 'Cancelada'];
+          $derivedLabels = [
+              'paid'    => t('finance.status_paid'),
+              'partial' => t('finance.status_partial'),
+              'overdue' => t('finance.status_overdue'),
+          ];
+          if (!isset($statusOptions[$invoice['status']])) {
+              $statusOptions[$invoice['status']] = $derivedLabels[$invoice['status']] ?? $invoice['status'];
+          }
+          ?>
           <select aria-label="Situação" name="status" class="w-full rounded-xl border border-white/10 bg-[#09090f] px-4 py-2.5 text-white focus:border-brand-500 focus:outline-none transition-colors">
-            <?php foreach (['draft'=>'Rascunho','sent'=>'Enviada','cancelled'=>'Cancelada'] as $v => $l): ?>
-            <option value="<?= $v ?>" <?= $invoice['status'] === $v ? 'selected' : '' ?>><?= $l ?></option>
+            <?php foreach ($statusOptions as $v => $l): ?>
+            <option value="<?= e((string) $v) ?>" <?= $invoice['status'] === $v ? 'selected' : '' ?>><?= e($l) ?></option>
             <?php endforeach; ?>
           </select>
+          <?php if (isset($derivedLabels[$invoice['status']])): ?>
+          <p class="mt-1.5 text-xs text-gray-400"><?= e(t('finance.status_derived_hint')) ?></p>
+          <?php endif; ?>
         </div>
 
         <div>
@@ -82,7 +103,7 @@
         <template x-for="(item, i) in items" :key="i">
           <div class="grid grid-cols-12 gap-3 items-start">
             <div class="col-span-6">
-              <input type="text" :name="`items[${i}][description]`" x-model="item.description" placeholder="Descrição" required
+              <input type="text" :name="`items[${i}][description]`" x-model="item.description" placeholder="Descrição" required maxlength="500"
                 class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white focus:border-brand-500 focus:outline-none transition-colors">
             </div>
             <div class="col-span-2">

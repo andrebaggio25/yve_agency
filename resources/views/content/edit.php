@@ -1,5 +1,8 @@
 <?php view_layout('app'); view_start('content'); ?>
 
+<?php /* Semana aprovada pela cliente: dá para renomear e anotar, não trocar a semana (BUG-05). */ ?>
+<?php $planClosed = ($plan['status'] ?? '') === 'approved'; ?>
+
 <div class="max-w-2xl mx-auto">
 
   <div class="mb-8">
@@ -44,12 +47,23 @@
       <div class="grid grid-cols-2 gap-4" x-data="editPlanWeek('<?= e($plan['week_start'] ?? '') ?>')">
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-2">
-            Semana (segunda) <span class="text-rose-400">*</span>
+            Semana (segunda) <?php if (!$planClosed): ?><span class="text-rose-400">*</span><?php endif; ?>
           </label>
+          <?php if ($planClosed): ?>
+          <?php /* BUG-05: semana aprovada não muda de data — os posts aprovados
+                   iriam com ela. Sem campo (nem desabilitado com `name`), para o
+                   PUT não carregar week_start e levar o 422 do service. */ ?>
+          <input aria-label="Semana (segunda-feira)" type="date" disabled value="<?= e($plan['week_start'] ?? '') ?>"
+                 class="w-full rounded-xl bg-white/[0.02] border border-white/5 text-gray-400 px-4 py-3 text-sm cursor-not-allowed">
+          <p class="mt-1 text-xs text-emerald-300"><?= e(t('content.plan_closed_week_hint')) ?></p>
+          <?php else: ?>
           <input aria-label="Semana (segunda-feira)" type="date" name="week_start" required
                  x-model="weekStart" @change="snapWeek()"
                  class="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-colors">
           <p class="mt-1 text-xs text-gray-400">Ao salvar, a semana é ajustada para segunda–domingo.</p>
+          <?php /* BUG-05: trocar a semana leva os posts junto — dizer antes evita susto. */ ?>
+          <p class="mt-1 text-xs text-gray-400"><?= e(t('content.plan_week_change_hint')) ?></p>
+          <?php endif; ?>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-2">Domingo</label>

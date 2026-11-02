@@ -38,16 +38,16 @@ $monthLabel = t('portal.month.' . $monthNum) . ' ' . date('Y', $firstTs);
       · <?= t('portal.calendar.hint') ?>
     </p>
   </div>
-  <a href="/portal/<?= $token ?>/planos" class="btn-secondary text-sm px-4 py-2"><?= t('portal.calendar.back') ?></a>
+  <a href="/portal/<?= e($token) ?>/planos" class="btn-secondary text-sm px-4 py-2"><?= t('portal.calendar.back') ?></a>
 </div>
 
 <!-- Navegação por mês -->
 <div class="flex items-center gap-1 mb-4">
-  <a href="/portal/<?= $token ?>/planos/calendario?month=<?= e($prevMonth) ?>"
+  <a href="/portal/<?= e($token) ?>/planos/calendario?month=<?= e($prevMonth) ?>"
      class="btn-secondary text-sm px-3 py-2" aria-label="<?= e(t('portal.calendar.prev')) ?>">←</a>
-  <a href="/portal/<?= $token ?>/planos/calendario?month=<?= date('Y-m') ?>"
+  <a href="/portal/<?= e($token) ?>/planos/calendario?month=<?= date('Y-m') ?>"
      class="btn-secondary text-sm px-3 py-2"><?= t('portal.calendar.today') ?></a>
-  <a href="/portal/<?= $token ?>/planos/calendario?month=<?= e($nextMonth) ?>"
+  <a href="/portal/<?= e($token) ?>/planos/calendario?month=<?= e($nextMonth) ?>"
      class="btn-secondary text-sm px-3 py-2" aria-label="<?= e(t('portal.calendar.next')) ?>">→</a>
 </div>
 
@@ -80,7 +80,7 @@ $monthLabel = t('portal.month.' . $monthNum) . ' ' . date('Y', $firstTs);
           $cls = $itemStatusColors[$item['status']] ?? $itemStatusColors['draft'];
           $dot = $itemStatusDots[$item['status']] ?? $itemStatusDots['draft'];
         ?>
-          <a href="/portal/<?= $token ?>/planos/<?= (int) $item['content_plan_id'] ?>#item-<?= (int) $item['id'] ?>"
+          <a href="/portal/<?= e($token) ?>/planos/<?= (int) $item['content_plan_id'] ?>#item-<?= (int) $item['id'] ?>"
              class="block mb-1 rounded-lg border px-1.5 py-1 <?= $cls ?> hover:brightness-125 transition-all"
              title="<?= e(($item['title'] ?: ($item['content_type'] ?? '')) . (!empty($item['publish_time']) ? ' · ' . substr($item['publish_time'], 0, 5) : '')) ?>">
             <span class="flex items-center gap-1">

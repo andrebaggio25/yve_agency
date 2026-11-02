@@ -10,6 +10,7 @@ use App\Core\Response;
 use App\Repositories\AgencyRepository;
 use App\Services\ImageUploadService;
 use App\Services\NotificationService;
+use App\Support\ActivityLogger;
 use App\Support\Auth;
 
 class SettingsController extends Controller
@@ -84,6 +85,14 @@ class SettingsController extends Controller
         // Aplica o idioma imediatamente na sessão (antes derivava do user, que não tem a coluna)
         $_SESSION['locale'] = \App\Core\Lang::normalize(trim((string) $request->post('language', 'pt')));
 
+        // SEC-15: mexer no cadastro da agência (nome, marca, logotipo) é ação de
+        // configuração e entra na trilha.
+        ActivityLogger::log('settings.agency_saved', 'settings', null, null, [
+            'name'        => $name,
+            'brand_color' => $brandColor ?: null,
+            'logo'        => $logoUrl === ($agency['logo_url'] ?? null) ? 'kept' : ($logoUrl ? 'replaced' : 'removed'),
+        ]);
+
         $this->withSuccess('Configurações salvas.');
         return $this->redirect('/configuracoes');
     }
@@ -101,10 +110,16 @@ class SettingsController extends Controller
         return Response::json(['notifications' => $notifications]);
     }
 
-    public function notificationsMarkRead(Request $request, int $id): Response
+    /**
+     * O `{id}` vem do `Request` (BUG-06): o Router chama o handler com **um**
+     * argumento só, então a assinatura antiga — `(Request $r, int $id)` — dava
+     * ArgumentCountError e 500 em toda notificação clicada. O sino engolia o
+     * erro e o contador voltava no poll de 30 s.
+     */
+    public function notificationsMarkRead(Request $request): Response
     {
         Auth::requireLogin();
-        $this->notifications->markRead($id, (int) Auth::id());
+        $this->notifications->markRead((int) $request->param('id'), (int) Auth::id());
         return Response::json(['success' => true]);
     }
 

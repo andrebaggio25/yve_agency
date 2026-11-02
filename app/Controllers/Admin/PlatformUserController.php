@@ -11,6 +11,7 @@ use App\Repositories\AgencyRepository;
 use App\Repositories\PlatformUserRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
+use App\Support\ActivityLogger;
 use App\Support\Auth;
 
 class PlatformUserController extends Controller
@@ -87,6 +88,16 @@ class PlatformUserController extends Controller
             $this->userRepo->syncRoles($userId, $roleIds);
         }
 
+        // SEC-15: o admin da plataforma cria usuário DENTRO de um tenant — a
+        // trilha é a do tenant, que é quem precisa ver o acesso aparecendo.
+        // Senha nunca entra no log (nem a enviada, nem o hash).
+        ActivityLogger::log('admin.user_created', 'admin', Auth::id(), null, [
+            'user_id'   => $userId,
+            'agency_id' => $agencyId,
+            'email'     => $email,
+            'role_ids'  => $roleIds,
+        ], $agencyId);
+
         $this->withSuccess("Usuário \"{$name}\" criado com sucesso.");
         return $this->redirect('/admin/usuarios');
     }
@@ -143,6 +154,14 @@ class PlatformUserController extends Controller
         $this->platformUsers->updateProfile($id, $name, $email, $agencyId);
         $this->userRepo->syncRoles($id, $roleIds);
 
+        ActivityLogger::log('admin.user_updated', 'admin', Auth::id(), null, [
+            'user_id'          => $id,
+            'agency_id'        => $agencyId,
+            'agency_id_before' => (int) ($user['agency_id'] ?? 0),
+            'email'            => $email,
+            'role_ids'         => $roleIds,
+        ], $agencyId);
+
         $this->withSuccess('Usuário atualizado.');
         return $this->redirect('/admin/usuarios');
     }
@@ -168,6 +187,14 @@ class PlatformUserController extends Controller
 
         $this->userRepo->updatePassword($id, password_hash($password, PASSWORD_ARGON2ID));
 
+        // Trocar a senha de outra pessoa é tomar a conta dela: só o fato, nunca
+        // a senha.
+        ActivityLogger::log('admin.user_password_set', 'admin', Auth::id(), null, [
+            'user_id'   => $id,
+            'agency_id' => (int) ($user['agency_id'] ?? 0),
+            'email'     => $user['email'] ?? null,
+        ], (int) ($user['agency_id'] ?? 0));
+
         $this->withSuccess("Senha de {$user['name']} redefinida com sucesso.");
         return $this->redirect("/admin/usuarios/{$id}/editar");
     }
@@ -184,6 +211,15 @@ class PlatformUserController extends Controller
         }
 
         $result = $this->authService->sendPasswordResetLink($user['email']);
+
+        // O link de redefinição é uma capability por e-mail: fica o pedido, não
+        // o token.
+        ActivityLogger::log('admin.user_reset_sent', 'admin', Auth::id(), null, [
+            'user_id'   => $id,
+            'agency_id' => (int) ($user['agency_id'] ?? 0),
+            'email'     => $user['email'] ?? null,
+            'success'   => (bool) ($result['success'] ?? false),
+        ], (int) ($user['agency_id'] ?? 0));
 
         if ($result['success'] ?? false) {
             $this->withSuccess("Link de redefinição enviado para {$user['email']}.");
@@ -209,6 +245,13 @@ class PlatformUserController extends Controller
 
         $newStatus = $user['status'] === 'active' ? 'inactive' : 'active';
         $this->platformUsers->setStatus($id, $newStatus);
+
+        ActivityLogger::log('admin.user_status_changed', 'admin', Auth::id(), null, [
+            'user_id'       => $id,
+            'agency_id'     => (int) ($user['agency_id'] ?? 0),
+            'status_before' => $user['status'] ?? null,
+            'status'        => $newStatus,
+        ], (int) ($user['agency_id'] ?? 0));
 
         $label = $newStatus === 'active' ? 'ativado' : 'inativado';
         $this->withSuccess("Usuário {$user['name']} {$label}.");

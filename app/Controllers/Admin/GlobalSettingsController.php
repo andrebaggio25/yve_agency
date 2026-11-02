@@ -10,6 +10,7 @@ use App\Core\Response;
 use App\Repositories\PlatformSettingsRepository;
 use App\Repositories\WhatsAppInstanceRepository;
 use App\Services\EvolutionApiService;
+use App\Support\ActivityLogger;
 use App\Support\Auth;
 
 class GlobalSettingsController extends Controller
@@ -109,6 +110,17 @@ class GlobalSettingsController extends Controller
         }
 
         $this->settings->setMultiple($map);
+
+        // SEC-15: aqui moram as chaves de API da plataforma (Evolution, Meta,
+        // OpenAI/Anthropic) e o SMTP. A trilha registra **quais chaves** foram
+        // gravadas, nunca os valores — e marca à parte as que são segredo, para
+        // responder "quando a chave da IA foi trocada?" sem expor nada.
+        $sensitiveKeys = ['evolution_api_key', 'meta_app_secret', 'openai_api_key', 'anthropic_api_key'];
+
+        ActivityLogger::log('admin.global_settings_saved', 'admin', Auth::id(), null, [
+            'keys'             => array_keys($map),
+            'secrets_replaced' => array_values(array_intersect($sensitiveKeys, array_keys($map))),
+        ]);
 
         $this->withSuccess('Configurações globais salvas.');
         return $this->redirect('/admin/configuracoes');

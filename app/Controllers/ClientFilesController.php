@@ -138,6 +138,15 @@ class ClientFilesController extends Controller
                 return Response::json(['error' => 'Arquivo não confirmado no Drive.'], 422);
             }
 
+            // `drive_files` não guarda autor (só `uploaded_via`): quem responde
+            // "quem subiu isso?" é a trilha — do lado da equipe também (SEC-15).
+            ActivityLogger::log('drive.file_uploaded', 'drive', null, (int) $client['id'], [
+                'folder_id' => $folderId,
+                'name'      => $payload['name'] ?? null,
+                'size'      => $payload['size_bytes'] ?? null,
+                'via'       => 'direct',
+            ]);
+
             return Response::json(['success' => true, 'file' => $payload]);
         } catch (\Throwable $e) {
             return Response::json(['error' => 'Falha ao confirmar o envio: ' . $e->getMessage()], 500);
@@ -180,6 +189,13 @@ class ClientFilesController extends Controller
 
         try {
             $payload = $this->uploads->relayUpload($client, $folderId, $name, $mime, $tmp, $size, 'panel');
+
+            ActivityLogger::log('drive.file_uploaded', 'drive', null, (int) $client['id'], [
+                'folder_id' => $folderId,
+                'name'      => $name,
+                'size'      => $size,
+                'via'       => 'relay',
+            ]);
 
             return Response::json(['success' => true, 'file' => $payload]);
         } catch (\Throwable $e) {
@@ -377,10 +393,18 @@ class ClientFilesController extends Controller
         return Response::json(['success' => true, 'folder' => $payload]);
     }
 
-    /** Guarda comum dos endpoints de escrita: permissão + cliente da agência. */
+    /**
+     * Guarda comum dos endpoints de escrita: permissão + cliente da agência.
+     *
+     * BUG-03: `clients.view` é leitura — com só ela, qualquer perfil que abria
+     * a galeria (inclusive o Gestor de Tráfego) apagava pasta de cliente.
+     * Escrever no Drive passa a exigir `content.edit`, a mesma permissão de
+     * mexer na planificação do cliente.
+     */
     private function requireClient(Request $request): array|Response
     {
         Auth::requirePermission('clients.view');
+        Auth::requirePermission('content.edit');
 
         $clientId = (int) $request->param('clientId');
         $client   = $this->clientRepo->findByIdAndAgency($clientId, (int) Auth::agencyId());
@@ -442,10 +466,14 @@ class ClientFilesController extends Controller
     /**
      * Reconcilia a galeria com o Google Drive (sob demanda, via botão).
      * Reflete no sistema o que foi apagado/renomeado direto no Drive.
+     *
+     * Exige `content.edit` como o resto da escrita (BUG-03): o sync remove
+     * linhas de `drive_files`, não é leitura.
      */
     public function sync(Request $request): Response
     {
         Auth::requirePermission('clients.view');
+        Auth::requirePermission('content.edit');
 
         $clientId = (int) $request->param('clientId');
         $agencyId = (int) Auth::agencyId();
@@ -457,7 +485,39 @@ class ClientFilesController extends Controller
         try {
             $result = $this->driveSync->syncClient($clientId, $agencyId);
         } catch (\Throwable $e) {
-            return Response::json(['success' => false, 'error' => 'Falha ao sincronizar: ' . $e->getMessage()], 500);
+            return Response::json([
+                'success' => false,
+                'error'   => t('drive.sync_failed', ['error' => $e->getMessage()]),
+            ], 500);
+        }
+
+        // Falha do Google no meio da varredura: a reconciliação não é
+        // transacional, então o que já foi removido FICA removido — a resposta
+        // leva o erro E os contadores do que foi aplicado antes de parar.
+        if (($result['reason'] ?? '') === 'list_failed') {
+            $msg = t('drive.sync_failed', ['error' => (string) ($result['error'] ?? '')])
+                . ' ' . $this->appliedMsg($result);
+            // A trava pode ter pegado antes da falha: não esconder a pasta.
+            if ((int) ($result['skipped'] ?? 0) > 0) {
+                $msg .= ' ' . $this->skippedMsg($result);
+            }
+
+            return Response::json(['success' => false, 'error' => $msg] + $this->syncCounts($result), 500);
+        }
+
+        // Trava do BUG-03: alguma pasta voltou vazia do Drive com galeria cheia.
+        // Nada foi excluído nela; a tela mostra QUAIS pastas ficaram de fora
+        // (sem o caminho o usuário não sabe onde conferir) e o que foi aplicado
+        // no resto.
+        if (($result['reason'] ?? '') === 'remote_empty') {
+            return Response::json([
+                'success' => false,
+                'error'   => $this->skippedMsg($result) . ' ' . t('drive.sync_changes', [
+                    'added'   => (int) ($result['added']   ?? 0),
+                    'removed' => (int) ($result['removed'] ?? 0),
+                    'renamed' => (int) ($result['renamed'] ?? 0),
+                ]),
+            ] + $this->syncCounts($result), 409);
         }
 
         if (!($result['synced'] ?? false)) {
@@ -470,11 +530,43 @@ class ClientFilesController extends Controller
             return Response::json(['success' => false, 'error' => $msg], 422);
         }
 
-        return Response::json([
-            'success' => true,
-            'added'   => $result['added']   ?? 0,
-            'removed' => $result['removed'] ?? 0,
-            'renamed' => $result['renamed'] ?? 0,
+        return Response::json(['success' => true] + $this->syncCounts($result));
+    }
+
+    /**
+     * Contadores que toda resposta do sync devolve — inclusive as de erro, já
+     * que a varredura é incremental e pode ter removido linhas antes de parar.
+     *
+     * @param  array<string,mixed> $result
+     * @return array<string,mixed>
+     */
+    private function syncCounts(array $result): array
+    {
+        return [
+            'added'           => (int) ($result['added']   ?? 0),
+            'removed'         => (int) ($result['removed'] ?? 0),
+            'renamed'         => (int) ($result['renamed'] ?? 0),
+            'skipped'         => (int) ($result['skipped'] ?? 0),
+            'skipped_folders' => $result['skipped_folders'] ?? [],
+        ];
+    }
+
+    /** @param array<string,mixed> $result */
+    private function appliedMsg(array $result): string
+    {
+        return t('drive.sync_applied', [
+            'added'   => (int) ($result['added']   ?? 0),
+            'removed' => (int) ($result['removed'] ?? 0),
+            'renamed' => (int) ($result['renamed'] ?? 0),
+        ]);
+    }
+
+    /** Pastas que a trava ignorou, com o caminho de cada uma. @param array<string,mixed> $result */
+    private function skippedMsg(array $result): string
+    {
+        return t('drive.sync_skipped', [
+            'folders' => (int) ($result['skipped'] ?? 0),
+            'list'    => implode(', ', $result['skipped_folders'] ?? []),
         ]);
     }
 

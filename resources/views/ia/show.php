@@ -22,7 +22,7 @@
       $tc = $typeColors[$insight['type']] ?? ['bg' => 'bg-gray-500/10', 'text' => 'text-gray-400', 'label' => $insight['type']];
       ?>
       <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold <?= $tc['bg'] ?> <?= $tc['text'] ?> mb-3">
-        <?= $tc['label'] ?>
+        <?= e($tc['label']) ?>
       </span>
       <div class="flex flex-wrap items-center gap-3 text-sm text-gray-400">
         <?php if ($insight['account_name']): ?>
@@ -62,8 +62,10 @@
   <!-- Ações -->
   <div class="flex items-center gap-3 mt-6">
     <a href="/ia" class="btn-secondary text-sm px-4 py-2">← Voltar</a>
+    <?php if (\App\Support\Auth::can('ai.recommend_ads_action')): ?>
     <a href="/ia/recomendacoes?account_id=<?= $insight['ad_account_id'] ?>"
        class="btn-secondary text-sm px-4 py-2">⚡ Gerar ações</a>
+    <?php endif; ?>
     <form method="POST" action="/ia/<?= $insight['id'] ?>"
           onsubmit="return confirm('Remover este insight?')" class="ml-auto">
       <?= csrf_field() ?>

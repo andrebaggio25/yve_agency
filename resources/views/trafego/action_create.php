@@ -86,7 +86,7 @@
 <script>
 function actionForm() {
   return {
-    campaigns: <?= json_encode($campaigns) ?>,
+    campaigns: <?= json_encode($campaigns, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
     init() {
       <?php if ($accountId): ?>
       // campaigns já carregadas via PHP
@@ -96,7 +96,11 @@ function actionForm() {
       if (!accountId) { this.campaigns = []; return; }
       try {
         const r = await fetch(`/trafego/contas/${accountId}/campanhas`);
-        this.campaigns = await r.json();
+        // Conta que não é da agência responde 404 com {error} (SEC-13): sem este
+        // guarda o x-for receberia um objeto em vez da lista.
+        if (!r.ok) { this.campaigns = []; return; }
+        const data = await r.json();
+        this.campaigns = Array.isArray(data) ? data : [];
       } catch { this.campaigns = []; }
     }
   }

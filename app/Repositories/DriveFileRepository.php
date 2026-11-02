@@ -118,13 +118,16 @@ class DriveFileRepository extends Repository
         );
     }
 
-    /** Remove todos os arquivos de uma pasta (usado na exclusão recursiva de pasta). */
-    public function deleteByFolder(int $clientId, int $folderId): void
+    /**
+     * Remove todos os arquivos de uma pasta (usado na exclusão recursiva de
+     * pasta). Devolve quantas linhas apagou — o sync reporta isso ao usuário.
+     */
+    public function deleteByFolder(int $clientId, int $folderId): int
     {
-        $this->query(
+        return $this->query(
             "DELETE FROM drive_files WHERE client_id = :c AND folder_id = :f",
             [':c' => $clientId, ':f' => $folderId]
-        );
+        )->rowCount();
     }
 
     public function totalBytesForAgency(int $agencyId): int

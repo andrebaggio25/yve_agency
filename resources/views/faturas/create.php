@@ -94,7 +94,7 @@ $old = flash_old();
         <template x-for="(item, i) in items" :key="i">
           <div class="grid grid-cols-12 gap-3 items-start">
             <div class="col-span-6">
-              <input type="text" :name="`items[${i}][description]`" x-model="item.description" placeholder="Descrição" required
+              <input type="text" :name="`items[${i}][description]`" x-model="item.description" placeholder="Descrição" required maxlength="500"
                 class="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white focus:border-brand-500 focus:outline-none transition-colors">
             </div>
             <div class="col-span-2">

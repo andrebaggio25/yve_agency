@@ -34,6 +34,19 @@ class AdRepository extends Repository
         return $this->first("SELECT * FROM ads WHERE id = :id LIMIT 1", [':id' => $id]);
     }
 
+    /** Anúncio dentro de uma conta específica — alvo de ação validado (SEC-13). */
+    public function findByIdAndAccount(int $id, int $adAccountId): ?array
+    {
+        return $this->first("
+            SELECT ads.*
+            FROM ads
+            JOIN ad_sets   s ON s.id = ads.ad_set_id
+            JOIN campaigns c ON c.id = s.campaign_id
+            WHERE ads.id = :id AND c.ad_account_id = :account_id
+            LIMIT 1
+        ", [':id' => $id, ':account_id' => $adAccountId]);
+    }
+
     public function upsert(int $adSetId, array $data): int
     {
         $stmt = $this->pdo->prepare("

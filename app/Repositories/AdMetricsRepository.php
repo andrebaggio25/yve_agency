@@ -210,11 +210,17 @@ class AdMetricsRepository extends Repository
                    COALESCE(SUM(m.impressions), 0)       AS impressions,
                    COALESCE(SUM(m.clicks), 0)            AS clicks,
                    COALESCE(SUM(m.conversions), 0)       AS conversions,
+                   -- CPC e CPM como nos irmãos por conta: a tela do painel já os
+                   -- lia (trafego/index.php), e sem eles a coluna vinha vazia.
+                   CASE WHEN SUM(m.clicks) > 0
+                        THEN SUM(m.spend) / SUM(m.clicks) ELSE 0 END AS cpc,
+                   CASE WHEN SUM(m.impressions) > 0
+                        THEN (SUM(m.spend)/SUM(m.impressions))*1000 ELSE 0 END AS cpm,
                    CASE WHEN SUM(m.spend) > 0
                         THEN SUM(m.conversion_value)/SUM(m.spend) ELSE 0 END AS roas
             FROM campaigns c
             JOIN ad_accounts a ON a.id = c.ad_account_id AND a.agency_id = :agency_id
-            LEFT JOIN clients cl ON cl.id = a.client_id
+            LEFT JOIN clients cl ON cl.id = a.client_id AND cl.agency_id = a.agency_id
             LEFT JOIN ad_daily_metrics m ON m.entity_type = 'campaign' AND m.entity_id = c.id
                 AND m.date BETWEEN :since AND :until
             GROUP BY c.id, c.name, c.status, a.name, a.id, cl.name

@@ -35,6 +35,12 @@ abstract class AbstractAutomation implements AutomationHandler
 
     /**
      * Executa $fn uma única vez por dedupe (idempotência). Retorna true se executou.
+     *
+     * Entrega barrada pelo canal desmarcado **não** queima a idempotência
+     * (BUG-07): gravar 'done' aqui faria religar o canal nunca reenviar, porque
+     * o `dedupe_key` já estaria no log — a agência corrigiria a regra e nada
+     * sairia. O motivo da não entrega fica no registro de entrega (timeline);
+     * o `automation_log` só recebe o que de fato saiu.
      */
     protected function once(int $agencyId, ?int $clientId, string $dedupe, callable $fn, ?string $channel = null): bool
     {
@@ -42,6 +48,11 @@ abstract class AbstractAutomation implements AutomationHandler
             return false;
         }
         $fn();
+
+        if ($channel !== null && !$this->automations->isChannelActive($agencyId, $this->key(), $channel)) {
+            return false;
+        }
+
         $this->automations->markRan($agencyId, $clientId, $this->key(), $dedupe, 'done', $channel);
         return true;
     }

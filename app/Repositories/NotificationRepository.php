@@ -93,6 +93,31 @@ class NotificationRepository extends Repository
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * BUG-07 — entrega que o motor decidiu NÃO fazer porque o canal está
+     * desmarcado na regra da agência. Fica na timeline, com o motivo e sem job:
+     * automação que não entrega **e** não explica parece defeito.
+     */
+    public function recordSkipped(array $data, string $reason): int
+    {
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO notification_jobs
+             (agency_id, channel, recipient, template, locale, payload, status, attempts, last_error, created_at)
+             VALUES (:agency_id, :channel, :recipient, :template, :locale, :payload, 'skipped', 0, :reason, NOW())
+             RETURNING id"
+        );
+        $stmt->execute([
+            ':agency_id' => $data['agency_id'],
+            ':channel'   => $data['channel'],
+            ':recipient' => $data['recipient'],
+            ':template'  => $data['template'],
+            ':locale'    => $data['locale'] ?? 'pt',
+            ':payload'   => json_encode($data['payload'] ?? []),
+            ':reason'    => $reason,
+        ]);
+        return (int) $stmt->fetchColumn();
+    }
+
     public function findDelivery(int $id): ?array
     {
         return $this->first("SELECT * FROM notification_jobs WHERE id = :id LIMIT 1", [':id' => $id]);
@@ -162,7 +187,8 @@ class NotificationRepository extends Repository
                 COUNT(*)                                  AS total,
                 COUNT(*) FILTER (WHERE status = 'sent')    AS sent,
                 COUNT(*) FILTER (WHERE status = 'failed')  AS failed,
-                COUNT(*) FILTER (WHERE status = 'pending') AS pending
+                COUNT(*) FILTER (WHERE status = 'pending') AS pending,
+                COUNT(*) FILTER (WHERE status = 'skipped') AS skipped
              FROM notification_jobs
              WHERE agency_id = :aid AND created_at >= NOW() - (:d || ' days')::interval",
             [':aid' => $agencyId, ':d' => (string) $days]
@@ -173,6 +199,7 @@ class NotificationRepository extends Repository
             'sent'    => (int) ($row['sent']    ?? 0),
             'failed'  => (int) ($row['failed']  ?? 0),
             'pending' => (int) ($row['pending'] ?? 0),
+            'skipped' => (int) ($row['skipped'] ?? 0),
         ];
     }
 

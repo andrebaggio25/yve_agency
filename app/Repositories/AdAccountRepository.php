@@ -25,12 +25,17 @@ class AdAccountRepository extends Repository
         return array_map(fn ($r) => $this->decryptRow($r), $rows);
     }
 
+    /**
+     * O cliente do JOIN carrega a agência da conta (SEC-13): o `client_id` vinha
+     * cru do POST, então linha legada com cliente de outra agência exibia o nome
+     * dele na coluna Cliente. Sem o par, a coluna fica em "—".
+     */
     public function listByAgency(int $agencyId): array
     {
         return $this->decryptRows($this->all("
             SELECT a.*, c.name AS client_name
             FROM ad_accounts a
-            LEFT JOIN clients c ON c.id = a.client_id
+            LEFT JOIN clients c ON c.id = a.client_id AND c.agency_id = a.agency_id
             WHERE a.agency_id = :aid
             ORDER BY a.name
         ", [':aid' => $agencyId]));
@@ -41,7 +46,7 @@ class AdAccountRepository extends Repository
         return $this->decryptRow($this->first("
             SELECT a.*, c.name AS client_name
             FROM ad_accounts a
-            LEFT JOIN clients c ON c.id = a.client_id
+            LEFT JOIN clients c ON c.id = a.client_id AND c.agency_id = a.agency_id
             WHERE a.id = :id AND a.agency_id = :aid
             LIMIT 1
         ", [':id' => $id, ':aid' => $agencyId]));

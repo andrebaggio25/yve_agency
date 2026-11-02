@@ -2,9 +2,14 @@
 <?php
 // CONT-06: a equipe também cria pastas e envia arquivos por aqui — mesma
 // máquina do portal (driveManager + UP-01), com endpoints do painel.
+use App\Support\Auth;
+
 $maxBytes = (int) ($maxUploadBytes ?? 0);
 $maxLabel = $maxBytes > 0 ? number_format($maxBytes / (1024 * 1024), 0) . ' MB' : '';
 $isConnected = (bool) ($connected ?? false);
+// BUG-03: escrever no Drive (enviar, mover, renomear, excluir, sincronizar)
+// exige content.edit no backend — sem ela a tela fica só de leitura.
+$canWrite = $isConnected && Auth::can('content.edit');
 
 $jsI18n = [
   'loading'              => t('portal.files.loading'),
@@ -46,7 +51,8 @@ $jsI18n = [
 ];
 $driveOpts = [
   'prefix'  => '/clientes/' . (int) $client['id'] . '/conteudos',
-  'syncUrl' => '/clientes/' . (int) $client['id'] . '/conteudos/sync',
+  // syncUrl habilita o botão Sincronizar no JS — só para quem pode escrever.
+  'syncUrl' => $canWrite ? '/clientes/' . (int) $client['id'] . '/conteudos/sync' : null,
 ];
 ?>
 
@@ -64,6 +70,7 @@ $driveOpts = [
         <h1 class="text-2xl font-bold text-white">Conteúdos do cliente</h1>
         <p class="mt-1 text-sm text-gray-400">Arquivos na pasta do cliente no Google Drive — enviados pelo portal ou pela equipe.</p>
       </div>
+      <?php if ($canWrite): ?>
       <button @click="sync()" :disabled="syncing"
               class="btn-secondary text-sm px-3 py-2 gap-2 flex-shrink-0 disabled:opacity-50 inline-flex items-center">
         <svg class="w-4 h-4" :class="{'animate-spin': syncing}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,6 +78,7 @@ $driveOpts = [
         </svg>
         <span x-text="syncing ? 'Sincronizando…' : 'Sincronizar'"></span>
       </button>
+      <?php endif; ?>
     </div>
     <p x-show="syncMsg" x-transition x-text="syncMsg"
        :class="syncOk ? 'text-emerald-400' : 'text-rose-400'"
@@ -98,7 +106,7 @@ $driveOpts = [
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
       <?= t('portal.files.copy_folder_link') ?>
     </button>
-    <?php if ($isConnected): ?>
+    <?php if ($canWrite): ?>
     <button @click="creatingFolder = true; $nextTick(() => $refs.folderInput?.focus())"
             class="btn-secondary text-sm px-3 py-2 inline-flex items-center gap-1.5">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11v4m-2-2h4"/></svg>
@@ -113,7 +121,7 @@ $driveOpts = [
     <?php endif; ?>
   </div>
 
-  <?php if ($isConnected): ?>
+  <?php if ($canWrite): ?>
   <!-- Barra de seleção (mover em lote) -->
   <div x-show="selectionCount() > 0" x-transition class="card p-3 mb-4 flex items-center gap-3 flex-wrap" style="display:none">
     <span class="text-sm text-gray-200 font-medium" x-text="i18n.selected_count.replace(':n', selectionCount())"></span>
@@ -135,14 +143,14 @@ $driveOpts = [
             class="btn-primary text-sm px-3 py-2 disabled:opacity-50" x-text="savingFolder ? '<?= e(t('portal.files.creating')) ?>' : '<?= e(t('portal.files.create')) ?>'"></button>
     <button @click="creatingFolder=false; newFolderName=''" class="text-xs text-gray-400 hover:text-gray-300 px-2"><?= t('portal.files.cancel') ?></button>
   </div>
-  <?php else: ?>
+  <?php elseif (!$isConnected): ?>
   <div class="card p-4 mb-4">
     <p class="text-sm text-gray-300">Google Drive não conectado — envio pela plataforma indisponível. Conecte em <a href="/settings" class="text-brand-400 hover:text-brand-300">Configurações → Integrações</a>.</p>
   </div>
   <?php endif; ?>
 
   <!-- Drop zone + listagem -->
-  <div <?php if ($isConnected): ?>@dragover.prevent="dragging=true" @dragleave.prevent="dragging=false"
+  <div <?php if ($canWrite): ?>@dragover.prevent="dragging=true" @dragleave.prevent="dragging=false"
        @drop.prevent="dragging=false; onFiles($event.dataTransfer.files)"<?php endif; ?>
        class="rounded-2xl border-2 border-dashed transition-colors p-2 sm:p-3"
        :class="dragging ? 'border-brand-500 bg-brand-500/5' : 'border-white/10'">
@@ -197,7 +205,7 @@ $driveOpts = [
           <template x-for="folder in folders" :key="'f'+folder.id">
             <div class="relative group">
               <button @click="goTo(folder.id)"
-                      class="w-full flex items-center gap-2 rounded-xl bg-white/[0.03] border transition-all px-3 py-3 <?= $isConnected ? 'pr-28' : 'pr-10' ?> text-left"
+                      class="w-full flex items-center gap-2 rounded-xl bg-white/[0.03] border transition-all px-3 py-3 <?= $canWrite ? 'pr-28' : 'pr-10' ?> text-left"
                       :class="isSelected('folder', folder.id) ? 'border-brand-500/50 bg-brand-500/10' : 'border-white/5 hover:border-brand-500/30 hover:bg-white/[0.06]'">
                 <svg class="w-5 h-5 text-brand-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
                 <span class="text-sm text-gray-200 truncate" x-text="folder.name"></span>
@@ -208,7 +216,7 @@ $driveOpts = [
                         class="w-5 h-5 rounded-md bg-black/40 text-gray-300 hover:text-white flex items-center justify-center transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                 </button>
-                <?php if ($isConnected): ?>
+                <?php if ($canWrite): ?>
                 <button @click.stop="openRename('folder', folder)" title="<?= e(t('portal.files.rename')) ?>"
                         class="w-5 h-5 rounded-md bg-black/40 text-gray-300 hover:text-white flex items-center justify-center transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -233,7 +241,7 @@ $driveOpts = [
           <template x-for="file in files" :key="'x'+file.id">
             <div class="group relative rounded-xl overflow-hidden bg-white/[0.03] border transition-all"
                  :class="isSelected('file', file.id) ? 'border-brand-500/50' : 'border-white/5 hover:border-brand-500/30'">
-              <?php if ($isConnected): ?>
+              <?php if ($canWrite): ?>
               <button @click.stop="toggleSelect('file', file.id)" aria-label="<?= e(t('portal.files.select')) ?>"
                       class="absolute top-1.5 left-1.5 z-10 w-6 h-6 rounded-md border flex items-center justify-center transition-all"
                       :class="isSelected('file', file.id) ? 'select-check-on' : 'bg-black/60 border-white/30 text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100'">
@@ -268,7 +276,7 @@ $driveOpts = [
                         class="w-7 h-7 rounded-lg bg-black/60 opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center text-gray-200 hover:text-white transition-all">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                 </button>
-                <?php if ($isConnected): ?>
+                <?php if ($canWrite): ?>
                 <button @click.stop="openRename('file', file)" title="<?= e(t('portal.files.rename')) ?>"
                         class="w-7 h-7 rounded-lg bg-black/60 opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center text-gray-200 hover:text-white transition-all">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>

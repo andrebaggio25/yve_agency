@@ -46,7 +46,7 @@ class ClickUpPushJob
         $result = $clickup->pushTask($agencyId, $task);
 
         if ($result['ok'] && !empty($result['external_id'])) {
-            $clickupRepo->updateExternalId($taskId, (string) $result['external_id']);
+            $clickupRepo->updateExternalId($taskId, $agencyId, (string) $result['external_id']);
         }
     }
 }

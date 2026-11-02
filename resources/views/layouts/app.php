@@ -96,7 +96,7 @@
       </div>
 
       <!-- Notifications bell -->
-      <div class="flex-shrink-0 relative" x-data="notifBell()" x-init="init()">
+      <div class="flex-shrink-0 relative" x-data="notifBell(<?= e(json_encode(t('notifications.sync_error'))) ?>)">
         <button @click="toggle()" aria-label="Notificações" :aria-expanded="open" class="relative flex items-center justify-center w-9 h-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
@@ -115,12 +115,16 @@
               Marcar todas como lidas
             </button>
           </div>
+          <!-- BUG-06: o sino tinha `catch {}` vazio — o 500 de "marcar como lida"
+               sumia e o contador voltava sozinho no poll. Agora o erro aparece. -->
+          <p x-show="error" x-text="error" style="display:none"
+             class="px-4 py-2 text-xs text-rose-300 bg-rose-500/10 border-b border-rose-500/20"></p>
           <div class="max-h-72 overflow-y-auto">
             <template x-if="notifications.length === 0">
               <p class="px-4 py-6 text-center text-sm text-gray-400">Nenhuma notificação.</p>
             </template>
             <template x-for="n in notifications" :key="n.id">
-              <a :href="n.action_url || '#'" @click="markRead(n.id)"
+              <a :href="n.action_url || '#'" @click="activate(n, $event)"
                  class="flex items-start gap-3 px-4 py-3 hover:bg-white/[0.04] transition-colors border-b border-white/[0.03] last:border-0">
                 <div class="mt-0.5 w-2 h-2 rounded-full bg-brand-500 flex-shrink-0"></div>
                 <div class="min-w-0">
@@ -214,16 +218,28 @@ function appShell() {
   return { mobileSidebarOpen: false }
 }
 
-function notifBell() {
+/**
+ * Sino de notificações (BUG-06).
+ *
+ * `init()` NÃO é chamado por `x-init` aqui: o Alpine já executa o `init()` do
+ * objeto de `x-data` sozinho. Com os dois, o poll subia duas vezes e o primeiro
+ * `setInterval` ficava órfão (nada guardava o id para limpar).
+ */
+function notifBell(syncError) {
   return {
     open: false,
     count: 0,
     notifications: [],
+    error: '',
     pollInterval: null,
 
     init() {
       this.fetchCount();
       this.pollInterval = setInterval(() => this.fetchCount(), 30000);
+    },
+
+    destroy() {
+      clearInterval(this.pollInterval);
     },
 
     toggle() {
@@ -233,42 +249,87 @@ function notifBell() {
 
     async fetchCount() {
       try {
-        const r = await fetch('/notifications/count');
-        const d = await r.json();
+        const d = await api.get('/notifications/count');
         this.count = d.count || 0;
-      } catch {}
+        this.limparAvisoDePoll();
+      } catch (e) {
+        this.error = syncError;
+      }
     },
 
     async fetchList() {
       try {
-        const r = await fetch('/notifications');
-        const d = await r.json();
+        const d = await api.get('/notifications');
         this.notifications = d.notifications || [];
-      } catch {}
+        this.limparAvisoDePoll();
+      } catch (e) {
+        this.error = syncError;
+      }
+    },
+
+    /**
+     * O poll que deu certo só apaga o aviso DELE. Sem isto, o fetchCount que
+     * roda logo depois de um "marcar como lida" falhado limpava a mensagem do
+     * erro — o usuário via um piscar e nada mais.
+     */
+    limparAvisoDePoll() {
+      if (this.error === syncError) this.error = '';
+    },
+
+    /**
+     * Clique no item: dispara a marcação e deixa o próprio <a> navegar na hora.
+     *
+     * Esperar a resposta para só então navegar (primeira versão do BUG-06)
+     * transformava qualquer 401/500/rede lenta em clique morto: a gaveta ficava
+     * até 30 s sem reação e o link nunca abria. O POST vai com `keepalive`, que
+     * resolve o motivo de esperar — a navegação não o cancela mais.
+     */
+    activate(n, event) {
+      // Sem destino não há navegação: segura o '#' do href (só sujaria a URL)
+      // e deixa a resposta tirar o item da lista ou mostrar o erro.
+      if (!n.action_url) event.preventDefault();
+
+      this.markRead(n.id);
     },
 
     async markRead(id) {
       try {
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        await fetch(`/notifications/${id}/read`, {
-          method: 'POST',
-          headers: { 'X-CSRF-Token': csrf }
-        });
+        await api.post(`/notifications/${id}/read`, null, { keepalive: true });
         this.count = Math.max(0, this.count - 1);
         this.notifications = this.notifications.filter(n => n.id !== id);
-      } catch {}
+        this.error = '';
+      } catch (e) {
+        // Não dá para descontar do contador: o servidor não gravou nada.
+        if (this.sessaoExpirou(e)) return;
+        this.error = e.message;
+        this.fetchCount();
+      }
     },
 
     async markAllRead() {
       try {
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        await fetch('/notifications/mark-all-read', {
-          method: 'POST',
-          headers: { 'X-CSRF-Token': csrf }
-        });
+        await api.post('/notifications/mark-all-read');
         this.count = 0;
         this.notifications = [];
-      } catch {}
+        this.error = '';
+      } catch (e) {
+        if (this.sessaoExpirou(e)) return;
+        this.error = e.message;
+        this.fetchCount();
+      }
+    },
+
+    /**
+     * 401/419 numa ação do usuário: a sessão morreu. Mostrar o "Unauthenticated"
+     * cru do middleware na gaveta não resolve nada — o login é a única saída.
+     * O poll não chama isto de propósito: arrancar a página de quem está
+     * preenchendo um formulário é pior que o aviso.
+     */
+    sessaoExpirou(e) {
+      if (e.status !== 401 && e.status !== 419) return false;
+
+      window.location.href = '/login';
+      return true;
     },
   };
 }

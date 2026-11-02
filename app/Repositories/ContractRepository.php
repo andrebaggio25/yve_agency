@@ -19,6 +19,9 @@ class ContractRepository extends Repository
             $where[] = 'c.client_id = :client_id';
             $params[':client_id'] = (int) $filters['client_id'];
         }
+        if (isset($filters['client_ids'])) {
+            $where[] = $this->clientIdsCondition((array) $filters['client_ids'], $params, 'c.client_id');
+        }
         if (!empty($filters['status'])) {
             $where[] = 'c.status = :status';
             $params[':status'] = $filters['status'];
@@ -126,15 +129,19 @@ class ContractRepository extends Repository
         return $stmt->rowCount() > 0;
     }
 
-    public function findByClient(int $clientId): array
+    /**
+     * Contratos de um cliente. A agência é **obrigatória** (SEC-16): quem chama
+     * é o portal, com o cliente já resolvido pelo token — mesma régua da fatura.
+     */
+    public function findByClient(int $clientId, int $agencyId): array
     {
         return $this->all("
             SELECT ct.*, c.name AS client_name
             FROM contracts ct
-            LEFT JOIN clients c ON c.id = ct.client_id
-            WHERE ct.client_id = :client_id
+            LEFT JOIN clients c ON c.id = ct.client_id AND c.agency_id = ct.agency_id
+            WHERE ct.client_id = :client_id AND ct.agency_id = :agency_id
             ORDER BY ct.start_date DESC
-        ", [':client_id' => $clientId]);
+        ", [':client_id' => $clientId, ':agency_id' => $agencyId]);
     }
 
     public function summaryByAgency(int $agencyId): array

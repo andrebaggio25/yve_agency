@@ -32,10 +32,10 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
     <div class="flex items-start justify-between gap-4 mb-4">
       <div class="flex flex-wrap items-center gap-2">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold <?= $sc['bg'] ?> <?= $sc['text'] ?>">
-          <?= $sc['label'] ?>
+          <?= e($sc['label']) ?>
         </span>
         <span class="text-xs text-gray-400 bg-white/[0.05] px-2 py-1 rounded-full">
-          <?= $actionLabels[$action['action_type']] ?? $action['action_type'] ?>
+          <?= e($actionLabels[$action['action_type']] ?? $action['action_type']) ?>
         </span>
         <?php if ($action['ai_generated']): ?>
         <span class="text-xs text-brand-400 bg-brand-500/10 px-2 py-1 rounded-full">Gerado por IA</span>
@@ -55,7 +55,7 @@ $sc = $statusMap[$action['status']] ?? ['bg' => 'bg-gray-500/15', 'text' => 'tex
     <div class="mt-4 pt-4 border-t border-white/[0.06] grid grid-cols-2 gap-3 text-sm">
       <div>
         <p class="text-xs text-gray-400 mb-0.5">Conta</p>
-        <p class="text-gray-300"><?= e($action['account_name']) ?></p>
+        <p class="text-gray-300"><?= e($action['account_name']) ?: '—' ?></p>
       </div>
       <?php if ($action['campaign_name']): ?>
       <div>

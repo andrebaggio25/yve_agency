@@ -143,7 +143,7 @@ class ExecutiveReportRepository extends Repository
         return $this->limited(
             "SELECT t.id, t.title, t.status, t.priority, t.due_date, u.name AS assigned_name
              FROM tasks t
-             LEFT JOIN users u ON u.id = t.assigned_to
+             LEFT JOIN users u ON u.id = t.assigned_to AND u.agency_id = t.agency_id
              WHERE t.client_id = :cid AND t.agency_id = :aid
              ORDER BY t.due_date NULLS LAST, t.created_at DESC
              LIMIT :lim",

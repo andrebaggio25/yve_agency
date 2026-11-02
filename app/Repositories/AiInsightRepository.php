@@ -54,21 +54,22 @@ class AiInsightRepository extends Repository
         return $this->all("
             SELECT i.*, a.name AS account_name, c.name AS client_name
             FROM ai_insights i
-            LEFT JOIN ad_accounts a ON a.id = i.ad_account_id
-            LEFT JOIN clients c ON c.id = i.client_id
+            LEFT JOIN ad_accounts a ON a.id = i.ad_account_id AND a.agency_id = i.agency_id
+            LEFT JOIN clients c ON c.id = i.client_id AND c.agency_id = i.agency_id
             WHERE {$whereClause}
             ORDER BY i.created_at DESC
             LIMIT 50
         ", $params);
     }
 
+    /** Conta e cliente do JOIN sempre da agência do insight (SEC-13). */
     public function findByIdAndAgency(int $id, int $agencyId): ?array
     {
         return $this->first("
             SELECT i.*, a.name AS account_name, c.name AS client_name
             FROM ai_insights i
-            LEFT JOIN ad_accounts a ON a.id = i.ad_account_id
-            LEFT JOIN clients c ON c.id = i.client_id
+            LEFT JOIN ad_accounts a ON a.id = i.ad_account_id AND a.agency_id = i.agency_id
+            LEFT JOIN clients c ON c.id = i.client_id AND c.agency_id = i.agency_id
             WHERE i.id = :id AND i.agency_id = :agency_id
             LIMIT 1
         ", [':id' => $id, ':agency_id' => $agencyId]);

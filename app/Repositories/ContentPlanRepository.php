@@ -19,9 +19,23 @@ class ContentPlanRepository extends Repository
             $where[]              = 'cp.client_id = :client_id';
             $params[':client_id'] = (int) $filters['client_id'];
         }
+        if (isset($filters['client_ids'])) {
+            $where[] = $this->clientIdsCondition((array) $filters['client_ids'], $params, 'cp.client_id');
+        }
         if (!empty($filters['status'])) {
             $where[]           = 'cp.status = :status';
             $params[':status'] = $filters['status'];
+        }
+        // Conjunto de status (a tela de Aprovações exclui rascunho, que a
+        // cliente nunca viu). Placeholders nomeados, nada interpolado.
+        if (!empty($filters['statuses'])) {
+            $placeholders = [];
+            foreach (array_values((array) $filters['statuses']) as $i => $status) {
+                $key            = ":status_{$i}";
+                $placeholders[] = $key;
+                $params[$key]   = (string) $status;
+            }
+            $where[] = 'cp.status IN (' . implode(', ', $placeholders) . ')';
         }
         if (!empty($filters['week_start'])) {
             $where[]                = 'cp.week_start >= :week_start';
@@ -50,7 +64,7 @@ class ContentPlanRepository extends Repository
      * planeja olhando o mês, onde buracos e acúmulos ficam evidentes. Os dados
      * já existiam; faltava a forma de ver.
      *
-     * @param array{client_id?:int} $filters
+     * @param array{client_id?:int,client_ids?:list<int>} $filters
      */
     public function itemsBetween(int $agencyId, string $from, string $to, array $filters = []): array
     {
@@ -63,6 +77,9 @@ class ContentPlanRepository extends Repository
         if (!empty($filters['client_id'])) {
             $where[]              = 'cp.client_id = :client_id';
             $params[':client_id'] = (int) $filters['client_id'];
+        }
+        if (isset($filters['client_ids'])) {
+            $where[] = $this->clientIdsCondition((array) $filters['client_ids'], $params, 'cp.client_id');
         }
 
         return $this->all(
@@ -327,8 +344,17 @@ class ContentPlanRepository extends Repository
 
     // ── Feedbacks ─────────────────────────────────────────────────────────────
 
-    public function getFeedbacks(int $itemId): array
+    /**
+     * Feedbacks do post. `$clientVisibleOnly` esconde o que a equipe escreveu
+     * pela tela interna de Aprovações (`source = 'agency'`): o portal do
+     * cliente mostra só o que veio do próprio cliente — nota interna de equipe
+     * ("refazer essa capa") não é para ele. Linha antiga sem `source` continua
+     * visível, porque nela não há como saber a origem.
+     */
+    public function getFeedbacks(int $itemId, bool $clientVisibleOnly = false): array
     {
+        $onlyClient = $clientVisibleOnly ? "AND COALESCE(f.source, 'client') <> 'agency'" : '';
+
         return $this->all(
             "SELECT f.*,
                     u.name   AS user_name,
@@ -338,6 +364,7 @@ class ContentPlanRepository extends Repository
              LEFT JOIN users   u ON u.id = f.user_id
              LEFT JOIN clients c ON c.id = f.client_id
              WHERE f.content_plan_item_id = :item_id
+             {$onlyClient}
              ORDER BY f.created_at ASC",
             [':item_id' => $itemId]
         );
@@ -351,6 +378,30 @@ class ContentPlanRepository extends Repository
         $stmt = $this->pdo->prepare("INSERT INTO content_feedbacks ({$cols}) VALUES ({$placeholders}) RETURNING id");
         $stmt->execute($this->namedParams($data));
         return (int) ($stmt->fetchColumn() ?: $this->pdo->lastInsertId());
+    }
+
+    /**
+     * Aprova os posts PENDENTES do plano (BUG-05) — quem aprovou foi o plano
+     * inteiro, então o post que ninguém decidiu ainda ('draft') vai com ele.
+     *
+     * `revision` e `rejected` ficam de fora: são decisão explícita de quem
+     * olhou aquele post ("refazer a capa"). Sobrescrevê-las apagava o pedido da
+     * cliente em silêncio — o chip virava "Aprovado", a contagem dizia 3/3 e o
+     * designer perdia o único sinal de que aquele post tem de ser refeito.
+     *
+     * Sem escopo de agência de propósito: o `content_plan_id` já veio de um
+     * plano resolvido pela agência (ou pelo cliente, no portal).
+     *
+     * @return int quantos posts mudaram de status
+     */
+    public function approvePendingItems(int $planId): int
+    {
+        return $this->query(
+            "UPDATE content_plan_items
+                SET status = 'approved', updated_at = :now
+              WHERE content_plan_id = :plan_id AND status = 'draft'",
+            [':now' => date('Y-m-d H:i:s'), ':plan_id' => $planId]
+        )->rowCount();
     }
 
     public function getItemStatusSummary(int $planId): array

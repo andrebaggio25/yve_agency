@@ -136,7 +136,7 @@
           </td>
           <td class="px-4 py-3 text-center">
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $sc ?>">
-              <?= ucfirst($c['status']) ?>
+              <?= e(ucfirst($c['status'])) ?>
             </span>
           </td>
           <td class="px-4 py-3 text-right">

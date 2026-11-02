@@ -45,6 +45,7 @@ use App\Middlewares\PlatformAdminMiddleware;
 use App\Middlewares\PortalMiddleware;
 use App\Middlewares\CsrfMiddleware;
 use App\Middlewares\RateLimitMiddleware;
+use App\Middlewares\PortalRateLimitMiddleware;
 use App\Middlewares\ClientAccessMiddleware;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -55,15 +56,15 @@ $router->post('/login', [AuthController::class, 'login'],  [RateLimitMiddleware:
 $router->post('/logout',[AuthController::class, 'logout'], [AuthMiddleware::class, CsrfMiddleware::class]);
 
 $router->get('/esqueci-senha',           [AuthController::class, 'showForgotPassword']);
-$router->post('/esqueci-senha',          [AuthController::class, 'sendResetLink'], [CsrfMiddleware::class]);
+$router->post('/esqueci-senha',          [AuthController::class, 'sendResetLink'], [RateLimitMiddleware::class, CsrfMiddleware::class]);
 $router->get('/redefinir-senha/{token}', [AuthController::class, 'showResetPassword']);
-$router->post('/redefinir-senha',        [AuthController::class, 'resetPassword'],  [CsrfMiddleware::class]);
+$router->post('/redefinir-senha',        [AuthController::class, 'resetPassword'],  [RateLimitMiddleware::class, CsrfMiddleware::class]);
 
 // English aliases for auth
 $router->get('/forgot-password',           [AuthController::class, 'showForgotPassword']);
-$router->post('/forgot-password',          [AuthController::class, 'sendResetLink'], [CsrfMiddleware::class]);
+$router->post('/forgot-password',          [AuthController::class, 'sendResetLink'], [RateLimitMiddleware::class, CsrfMiddleware::class]);
 $router->get('/reset-password/{token}',    [AuthController::class, 'showResetPassword']);
-$router->post('/reset-password',           [AuthController::class, 'resetPassword'],  [CsrfMiddleware::class]);
+$router->post('/reset-password',           [AuthController::class, 'resetPassword'],  [RateLimitMiddleware::class, CsrfMiddleware::class]);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Platform Admin (/admin/*)
@@ -139,19 +140,19 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/clients/{clientId}',       [ClientController::class, 'show'],   [ClientAccessMiddleware::class]);
     $router->get('/clients/{clientId}/edit',  [ClientController::class, 'edit'],   [ClientAccessMiddleware::class]);
     $router->put('/clients/{clientId}',       [ClientController::class, 'update'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
-    $router->delete('/clients/{clientId}',    [ClientController::class, 'destroy'],[CsrfMiddleware::class]);
+    $router->delete('/clients/{clientId}',    [ClientController::class, 'destroy'],[CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->post('/clients/{clientId}/restore', [ClientController::class, 'restore'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->get('/clients/{clientId}/access',         [ClientController::class, 'accessIndex'],  [ClientAccessMiddleware::class]);
     $router->post('/clients/{clientId}/access',        [ClientController::class, 'grantAccess'],  [CsrfMiddleware::class, ClientAccessMiddleware::class]);
-    $router->delete('/clients/{clientId}/access/{userId}', [ClientController::class, 'revokeAccess'], [CsrfMiddleware::class]);
+    $router->delete('/clients/{clientId}/access/{userId}', [ClientController::class, 'revokeAccess'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     // Content plans
     $router->get('/content',                  [ContentPlanController::class, 'index']);
     $router->get('/content/calendar',         [ContentPlanController::class, 'calendar']);
     $router->get('/content/new',              [ContentPlanController::class, 'create']);
     $router->post('/content',                 [ContentPlanController::class, 'store'],          [CsrfMiddleware::class]);
     // Antes de /content/{planId}: "template" não pode virar planId.
-    $router->get('/content/template/{clientId}', [ContentPlanController::class, 'clientTemplate']);
-    $router->get('/content/week-plan/{clientId}', [ContentPlanController::class, 'weekPlan']);
+    $router->get('/content/template/{clientId}', [ContentPlanController::class, 'clientTemplate'], [ClientAccessMiddleware::class]);
+    $router->get('/content/week-plan/{clientId}', [ContentPlanController::class, 'weekPlan'], [ClientAccessMiddleware::class]);
     $router->get('/content/{planId}',         [ContentPlanController::class, 'show']);
     $router->get('/content/{planId}/edit',    [ContentPlanController::class, 'edit']);
     $router->put('/content/{planId}',         [ContentPlanController::class, 'update'],         [CsrfMiddleware::class]);
@@ -308,7 +309,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/clientes/{clientId}',    [ClientController::class, 'show'],   [ClientAccessMiddleware::class]);
     $router->get('/clientes/{clientId}/editar', [ClientController::class, 'edit'], [ClientAccessMiddleware::class]);
     $router->put('/clientes/{clientId}',    [ClientController::class, 'update'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
-    $router->delete('/clientes/{clientId}', [ClientController::class, 'destroy'],[CsrfMiddleware::class]);
+    $router->delete('/clientes/{clientId}', [ClientController::class, 'destroy'],[CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->post('/clientes/{clientId}/reativar', [ClientController::class, 'restore'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
     $router->post('/clientes/{clientId}/drive/pasta', [ClientController::class, 'createDriveFolder'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
 
@@ -332,7 +333,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     // Acesso de usuários ao cliente
     $router->get('/clientes/{clientId}/acesso',                  [ClientController::class, 'accessIndex'],  [ClientAccessMiddleware::class]);
     $router->post('/clientes/{clientId}/acesso',                 [ClientController::class, 'grantAccess'],  [CsrfMiddleware::class, ClientAccessMiddleware::class]);
-    $router->delete('/clientes/{clientId}/acesso/{userId}',      [ClientController::class, 'revokeAccess'], [CsrfMiddleware::class]);
+    $router->delete('/clientes/{clientId}/acesso/{userId}',      [ClientController::class, 'revokeAccess'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
 
     // ── Planos de Conteúdo ────────────────────────────────────────────────────
     $router->get('/conteudo',                   [ContentPlanController::class, 'index']);
@@ -341,8 +342,8 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/conteudo/criar',             [ContentPlanController::class, 'create']);
     $router->post('/conteudo',                  [ContentPlanController::class, 'store'],          [CsrfMiddleware::class]);
     // Antes de /conteudo/{planId}: "modelo" não pode virar planId.
-    $router->get('/conteudo/modelo/{clientId}', [ContentPlanController::class, 'clientTemplate']);
-    $router->get('/conteudo/semana/{clientId}', [ContentPlanController::class, 'weekPlan']);
+    $router->get('/conteudo/modelo/{clientId}', [ContentPlanController::class, 'clientTemplate'], [ClientAccessMiddleware::class]);
+    $router->get('/conteudo/semana/{clientId}', [ContentPlanController::class, 'weekPlan'], [ClientAccessMiddleware::class]);
     $router->get('/conteudo/{planId}',          [ContentPlanController::class, 'show']);
     $router->get('/conteudo/{planId}/editar',   [ContentPlanController::class, 'edit']);
     $router->put('/conteudo/{planId}',          [ContentPlanController::class, 'update'],         [CsrfMiddleware::class]);
@@ -392,7 +393,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->post('/faturas/{id}/email',        [InvoiceController::class, 'sendEmail'],[CsrfMiddleware::class]);
 
     // Contratos ativos por cliente (AJAX usado no form de fatura)
-    $router->get('/clientes/{clientId}/contratos-ativos', [InvoiceController::class, 'contractsForClient']);
+    $router->get('/clientes/{clientId}/contratos-ativos', [InvoiceController::class, 'contractsForClient'], [ClientAccessMiddleware::class]);
 
     // Pagamentos
     $router->get('/pagamentos',                 [PaymentController::class, 'index']);
@@ -442,8 +443,8 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->delete('/organico/contas/{id}',           [OrganicController::class, 'destroy'],  [CsrfMiddleware::class]);
 
     // ── Portal admin (dentro do painel da agência) ───────────────────────────
-    $router->post('/clientes/{clientId}/portal/regenerar', [PortalController::class, 'adminRegenerateToken'], [CsrfMiddleware::class]);
-    $router->post('/clientes/{clientId}/portal/toggle',    [PortalController::class, 'adminTogglePortal'],    [CsrfMiddleware::class]);
+    $router->post('/clientes/{clientId}/portal/regenerar', [PortalController::class, 'adminRegenerateToken'], [CsrfMiddleware::class, ClientAccessMiddleware::class]);
+    $router->post('/clientes/{clientId}/portal/toggle',    [PortalController::class, 'adminTogglePortal'],    [CsrfMiddleware::class, ClientAccessMiddleware::class]);
 
     // ── Tarefas ──────────────────────────────────────────────────────────────
     $router->get('/tarefas',                    [TaskController::class, 'index']);
@@ -525,7 +526,11 @@ $router->post('/webhook/clickup/{token}', [ClickUpWebhookController::class, 'han
 // ─────────────────────────────────────────────────────────────────────────────
 // Portal do Cliente (público — acesso via portal_token na URL)
 // ─────────────────────────────────────────────────────────────────────────────
-$router->group([PortalMiddleware::class], function ($router) {
+// O rate limit vem DEPOIS do PortalMiddleware de propósito: token inválido já
+// sai em 403 sem gastar I/O, e a tela de estouro fala o idioma do cliente (é o
+// PortalMiddleware que define o locale). Teto por IP + token, só nas mutações
+// (SEC-18) — ver PortalRateLimitMiddleware.
+$router->group([PortalMiddleware::class, PortalRateLimitMiddleware::class], function ($router) {
     $router->get('/portal/{portal_token}',                              [PortalController::class, 'index']);
     $router->get('/portal/{portal_token}/planos',                      [PortalController::class, 'plans']);
     // ANTES de /planos/{planId}: o router casa na ordem — depois dele,

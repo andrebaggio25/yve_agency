@@ -33,12 +33,7 @@
                       focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
     </div>
 
-    <div class="flex items-center justify-between pt-1">
-        <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
-            <input type="checkbox" name="remember"
-                   class="rounded border-white/20 bg-white/5 text-brand-500 focus:ring-brand-500 focus:ring-offset-0">
-            Lembrar-me
-        </label>
+    <div class="flex items-center justify-end pt-1">
         <a href="/esqueci-senha" class="text-sm text-brand-400 hover:text-brand-300 transition-colors">
             <?= t('auth.forgot_password') ?>
         </a>

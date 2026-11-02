@@ -54,6 +54,14 @@ async function request(method, url, body = null, options = {}) {
 
   const init = { method, headers, signal: AbortSignal.timeout(timeout) };
 
+  // `keepalive`: a requisição sobrevive à navegação que começa no mesmo clique
+  // (é assim que o sino marca a notificação como lida e deixa o link abrir na
+  // hora). Navegador sem suporte ignora a opção — aí vale o antigo: a navegação
+  // cancela o POST. Só serve para corpo pequeno (limite de 64 KB do browser).
+  if (options.keepalive) {
+    init.keepalive = true;
+  }
+
   if (body instanceof FormData) {
     init.body = body; // o browser define o Content-Type com o boundary
   } else if (body !== null) {

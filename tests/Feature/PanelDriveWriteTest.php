@@ -41,7 +41,7 @@ class PanelDriveWriteTest extends FeatureTestCase
         $agenciaB = $this->createAgency('Agência B');
         $clientB  = $this->createClient($agenciaB, 'Cliente da B');
         $userA    = $this->createUser($agenciaA);
-        $this->actingAs($userA['id'], permissions: ['clients.view', 'clients.view_all']);
+        $this->actingAs($userA['id'], permissions: ['clients.view', 'clients.view_all', 'content.edit']);
 
         $resp = $this->post("/clientes/{$clientB['id']}/conteudos/folders", ['name' => 'Invasão']);
 
@@ -53,7 +53,7 @@ class PanelDriveWriteTest extends FeatureTestCase
         $agencyId = $this->createAgency();
         $client   = $this->createClient($agencyId);
         $user     = $this->createUser($agencyId);
-        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all']);
+        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all', 'content.edit']);
 
         $resp = $this->post("/clientes/{$client['id']}/conteudos/folders", ['name' => '  ']);
 
@@ -65,7 +65,7 @@ class PanelDriveWriteTest extends FeatureTestCase
         $agencyId = $this->createAgency();
         $client   = $this->createClient($agencyId);
         $user     = $this->createUser($agencyId);
-        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all']);
+        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all', 'content.edit']);
 
         // Sem nome/tamanho → 422 antes de qualquer chamada externa.
         $resp = $this->post("/clientes/{$client['id']}/conteudos/upload/session", ['name' => '', 'size' => 0]);
@@ -83,7 +83,7 @@ class PanelDriveWriteTest extends FeatureTestCase
         $agencyId = $this->createAgency();
         $client   = $this->createClient($agencyId);
         $user     = $this->createUser($agencyId);
-        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all']);
+        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all', 'content.edit']);
 
         $resp = $this->post("/clientes/{$client['id']}/conteudos/upload/complete", ['drive_file_id' => '']);
 

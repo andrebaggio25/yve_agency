@@ -41,7 +41,7 @@ foreach ($items as $it) {
 ?>
 
 <nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
-  <a href="/portal/<?= $token ?>/planos" class="hover:text-gray-300"><?= t('portal.plan.breadcrumb') ?></a>
+  <a href="/portal/<?= e($token) ?>/planos" class="hover:text-gray-300"><?= t('portal.plan.breadcrumb') ?></a>
   <span>/</span>
   <span class="text-gray-300"><?= e($plan['title']) ?></span>
 </nav>
@@ -99,15 +99,15 @@ foreach ($items as $it) {
   <!-- Navegação entre semanas -->
   <div class="flex items-center justify-between gap-2 text-sm border-t border-white/[0.06] pt-3">
     <?php if (!empty($prevPlan)): ?>
-    <a href="/portal/<?= $token ?>/planos/<?= (int) $prevPlan['id'] ?>" class="text-gray-400 hover:text-white transition-colors">
+    <a href="/portal/<?= e($token) ?>/planos/<?= (int) $prevPlan['id'] ?>" class="text-gray-400 hover:text-white transition-colors">
       <?= t('portal.plan.prev_week') ?>
     </a>
     <?php else: ?><span></span><?php endif; ?>
-    <a href="/portal/<?= $token ?>/planos/calendario" class="text-xs text-brand-300 hover:text-brand-200 transition-colors">
+    <a href="/portal/<?= e($token) ?>/planos/calendario" class="text-xs text-brand-300 hover:text-brand-200 transition-colors">
       <?= t('portal.calendar.view') ?>
     </a>
     <?php if (!empty($nextPlan)): ?>
-    <a href="/portal/<?= $token ?>/planos/<?= (int) $nextPlan['id'] ?>" class="text-gray-400 hover:text-white transition-colors">
+    <a href="/portal/<?= e($token) ?>/planos/<?= (int) $nextPlan['id'] ?>" class="text-gray-400 hover:text-white transition-colors">
       <?= t('portal.plan.next_week') ?>
     </a>
     <?php else: ?><span></span><?php endif; ?>
@@ -117,7 +117,7 @@ foreach ($items as $it) {
   <!-- Ações de aprovação do plano -->
   <?php if (in_array($planStatus, ['sent', 'pending_approval'], true)): ?>
   <div class="flex flex-wrap gap-3 pt-4 border-t border-white/[0.06]" x-data="{showRevision: false}">
-    <form method="POST" action="/portal/<?= $token ?>/planos/<?= $plan['id'] ?>/aprovar">
+    <form method="POST" action="/portal/<?= e($token) ?>/planos/<?= $plan['id'] ?>/aprovar">
       <?= csrf_field() ?>
       <button type="submit" class="btn-primary text-sm px-5 py-2.5 gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@ foreach ($items as $it) {
     </button>
 
     <div x-show="showRevision" x-transition class="w-full mt-2">
-      <form method="POST" action="/portal/<?= $token ?>/planos/<?= $plan['id'] ?>/revisao">
+      <form method="POST" action="/portal/<?= e($token) ?>/planos/<?= $plan['id'] ?>/revisao">
         <?= csrf_field() ?>
         <textarea aria-label="Comentário" name="comment" rows="3" placeholder="<?= e(t('portal.plan.revision_placeholder')) ?>"
                   class="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 resize-none"
@@ -169,7 +169,7 @@ foreach ($items as $it) {
     }
   ?>
   <div class="card overflow-hidden" id="item-<?= (int) $item['id'] ?>"
-       x-data="portalItem(<?= $idx ?>, '<?= $token ?>', <?= $plan['id'] ?>, <?= $item['id'] ?>, <?= htmlspecialchars(json_encode($feedbacks), ENT_QUOTES) ?>, '<?= htmlspecialchars($itemStatus, ENT_QUOTES) ?>', <?= $youtubeId ? "'" . e($youtubeId) . "'" : 'null' ?>)"
+       x-data="portalItem(<?= $idx ?>, '<?= e($token) ?>', <?= $plan['id'] ?>, <?= $item['id'] ?>, <?= htmlspecialchars(json_encode($feedbacks), ENT_QUOTES) ?>, '<?= htmlspecialchars($itemStatus, ENT_QUOTES) ?>', <?= $youtubeId ? "'" . e($youtubeId) . "'" : 'null' ?>)"
        x-init="initYt()">
 
     <!-- Card header — sempre visível -->
@@ -321,8 +321,12 @@ foreach ($items as $it) {
                    class="rounded-xl border border-white/[0.06] p-3">
                 <div class="flex items-center justify-between gap-2 mb-1">
                   <div class="flex items-center gap-1.5 flex-wrap">
+                    <!-- `user_name` primeiro: quando há usuário, o autor é ele.
+                         O cliente só preenche `client_id`, então o nome do
+                         cliente seguia assinando feedback escrito por gente da
+                         agência (linha antiga, antes de `source`). -->
                     <span class="text-xs font-semibold text-white"
-                          x-text="fb.client_name || fb.user_name || <?= e(json_encode(t('portal.plan.you'), JSON_UNESCAPED_UNICODE)) ?>"></span>
+                          x-text="fb.user_name || fb.client_name || <?= e(json_encode(t('portal.plan.you'), JSON_UNESCAPED_UNICODE)) ?>"></span>
                     <span :class="feedbackTypeClass(fb)"
                           class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                           x-text="feedbackTypeLabel(fb)"></span>
@@ -539,6 +543,11 @@ function portalItem(idx, token, planId, itemId, initialFeedbacks, initialStatus,
           comment:       this.comment,
           timecode:      this.timecode,
         });
+
+        // Este feedback pode ter sido o último pendente: o plano inteiro fechou
+        // e não aceita mais feedback (409). A página precisa refletir isso —
+        // sem recarregar, o formulário dos outros posts fica na tela.
+        if (d.plan_closed) { window.location.reload(); return; }
 
         this.feedbacks.push(d.feedback);
         const statusMap = { approved: 'approved', changes_requested: 'revision', rejected: 'rejected' };

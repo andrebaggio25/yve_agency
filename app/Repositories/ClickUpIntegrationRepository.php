@@ -77,10 +77,12 @@ class ClickUpIntegrationRepository extends Repository
         )->execute([':a' => $agencyId]);
     }
 
-    public function updateExternalId(int $taskId, string $externalId): void
+    /** O escopo de agência também no UPDATE (SEC-13): o id da tarefa vem do payload do job. */
+    public function updateExternalId(int $taskId, int $agencyId, string $externalId): void
     {
         $this->pdo->prepare(
-            "UPDATE tasks SET external_id = :eid, sync_source = 'yve', last_synced_at = NOW(), updated_at = NOW() WHERE id = :id"
-        )->execute([':eid' => $externalId, ':id' => $taskId]);
+            "UPDATE tasks SET external_id = :eid, sync_source = 'yve', last_synced_at = NOW(), updated_at = NOW()
+             WHERE id = :id AND agency_id = :a"
+        )->execute([':eid' => $externalId, ':id' => $taskId, ':a' => $agencyId]);
     }
 }

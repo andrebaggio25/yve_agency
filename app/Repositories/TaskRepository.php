@@ -10,6 +10,11 @@ class TaskRepository extends Repository
 {
     protected string $table = 'tasks';
 
+    /**
+     * Os JOINs carregam a agência da própria tarefa (SEC-13): linha gravada
+     * antes da validação do controller, com cliente/usuário de outra agência,
+     * aparecia no kanban com o nome alheio em vez de em branco.
+     */
     public function listByAgency(int $agencyId, array $filters = []): array
     {
         $sql = "
@@ -18,9 +23,9 @@ class TaskRepository extends Repository
                    u.name  AS assigned_name,
                    cb.name AS created_by_name
             FROM tasks t
-            LEFT JOIN clients  c  ON c.id = t.client_id
-            LEFT JOIN users    u  ON u.id = t.assigned_to
-            LEFT JOIN users    cb ON cb.id = t.created_by
+            LEFT JOIN clients  c  ON c.id  = t.client_id   AND c.agency_id  = t.agency_id
+            LEFT JOIN users    u  ON u.id  = t.assigned_to AND u.agency_id  = t.agency_id
+            LEFT JOIN users    cb ON cb.id = t.created_by  AND cb.agency_id = t.agency_id
             WHERE t.agency_id = :agency_id
         ";
         $params = [':agency_id' => $agencyId];
@@ -58,9 +63,9 @@ class TaskRepository extends Repository
                    u.name  AS assigned_name,
                    cb.name AS created_by_name
             FROM tasks t
-            LEFT JOIN clients  c  ON c.id = t.client_id
-            LEFT JOIN users    u  ON u.id = t.assigned_to
-            LEFT JOIN users    cb ON cb.id = t.created_by
+            LEFT JOIN clients  c  ON c.id  = t.client_id   AND c.agency_id  = t.agency_id
+            LEFT JOIN users    u  ON u.id  = t.assigned_to AND u.agency_id  = t.agency_id
+            LEFT JOIN users    cb ON cb.id = t.created_by  AND cb.agency_id = t.agency_id
             WHERE t.id = :id AND t.agency_id = :agency_id
         ", [':id' => $id, ':agency_id' => $agencyId]);
     }

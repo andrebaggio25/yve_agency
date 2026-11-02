@@ -13,7 +13,10 @@ class RoleRepository extends Repository
     public function findByAgency(int $agencyId): array
     {
         return $this->all(
-            'SELECT * FROM roles WHERE agency_id = :agency_id OR agency_id IS NULL ORDER BY name',
+            'SELECT r.*, (SELECT COUNT(*) FROM role_permissions rp WHERE rp.role_id = r.id) AS permissions_count
+             FROM roles r
+             WHERE r.agency_id = :agency_id OR r.agency_id IS NULL
+             ORDER BY r.name',
             [':agency_id' => $agencyId],
         );
     }
@@ -24,6 +27,21 @@ class RoleRepository extends Repository
             'SELECT * FROM roles WHERE id = :id AND (agency_id = :agency_id OR agency_id IS NULL) LIMIT 1',
             [':id' => $id, ':agency_id' => $agencyId],
         );
+    }
+
+    /** Slug é único por agência, e o da agência não pode imitar um perfil do sistema. */
+    public function slugTaken(string $slug, int $agencyId): bool
+    {
+        return $this->first(
+            'SELECT 1 FROM roles WHERE slug = :slug AND (agency_id = :agency_id OR agency_id IS NULL) LIMIT 1',
+            [':slug' => $slug, ':agency_id' => $agencyId],
+        ) !== null;
+    }
+
+    /** @return list<string> */
+    public function permissionSlugs(int $roleId): array
+    {
+        return array_column($this->findPermissions($roleId), 'slug');
     }
 
     public function updateById(int $id, array $data): void

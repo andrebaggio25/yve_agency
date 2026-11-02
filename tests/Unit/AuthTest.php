@@ -12,11 +12,13 @@ class AuthTest extends TestCase
     protected function setUp(): void
     {
         $_SESSION = [];
+        Auth::forgetClientAgencies();
     }
 
     protected function tearDown(): void
     {
         $_SESSION = [];
+        Auth::forgetClientAgencies();
     }
 
     // ── check / guest ─────────────────────────────────────────────────────────
@@ -101,9 +103,26 @@ class AuthTest extends TestCase
 
     // ── client access ─────────────────────────────────────────────────────────
 
+    /**
+     * O mapa cliente→agência vem do banco; aqui o pré-carregamos para o teste
+     * ficar unitário (é o mesmo caminho que a listagem usa para não virar N+1).
+     */
+    private function primeClients(): void
+    {
+        Auth::primeClientAgencies([
+            ['id' => 10, 'agency_id' => 1],
+            ['id' => 20, 'agency_id' => 1],
+            ['id' => 30, 'agency_id' => 1],
+            ['id' => 99, 'agency_id' => 1],
+            // Cliente de outra agência.
+            ['id' => 777, 'agency_id' => 2],
+        ]);
+    }
+
     public function test_can_access_client_in_list(): void
     {
         Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], [], [10, 20, 30]);
+        $this->primeClients();
 
         $this->assertTrue(Auth::canAccessClient(10));
         $this->assertTrue(Auth::canAccessClient(20));
@@ -113,8 +132,52 @@ class AuthTest extends TestCase
     public function test_clients_view_all_bypasses_client_list(): void
     {
         Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], ['clients.view_all'], []);
+        $this->primeClients();
 
-        $this->assertTrue(Auth::canAccessClient(999));
+        $this->assertTrue(Auth::canAccessClient(99));
+    }
+
+    /** SEC-11: view_all vale dentro da agência, não fora dela. */
+    public function test_view_all_nao_atravessa_a_agencia(): void
+    {
+        Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], ['clients.view_all'], []);
+        $this->primeClients();
+
+        $this->assertFalse(Auth::canAccessClient(777));
+    }
+
+    /** Nem o acesso explícito (sessão antiga, vínculo indevido) atravessa. */
+    public function test_acesso_explicito_nao_atravessa_a_agencia(): void
+    {
+        Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], [], [777]);
+        $this->primeClients();
+
+        $this->assertFalse(Auth::canAccessClient(777));
+    }
+
+    /**
+     * SEC-11: o recorte da listagem segue a mesma régua do detalhe — `null` é
+     * "a agência toda", lista é "só estes". Se divergirem, a lista mostra o que
+     * o detalhe nega (ou o contrário).
+     */
+    public function test_reachable_client_ids_acompanha_o_can_access_client(): void
+    {
+        Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], [], [10, 20]);
+        $this->assertSame([10, 20], Auth::reachableClientIds());
+
+        Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], ['clients.view_all'], []);
+        $this->assertNull(Auth::reachableClientIds());
+
+        Auth::login(['id' => 1, 'agency_id' => null, 'name' => 'X', 'is_platform_admin' => true], [], []);
+        $this->assertNull(Auth::reachableClientIds());
+    }
+
+    public function test_platform_admin_passa_em_qualquer_cliente(): void
+    {
+        Auth::login(['id' => 1, 'agency_id' => null, 'name' => 'X', 'is_platform_admin' => true], [], []);
+        $this->primeClients();
+
+        $this->assertTrue(Auth::canAccessClient(777));
     }
 
     // ── logout ────────────────────────────────────────────────────────────────

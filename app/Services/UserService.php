@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Repositories\RoleRepository;
 use App\Repositories\UserRepository;
 use App\Support\ActivityLogger;
+use App\Support\Auth;
 
 class UserService
 {
-    public function __construct(private readonly UserRepository $userRepo) {}
+    public function __construct(
+        private readonly UserRepository $userRepo,
+        private readonly RoleRepository $roleRepo,
+    ) {}
 
     public function listForAgency(?int $agencyId): array
     {
@@ -33,6 +38,12 @@ class UserService
 
         if ($this->userRepo->emailExists($data['email'])) {
             return ['success' => false, 'errors' => ['email' => 'E-mail já cadastrado.']];
+        }
+
+        $roleIds = !empty($data['role_id']) ? [(int) $data['role_id']] : [];
+        $roleError = $this->roleAssignmentError($roleIds, $agencyId);
+        if ($roleError !== null) {
+            return ['success' => false, 'errors' => ['role_id' => $roleError]];
         }
 
         $userId = $this->userRepo->insert([
@@ -60,6 +71,26 @@ class UserService
         $user = $this->userRepo->findByIdAndAgency($id, (int) $agencyId);
         if (!$user) return ['success' => false, 'errors' => ['id' => 'Usuário não encontrado.']];
 
+        // Sem isto, quem tem users.edit troca a senha do admin e entra no lugar dele.
+        if (!Auth::canGrant($this->userRepo->loadPermissions($id))) {
+            return ['success' => false, 'errors' => ['id' => t('users.outranks_you')]];
+        }
+
+        // O formulário manda role_id; role_ids é a forma em lista.
+        $roleIds = null;
+        if (!empty($data['role_ids']) && is_array($data['role_ids'])) {
+            $roleIds = array_map('intval', $data['role_ids']);
+        } elseif (!empty($data['role_id'])) {
+            $roleIds = [(int) $data['role_id']];
+        }
+
+        if ($roleIds !== null) {
+            $roleError = $this->roleAssignmentError($roleIds, $agencyId);
+            if ($roleError !== null) {
+                return ['success' => false, 'errors' => ['role_id' => $roleError]];
+            }
+        }
+
         $update = [
             'name'       => trim($data['name']   ?? $user['name']),
             'phone'      => $data['phone']        ?? $user['phone'],
@@ -76,18 +107,44 @@ class UserService
 
         $this->userRepo->updateById($id, $update);
 
-        if (!empty($data['role_ids']) && is_array($data['role_ids'])) {
-            $this->userRepo->syncRoles($id, array_map('intval', $data['role_ids']));
+        if ($roleIds !== null) {
+            $this->userRepo->syncRoles($id, $roleIds);
         }
 
         ActivityLogger::log('user_updated', 'users', null, null, ['user_id' => $id]);
         return ['success' => true];
     }
 
-    public function delete(int $id, ?int $agencyId): void
+    public function delete(int $id, ?int $agencyId): array
     {
+        if (!Auth::canGrant($this->userRepo->loadPermissions($id))) {
+            return ['success' => false, 'errors' => ['id' => t('users.outranks_you')]];
+        }
+
         $this->userRepo->deleteByIdAndAgency($id, (int) $agencyId);
         ActivityLogger::log('user_deleted', 'users', null, null, ['user_id' => $id]);
+
+        return ['success' => true];
+    }
+
+    /**
+     * O perfil precisa ser do sistema ou da própria agência, e quem atribui precisa
+     * ter tudo o que o perfil dá.
+     *
+     * @param list<int> $roleIds
+     */
+    private function roleAssignmentError(array $roleIds, ?int $agencyId): ?string
+    {
+        foreach ($roleIds as $roleId) {
+            if ($this->roleRepo->findByIdAndAgency($roleId, (int) $agencyId) === null) {
+                return t('roles.invalid');
+            }
+            if (!Auth::canGrant($this->roleRepo->permissionSlugs($roleId))) {
+                return t('roles.cannot_grant');
+            }
+        }
+
+        return null;
     }
 
     private function validateCreate(array $data): array

@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
+use App\Support\ActivityLogger;
 use App\Support\Auth;
 use App\Repositories\OrganicAccountRepository;
 use App\Repositories\OrganicMetricsRepository;
@@ -132,7 +133,7 @@ class OrganicController extends Controller
             $name     = $platform === 'instagram' ? ($igData['name'] ?? $pageInfo['name'] ?? "Conta {$pageId}") : ($pageInfo['name'] ?? "Página {$pageId}");
             $username = $platform === 'instagram' ? ($igData['username'] ?? null) : null;
 
-            $this->accountRepo->create([
+            $accountId = $this->accountRepo->create([
                 'agency_id'           => $agencyId,
                 'client_id'           => $clientId ?: null,
                 'platform'            => $platform,
@@ -149,6 +150,15 @@ class OrganicController extends Controller
                 'media_count'         => $igData['media_count']     ?? 0,
                 'sync_days_back'      => (int) $request->post('sync_days_back', 30),
                 'created_by'          => Auth::id(),
+            ]);
+
+            // SEC-15: o token da página fica cifrado no banco (SEC-14) e **não**
+            // entra no log; o que importa é quem ligou qual página a qual cliente.
+            ActivityLogger::log('organic_account.connected', 'organic', null, $clientId ?: null, [
+                'organic_account_id' => $accountId,
+                'platform'           => $platform,
+                'platform_page_id'   => $pageId,
+                'username'           => $username,
             ]);
 
             $this->withSuccess("Conta @{$username} conectada com sucesso!");
@@ -193,8 +203,21 @@ class OrganicController extends Controller
     public function destroy(Request $request): Response
     {
         Auth::requirePermission('organic_metrics.view');
-        $id = (int) $request->param('id');
-        $this->accountRepo->deleteById($id, Auth::agencyId());
+        $id       = (int) $request->param('id');
+        $agencyId = (int) Auth::agencyId();
+
+        // Lido antes só para a trilha: o DELETE já é escopado por agência.
+        $account = $this->accountRepo->findByIdAndAgency($id, $agencyId);
+        $this->accountRepo->deleteById($id, $agencyId);
+
+        if ($account) {
+            ActivityLogger::log('organic_account.disconnected', 'organic', null, (int) ($account['client_id'] ?? 0) ?: null, [
+                'organic_account_id' => $id,
+                'platform'           => $account['platform'] ?? null,
+                'platform_page_id'   => $account['platform_page_id'] ?? null,
+            ]);
+        }
+
         $this->withSuccess('Conta removida.');
         return $this->redirect('/organico/contas');
     }

@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
+use App\Support\ActivityLogger;
 use App\Support\PortalAuth;
 use App\Repositories\DriveFolderRepository;
 use App\Repositories\DriveFileRepository;
@@ -146,6 +147,13 @@ class PortalDriveController extends Controller
         try {
             $payload = $this->uploads->relayUpload($client, $folderId, $name, $mime, $tmp, $size, 'portal');
 
+            $this->logDrive($client, 'drive.file_uploaded', [
+                'folder_id' => $folderId,
+                'name'      => $name,
+                'size'      => $size,
+                'via'       => 'relay',
+            ]);
+
             return Response::json(['success' => true, 'file' => $payload]);
         } catch (\Throwable $e) {
             return Response::json(['error' => 'Falha ao enviar: ' . $e->getMessage()], 500);
@@ -217,6 +225,13 @@ class PortalDriveController extends Controller
                 return Response::json(['error' => 'Arquivo não confirmado no Drive.'], 422);
             }
 
+            $this->logDrive($client, 'drive.file_uploaded', [
+                'folder_id' => $folderId,
+                'name'      => $payload['name'] ?? null,
+                'size'      => $payload['size_bytes'] ?? null,
+                'via'       => 'direct',
+            ]);
+
             return Response::json(['success' => true, 'file' => $payload]);
         } catch (\Throwable $e) {
             return Response::json(['error' => 'Falha ao confirmar o envio: ' . $e->getMessage()], 500);
@@ -247,6 +262,15 @@ class PortalDriveController extends Controller
             return Response::json(['error' => t('portal.files.move_failed') . ': ' . $e->getMessage()], 500);
         }
 
+        if ($result['moved'] > 0) {
+            $this->logDrive($client, 'drive.items_moved', [
+                'files'            => $fileIds,
+                'folders'          => $folderIds,
+                'target_folder_id' => $targetId,
+                'moved'            => $result['moved'],
+            ]);
+        }
+
         return Response::json(['success' => true, 'moved' => $result['moved'], 'errors' => $result['errors']]);
     }
 
@@ -264,6 +288,11 @@ class PortalDriveController extends Controller
         if ($restore === null) {
             return Response::json(['error' => t('portal.files.not_found')], 404);
         }
+
+        $this->logDrive($client, 'drive.file_deleted', [
+            'file_id' => $fileId,
+            'name'    => $restore['name'],
+        ]);
 
         return Response::json(['success' => true, 'restore' => $restore]);
     }
@@ -293,6 +322,10 @@ class PortalDriveController extends Controller
             return Response::json(['error' => t('portal.files.restore_failed') . ': ' . $e->getMessage()], 500);
         }
 
+        $this->logDrive($client, 'drive.file_restored', [
+            'drive_file_id' => $driveFileId,
+        ]);
+
         return Response::json(['success' => true, 'file' => $payload]);
     }
 
@@ -311,6 +344,10 @@ class PortalDriveController extends Controller
             return Response::json(['error' => t('portal.files.not_found')], 404);
         }
 
+        $this->logDrive($client, 'drive.folder_deleted', [
+            'folder_id' => $folderId,
+        ]);
+
         return Response::json(['success' => true]);
     }
 
@@ -324,14 +361,21 @@ class PortalDriveController extends Controller
             return Response::json(['error' => t('portal.files.rename_failed')], 422);
         }
 
+        $fileId = (int) $request->param('fileId');
+
         try {
-            $payload = $this->uploads->renameFile($client, (int) $request->param('fileId'), $name);
+            $payload = $this->uploads->renameFile($client, $fileId, $name);
         } catch (\Throwable $e) {
             return Response::json(['error' => t('portal.files.rename_failed') . ': ' . $e->getMessage()], 500);
         }
         if ($payload === null) {
             return Response::json(['error' => t('portal.files.not_found')], 404);
         }
+
+        $this->logDrive($client, 'drive.file_renamed', [
+            'file_id' => $fileId,
+            'name'    => $name,
+        ]);
 
         return Response::json(['success' => true, 'file' => $payload]);
     }
@@ -346,14 +390,21 @@ class PortalDriveController extends Controller
             return Response::json(['error' => t('portal.files.rename_failed')], 422);
         }
 
+        $folderId = (int) $request->param('folderId');
+
         try {
-            $payload = $this->uploads->renameFolder($client, (int) $request->param('folderId'), $name);
+            $payload = $this->uploads->renameFolder($client, $folderId, $name);
         } catch (\Throwable $e) {
             return Response::json(['error' => t('portal.files.rename_failed') . ': ' . $e->getMessage()], 500);
         }
         if ($payload === null) {
             return Response::json(['error' => t('portal.files.not_found')], 404);
         }
+
+        $this->logDrive($client, 'drive.folder_renamed', [
+            'folder_id' => $folderId,
+            'name'      => $name,
+        ]);
 
         return Response::json(['success' => true, 'folder' => $payload]);
     }
@@ -420,6 +471,34 @@ class PortalDriveController extends Controller
     }
 
     // ── helpers Drive ──────────────────────────────────────────────────────────
+
+    /**
+     * Trilha de auditoria da escrita do cliente no Drive (SEC-15). A mesma lista
+     * de ações que `ClientFilesController` grava do lado da agência — sem ela, o
+     * arquivo que desaparecia da galeria não tinha autor nenhum.
+     *
+     * O portal não tem usuário de sessão (a autenticação é o capability-token da
+     * URL), então quem responde "quem foi?" é o **cliente** mais o IP que o
+     * `ActivityLogger` já registra; `user_id` fica nulo — salvo quando o mesmo
+     * navegador também está logado no painel, e aí a atribuição é a correta. A
+     * agência vai explícita porque `Auth::agencyId()` é nulo aqui.
+     *
+     * @param array<string,mixed> $client
+     * @param array<string,mixed> $metadata
+     */
+    private function logDrive(array $client, string $action, array $metadata): void
+    {
+        $metadata['source'] = 'portal';
+
+        ActivityLogger::log(
+            $action,
+            'drive',
+            null,
+            (int) $client['id'],
+            $metadata,
+            (int) $client['agency_id'],
+        );
+    }
 
     /** Monta o caminho (breadcrumb) subindo pelos parent_id. */
     private function buildBreadcrumb(array $folder, int $clientId): array

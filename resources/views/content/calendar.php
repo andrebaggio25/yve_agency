@@ -138,9 +138,14 @@ $qs = static function (array $extra) use ($filters, $month): string {
   <!-- Estado vazio: nunca um mês em branco sem explicação -->
   <div class="card p-8 mt-4 text-center">
     <p class="text-sm text-gray-400">Nenhuma publicação planejada para este mês</p>
+    <?php if (empty($clientList) && !\App\Support\Auth::can('clients.view_all')): ?>
+    <?php /* Perfil sem alcance de cliente vê o módulo vazio: diga por quê (SEC-11). */ ?>
+    <p class="text-xs text-gray-400 mt-1 max-w-xl mx-auto"><?= t('content.no_client_reach') ?></p>
+    <?php else: ?>
     <p class="text-xs text-gray-400 mt-1">
       Crie um plano de conteúdo — os itens com data de publicação aparecem aqui automaticamente.
     </p>
+    <?php endif; ?>
   </div>
 <?php endif; ?>
 

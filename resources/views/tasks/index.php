@@ -21,7 +21,9 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
 <div class="flex items-center justify-between mb-6">
   <div>
     <h1 class="text-xl font-semibold text-white">Tarefas</h1>
-    <p class="text-sm text-gray-400 mt-0.5">
+    <!-- Os contadores saem das tarefas já filtradas (BUG-06). O
+         `data-task-total` é a âncora do teste, como o `data-my-day` do dashboard. -->
+    <p class="text-sm text-gray-400 mt-0.5" data-task-total="<?= array_sum($counts) ?>">
       <?= array_sum($counts) ?> tarefas &mdash;
       <span class="text-blue-400"><?= $counts['in_progress'] ?> em andamento</span>
     </p>
@@ -79,7 +81,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
         <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border <?= $statusColors[$col] ?>">
           <?= $statusLabels[$col] ?>
         </span>
-        <span class="text-xs text-gray-400 font-medium"><?= $counts[$col] ?></span>
+        <span class="text-xs text-gray-400 font-medium" data-count="<?= $col ?>"><?= $counts[$col] ?></span>
       </div>
       <?php if (\App\Support\Auth::can('tasks.create')): ?>
       <a href="/tarefas/nova?status=<?= $col ?>"
@@ -103,8 +105,12 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
 
         <!-- Prioridade + menu -->
         <div class="flex items-center justify-between mb-2">
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium <?= $priorityColors[$t['priority']] ?>">
-            <?= $priorityLabels[$t['priority']] ?>
+          <?php /* Prioridade fora do vocabulário (linha antiga, mapa do ClickUp)
+                   estourava "Undefined array key" aqui e o selo saía sem rótulo
+                   nem cor — o detalhe já mostrava o valor cru num selo neutro
+                   (BUG-06), o quadro tinha ficado de fora. */ ?>
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium <?= $priorityColors[$t['priority']] ?? 'text-gray-400 bg-gray-500/10' ?>">
+            <?= e($priorityLabels[$t['priority']] ?? $t['priority']) ?>
           </span>
           <a href="/tarefas/<?= $t['id'] ?>"
              class="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-brand-400 hover:text-brand-300">

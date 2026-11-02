@@ -42,7 +42,7 @@ class DriveMoveTest extends FeatureTestCase
         $agenciaB = $this->createAgency('Agência B');
         $clientB  = $this->createClient($agenciaB, 'Cliente da B');
         $userA    = $this->createUser($agenciaA);
-        $this->actingAs($userA['id'], permissions: ['clients.view', 'clients.view_all']);
+        $this->actingAs($userA['id'], permissions: ['clients.view', 'clients.view_all', 'content.edit']);
 
         $resp = $this->post("/clientes/{$clientB['id']}/conteudos/move", ['file_ids' => [1]]);
 
@@ -211,7 +211,7 @@ class DriveMoveTest extends FeatureTestCase
         $agencyId = $this->createAgency();
         $client   = $this->createClient($agencyId);
         $user     = $this->createUser($agencyId);
-        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all']);
+        $this->actingAs($user['id'], permissions: ['clients.view', 'clients.view_all', 'content.edit']);
 
         return [$client, $agencyId];
     }

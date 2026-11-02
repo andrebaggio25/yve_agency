@@ -49,7 +49,7 @@ class ContentPlanDuplicateTest extends FeatureTestCase
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedApprovedPlan($agencyId);
 
-        $this->actingAs($user['id'], permissions: ['content.create', 'content.view']);
+        $this->actingAs($user['id'], permissions: ['content.create', 'content.view', 'clients.view_all']);
 
         $response = $this->post('/conteudo/' . $seed['plan'] . '/duplicar');
         $this->assertSame(302, $response->getStatus());
@@ -93,7 +93,7 @@ class ContentPlanDuplicateTest extends FeatureTestCase
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedApprovedPlan($agencyId);
 
-        $this->actingAs($user['id'], permissions: ['content.create']);
+        $this->actingAs($user['id'], permissions: ['content.create', 'clients.view_all']);
         $this->post('/conteudo/' . $seed['plan'] . '/duplicar');
 
         $new = $this->pdo->query("SELECT * FROM content_plans WHERE id <> {$seed['plan']} ORDER BY id DESC LIMIT 1")->fetch();
@@ -113,7 +113,7 @@ class ContentPlanDuplicateTest extends FeatureTestCase
         $user     = $this->createUser($agencyId);
         $seed     = $this->seedApprovedPlan($agencyId);
 
-        $this->actingAs($user['id'], permissions: ['content.view']);
+        $this->actingAs($user['id'], permissions: ['content.view', 'clients.view_all']);
 
         $this->assertSame(403, $this->post('/conteudo/' . $seed['plan'] . '/duplicar')->getStatus());
         $this->assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM content_plans')->fetchColumn());
@@ -126,7 +126,7 @@ class ContentPlanDuplicateTest extends FeatureTestCase
         $user    = $this->createUser($agencyA, 'a@test.com');
         $seedB   = $this->seedApprovedPlan($agencyB);
 
-        $this->actingAs($user['id'], permissions: ['content.create']);
+        $this->actingAs($user['id'], permissions: ['content.create', 'clients.view_all']);
         $this->post('/conteudo/' . $seedB['plan'] . '/duplicar');
 
         $this->assertSame(

@@ -9,6 +9,7 @@ use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Router;
+use App\Support\Auth;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -28,6 +29,13 @@ abstract class FeatureTestCase extends TestCase
 {
     protected Router $router;
     protected PDO $pdo;
+    /**
+     * O container que resolve os controllers desta requisição. Exposto para o
+     * teste poder trocar um serviço externo por um fake antes do dispatch
+     * (`$this->container->instance(Foo::class, $fake)`) — é assim que o sync do
+     * Drive é exercitado sem falar com o Google.
+     */
+    protected Container $container;
 
     /** Tabelas limpas antes de cada teste (ordem irrelevante — usamos CASCADE). */
     private const TRUNCATE = [
@@ -58,14 +66,17 @@ abstract class FeatureTestCase extends TestCase
         $this->resetDatabase();
 
         $_SESSION = [];
+        // O cache cliente→agência é por requisição; aqui cada teste é uma
+        // requisição nova (e o TRUNCATE reaproveita ids).
+        Auth::forgetClientAgencies();
         $_POST = $_GET = $_FILES = [];
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI']    = '/';
         $_SERVER['REMOTE_ADDR']    = '127.0.0.1';
 
-        $container    = new Container();
-        $this->router = new Router($container);
-        $router       = $this->router;
+        $this->container = new Container();
+        $this->router    = new Router($this->container);
+        $router          = $this->router;
         require dirname(__DIR__, 2) . '/routes/web.php';
         require dirname(__DIR__, 2) . '/routes/api.php';
     }
@@ -149,6 +160,18 @@ abstract class FeatureTestCase extends TestCase
         $_SESSION['user']        = $user;
         $_SESSION['permissions'] = $permissions;
         $_SESSION['client_ids']  = $clientIds;
+
+        // O vínculo também vai para o banco: é de lá que o AuthMiddleware
+        // recarrega os clientes da sessão a cada revalidação (SEC-11). Sessão e
+        // banco em desacordo fariam o teste provar o que produção não faz.
+        $link = $this->pdo->prepare(
+            'INSERT INTO client_user_access (client_id, user_id, access_level, created_at)
+             VALUES (:c, :u, :l, NOW())
+             ON CONFLICT (user_id, client_id) DO NOTHING'
+        );
+        foreach ($clientIds as $clientId) {
+            $link->execute([':c' => (int) $clientId, ':u' => $userId, ':l' => 'standard']);
+        }
     }
 
     // ── HTTP ─────────────────────────────────────────────────────────────────

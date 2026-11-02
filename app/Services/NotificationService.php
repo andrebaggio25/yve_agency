@@ -26,6 +26,7 @@ class NotificationService
         private readonly EmailService           $email,
         private readonly UserRepository         $users,
         private readonly JobRepository          $jobs,
+        private readonly AutomationService      $automations,
     ) {}
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -43,16 +44,17 @@ class NotificationService
             'plan.revision_requested' => $this->onPlanRevision($agencyId, $context),
             'item.feedback_added'     => $this->onItemFeedback($agencyId, $context),
             'task.assigned'           => $this->onTaskAssigned($agencyId, $context),
-            // Automações
-            'billing.invoice_due_reminder' => $this->onInvoiceDue($agencyId, $context),
-            'billing.invoice_overdue'      => $this->onInvoiceOverdue($agencyId, $context),
-            'content.approval_reminder'    => $this->onApprovalReminder($agencyId, $context),
-            'content.approval_escalation'  => $this->onApprovalEscalation($agencyId, $context),
-            'contract.expiring'            => $this->onContractExpiring($agencyId, $context),
-            'task.sla_overdue'             => $this->onTaskSlaOverdue($agencyId, $context),
-            'report.client_monthly'        => $this->onClientMonthlyReport($agencyId, $context),
-            'digest.team_daily'            => $this->onTeamDailyDigest($agencyId, $context),
-            'client.onboarding'            => $this->onClientOnboarding($agencyId, $context),
+            // Automações — recebem a própria chave: é por ela que o motor
+            // descobre os canais ligados na regra da agência (BUG-07).
+            'billing.invoice_due_reminder' => $this->onInvoiceDue($agencyId, $context, $event),
+            'billing.invoice_overdue'      => $this->onInvoiceOverdue($agencyId, $context, $event),
+            'content.approval_reminder'    => $this->onApprovalReminder($agencyId, $context, $event),
+            'content.approval_escalation'  => $this->onApprovalEscalation($agencyId, $context, $event),
+            'contract.expiring'            => $this->onContractExpiring($agencyId, $context, $event),
+            'task.sla_overdue'             => $this->onTaskSlaOverdue($agencyId, $context, $event),
+            'report.client_monthly'        => $this->onClientMonthlyReport($agencyId, $context, $event),
+            'digest.team_daily'            => $this->onTeamDailyDigest($agencyId, $context, $event),
+            'client.onboarding'            => $this->onClientOnboarding($agencyId, $context, $event),
             default                        => null,
         };
     }
@@ -83,6 +85,34 @@ class NotificationService
         );
 
         return $deliveryId;
+    }
+
+    /**
+     * BUG-07 — entrega ao cliente que o motor decidiu NÃO fazer por falta de
+     * condição no destino (hoje: cliente sem link do portal). Vai para a
+     * timeline com o motivo em vez de a mensagem simplesmente não sair:
+     * "por que a cliente não recebeu?" precisa de resposta na tela.
+     *
+     * Mesma régua do `whatsAppToClient`: sem telefone ou com o WhatsApp
+     * desligado na ficha não há entrega nenhuma a registrar.
+     *
+     * @param array<string,mixed>|null $client
+     * @param array<string,mixed>      $payload
+     */
+    public function skipClientDelivery(int $agencyId, ?array $client, string $template, string $reason, array $payload = []): void
+    {
+        if (!$client || empty($client['whatsapp']) || !($client['notify_whatsapp'] ?? true)) {
+            return;
+        }
+
+        $this->repo->recordSkipped([
+            'agency_id' => $agencyId,
+            'channel'   => 'whatsapp',
+            'recipient' => $client['whatsapp'],
+            'template'  => $template,
+            'locale'    => $client['language'] ?? 'pt',
+            'payload'   => $payload,
+        ], $reason);
     }
 
     /**
@@ -229,23 +259,27 @@ class NotificationService
      * Rascunho da próxima semana criado pela automação
      * content.approved_create_next_plan — automação que ninguém vê acontecer
      * parece que não existe (OBS-02), então a equipe é avisada in-app.
+     *
+     * Este aviso é a **entrega** dessa automação, e o canal marcado na regra
+     * manda (BUG-07): o evento tem nome próprio (`plan.auto_created`), mas a
+     * regra que vale é a da automação do catálogo — senão o checkbox "No
+     * sistema" dela ficaria na tela sem efeito nenhum. O canal barra o aviso,
+     * nunca a criação do rascunho: isso é o toggle da automação.
      */
     private function onPlanAutoCreated(int $agencyId, array $ctx): void
     {
         $planId    = $ctx['plan_id'] ?? null;
         $planTitle = $ctx['plan_title'] ?? 'Plano';
 
-        $agencyUsers = $this->users->findByAgencyAndPermission($agencyId, 'content.view');
-        foreach ($agencyUsers as $u) {
-            $this->repo->createNotification([
-                'agency_id'  => $agencyId,
-                'user_id'    => (int) $u['id'],
-                'type'       => 'plan.auto_created',
-                'title'      => "Rascunho criado: {$planTitle}",
-                'body'       => 'O plano da próxima semana foi criado automaticamente após a aprovação.',
-                'action_url' => "/conteudo/{$planId}",
-            ]);
-        }
+        $this->inAppToPermission(
+            $agencyId,
+            'content.approved_create_next_plan',
+            'content.view',
+            'plan.auto_created',
+            "Rascunho criado: {$planTitle}",
+            'O plano da próxima semana foi criado automaticamente após a aprovação.',
+            "/conteudo/{$planId}",
+        );
     }
 
     private function onPlanApproved(int $agencyId, array $ctx): void
@@ -354,11 +388,11 @@ class NotificationService
 
     // ── Automation event handlers ──────────────────────────────────────────────
 
-    private function onInvoiceDue(int $agencyId, array $ctx): void
+    private function onInvoiceDue(int $agencyId, array $ctx, string $key): void
     {
         $invoice = $ctx['invoice'] ?? [];
         $client  = $ctx['client'] ?? null;
-        $this->whatsAppToClient($agencyId, $client, 'invoice_due_reminder', [
+        $this->whatsAppToClient($agencyId, $key, $client, 'invoice_due_reminder', [
             'client_name'    => $client['name'] ?? '',
             'invoice_number' => $invoice['invoice_number'] ?? '',
             'total'          => $this->money($invoice['total'] ?? 0, $invoice['currency_code'] ?? 'BRL'),
@@ -367,11 +401,11 @@ class NotificationService
         ]);
     }
 
-    private function onInvoiceOverdue(int $agencyId, array $ctx): void
+    private function onInvoiceOverdue(int $agencyId, array $ctx, string $key): void
     {
         $invoice = $ctx['invoice'] ?? [];
         $client  = $ctx['client'] ?? null;
-        $this->whatsAppToClient($agencyId, $client, 'invoice_overdue', [
+        $this->whatsAppToClient($agencyId, $key, $client, 'invoice_overdue', [
             'client_name'    => $client['name'] ?? '',
             'invoice_number' => $invoice['invoice_number'] ?? '',
             'total'          => $this->money($invoice['total'] ?? 0, $invoice['currency_code'] ?? 'BRL'),
@@ -379,10 +413,10 @@ class NotificationService
         ]);
     }
 
-    private function onApprovalReminder(int $agencyId, array $ctx): void
+    private function onApprovalReminder(int $agencyId, array $ctx, string $key): void
     {
         $client = $ctx['client'] ?? null;
-        $this->whatsAppToClient($agencyId, $client, 'content_approval_reminder', [
+        $this->whatsAppToClient($agencyId, $key, $client, 'content_approval_reminder', [
             'client_name'  => $client['name'] ?? '',
             'plan_title'   => $ctx['plan_title'] ?? 'Plano',
             'approval_url' => $ctx['approval_url'] ?? '',
@@ -390,36 +424,39 @@ class NotificationService
         ]);
     }
 
-    private function onClientMonthlyReport(int $agencyId, array $ctx): void
+    private function onClientMonthlyReport(int $agencyId, array $ctx, string $key): void
     {
         $client = $ctx['client'] ?? null;
-        $this->whatsAppToClient($agencyId, $client, 'client_monthly_report', [
+        $this->whatsAppToClient($agencyId, $key, $client, 'client_monthly_report', [
             'client_name' => $client['name'] ?? '',
             'month_label' => $ctx['month_label'] ?? '',
             'report_url'  => $ctx['report_url'] ?? '',
         ]);
     }
 
-    private function onApprovalEscalation(int $agencyId, array $ctx): void
+    private function onApprovalEscalation(int $agencyId, array $ctx, string $key): void
     {
         $planId = $ctx['plan_id'] ?? null;
-        $this->inAppToPermission($agencyId, 'content.edit', 'content.escalation',
+        $this->inAppToPermission($agencyId, $key, 'content.edit', 'content.escalation',
             "Aprovação parada: {$ctx['plan_title']}",
             "O plano de {$ctx['client_name']} está sem aprovação há {$ctx['days']} dias.",
             "/conteudo/{$planId}");
     }
 
-    private function onContractExpiring(int $agencyId, array $ctx): void
+    private function onContractExpiring(int $agencyId, array $ctx, string $key): void
     {
-        $this->inAppToPermission($agencyId, 'contracts.view', 'contract.expiring',
+        $this->inAppToPermission($agencyId, $key, 'contracts.view', 'contract.expiring',
             "Contrato expirando: {$ctx['contract_title']}",
             "O contrato de {$ctx['client_name']} vence em {$ctx['days']} dia(s).",
             "/contratos/{$ctx['contract_id']}");
     }
 
-    private function onTaskSlaOverdue(int $agencyId, array $ctx): void
+    private function onTaskSlaOverdue(int $agencyId, array $ctx, string $key): void
     {
         $taskId = $ctx['task_id'] ?? null;
+        if (!$this->automations->isChannelActive($agencyId, $key, 'inapp')) {
+            return;
+        }
         if (!empty($ctx['assigned_to'])) {
             $this->repo->createNotification([
                 'agency_id'  => $agencyId,
@@ -432,16 +469,16 @@ class NotificationService
         }
     }
 
-    private function onClientOnboarding(int $agencyId, array $ctx): void
+    private function onClientOnboarding(int $agencyId, array $ctx, string $key): void
     {
         $client = $ctx['client'] ?? null;
-        $this->whatsAppToClient($agencyId, $client, 'client_welcome', [
+        $this->whatsAppToClient($agencyId, $key, $client, 'client_welcome', [
             'client_name' => $client['name'] ?? '',
             'portal_url'  => $ctx['portal_url'] ?? '',
         ]);
     }
 
-    private function onTeamDailyDigest(int $agencyId, array $ctx): void
+    private function onTeamDailyDigest(int $agencyId, array $ctx, string $key): void
     {
         // O trecho operacional vai para toda a equipe; a contagem de faturas
         // em aberto é dado financeiro e sai num aviso separado, só para quem
@@ -451,7 +488,7 @@ class NotificationService
             (int) ($ctx['tasks_today'] ?? 0),
             (int) ($ctx['plans_pending'] ?? 0),
         );
-        $this->inAppToPermission($agencyId, 'dashboard.view', 'digest.daily', 'Resumo do dia', $body, '/');
+        $this->inAppToPermission($agencyId, $key, 'dashboard.view', 'digest.daily', 'Resumo do dia', $body, '/');
 
         $invoicesOpen = (int) ($ctx['invoices_open'] ?? 0);
         if ($invoicesOpen > 0) {
@@ -460,6 +497,7 @@ class NotificationService
             // que veria a carteira de faturas dos outros clientes.
             $this->inAppToAllPermissions(
                 $agencyId,
+                $key,
                 ['dashboard.view', 'invoices.view'],
                 'digest.daily_financial',
                 'Resumo do dia — financeiro',
@@ -471,23 +509,38 @@ class NotificationService
 
     // ── Automation helpers ─────────────────────────────────────────────────────
 
-    private function whatsAppToClient(int $agencyId, ?array $client, string $template, array $payload): void
+    private function whatsAppToClient(int $agencyId, string $key, ?array $client, string $template, array $payload): void
     {
         if (!$client || empty($client['whatsapp']) || !($client['notify_whatsapp'] ?? true)) {
             return;
         }
-        $this->queueDelivery([
+
+        $delivery = [
             'agency_id' => $agencyId,
             'channel'   => 'whatsapp',
             'recipient' => $client['whatsapp'],
             'template'  => $template,
             'locale'    => $client['language'] ?? 'pt',
             'payload'   => $payload,
-        ]);
+        ];
+
+        // BUG-07 — canal desmarcado na regra da agência não entrega. Fica o
+        // registro do motivo na timeline: "a cliente não recebeu" precisa de
+        // resposta, e silêncio não é resposta.
+        if (!$this->automations->isChannelActive($agencyId, $key, 'whatsapp')) {
+            $this->repo->recordSkipped($delivery, 'channel_off:whatsapp');
+            return;
+        }
+
+        $this->queueDelivery($delivery);
     }
 
-    private function inAppToPermission(int $agencyId, string $permission, string $type, string $title, string $body, string $actionUrl): void
+    private function inAppToPermission(int $agencyId, string $key, string $permission, string $type, string $title, string $body, string $actionUrl): void
     {
+        if (!$this->automations->isChannelActive($agencyId, $key, 'inapp')) {
+            return;
+        }
+
         foreach ($this->users->findByAgencyAndPermission($agencyId, $permission) as $u) {
             $this->repo->createNotification([
                 'agency_id'  => $agencyId,
@@ -507,9 +560,12 @@ class NotificationService
      *
      * @param list<string> $permissions
      */
-    private function inAppToAllPermissions(int $agencyId, array $permissions, string $type, string $title, string $body, string $actionUrl): void
+    private function inAppToAllPermissions(int $agencyId, string $key, array $permissions, string $type, string $title, string $body, string $actionUrl): void
     {
         if ($permissions === []) {
+            return;
+        }
+        if (!$this->automations->isChannelActive($agencyId, $key, 'inapp')) {
             return;
         }
 

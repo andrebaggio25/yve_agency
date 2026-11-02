@@ -48,7 +48,7 @@ class ClientArchiveTest extends FeatureTestCase
              VALUES (:a, :c, 'Plano de Julho', 'approved', NOW())"
         )->execute([':a' => $agencyId, ':c' => $client['id']]);
 
-        $this->actingAs($user['id'], permissions: ['clients.delete']);
+        $this->actingAs($user['id'], permissions: ['clients.delete'], clientIds: [$client['id']]);
         $this->post('/clientes/' . $client['id'], ['_method' => 'DELETE']);
 
         // O cliente continua no banco (arquivado), e o plano segue lá.

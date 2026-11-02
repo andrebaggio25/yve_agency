@@ -434,7 +434,14 @@ function itemCard(item) {
         headers: { 'X-CSRF-Token': CSRF, 'X-Requested-With': 'XMLHttpRequest' }
       });
       const d = await r.json();
-      if (d.success) this.$el.remove();
+      if (d.success) { this.$el.remove(); return; }
+
+      // Recusa com motivo (plano já aprovado pela cliente, por exemplo): antes
+      // o card simplesmente não saía e ninguém dizia por quê. O toast vive no
+      // componente raiz — daqui vai por evento.
+      window.dispatchEvent(new CustomEvent('plan-toast', {
+        detail: { msg: d.error || 'Não foi possível excluir o post.', ok: false }
+      }));
     },
 
     async changeStatus(status) {
@@ -444,7 +451,13 @@ function itemCard(item) {
         body: JSON.stringify({ status })
       });
       const d = await r.json();
-      if (d.success) location.reload();
+      if (d.success) { location.reload(); return; }
+
+      // Recusa com motivo (aba velha de um plano que a cliente já aprovou, por
+      // exemplo): antes o menu fechava e nada acontecia, sem dizer por quê.
+      window.dispatchEvent(new CustomEvent('plan-toast', {
+        detail: { msg: d.error || 'Não foi possível mudar o status do post.', ok: false }
+      }));
     }
   }
 }

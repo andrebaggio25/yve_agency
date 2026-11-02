@@ -20,7 +20,7 @@ class ContentPlanItemUpdateTest extends TestCase
     private function capturedItemFields(array $input): array
     {
         $repo = $this->createMock(ContentPlanRepository::class);
-        $repo->method('findItem')->willReturn(['id' => 5, 'agency_id' => 1]);
+        $repo->method('findItem')->willReturn(['id' => 5, 'agency_id' => 1, 'content_plan_id' => 7]);
 
         $captured = [];
         $repo->method('updateItem')->willReturnCallback(
@@ -88,7 +88,20 @@ class ContentPlanItemUpdateTest extends TestCase
     public function test_an_invalid_status_is_ignored(): void
     {
         $this->assertArrayNotHasKey('status', $this->capturedItemFields(['status' => 'published']));
-        $this->assertSame('approved', $this->capturedItemFields(['status' => 'approved'])['status']);
+        $this->assertSame('revision', $this->capturedItemFields(['status' => 'revision'])['status']);
+    }
+
+    /**
+     * BUG-05: "Aprovado" é decisão do fluxo de aprovação (portal ou tela de
+     * Aprovações, que registra autor e data), não do menu de status do card —
+     * ali virava um selo sem autor que fazia a contagem do plano fechar a
+     * semana no primeiro "Aprovar" da cliente.
+     */
+    public function test_free_edit_cannot_mark_an_item_as_approved(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->capturedItemFields(['status' => 'approved']);
     }
 
     public function test_an_update_with_nothing_to_write_is_a_no_op(): void

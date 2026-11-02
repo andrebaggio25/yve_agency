@@ -59,6 +59,10 @@ class RoleController extends Controller
         Auth::requirePermission('roles.edit');
         $role = $this->roleService->findById((int) $request->param('id'), Auth::agencyId());
         if (!$role) return $this->view('errors.404', [], 404);
+        if (!RoleService::isEditable($role)) {
+            $this->withError(t('roles.system_readonly'));
+            return $this->redirect("/perfis/{$role['id']}");
+        }
         $permissions = require base_path('config/permissions.php');
         return $this->view('users.roles.edit', ['role' => $role, 'allPermissions' => $permissions]);
     }

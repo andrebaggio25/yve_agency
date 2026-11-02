@@ -52,7 +52,7 @@ class AdsActionController extends Controller
 
         $accountId = (int) $request->query('account_id', '0');
         if ($accountId) {
-            $campaigns = $this->campaignRepo->listByAccount($accountId);
+            $campaigns = $this->campaignRepo->listByAccount($accountId, (int) $agencyId);
         }
 
         return $this->view('trafego.action_create', compact('accounts', 'campaigns', 'accountId'));
@@ -142,7 +142,15 @@ class AdsActionController extends Controller
     {
         Auth::requirePermission('ads_actions.view');
         $accountId = (int) $request->param('accountId');
-        $campaigns = $this->campaignRepo->listByAccount($accountId);
+        $agencyId  = (int) Auth::agencyId();
+
+        // O id da conta vem da URL: conta de outra agência é 404, não lista vazia
+        // (SEC-13) — assim o front não trata "sem campanha" e "não é sua" igual.
+        if (!$this->accountRepo->findByIdAndAgency($accountId, $agencyId)) {
+            return Response::json(['error' => t('ads.account_not_found')], 404);
+        }
+
+        $campaigns = $this->campaignRepo->listByAccount($accountId, $agencyId);
         return $this->json($campaigns);
     }
 }

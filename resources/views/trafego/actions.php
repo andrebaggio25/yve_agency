@@ -14,8 +14,12 @@
     </p>
   </div>
   <div class="flex gap-3">
+    <?php if (\App\Support\Auth::can('ai.recommend_ads_action')): ?>
     <a href="/ia/recomendacoes" class="btn-secondary text-sm px-4 py-2">⚡ Recomendações IA</a>
+    <?php endif; ?>
+    <?php if (\App\Support\Auth::can('ads_actions.request')): ?>
     <a href="/trafego/acoes/nova" class="btn-primary text-sm px-4 py-2">+ Nova ação</a>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -68,10 +72,10 @@
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 flex-wrap mb-2">
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $sc['bg'] ?> <?= $sc['text'] ?>">
-            <?= $sc['label'] ?>
+            <?= e($sc['label']) ?>
           </span>
           <span class="text-xs text-gray-400 bg-white/[0.05] px-2 py-0.5 rounded-full">
-            <?= $actionLabels[$a['action_type']] ?? $a['action_type'] ?>
+            <?= e($actionLabels[$a['action_type']] ?? $a['action_type']) ?>
           </span>
           <?php if ($a['ai_generated']): ?>
           <span class="text-xs text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full">IA</span>
@@ -80,7 +84,7 @@
         </div>
         <p class="text-sm font-medium text-white"><?= e($a['description']) ?></p>
         <p class="text-xs text-gray-400 mt-1">
-          <?= e($a['account_name']) ?>
+          <?= e($a['account_name']) ?: '—' ?>
           <?php if ($a['campaign_name']): ?>
           <span class="mx-1">·</span><?= e($a['campaign_name']) ?>
           <?php endif; ?>

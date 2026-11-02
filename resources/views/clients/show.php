@@ -161,6 +161,8 @@
       </span>
     </div>
   </div>
+  <?php /* Ligar/desligar e trocar o link exigem clients.edit no backend (SEC-11). */ ?>
+  <?php if (\App\Support\Auth::can('clients.edit')): ?>
   <div class="flex gap-2 flex-wrap">
     <form method="POST" action="/clientes/<?= $client['id'] ?>/portal/toggle">
       <?= csrf_field() ?>
@@ -176,12 +178,15 @@
       </button>
     </form>
   </div>
+  <?php endif; ?>
   <?php else: ?>
   <p class="text-sm text-gray-400">Nenhum link gerado ainda.</p>
+  <?php if (\App\Support\Auth::can('clients.edit')): ?>
   <form method="POST" action="/clientes/<?= $client['id'] ?>/portal/regenerar" class="mt-3">
     <?= csrf_field() ?>
     <button class="text-sm text-brand-400 hover:text-brand-300">Gerar link de acesso</button>
   </form>
+  <?php endif; ?>
   <?php endif; ?>
 </div>
 

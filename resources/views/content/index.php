@@ -105,6 +105,12 @@
       </svg>
     </div>
     <h3 class="text-lg font-semibold text-white mb-1">Nenhum plano encontrado</h3>
+    <?php /* Perfil sem alcance de cliente vê o módulo inteiro vazio (SEC-11):
+              sem esta frase, não há nada na tela que explique o porquê nem o
+              que pedir ao administrador. */ ?>
+    <?php if (empty($clientList) && !\App\Support\Auth::can('clients.view_all')): ?>
+    <p class="text-gray-400 text-sm mb-6 max-w-xl"><?= t('content.no_client_reach') ?></p>
+    <?php else: ?>
     <p class="text-gray-400 text-sm mb-6">Crie seu primeiro plano de conteúdo semanal.</p>
     <?php if (\App\Support\Auth::can('content.create')): ?>
     <a href="/conteudo/criar"
@@ -112,6 +118,7 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Criar Plano
     </a>
+    <?php endif; ?>
     <?php endif; ?>
   </div>
   <?php else: ?>

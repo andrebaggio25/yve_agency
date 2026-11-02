@@ -209,7 +209,16 @@ A cliente aprovou o post e pediu para publicar depois? Não refaça o post. No c
 - Data em outra semana: o post **migra** para a planificação daquela semana, levando legenda, roteiro, CTA, capa, imagens, plataforma, formato, responsável e o histórico de feedback. É o mesmo post, não uma cópia.
 - Não existe planificação naquela semana? Ela é criada na hora, em rascunho, já com o post.
 - O status do post é preservado — adiar não desfaz a aprovação da cliente.
-- Semana de destino já aprovada pela cliente **não** aceita o post: reabra aquele plano ou escolha outra data.
+- Semana de destino já aprovada pela cliente **não** aceita o post: escolha outra data (não existe "reabrir semana").
+
+**O que uma semana já aprovada aceita (BUG-05)**
+
+Depois que a cliente aprova o plano, a semana está fechada: o que a tela mostra como aprovado tem de ser o que ela viu.
+
+- **Não** aceita: adicionar post, excluir post, trocar a data da semana, mudar o status de um post pelo menu "Status".
+- **Aceita**: renomear o plano, editar as notas internas, editar o conteúdo do post (legenda, capa, mídia, responsável — a peça pronta chega depois da aprovação), remanejar a data dentro da própria semana e **Reagendar** o post para outra semana, a pedido da cliente.
+- Aprovar o plano aprova os posts que ninguém decidiu ainda. Post em **revisão** ou **rejeitado** continua como está: o pedido de alteração da cliente não é apagado, e o plano aparece como "Aprovado — 2/3 aprovados" (semana fechada, um post a refazer).
+- "Aprovado" só sai do fluxo de aprovação — a cliente no portal ou a tela de Aprovações, que registra quem aprovou. O menu "Status" do card serve para rascunho/revisão/rejeitado.
 
 ---
 

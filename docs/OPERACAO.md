@@ -170,3 +170,76 @@ Depois, no navegador: **hard refresh** (Ctrl+Shift+R) — CSS e JS têm cache lo
 | Chaves globais (SMTP, IA, Evolution) | `platform_settings`, **cifradas** | Vazamento |
 
 **Senha padrão do seeder:** se o platform admin ainda usa `platform123!`, **troque agora** — está no repositório público.
+
+---
+
+## 6. Suíte e smoke de navegador (QA-04/QA-05)
+
+### A suíte PHP
+
+```bash
+docker compose -f docker-compose.test.yml up -d   # Postgres de teste na 55432
+composer db:test                                  # migrations NO BANCO DE TESTE
+composer test && composer analyse
+```
+
+Sem o container, os testes de feature se **auto-skipam** (não falham) e a suíte
+unitária roda sozinha. Isso é verificável: `docker stop yve_test_db && composer test`
+tem de terminar em **0 erro** — se aparecer erro de conexão ou de propriedade
+tipada em `tearDown`, a suíte está mentindo sobre o próprio ambiente.
+
+### O smoke de navegador
+
+Abre as telas num Chromium de verdade e falha com **qualquer** erro de console,
+CSP ou componente Alpine que não inicializa — a rede que PHPUnit e PHPStan não
+pegam. Por tela ele cobra quatro coisas: **status 2xx**, **URL final igual à
+pedida**, zero erro de console/`pageerror` e Alpine inicializado onde há
+`[x-data]`.
+
+> Status e URL final não são preciosismo. As telas de erro (`errors/403.php`,
+> `404.php`, `500.php`) são HTML puro — sem `<script>`, sem `[x-data]` — então a
+> sonda de Alpine não tem o que reclamar nelas. E **redirect não gera erro de
+> console nenhum**: antes dessa conferência, `/tarefas` respondendo 302 → `/login`
+> (sessão caída) imprimia `✅` tendo validado só o formulário de login.
+
+```bash
+npm run test:browser
+```
+
+Um comando, nada pulado: ele semeia um login e um portal descartáveis no **banco
+de teste**, sobe o `php -S` apontado para esse banco, roda as 8 telas (login,
+dashboard, clientes, conteúdo, tarefas, financeiro, portal, portal/arquivos) e
+mata o servidor no fim. Pré-requisitos: banco de teste no ar com `composer db:test`,
+`npm install` feito e um Chromium (`npx playwright install chromium`; sem ele, cai
+no Chrome instalado na máquina e avisa).
+
+| Variável | Para quê |
+|----------|----------|
+| `SMOKE_PORT` | porta do servidor do smoke (padrão `8099`) |
+| `SMOKE_PASSWORD` | senha do usuário de smoke (padrão `smoke-local-123456`, local e descartável) |
+| `SMOKE_BROWSER_CHANNEL` | `chrome` para usar o navegador da máquina |
+| `BASE_URL` + `SMOKE_EMAIL` + `SMOKE_PASSWORD` + `PORTAL_TOKEN` | app e credenciais já prontos: o script só roda o smoke |
+
+A semente (`tests/browser/seed.php`) é idempotente, lê **apenas** o `.env.testing`
+e aborta se o host não for local. Nunca use credencial real aqui: `composer test`
+trunca as tabelas desse banco. Faltando `SMOKE_EMAIL`/`SMOKE_PASSWORD`/`PORTAL_TOKEN`,
+o `smoke.mjs` **falha** em vez de pular as telas internas — antes ele abria só o
+`/login` e terminava com "✅ nenhum erro".
+
+> ⚠ **Rodar o servidor local contra o banco de teste exige `-d variables_order=EGPCS`.**
+> No SAPI web do `php -S`, `$_ENV` nasce vazio: o dotenv (imutável) não vê o que você
+> exportou no shell, grava os valores do `.env` — que aponta para o **Supabase de
+> produção** — e você acaba navegando em produção achando que está no banco de teste.
+> O `tests/browser/smoke.sh` já sobe assim e ainda faz um login de conferência antes de
+> abrir o navegador: se o app não estiver no banco semeado, ele para ali.
+
+**Se o smoke disser que a porta 8099 já está ocupada**, ele lista os PIDs e o
+`kill` pronto — é servidor de uma rodada anterior que ficou de pé. O `php -S`
+sobe com `PHP_CLI_SERVER_WORKERS=4` e forka: matar só o PID do pai deixava os 4
+workers vivos (reparentados no PID 1) segurando a porta, e a rodada seguinte
+rodava inteira contra esse zumbi — com o `DB_*` e o `APP_ENV` congelados no que
+valia naquela hora — devolvendo 8 ✅ sobre um servidor que o script não subiu.
+Hoje o script mata o **grupo de processos** (`set -m` + `kill -- -$SERVER_PID`),
+recusa começar se a porta estiver ocupada e confere com `kill -0` que o servidor
+que ele mesmo subiu está vivo antes de confiar no readiness. Para rodar em
+paralelo com outro servidor local, use `SMOKE_PORT=8098 npm run test:browser`.

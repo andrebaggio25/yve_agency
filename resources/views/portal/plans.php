@@ -29,7 +29,7 @@ $statusColors = [
     <h1 class="text-xl font-semibold text-white"><?= t('portal.plans.title') ?></h1>
     <p class="text-sm text-gray-400 mt-0.5"><?= t(count($plans) === 1 ? 'portal.plans.count' : 'portal.plans.count_plural', ['n' => count($plans)]) ?></p>
   </div>
-  <a href="/portal/<?= $token ?>/planos/calendario" class="btn-secondary text-sm px-4 py-2"><?= t('portal.calendar.view') ?></a>
+  <a href="/portal/<?= e($token) ?>/planos/calendario" class="btn-secondary text-sm px-4 py-2"><?= t('portal.calendar.view') ?></a>
 </div>
 
 <?php if (empty($plans)): ?>
@@ -37,7 +37,7 @@ $statusColors = [
 <?php else: ?>
 <div class="space-y-3">
   <?php foreach ($plans as $p): ?>
-  <a href="/portal/<?= $token ?>/planos/<?= $p['id'] ?>"
+  <a href="/portal/<?= e($token) ?>/planos/<?= $p['id'] ?>"
      class="card p-5 flex items-center justify-between hover:bg-white/[0.03] transition-colors block">
     <div>
       <p class="font-medium text-white mb-1"><?= e($p['title']) ?></p>

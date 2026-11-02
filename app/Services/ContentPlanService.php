@@ -16,6 +16,17 @@ class ContentPlanService
     public const ITEM_STATUSES = ['draft', 'revision', 'approved', 'rejected'];
 
     /**
+     * Plano na mesa da cliente, esperando decisão — os ÚNICOS status de onde
+     * sai "aprovado" ou "em revisão" (BUG-05). 'pending_approval' é dado
+     * legado/manual, aceito só na leitura; o envio grava 'sent'.
+     *
+     * Rascunho não entra porque a cliente nunca o viu, e 'revision' espera a
+     * agência corrigir e **reenviar**: fechar o plano a partir dali faria o
+     * sistema dizer que ela aprovou a versão que pediu para mudar.
+     */
+    private const AWAITING_CLIENT = ['sent', 'pending_approval'];
+
+    /**
      * Link PÚBLICO de aprovação (portal do cliente). O cliente não tem login —
      * mandar a rota interna /aprovacoes/{id} gera um link que ele não abre.
      */
@@ -79,6 +90,47 @@ class ContentPlanService
     public function get(int $id, int $agencyId): ?array
     {
         return $this->repo->findByIdFull($id, $agencyId);
+    }
+
+    /**
+     * Planos da tela de Aprovações (BUG-04): os da agência que já saíram do
+     * rascunho, recortados pelos clientes que o usuário alcança — `null` = a
+     * agência inteira (`clients.view_all`), como manda `Auth::reachableClientIds`.
+     *
+     * @param list<int>|null $clientIds
+     * @return list<array<string,mixed>>
+     */
+    public function listForApproval(int $agencyId, ?array $clientIds): array
+    {
+        $filters = ['statuses' => ['sent', 'revision', 'approved', 'rejected']];
+
+        if ($clientIds !== null) {
+            $filters['client_ids'] = $clientIds;
+        }
+
+        return $this->repo->allByAgency($agencyId, $filters);
+    }
+
+    /**
+     * Plano que a tela de Aprovações pode abrir ou mudar: da agência e fora do
+     * rascunho — ninguém aprova o que a cliente não recebeu. `$withItems` traz
+     * os posts com feedback, como o detalhe precisa.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function planForApproval(int $planId, int $agencyId, bool $withItems = false): ?array
+    {
+        $plan = $withItems
+            ? $this->getWithItems($planId, $agencyId)
+            : $this->repo->findByIdFull($planId, $agencyId);
+
+        return ($plan && $plan['status'] !== 'draft') ? $plan : null;
+    }
+
+    /** Post com o cliente dono — o controller usa para validar o acesso (SEC-11). */
+    public function getItem(int $itemId, int $agencyId): ?array
+    {
+        return $this->repo->findItem($itemId, $agencyId);
     }
 
     /** Clientes que já têm plano na semana (radar de pauta na listagem). */
@@ -204,9 +256,17 @@ class ContentPlanService
         }
     }
 
-    public function update(int $id, int $agencyId, array $input): bool
+    /**
+     * Grava o plano. `week_moved` = a semana mudou e os posts foram com ela.
+     *
+     * @param array<string,mixed> $input
+     * @return array{success:bool,week_moved:bool}
+     * @throws \InvalidArgumentException semana de plano já aprovado pela cliente
+     */
+    public function update(int $id, int $agencyId, array $input): array
     {
-        $fields = [];
+        $fields    = [];
+        $newMonday = null;
 
         // Obrigatórios: só gravam se vierem preenchidos.
         if (!empty($input['title'])) {
@@ -215,8 +275,9 @@ class ContentPlanService
 
         // A semana encaixa na segunda; o domingo é sempre derivado.
         if (!empty($input['week_start'])) {
-            $fields['week_start'] = self::mondayOf(trim((string) $input['week_start']));
-            $fields['week_end']   = self::sundayOf($fields['week_start']);
+            $newMonday            = self::mondayOf(trim((string) $input['week_start']));
+            $fields['week_start'] = $newMonday;
+            $fields['week_end']   = self::sundayOf($newMonday);
         }
 
         // Opcionais: chave presente e vazia limpa o campo.
@@ -225,11 +286,72 @@ class ContentPlanService
             $fields['notes'] = $value === '' ? null : $value;
         }
 
-        if (!$fields) return false;
+        if (!$fields) return ['success' => false, 'week_moved' => false];
 
-        $affected = $this->repo->updatePlan($id, $agencyId, $fields);
+        // A semana antiga precisa ser lida ANTES da gravação: é a referência do
+        // deslocamento dos posts.
+        $plan = $newMonday !== null ? $this->get($id, $agencyId) : null;
+
+        // Semana aprovada não muda de lugar: agora que trocar `week_start`
+        // ARRASTA os posts, isto re-datava em silêncio tudo o que a cliente
+        // fechou (status 'approved' e `approved_at` intactos), e o portal
+        // passava a exibir como aprovada uma semana que ela nunca viu — a mesma
+        // mentira que `assertPlanOpenForItems` impede em adicionar/excluir, só
+        // maior. Título e notas internas continuam editáveis.
+        if ($plan !== null && ($plan['status'] ?? '') === 'approved'
+            && $newMonday !== (string) ($plan['week_start'] ?? '')) {
+            throw new \InvalidArgumentException(t('content.plan_closed_week'));
+        }
+
+        $affected  = $this->repo->updatePlan($id, $agencyId, $fields);
+        $weekMoved = 0;
+
+        if ($affected > 0 && $newMonday !== null && $plan !== null) {
+            $weekMoved = $this->shiftItemsToWeek($id, (string) ($plan['week_start'] ?? ''), $newMonday);
+        }
+
         ActivityLogger::log('content_plan.updated', 'content', null, null, ['plan_id' => $id]);
-        return $affected > 0;
+        return ['success' => $affected > 0, 'week_moved' => $weekMoved > 0];
+    }
+
+    /**
+     * Trocar a semana leva os posts junto, **no mesmo dia da semana**: o post
+     * de quarta continua na quarta.
+     *
+     * Sem isto, mudar `week_start` deixava todo post com data fora de
+     * `week_start..week_end`: a visão Semana os jogava no aviso "fora da
+     * semana" e `assertDateInPlanWeek` passava a recusar qualquer edição deles
+     * — o plano ficava intocável até reagendar post por post.
+     *
+     * O deslocamento é medido entre as SEGUNDAS (múltiplo de 7), então plano
+     * legado com `week_start` fora da segunda também preserva o dia. Post sem
+     * data continua sem data; data que já estava fora da semana antiga entra no
+     * limite mais próximo da nova (mesmo clamp de `duplicate`).
+     *
+     * @return int quantos posts mudaram de data
+     */
+    private function shiftItemsToWeek(int $planId, string $oldWeekStart, string $newWeekStart): int
+    {
+        if ($oldWeekStart === '') return 0;
+
+        $shiftDays = $this->daysBetween(self::mondayOf($oldWeekStart), $newWeekStart);
+        if ($shiftDays === 0) return 0;
+
+        $weekEnd = self::sundayOf($newWeekStart);
+        $moved   = 0;
+
+        foreach ($this->repo->getItems($planId) as $item) {
+            $date = (string) ($item['publish_date'] ?? '');
+            if ($date === '') continue;
+
+            $newDate = max($newWeekStart, min($weekEnd, (string) $this->shiftDate($date, $shiftDays)));
+            if ($newDate === $date) continue;
+
+            $this->repo->updateItem((int) $item['id'], ['publish_date' => $newDate]);
+            $moved++;
+        }
+
+        return $moved;
     }
 
     public function send(int $id, int $agencyId): bool
@@ -275,9 +397,13 @@ class ContentPlanService
      * envio — dizer que a cliente aprovou um plano que ela nunca viu seria
      * mentira do sistema.
      *
+     * `$byAutomation` marca a cópia disparada pela aprovação da cliente no
+     * portal (`maybeCreateNextPlan`): ali não há sessão nem ator humano, e isso
+     * muda a linha de auditoria lá embaixo.
+     *
      * @return array{success:bool,id?:int,error?:string}
      */
-    public function duplicate(int $id, int $agencyId, int $userId, array $input = []): array
+    public function duplicate(int $id, int $agencyId, int $userId, array $input = [], bool $byAutomation = false): array
     {
         $plan = $this->getWithItems($id, $agencyId);
         if (!$plan) {
@@ -335,11 +461,25 @@ class ContentPlanService
             ]);
         }
 
-        ActivityLogger::log('content_plan.duplicated', 'content', $userId, (int) $plan['client_id'], [
-            'source_plan_id' => $id,
-            'new_plan_id'    => $newId,
-            'items'          => count($plan['items'] ?? []),
-        ]);
+        // A agência vai explícita porque duplicar também acontece **pelo
+        // portal**, pela automação da aprovação, onde `Auth::agencyId()` é nulo
+        // e a linha nasceria em `agency_id = 0` (SEC-15). E por ali não há ator:
+        // `$userId` é o `created_by` do plano de origem, então creditar o gestor
+        // punha no nome dele uma criação disparada pelo clique da cliente —
+        // `user_id` nulo é a verdade, como nas outras linhas do portal.
+        ActivityLogger::log(
+            'content_plan.duplicated',
+            'content',
+            $byAutomation ? null : $userId,
+            (int) $plan['client_id'],
+            [
+                'source_plan_id' => $id,
+                'new_plan_id'    => $newId,
+                'items'          => count($plan['items'] ?? []),
+                'automated'      => $byAutomation,
+            ],
+            $agencyId,
+        );
 
         return ['success' => true, 'id' => $newId];
     }
@@ -384,6 +524,7 @@ class ContentPlanService
         $plan = $this->get($planId, $agencyId);
         if (!$plan) throw new \InvalidArgumentException('Plano não encontrado.');
 
+        $this->assertPlanOpenForItems($plan);
         $this->assertDateInPlanWeek($input['publish_date'] ?? null, $plan);
 
         $driveData = [];
@@ -424,11 +565,14 @@ class ContentPlanService
         $item = $this->repo->findItem($itemId, $agencyId);
         if (!$item) return false;
 
-        if (!empty($input['publish_date'])) {
-            $plan = $this->get((int) $item['content_plan_id'], $agencyId);
-            if ($plan) {
-                $this->assertDateInPlanWeek((string) $input['publish_date'], $plan);
-            }
+        // O plano é carregado uma vez: a data e o status do post são julgados
+        // contra a semana dele.
+        $plan = (!empty($input['publish_date']) || !empty($input['status']))
+            ? $this->get((int) $item['content_plan_id'], $agencyId)
+            : null;
+
+        if (!empty($input['publish_date']) && $plan) {
+            $this->assertDateInPlanWeek((string) $input['publish_date'], $plan);
         }
 
         $driveData = [];
@@ -470,6 +614,7 @@ class ContentPlanService
 
         // O status do item é dirigido pelo fluxo de aprovação, não por edição livre.
         if (!empty($input['status']) && in_array($input['status'], self::ITEM_STATUSES, true)) {
+            $this->assertItemStatusEditable((string) $input['status'], $plan);
             $fields['status'] = $input['status'];
         }
 
@@ -479,6 +624,57 @@ class ContentPlanService
         $affected = $this->repo->updateItem($itemId, $fields);
         ActivityLogger::log('content_item.updated', 'content', null, null, ['item_id' => $itemId]);
         return $affected > 0;
+    }
+
+    /**
+     * Plano aprovado não ganha post novo nem perde post (BUG-05).
+     *
+     * A cliente fechou aquela semana: enfiar um post depois faz a tela dizer
+     * que ela aprovou conteúdo que nunca viu, e excluir apaga o que ela
+     * aprovou — nos dois casos o selo "Aprovado" passa a mentir.
+     *
+     * Reagendar (CONT-07) continua levando o post para outra semana, inclusive
+     * saindo de semana aprovada: o post não desaparece, vai inteiro e a pedido
+     * da cliente ("publica semana que vem"), com o movimento no `activity_logs`.
+     * Quem bloqueia é a semana de DESTINO já aprovada.
+     *
+     * @param array<string,mixed> $plan
+     * @throws \InvalidArgumentException
+     */
+    private function assertPlanOpenForItems(array $plan): void
+    {
+        if (($plan['status'] ?? '') === 'approved') {
+            throw new \InvalidArgumentException(t('content.plan_closed_items'));
+        }
+    }
+
+    /**
+     * Edição livre não decide aprovação (BUG-05).
+     *
+     * 'approved' sai do fluxo de aprovação — do portal, onde a cliente decide,
+     * ou da tela de Aprovações, onde alguém com `approvals.approve` decide por
+     * ela deixando feedback, autor e data registrados. Pelo menu "Status" do
+     * card era um selo "Aprovado" sem autor nem data, e isso bastava para
+     * `maybeApprovePlanFromItems` fechar a semana no primeiro "Aprovar" da
+     * cliente: o sistema passava a afirmar que ela aprovou posts que nunca viu.
+     *
+     * Em plano já aprovado o status do post não muda mais por aqui: o selo da
+     * semana e o dos posts têm de continuar contando a mesma história, e devolver
+     * um post para rascunho ali não tem volta (feedback de item em plano
+     * aprovado responde 409 nas duas telas).
+     *
+     * @param array<string,mixed>|null $plan plano do post, quando carregado
+     * @throws \InvalidArgumentException
+     */
+    private function assertItemStatusEditable(string $status, ?array $plan): void
+    {
+        if ($status === 'approved') {
+            throw new \InvalidArgumentException(t('content.item_status_approval_only'));
+        }
+
+        if (($plan['status'] ?? '') === 'approved') {
+            throw new \InvalidArgumentException(t('content.item_status_plan_closed'));
+        }
     }
 
     /**
@@ -522,10 +718,13 @@ class ContentPlanService
      * nesse caso: quem move um post não pediu uma grade nova de posts vazios.
      *
      * O status do post é preservado. Um post aprovado continua aprovado depois
-     * de adiado — o que mudou foi a data, não a decisão da cliente. Já a semana
-     * de destino **já aprovada** bloqueia a operação: enfiar um post novo num
-     * plano que a cliente fechou faria o sistema dizer que ela aprovou algo que
-     * nunca viu.
+     * de adiado — o que mudou foi a data, não a decisão da cliente. Semana
+     * **de destino** já aprovada bloqueia a troca de plano (BUG-05): enfiar um
+     * post num plano que a cliente fechou faria o sistema dizer que ela aprovou
+     * algo que nunca viu. A semana de ORIGEM aprovada não bloqueia — é o caso
+     * para o qual o CONT-07 existe, e aqui o post não desaparece como em
+     * `deleteItem`: ele muda de data a pedido da cliente, inteiro, com o
+     * movimento registrado no `activity_logs`.
      *
      * @return array{success:bool,plan_id?:int,created_plan?:bool,moved?:bool,week_start?:string,error?:string}
      */
@@ -599,6 +798,13 @@ class ContentPlanService
             ];
         }
 
+        // Daqui para baixo o post TROCA de plano — inclusive saindo de semana
+        // já aprovada, que é exatamente o pedido que o CONT-07 atende ("a
+        // cliente aprovou e quer publicar semana que vem"). Bloquear a origem
+        // aprovada deixava o plano fechado sem nenhuma saída e devolvia o
+        // retrabalho manual de recriar o post; o post não se perde, muda de
+        // data levando tudo e o movimento fica no `activity_logs`. Quem recusa
+        // é a semana de DESTINO aprovada, logo abaixo.
         $createdPlan = false;
 
         if (!$targetPlan) {
@@ -625,7 +831,7 @@ class ContentPlanService
                 return [
                     'success' => false,
                     'error'   => "A semana de destino ({$from} a {$to}) já foi aprovada pela cliente. "
-                               . 'Escolha outra semana ou reabra aquele plano antes de mover o post.',
+                               . 'Escolha outra data — não existe reabrir semana aprovada.',
                 ];
             }
             $targetId = (int) $targetPlan['id'];
@@ -653,8 +859,15 @@ class ContentPlanService
         ];
     }
 
+    /** @throws \InvalidArgumentException plano já aprovado pela cliente */
     public function deleteItem(int $itemId, int $agencyId): bool
     {
+        $item = $this->repo->findItem($itemId, $agencyId);
+        if (!$item) return false;
+
+        $plan = $this->get((int) $item['content_plan_id'], $agencyId);
+        if ($plan) $this->assertPlanOpenForItems($plan);
+
         $ok = $this->repo->deleteItem($itemId, $agencyId);
         if ($ok) ActivityLogger::log('content_item.deleted', 'content', null, null, ['item_id' => $itemId]);
         return $ok;
@@ -662,9 +875,14 @@ class ContentPlanService
 
     // ── Feedback / Approval ────────────────────────────────────────────────────
 
+    /**
+     * `$agencyId` só é necessário quando a chamada vem do portal: lá não há
+     * sessão, e sem ele a trilha do feedback cai na agência 0 (SEC-15). Pela
+     * tela interna o `ActivityLogger` resolve a agência pela sessão.
+     */
     public function addFeedback(
         int $itemId, int $planId, int $clientId, ?int $userId, string $type, ?string $comment,
-        ?int $timecodeSeconds = null, string $source = 'client'
+        ?int $timecodeSeconds = null, string $source = 'client', ?int $agencyId = null
     ): int {
         $id = $this->repo->addFeedback([
             'content_plan_item_id' => $itemId,
@@ -689,7 +907,7 @@ class ContentPlanService
             }
         }
 
-        ActivityLogger::log('approval.feedback_added', 'approvals', null, $clientId, ['item_id' => $itemId, 'type' => $type]);
+        ActivityLogger::log('approval.feedback_added', 'approvals', null, $clientId, ['item_id' => $itemId, 'type' => $type], $agencyId);
 
         if ($type === 'approved') {
             $this->maybeApprovePlanFromItems($planId, $clientId);
@@ -709,23 +927,55 @@ class ContentPlanService
 
         if ($total === 0 || ($summary['approved'] ?? 0) !== $total) return;
 
-        $plan = $this->repo->findByIdForClient($planId, $clientId);
-        if (!$plan || $plan['status'] === 'approved') return;
-
+        // Quem decide se a transição vale é `approvePlan`: a via item a item
+        // não pode fechar plano que não está esperando decisão da cliente
+        // (rascunho, em revisão, rejeitado ou já aprovado) — era o atalho que
+        // contornava o guard do portal.
         $this->approvePlan($planId, $clientId);
     }
 
+    /**
+     * Fecha a semana: o plano vira 'approved' **e os posts pendentes também**.
+     *
+     * Aprovar o plano gravava só a linha do plano. Como as telas leem as duas
+     * coisas, elas se contradiziam: selo "Aprovado" ao lado de "0/3 aprovados"
+     * em Conteúdo e Aprovações, e cada post ainda "Pendente" no portal. Depois
+     * do BUG-04/BUG-05 isso virava permanente — feedback de item em plano
+     * aprovado responde 409 e `approvePlan` recusa reaprovar, então não havia
+     * como reconciliar pela tela.
+     *
+     * Pendente = 'draft', o post que ninguém decidiu. O que está em revisão ou
+     * rejeitado NÃO é sobrescrito: o pedido de alteração é decisão registrada
+     * de quem viu o post, e apagá-lo mandava a capa reprovada para o ar sem
+     * ninguém notar (a cliente também não consegue repetir o pedido depois,
+     * porque feedback de item em plano aprovado responde 409). O plano fica
+     * "Aprovado — 2/3", que é a verdade: semana fechada, um post a refazer.
+     */
     public function approvePlan(int $planId, int $clientId): bool
     {
         $plan = $this->repo->findByIdForClient($planId, $clientId);
         if (!$plan) return false;
+
+        // Só o plano que está na mesa da cliente vira aprovado. Sem isto, um
+        // "Aprovar Tudo" repetido (ou numa aba velha) regravava `approved_at`,
+        // re-disparava a confirmação de aprovação para a cliente e re-rodava as
+        // automações do plano; e plano em revisão virava aprovado sem reenvio.
+        if (!in_array((string) $plan['status'], self::AWAITING_CLIENT, true)) return false;
 
         $agencyId = (int) $plan['agency_id'];
         $affected = $this->repo->updatePlan($planId, $agencyId, [
             'status'      => 'approved',
             'approved_at' => date('Y-m-d H:i:s'),
         ]);
-        ActivityLogger::log('content_plan.approved', 'approvals', null, $clientId, ['plan_id' => $planId]);
+        $itemsApproved = $affected > 0 ? $this->repo->approvePendingItems($planId) : 0;
+
+        // A agência vai explícita: aprovar vem do portal, onde não há sessão —
+        // sem ela a linha nasce em `agency_id = 0` e a aprovação da semana
+        // desaparece da trilha da agência dona (SEC-15).
+        ActivityLogger::log('content_plan.approved', 'approvals', null, $clientId, [
+            'plan_id'        => $planId,
+            'items_approved' => $itemsApproved,
+        ], $agencyId);
 
         if ($affected > 0) {
             $client = $this->clientRepo?->findByIdAndAgency($clientId, $agencyId);
@@ -779,16 +1029,19 @@ class ContentPlanService
             ]);
             $this->applyTemplateItems($newId, $clientId, $nextMonday, $template['items']);
         } else {
-            $result = $this->duplicate($planId, $agencyId, $createdBy, ['week_start' => $nextMonday]);
+            $result = $this->duplicate($planId, $agencyId, $createdBy, ['week_start' => $nextMonday], byAutomation: true);
             $newId  = (int) ($result['id'] ?? 0);
             if (!$newId) return;
         }
 
         $this->automations->markRan($agencyId, $clientId, $key, $dedupe, 'done', 'inapp', "Plano {$newId} criado");
+        // Mesma razão de `approvePlan`: quem dispara é a aprovação da cliente no
+        // portal, sem sessão — sem a agência explícita o plano da semana
+        // seguinte nascia na agência 0, fora da trilha de quem é dono dele.
         ActivityLogger::log('content_plan.auto_created', 'content', null, $clientId, [
             'source_plan_id' => $planId,
             'new_plan_id'    => $newId,
-        ]);
+        ], $agencyId);
 
         $this->notifications?->notifyEvent('plan.auto_created', $agencyId, [
             'plan_id'     => $newId,
@@ -848,12 +1101,32 @@ class ContentPlanService
         $plan = $this->repo->findByIdForClient($planId, $clientId);
         if (!$plan) return false;
 
+        // Mesma régua da aprovação: pedir revisão é a resposta ao plano que
+        // está na mesa da cliente. Plano já aprovado não volta para revisão por
+        // POST solto — reabrir semana fechada re-notificava a cliente e deixava
+        // `approved_at` preenchido num plano "em revisão".
+        if (!in_array((string) $plan['status'], self::AWAITING_CLIENT, true)) return false;
+
         $agencyId = (int) $plan['agency_id'];
-        $affected = $this->repo->updatePlan($planId, $agencyId, [
-            'status' => 'revision',
-            'notes'  => $note,
-        ]);
-        ActivityLogger::log('content_plan.revision_requested', 'approvals', null, $clientId, ['plan_id' => $planId]);
+        $note     = trim($note);
+        $fields   = ['status' => 'revision'];
+
+        // `notes` é o MESMO campo do "Observações para a equipe" do formulário
+        // do plano. Gravar a nota de revisão em cima dele apagava o que o gestor
+        // escreveu — e com a nota vazia (o modal não exige texto) apagava sem
+        // pôr nada no lugar. Agora acrescenta, datada, e nota vazia não toca no
+        // campo.
+        if ($note !== '') {
+            $current = is_string($plan['notes'] ?? null) ? trim($plan['notes']) : '';
+            $header  = t('content.revision_note_header', ['date' => date('d/m/Y H:i')]);
+
+            $fields['notes'] = ($current !== '' ? $current . "\n\n" : '') . $header . "\n" . $note;
+        }
+
+        $affected = $this->repo->updatePlan($planId, $agencyId, $fields);
+        // Mesma razão da aprovação: sem a agência explícita o pedido do portal
+        // cai na agência 0.
+        ActivityLogger::log('content_plan.revision_requested', 'approvals', null, $clientId, ['plan_id' => $planId], $agencyId);
 
         if ($affected > 0) {
             $this->notifications?->notifyEvent('plan.revision_requested', $agencyId, [

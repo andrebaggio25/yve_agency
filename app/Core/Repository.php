@@ -52,6 +52,31 @@ abstract class Repository
         }
     }
 
+    /**
+     * Recorte por clientes alcançados (SEC-11): devolve a condição SQL e
+     * registra os binds. Lista vazia vira `1=0` — quem não alcança nenhum
+     * cliente não enxerga linha nenhuma, em vez de ver a agência inteira.
+     *
+     * @param list<int>           $clientIds
+     * @param array<string,mixed> $params      recebe os binds (por referência)
+     * @param string              $column      coluna já qualificada (ex.: `i.client_id`)
+     */
+    protected function clientIdsCondition(array $clientIds, array &$params, string $column): string
+    {
+        if ($clientIds === []) {
+            return '1=0';
+        }
+
+        $placeholders = [];
+        foreach (array_values($clientIds) as $i => $clientId) {
+            $key            = ":cid_scope_{$i}";
+            $placeholders[] = $key;
+            $params[$key]   = (int) $clientId;
+        }
+
+        return $column . ' IN (' . implode(', ', $placeholders) . ')';
+    }
+
     // -------------------------------------------------------------------------
     // Core query helpers (all use prepared statements)
     // -------------------------------------------------------------------------

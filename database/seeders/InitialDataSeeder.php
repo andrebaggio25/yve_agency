@@ -64,53 +64,68 @@ final class InitialDataSeeder extends AbstractSeed
         echo "  ✓ Permissions seeded\n";
     }
 
+    /**
+     * Papéis padrão do sistema (agency_id NULL, compartilhados por todos os
+     * tenants). É a fonte da verdade: o teste `DefaultRolesReachTest` lê daqui
+     * para garantir que papel que vê conteúdo/aprovação alcança cliente.
+     *
+     * @var list<array{slug:string, name:string, permissions:'__ALL__'|list<string>}>
+     */
+    public const DEFAULT_ROLES = [
+        ['slug' => 'super_admin',     'name' => 'Super Admin',              'permissions' => '__ALL__'],
+        ['slug' => 'agency_admin',    'name' => 'Admin da Agência',         'permissions' => '__ALL__'],
+        // clients.view_all: o gestor de tráfego cuida da carteira inteira —
+        // sem isso, depois do SEC-11 o módulo de Conteúdo e a lista de
+        // clientes vinham vazios (ele não tem vínculo por cliente).
+        ['slug' => 'traffic_manager', 'name' => 'Gestor de Tráfego',       'permissions' => [
+            'dashboard.view', 'clients.view', 'clients.view_all', 'ads_metrics.view',
+            'ads_actions.view', 'ads_actions.request', 'ads_actions.approve', 'ads_actions.execute',
+            'ai_insights.view', 'ai.generate_report', 'ai.recommend_ads_action',
+            'organic_metrics.view',
+            'content.view', 'tasks.view', 'tasks.create', 'tasks.edit',
+        ]],
+        // clients.view_all: a equipe de conteúdo precisa alcançar a pasta
+        // de qualquer cliente da agência para subir/pegar material — sem
+        // isso o ClientAccessMiddleware barra a galeria e a lista vem vazia.
+        // approvals.comment/approve: é o social media que fala com a cliente e
+        // registra na ferramenta o que foi combinado — com só `approvals.view`
+        // a tela interna de Aprovações abria e dava 403 em tudo (BUG-04,
+        // migration 31). O designer comenta o criativo, não aprova pela cliente.
+        ['slug' => 'social_media',    'name' => 'Social Media',             'permissions' => [
+            'dashboard.view', 'clients.view', 'clients.view_all', 'content.view', 'content.create', 'content.edit',
+            'content.send_to_approval', 'approvals.view', 'approvals.comment', 'approvals.approve',
+            'drive_assets.view',
+            'organic_metrics.view', 'tasks.view', 'tasks.create', 'tasks.edit',
+            'whatsapp.view', 'email.view',
+        ]],
+        ['slug' => 'designer',        'name' => 'Designer',                 'permissions' => [
+            'dashboard.view', 'clients.view', 'clients.view_all', 'content.view', 'drive_assets.view',
+            'approvals.view', 'approvals.comment', 'tasks.view',
+        ]],
+        // clients.view_all: o financeiro fatura a carteira inteira — sem
+        // isso o relatório executivo por cliente (e o PDF) devolvia 403.
+        ['slug' => 'financial',       'name' => 'Financeiro',               'permissions' => [
+            'dashboard.view', 'clients.view_basic', 'clients.view_all', 'contracts.view', 'contracts.create',
+            'contracts.edit', 'contracts.send', 'invoices.view', 'invoices.create',
+            'invoices.edit', 'invoices.send', 'payments.view', 'payments.create',
+            'financial_reports.view', 'financial_reports.export',
+        ]],
+        ['slug' => 'client_admin',    'name' => 'Cliente — Admin',          'permissions' => [
+            'dashboard.view', 'approvals.view', 'approvals.comment', 'approvals.approve', 'approvals.reject',
+            'content.view', 'drive_assets.view',
+        ]],
+        ['slug' => 'client_approver', 'name' => 'Cliente — Aprovador',      'permissions' => [
+            'approvals.view', 'approvals.comment', 'approvals.approve', 'approvals.reject',
+            'content.view', 'drive_assets.view',
+        ]],
+        ['slug' => 'client_financial','name' => 'Cliente — Financeiro',     'permissions' => [
+            'invoices.view', 'contracts.view', 'payments.view',
+        ]],
+    ];
+
     private function seedRoles(): void
     {
-        $roles = [
-            ['slug' => 'super_admin',     'name' => 'Super Admin',              'permissions' => '__ALL__'],
-            ['slug' => 'agency_admin',    'name' => 'Admin da Agência',         'permissions' => '__ALL__'],
-            ['slug' => 'traffic_manager', 'name' => 'Gestor de Tráfego',       'permissions' => [
-                'dashboard.view', 'clients.view', 'ads_metrics.view',
-                'ads_actions.view', 'ads_actions.request', 'ads_actions.approve', 'ads_actions.execute',
-                'ai_insights.view', 'ai.generate_report', 'ai.recommend_ads_action',
-                'organic_metrics.view',
-                'content.view', 'tasks.view', 'tasks.create', 'tasks.edit',
-            ]],
-            // clients.view_all: a equipe de conteúdo precisa alcançar a pasta
-            // de qualquer cliente da agência para subir/pegar material — sem
-            // isso o ClientAccessMiddleware barra a galeria e a lista vem vazia.
-            ['slug' => 'social_media',    'name' => 'Social Media',             'permissions' => [
-                'dashboard.view', 'clients.view', 'clients.view_all', 'content.view', 'content.create', 'content.edit',
-                'content.send_to_approval', 'approvals.view', 'drive_assets.view',
-                'organic_metrics.view', 'tasks.view', 'tasks.create', 'tasks.edit',
-                'whatsapp.view', 'email.view',
-            ]],
-            ['slug' => 'designer',        'name' => 'Designer',                 'permissions' => [
-                'dashboard.view', 'clients.view', 'clients.view_all', 'content.view', 'drive_assets.view',
-                'approvals.view', 'tasks.view',
-            ]],
-            // clients.view_all: o financeiro fatura a carteira inteira — sem
-            // isso o relatório executivo por cliente (e o PDF) devolvia 403.
-            ['slug' => 'financial',       'name' => 'Financeiro',               'permissions' => [
-                'dashboard.view', 'clients.view_basic', 'clients.view_all', 'contracts.view', 'contracts.create',
-                'contracts.edit', 'contracts.send', 'invoices.view', 'invoices.create',
-                'invoices.edit', 'invoices.send', 'payments.view', 'payments.create',
-                'financial_reports.view', 'financial_reports.export',
-            ]],
-            ['slug' => 'client_admin',    'name' => 'Cliente — Admin',          'permissions' => [
-                'dashboard.view', 'approvals.view', 'approvals.comment', 'approvals.approve', 'approvals.reject',
-                'content.view', 'drive_assets.view',
-            ]],
-            ['slug' => 'client_approver', 'name' => 'Cliente — Aprovador',      'permissions' => [
-                'approvals.view', 'approvals.comment', 'approvals.approve', 'approvals.reject',
-                'content.view', 'drive_assets.view',
-            ]],
-            ['slug' => 'client_financial','name' => 'Cliente — Financeiro',     'permissions' => [
-                'invoices.view', 'contracts.view', 'payments.view',
-            ]],
-        ];
-
-        foreach ($roles as $roleData) {
+        foreach (self::DEFAULT_ROLES as $roleData) {
             $exists = $this->fetchRow("SELECT id FROM roles WHERE slug = '{$roleData['slug']}'");
             if ($exists) continue;
 

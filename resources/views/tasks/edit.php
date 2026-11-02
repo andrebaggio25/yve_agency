@@ -4,6 +4,17 @@
 <?php
 $statusLabels   = ['todo' => 'A fazer', 'in_progress' => 'Em andamento', 'review' => 'Revisão', 'done' => 'Concluído'];
 $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média', 'low' => 'Baixa'];
+
+// Valor fora do vocabulário (linha antiga, mapa do ClickUp) entra na lista como
+// opção marcada: sem ela nenhuma `<option>` ficava `selected`, o navegador
+// marcava a primeira — prioridade virava "Urgente" — e salvar só o título
+// regravava o valor calado. Mesma correção do seletor de cliente (SEC-13).
+if (!isset($statusLabels[$task['status']])) {
+    $statusLabels[$task['status']] = t('tasks.legacy_value', ['value' => $task['status']]);
+}
+if (!isset($priorityLabels[$task['priority']])) {
+    $priorityLabels[$task['priority']] = t('tasks.legacy_value', ['value' => $task['priority']]);
+}
 ?>
 
 <div class="max-w-xl mx-auto">
@@ -38,7 +49,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
         <label class="label-field">Status</label>
         <select aria-label="Situação" name="status" class="input-field w-full">
           <?php foreach ($statusLabels as $v => $l): ?>
-          <option value="<?= $v ?>" <?= $task['status'] === $v ? 'selected' : '' ?>><?= $l ?></option>
+          <option value="<?= e((string) $v) ?>" <?= (string) $task['status'] === (string) $v ? 'selected' : '' ?>><?= e($l) ?></option>
           <?php endforeach; ?>
         </select>
       </div>
@@ -46,7 +57,7 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
         <label class="label-field">Prioridade</label>
         <select aria-label="Prioridade" name="priority" class="input-field w-full">
           <?php foreach ($priorityLabels as $v => $l): ?>
-          <option value="<?= $v ?>" <?= $task['priority'] === $v ? 'selected' : '' ?>><?= $l ?></option>
+          <option value="<?= e((string) $v) ?>" <?= (string) $task['priority'] === (string) $v ? 'selected' : '' ?>><?= e($l) ?></option>
           <?php endforeach; ?>
         </select>
       </div>
@@ -56,9 +67,12 @@ $priorityLabels = ['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Média'
       <div>
         <label class="label-field">Cliente</label>
         <select aria-label="Cliente" name="client_id" class="input-field w-full">
+          <?php /* A opção vazia é a primeira: sem a do cliente da tarefa marcada,
+                    o navegador cai nela e salvar desfaz o vínculo (SEC-13). O
+                    controller garante que o cliente arquivado esteja na lista. */ ?>
           <option value="">— Sem cliente —</option>
           <?php foreach ($clients as $c): ?>
-          <option value="<?= $c['id'] ?>" <?= ($task['client_id'] ?? '') === $c['id'] ? 'selected' : '' ?>><?= e($c['name']) ?></option>
+          <option value="<?= $c['id'] ?>" <?= (string) ($task['client_id'] ?? '') === (string) $c['id'] ? 'selected' : '' ?>><?= e($c['name']) ?></option>
           <?php endforeach; ?>
         </select>
       </div>

@@ -23,18 +23,35 @@ class MiddlewareAuthorizationTest extends TestCase
     protected function setUp(): void
     {
         $_SESSION = [];
+        Auth::forgetClientAgencies();
     }
 
     protected function tearDown(): void
     {
         $_SESSION = [];
+        Auth::forgetClientAgencies();
+    }
+
+    /**
+     * Mapa cliente→agência que o `canAccessClient` consultaria no banco
+     * (SEC-11). Pré-carregado para o teste do middleware ficar unitário.
+     */
+    private function primeClients(): void
+    {
+        Auth::primeClientAgencies([
+            ['id' => 10,  'agency_id' => 1],
+            ['id' => 20,  'agency_id' => 1],
+            ['id' => 99,  'agency_id' => 1],
+            ['id' => 999, 'agency_id' => 1],
+            ['id' => 777, 'agency_id' => 2],
+        ]);
     }
 
     // ── AuthMiddleware ────────────────────────────────────────────────────────
 
     public function test_auth_redirects_guest_to_login(): void
     {
-        $resp = (new AuthMiddleware())->handle($this->request(), $this->passthrough());
+        $resp = $this->authMiddleware()->handle($this->request(), $this->passthrough());
 
         $this->assertSame(302, $resp->getStatus());
         $this->assertSame('/login', $resp->getHeaders()['Location'] ?? null);
@@ -42,17 +59,36 @@ class MiddlewareAuthorizationTest extends TestCase
 
     public function test_auth_returns_401_json_for_guest_api(): void
     {
-        $resp = (new AuthMiddleware())->handle($this->request(json: true), $this->passthrough());
+        $resp = $this->authMiddleware()->handle($this->request(json: true), $this->passthrough());
         $this->assertSame(401, $resp->getStatus());
     }
 
     public function test_auth_passes_authenticated_user(): void
     {
         Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], [], []);
-        $resp = (new AuthMiddleware())->handle($this->request(), $this->passthrough());
+        $resp = $this->authMiddleware()->handle($this->request(), $this->passthrough());
 
         $this->assertSame(200, $resp->getStatus());
         $this->assertSame('PASSED', $resp->getBody());
+    }
+
+    /** Sem banco: a conta da sessão existe, está ativa e não trocou de senha. */
+    private function authMiddleware(): AuthMiddleware
+    {
+        return new AuthMiddleware(new class extends \App\Repositories\UserRepository {
+            public function __construct() {}
+
+            public function sessionState(int $userId): ?array
+            {
+                return ['password_hash' => '', 'status' => 'active'];
+            }
+
+            /** A revalidação recarrega os vínculos de cliente (SEC-11). */
+            public function loadClientIds(int $userId): array
+            {
+                return [];
+            }
+        });
     }
 
     // ── PermissionMiddleware ──────────────────────────────────────────────────
@@ -79,6 +115,7 @@ class MiddlewareAuthorizationTest extends TestCase
     public function test_client_access_blocks_client_not_in_scope(): void
     {
         Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], [], [10, 20]);
+        $this->primeClients();
         $resp = (new ClientAccessMiddleware())->handle(
             $this->request(json: true, params: ['clientId' => '99']),
             $this->passthrough(),
@@ -90,6 +127,7 @@ class MiddlewareAuthorizationTest extends TestCase
     public function test_client_access_allows_client_in_scope(): void
     {
         Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], [], [10, 20]);
+        $this->primeClients();
         $resp = (new ClientAccessMiddleware())->handle(
             $this->request(params: ['clientId' => '10']),
             $this->passthrough(),
@@ -101,12 +139,27 @@ class MiddlewareAuthorizationTest extends TestCase
     public function test_client_access_view_all_bypasses_scope(): void
     {
         Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], ['clients.view_all'], []);
+        $this->primeClients();
         $resp = (new ClientAccessMiddleware())->handle(
             $this->request(params: ['clientId' => '999']),
             $this->passthrough(),
         );
 
         $this->assertSame(200, $resp->getStatus());
+    }
+
+    /** SEC-11: o middleware agora é fronteira de tenant, não só de alcance. */
+    public function test_client_access_blocks_client_of_another_agency(): void
+    {
+        Auth::login(['id' => 1, 'agency_id' => 1, 'name' => 'X'], ['clients.view_all'], []);
+        $this->primeClients();
+
+        $resp = (new ClientAccessMiddleware())->handle(
+            $this->request(json: true, params: ['clientId' => '777']),
+            $this->passthrough(),
+        );
+
+        $this->assertSame(403, $resp->getStatus());
     }
 
     // ── PlatformAdminMiddleware ───────────────────────────────────────────────

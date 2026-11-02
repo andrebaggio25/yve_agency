@@ -10,10 +10,17 @@ $statusMeta = [
     'sent'    => ['label' => 'Entregue',  'cls' => 'text-emerald-300 bg-emerald-500/10'],
     'pending' => ['label' => 'Na fila',   'cls' => 'text-amber-300 bg-amber-500/10'],
     'failed'  => ['label' => 'Falhou',    'cls' => 'text-rose-300 bg-rose-500/10'],
+    // BUG-07: o motor não entregou porque o canal está desmarcado na regra.
+    'skipped' => ['label' => t('automations.delivery_skipped'), 'cls' => 'text-gray-300 bg-gray-500/10'],
 ];
 $channelMeta = [
     'whatsapp' => ['label' => 'WhatsApp', 'cls' => 'text-emerald-300'],
     'email'    => ['label' => 'E-mail',   'cls' => 'text-blue-300'],
+];
+// BUG-07: o motivo do "Não enviado" vem da linha — motivo errado é pior do que
+// motivo nenhum. O que não está aqui é canal desmarcado (`channel_off:*`).
+$skipReasons = [
+    'portal_off' => t('automations.delivery_portal_off'),
 ];
 $fmtDate = static function (?string $dt): string {
     return $dt ? date('d/m/Y H:i', strtotime($dt)) : '—';
@@ -29,13 +36,14 @@ $fmtDate = static function (?string $dt): string {
 </div>
 
 <!-- Resumo -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
   <?php
   $cards = [
       ['Total',    $stats['total'],   'text-white'],
       ['Entregue', $stats['sent'],    'text-emerald-300'],
       ['Na fila',  $stats['pending'], 'text-amber-300'],
       ['Falhou',   $stats['failed'],  'text-rose-300'],
+      [t('automations.delivery_skipped'), $stats['skipped'] ?? 0, 'text-gray-300'],
   ];
   foreach ($cards as [$label, $value, $cls]): ?>
     <div class="card p-4">
@@ -62,6 +70,7 @@ $fmtDate = static function (?string $dt): string {
       <option value="sent" <?= ($filters['status'] ?? '') === 'sent' ? 'selected' : '' ?>>Entregue</option>
       <option value="pending" <?= ($filters['status'] ?? '') === 'pending' ? 'selected' : '' ?>>Na fila</option>
       <option value="failed" <?= ($filters['status'] ?? '') === 'failed' ? 'selected' : '' ?>>Falhou</option>
+      <option value="skipped" <?= ($filters['status'] ?? '') === 'skipped' ? 'selected' : '' ?>><?= e(t('automations.delivery_skipped')) ?></option>
     </select>
   </div>
   <button type="submit" class="btn-primary text-sm px-4 py-2.5">Filtrar</button>
@@ -107,6 +116,11 @@ $fmtDate = static function (?string $dt): string {
                 <!-- O motivo do erro é o que transforma "falhou" em algo acionável -->
                 <p class="text-xs text-rose-400/70 mt-1 max-w-md truncate" title="<?= e((string) $d['last_error']) ?>">
                   <?= e((string) $d['last_error']) ?>
+                </p>
+              <?php elseif ($d['status'] === 'skipped'): ?>
+                <!-- Sem o motivo, "não enviado" vira suspeita de defeito -->
+                <p class="text-xs text-gray-400 mt-1">
+                  <?= e($skipReasons[(string) ($d['last_error'] ?? '')] ?? t('automations.delivery_channel_off')) ?>
                 </p>
               <?php elseif ($d['status'] === 'pending' && (int) $d['attempts'] > 0): ?>
                 <p class="text-xs text-amber-400/60 mt-1"><?= (int) $d['attempts'] ?>ª tentativa</p>

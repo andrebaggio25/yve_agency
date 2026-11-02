@@ -22,6 +22,12 @@ class GoogleDriveApiService
     private const SCOPES       = 'openid email https://www.googleapis.com/auth/drive.file';
     private const FOLDER_MIME  = 'application/vnd.google-apps.folder';
     private const ROOT_NAME    = 'YVE — Conteúdos de Clientes';
+    /**
+     * Backoff do retry de leitura (µs): 2 novas tentativas, 0,7 s no pior caso.
+     * Curto de propósito — a listagem roda dentro de um request web (botão
+     * Sincronizar), ninguém pode ficar segurando o navegador por segundos.
+     */
+    private const RETRY_DELAYS_US = [200_000, 500_000];
 
     public function __construct(
         private readonly GoogleDriveIntegrationRepository $integrationRepo,
@@ -260,6 +266,11 @@ class GoogleDriveApiService
      * Lista o conteúdo direto (arquivos + subpastas) de uma pasta do Drive.
      * Escopo drive.file: só retorna itens que o próprio app criou — suficiente
      * para reconciliar exclusões/renomeações do que foi enviado pelo sistema.
+     *
+     * Falha do Google é ERRO, nunca lista vazia (BUG-03): quem chama entende
+     * vazio como "apagaram tudo no Drive" e limparia a galeria do cliente.
+     * 429/5xx ganham retry curto antes de desistir.
+     *
      * @return array<int,array{id:string,name:string,mimeType:string,size?:string,thumbnailLink?:string,webViewLink?:string}>
      */
     public function listFolder(int $agencyId, string $parentDriveId): array
@@ -281,13 +292,13 @@ class GoogleDriveApiService
                 $query['pageToken'] = $pageToken;
             }
 
-            $resp = (new Client(['timeout' => 30, 'http_errors' => false]))->get(
+            $resp = $this->getWithRetry(
                 'https://www.googleapis.com/drive/v3/files',
                 ['headers' => ['Authorization' => 'Bearer ' . $token], 'query' => $query]
             );
 
             if ($resp->getStatusCode() !== 200) {
-                break;
+                throw new RuntimeException(t('drive.list_failed', ['status' => $resp->getStatusCode()]));
             }
 
             $data = json_decode((string) $resp->getBody(), true) ?? [];
@@ -578,6 +589,31 @@ class GoogleDriveApiService
     }
 
     // ── Internos ─────────────────────────────────────────────────────────────
+
+    /**
+     * GET na API do Drive com retry curto em 429 (limite de taxa) e 5xx
+     * (instabilidade do Google). Qualquer outro status volta na primeira
+     * tentativa — retry não conserta 401/403/404.
+     */
+    protected function getWithRetry(string $url, array $options): \Psr\Http\Message\ResponseInterface
+    {
+        foreach (self::RETRY_DELAYS_US as $delay) {
+            $resp   = $this->httpGet($url, $options);
+            $status = $resp->getStatusCode();
+            if ($status !== 429 && $status < 500) {
+                return $resp;
+            }
+            usleep($delay);
+        }
+
+        return $this->httpGet($url, $options);
+    }
+
+    /** Ponto único do GET — os testes sobrescrevem para não falar com a rede. */
+    protected function httpGet(string $url, array $options): \Psr\Http\Message\ResponseInterface
+    {
+        return (new Client(['timeout' => 30, 'http_errors' => false]))->get($url, $options);
+    }
 
     private function createFolderRaw(string $accessToken, string $name, ?string $parentDriveId): string
     {

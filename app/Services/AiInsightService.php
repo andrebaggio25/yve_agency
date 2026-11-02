@@ -16,6 +16,15 @@ use GuzzleHttp\Client;
  */
 class AiInsightService
 {
+    /**
+     * Os tipos de análise que a tela oferece e que `buildPrompt` conhece. O
+     * `default` do match aceitava qualquer coisa, e `type` é gravado num
+     * varchar sem CHECK: o valor do POST voltava como rótulo na listagem.
+     *
+     * @var list<string>
+     */
+    public const INSIGHT_TYPES = ['performance_summary', 'alert', 'recommendation', 'report'];
+
     private Client $http;
 
     public function __construct(

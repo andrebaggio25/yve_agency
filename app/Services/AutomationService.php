@@ -55,7 +55,7 @@ class AutomationService
                 'status'         => $row['status'] ?? 'inactive',
                 'scheduled_time' => $row['scheduled_time'] ?? ($def['time'] ?? '08:00'),
                 'scheduled_day'  => $row['scheduled_day'] ?? ($def['day'] ?? null),
-                'channels_on'    => isset($row['channels']) ? (json_decode($row['channels'], true) ?: ($def['channels'] ?? [])) : ($def['channels'] ?? []),
+                'channels_on'    => $this->channelsOf($row, $def),
             ];
         }
         return $out;
@@ -82,6 +82,59 @@ class AutomationService
         }
         if (!$clientId) return false;
         return $this->repo->clientEnabled($clientId, $key); // opt-in: ausência = false
+    }
+
+    // ── Canais da regra (BUG-07) ────────────────────────────────────────────
+
+    /**
+     * Canais ligados nesta automação para a agência. Lista vazia é uma escolha
+     * ("desmarquei tudo"), não falta de configuração: o motor não entrega.
+     *
+     * @return list<string>
+     */
+    public function activeChannels(int $agencyId, string $key): array
+    {
+        $def = $this->definition($key);
+        if (!$def) return [];
+
+        return $this->channelsOf($this->repo->findRule($agencyId, $key), $def);
+    }
+
+    /**
+     * O canal está ligado? Antes do BUG-07 ninguém perguntava: o canal real
+     * estava fixo no handler do evento e desmarcar WhatsApp não impedia o envio.
+     *
+     * Evento que não é automação do catálogo (aviso interno do app) passa
+     * direto — preferência de notificação da equipe é o UX-06.
+     */
+    public function isChannelActive(int $agencyId, string $key, string $channel): bool
+    {
+        if (!$this->definition($key)) return true;
+
+        return in_array($channel, $this->activeChannels($agencyId, $key), true);
+    }
+
+    /**
+     * Canais salvos na regra, com fallback no catálogo. `channels` NULL = nunca
+     * configurado (herda o catálogo); `[]` = o usuário desmarcou tudo — e isso
+     * tem de sobreviver à releitura, senão a tela remarca tudo sozinha.
+     *
+     * @param array<string,mixed>|null $rule
+     * @param array<string,mixed>      $def
+     * @return list<string>
+     */
+    private function channelsOf(?array $rule, array $def): array
+    {
+        $raw = $rule['channels'] ?? null;
+        if ($raw === null || $raw === '') {
+            return array_values($def['channels'] ?? []);
+        }
+
+        $decoded = is_array($raw) ? $raw : json_decode((string) $raw, true);
+
+        return is_array($decoded)
+            ? array_values(array_filter($decoded, 'is_string'))
+            : array_values($def['channels'] ?? []);
     }
 
     // ── Idempotência ────────────────────────────────────────────────────────
@@ -136,13 +189,20 @@ class AutomationService
         $day       = $day ?: ($def['day'] ?? null);
         $frequency = $def['frequency'] ?? null;
 
+        // Só canal do catálogo entra. Canal inventado num POST cru ficaria
+        // salvo desligando tudo, calado — agora o motor obedece esta lista.
+        $allowed  = array_values($def['channels'] ?? []);
+        $channels = $channels === null
+            ? $allowed
+            : array_values(array_intersect(array_filter($channels, 'is_string'), $allowed));
+
         $this->repo->upsertRule($agencyId, $key, [
             'name'           => $def['label'] ?? $key,
             'status'         => $active ? 'active' : 'inactive',
             'frequency'      => $frequency,
             'scheduled_day'  => $day,
             'scheduled_time' => $time,
-            'channels'       => $channels ?? ($def['channels'] ?? []),
+            'channels'       => $channels,
             // Agenda só vale para automações schedule e quando ativadas.
             'next_run_at'    => ($active && $frequency) ? $this->computeNext($frequency, $day, $time) : null,
         ]);

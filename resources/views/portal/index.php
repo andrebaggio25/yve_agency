@@ -38,7 +38,7 @@ $statusColors = [
       <p class="text-sm text-gray-400 mt-1.5"><?= t('portal.home.summary') ?></p>
     </div>
     <?php if ($hasPending): ?>
-    <a href="/portal/<?= $token ?>/planos" class="btn-primary flex-shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:scale-[1.02]">
+    <a href="/portal/<?= e($token) ?>/planos" class="btn-primary flex-shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:scale-[1.02]">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
       </svg>
@@ -57,7 +57,7 @@ $statusColors = [
       ['label' => t('portal.home.kpi_invoices_paid'), 'value' => $stats['invoices_paid'],  'icon' => 'M5 13l4 4L19 7', 'cls' => 'text-blue-300', 'href' => "/portal/{$token}/faturas"],
     ];
     foreach ($kpis as $k): ?>
-    <a href="<?= $k['href'] ?>"
+    <a href="<?= e($k['href']) ?>"
        class="rounded-xl p-3.5 bg-white/[0.04] border border-white/[0.08] transition-all hover:bg-white/[0.06] hover:border-white/[0.14]">
       <div class="flex items-center gap-2 mb-2">
         <svg class="w-4 h-4 flex-shrink-0 <?= $k['cls'] ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +90,7 @@ foreach ($weekItems as $wi) {
       <?= t('portal.home.your_week') ?>
       <span class="font-normal text-gray-400">· <?= t('portal.plan.week_of', ['from' => date('d/m', strtotime($weekMonday)), 'to' => date('d/m', strtotime($weekSunday))]) ?></span>
     </h2>
-    <a href="/portal/<?= $token ?>/planos/calendario" class="text-xs text-brand-300 hover:text-brand-200 transition-colors">
+    <a href="/portal/<?= e($token) ?>/planos/calendario" class="text-xs text-brand-300 hover:text-brand-200 transition-colors">
       <?= t('portal.calendar.view') ?> →
     </a>
   </div>
@@ -111,7 +111,7 @@ foreach ($weekItems as $wi) {
         <?php if (empty($dayItems)): ?>
         <p class="text-[11px] text-gray-500">—</p>
         <?php else: foreach ($dayItems as $wi): ?>
-        <a href="/portal/<?= $token ?>/planos/<?= (int) $wi['content_plan_id'] ?>#item-<?= (int) $wi['id'] ?>"
+        <a href="/portal/<?= e($token) ?>/planos/<?= (int) $wi['content_plan_id'] ?>#item-<?= (int) $wi['id'] ?>"
            class="block mb-1 rounded-lg border border-white/[0.07] bg-white/[0.04] px-1.5 py-1 hover:border-brand-500/40 transition-all">
           <span class="block text-[11px] text-gray-200 truncate"><?= e($wi['title'] ?: ($wi['content_type'] ?: 'Post')) ?></span>
           <?php if (!empty($wi['publish_time'])): ?>
@@ -139,7 +139,7 @@ foreach ($weekItems as $wi) {
   </div>
   <div class="space-y-2">
     <?php foreach ($pending as $p): ?>
-    <a href="/portal/<?= $token ?>/planos/<?= $p['id'] ?>"
+    <a href="/portal/<?= e($token) ?>/planos/<?= $p['id'] ?>"
        class="flex items-center justify-between rounded-xl p-4 transition-all hover:scale-[1.01]"
        style="background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.18)">
       <div class="flex items-center gap-3">
@@ -176,7 +176,7 @@ foreach ($weekItems as $wi) {
     <?php if (!empty($recentPlans)): ?>
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-sm font-semibold text-gray-300"><?= t('portal.home.content_plans') ?></h2>
-      <a href="/portal/<?= $token ?>/planos" class="text-xs text-brand-400 hover:text-brand-300"><?= t('portal.home.see_all') ?></a>
+      <a href="/portal/<?= e($token) ?>/planos" class="text-xs text-brand-400 hover:text-brand-300"><?= t('portal.home.see_all') ?></a>
     </div>
     <div class="space-y-2 mb-6">
       <?php foreach ($recentPlans as $p):
@@ -186,7 +186,7 @@ foreach ($weekItems as $wi) {
         $approved = (int)($p['approved_items'] ?? 0);
         $pct      = $total > 0 ? round($approved / $total * 100) : 0;
       ?>
-      <a href="/portal/<?= $token ?>/planos/<?= $p['id'] ?>"
+      <a href="/portal/<?= e($token) ?>/planos/<?= $p['id'] ?>"
          class="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-white/[0.04]"
          style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
         <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -300,7 +300,7 @@ foreach ($weekItems as $wi) {
           ['href' => "/portal/{$token}/contratos", 'label' => t('portal.nav.contracts'),      'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'color' => '#3b82f6'],
         ];
         foreach ($navLinks as $l): ?>
-        <a href="<?= $l['href'] ?>"
+        <a href="<?= e($l['href']) ?>"
            class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:bg-white/[0.04] group">
           <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
                style="background:<?= $l['color'] ?>18">
@@ -339,7 +339,7 @@ foreach ($weekItems as $wi) {
         </div>
         <?php endforeach; ?>
       </div>
-      <a href="/portal/<?= $token ?>/faturas" class="block mt-3 text-center text-xs text-red-400 hover:text-red-300 transition-colors">
+      <a href="/portal/<?= e($token) ?>/faturas" class="block mt-3 text-center text-xs text-red-400 hover:text-red-300 transition-colors">
         <?= t('portal.home.see_all_invoices') ?>
       </a>
     </div>

@@ -122,7 +122,8 @@ class PlatformUserRepository extends Repository
     /** ID de um papel global pelo slug (ex.: super_admin). */
     public function roleIdBySlug(string $slug): ?int
     {
-        $row = $this->first("SELECT id FROM roles WHERE slug = :slug LIMIT 1", [':slug' => $slug]);
+        // Só perfil do sistema: uma agência pode ter criado um perfil próprio com o mesmo slug.
+        $row = $this->first("SELECT id FROM roles WHERE slug = :slug AND agency_id IS NULL LIMIT 1", [':slug' => $slug]);
         return $row ? (int) $row['id'] : null;
     }
 

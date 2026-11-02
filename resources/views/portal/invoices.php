@@ -49,7 +49,10 @@ $statusColors = [
           <?php endif; ?>
         </td>
         <td class="px-5 py-4 text-gray-400 hidden sm:table-cell">
-          <?= $inv['issue_date'] ? date('d/m/Y', strtotime($inv['issue_date'])) : '—' ?>
+          <?php // `invoices` nunca teve `issue_date`: a coluna "Emissão" dava
+                // warning em toda linha e saía vazia. A emissão é a criação. ?>
+          <?php $emissao = $inv['issue_date'] ?? $inv['created_at'] ?? null; ?>
+          <?= $emissao ? date('d/m/Y', strtotime((string) $emissao)) : '—' ?>
         </td>
         <td class="px-5 py-4 <?= ($inv['status'] === 'overdue') ? 'text-red-400 font-medium' : 'text-gray-400' ?> hidden sm:table-cell">
           <?= $inv['due_date'] ? date('d/m/Y', strtotime($inv['due_date'])) : '—' ?>

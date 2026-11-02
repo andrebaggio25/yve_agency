@@ -38,6 +38,40 @@ class RoutesResolveTest extends TestCase
         $this->assertSame([], $broken, "Rotas apontando para handler inexistente:\n" . implode("\n", $broken));
     }
 
+    /**
+     * O handler tem de caber na chamada que o Router faz.
+     *
+     * `Router::runRoute()` invoca `$controller->$action($request)` — **um**
+     * argumento, sempre; o `{id}` da URL sai do `Request::param()`. Método que
+     * declara um segundo parâmetro obrigatório estoura ArgumentCountError e
+     * virar 500 (foi o BUG-06: `SettingsController::notificationsMarkRead`
+     * pedia `int $id` e marcar notificação como lida nunca funcionou).
+     */
+    public function test_every_route_handler_accepts_a_single_argument(): void
+    {
+        $broken = [];
+
+        foreach ($this->collectRoutes() as [$method, $uri, $handler]) {
+            [$class, $action] = [$handler[0] ?? null, $handler[1] ?? null];
+
+            if (!is_string($class) || !class_exists($class) || !is_string($action) || !method_exists($class, $action)) {
+                continue;   // handler inexistente é o outro teste
+            }
+
+            $reflection = new \ReflectionMethod($class, $action);
+            $required   = $reflection->getNumberOfRequiredParameters();
+
+            if ($required > 1) {
+                $broken[] = "{$method} {$uri} → {$class}::{$action}() exige {$required} argumentos; o Router passa só o Request";
+            }
+            if (!$reflection->isPublic() || $reflection->isStatic()) {
+                $broken[] = "{$method} {$uri} → {$class}::{$action}() precisa ser público e de instância";
+            }
+        }
+
+        $this->assertSame([], array_values(array_unique($broken)), "Rotas com handler incompatível:\n" . implode("\n", $broken));
+    }
+
     public function test_the_route_files_were_actually_loaded(): void
     {
         // Guarda do próprio teste: se o require falhar em silêncio, o teste

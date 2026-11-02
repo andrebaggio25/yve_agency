@@ -76,7 +76,7 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-2">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium <?= $ai['bg'] ?> <?= $ai['color'] ?>">
-              <?= $ai['label'] ?>
+              <?= e($ai['label']) ?>
             </span>
             <?php if ($s['campaign_name']): ?>
             <span class="text-xs text-gray-400"><?= e($s['campaign_name']) ?></span>
