@@ -243,3 +243,16 @@ Hoje o script mata o **grupo de processos** (`set -m` + `kill -- -$SERVER_PID`),
 recusa começar se a porta estiver ocupada e confere com `kill -0` que o servidor
 que ele mesmo subiu está vivo antes de confiar no readiness. Para rodar em
 paralelo com outro servidor local, use `SMOKE_PORT=8098 npm run test:browser`.
+
+## Homologação local
+
+Testar o sistema inteiro sem tocar em produção. **Nunca rode `php -S` na pasta principal:** o `.env` dela aponta para o Supabase, e qualquer variável ausente cairia nele.
+
+```bash
+git worktree add --detach ../yve_agency_hom hom
+cd ../yve_agency_hom && composer install
+scripts/hom/up.sh       # banco e caixa de e-mails em Docker, migrations e dados fictícios; imprime os logins
+scripts/hom/serve.sh    # sistema em http://localhost:8010, e-mails em http://localhost:8025
+```
+
+Para atualizar depois de novos commits: `git checkout --detach hom`, `composer install` e `scripts/hom/up.sh`. Para recomeçar do zero: `scripts/hom/up.sh --reset`. O cron não roda sozinho (comandos no topo do `serve.sh`). Meta, Drive e respostas do WhatsApp não funcionam aqui, porque dependem de endereço público e contas reais.

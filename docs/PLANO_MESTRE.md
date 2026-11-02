@@ -13,7 +13,7 @@
 
 **Gates em 2026-10-31:** 244 testes / 536 asserts verdes **com** o banco Docker (sem ele: 10 erros) · PHPStan nível 6 = 0 · `composer audit` = **5 advisories (1 crítico)**.
 
-**Totais revisados em 01/11 (após as decisões):** 69 entregas, ~898 h no total (incluindo INFRA-04 suspenso, que não conta no núcleo). Mudanças sobre os 838 h originais: FE-06 de 6 h para 40 h (D14: painel inteiro em 3 idiomas), AI-02 novo (18 h), META-03 e META-07 com +4 h cada (D2: rodar em fatias no cron da Hostinger). Visão interativa: artifact "Plano YVE Agency ciclo 4".
+**Totais revisados em 01/11 (após as decisões):** 77 entregas, ~928 h no total (incluindo INFRA-04 suspenso, que não conta no núcleo). Mudanças sobre os 838 h originais: FE-06 de 6 h para 40 h (D14: painel inteiro em 3 idiomas), AI-02 novo (18 h), META-03 e META-07 com +4 h cada (D2: rodar em fatias no cron da Hostinger), 8 itens novos achados na execução da F0 (30 h). Visão interativa: artifact "Plano YVE Agency ciclo 4".
 
 ---
 
@@ -38,6 +38,14 @@
 | ✅ SEC-17 | Dependências com CVE e PHP de produção | 3 | 0% | ● | — |
 | ✅ SEC-18 | Login e portal endurecidos | 6 | 0% | ● | — |
 | ✅ QA-05 | Suíte que não mente | 14 | 5% | ● | — |
+| SEC-19 | Agregados de dinheiro respeitam o alcance do usuário | 4 | 0% | ○ | Decisão do dono |
+| SEC-20 | Permissão própria para excluir insight de IA | 1 | 0% | ○ | — |
+| SEC-21 | Arquivos do Drive públicos por link | 6 | 0% | ● | Decisão do dono |
+| SEC-22 | Pagamento simultâneo, moeda e fatura cancelada no formulário | 3 | 0% | ○ | — |
+| BUG-08 | Saída para plano aprovado e plano rejeitado | 6 | 0% | ● | Decisão do dono |
+| BUG-09 | Dois planos do mesmo cliente na mesma semana | 3 | 0% | ○ | — |
+| BUG-10 | Envio manual do plano sem link do portal | 2 | 0% | ● | — |
+| FE-07 | Mensagens de erro cruas restantes | 5 | 0% | ○ | — |
 
 ### SEC-11 · Fronteira de tenant nos clientes e no conteúdo — `12h` · 30% · núcleo
 > ✅ **FEITO (2026-11-01):** `canAccessClient` passou a exigir a agência dona do cliente (cache por requisição, platform admin ainda passa), grant/revoke usam o `agency_id` e validam o `user_id` do POST, conteúdo ganhou guarda de cliente em plano, post e no `?client_id=` da lista e do calendário, o `client_id` do POST de fatura e contrato é validado, `loadClientIds` só carrega vínculo da própria agência (fechava o 200 em `/aprovacoes/{plano de outra agência}`), a revalidação do `AuthMiddleware` recarrega os vínculos — revogar acesso passou a valer em até 60 s, não só no próximo login — e o portal do cliente agora exige `clients.edit`. `TenantBoundaryTest` e `DefaultRolesReachTest` (+ casos novos em `AuthTest` e `MiddlewareAuthorizationTest`). Na revisão (01/11) o financeiro também fechou na **leitura**: `/faturas`, `/contratos` e `/pagamentos` só listam cliente alcançado (`Auth::reachableClientIds` + filtro `client_ids` no repositório) e fatura/contrato/pagamento de cliente fora do alcance responde 403 em abrir, editar, PDF e excluir — antes o seletor escondia o cliente e a URL entregava o dado dele (o papel padrão `client_financial` via a cobrança da agência inteira). O seletor de cliente da fatura e do contrato ganhou opção vazia e mantém o cliente do registro aberto mesmo arquivado: sem isso, salvar reatribuía a fatura ao primeiro cliente da lista, calado. Observações: a negativa de cliente de outra agência responde **403** (ClientAccessMiddleware), não 404; a **migration 30** devolve `clients.view_all` ao papel Gestor de Tráfego — sem ela, esse papel fica com o módulo de Conteúdo vazio; **perfil criado pelo tenant** com `content.view` e sem `clients.view_all` fica sem alcance e a lista de Conteúdo agora explica o que pedir ao administrador (`content.no_client_reach`) — backfill em massa desses perfis ficou de fora de propósito (daria a usuário de cliente o conteúdo de toda a agência). Fora do item: `/financeiro` e o Dashboard ainda somam dinheiro por agência, sem recorte de alcance.
@@ -128,6 +136,17 @@
 > **Ação:** Testes pulam limpo sem Postgres (hoje 10 dão erro); teste que resolve toda view referenciada e a aridade de todo handler; testes de financeiro, auth, RBAC, aprovações e sync do Drive. Inclui o QA-04 (smoke com credenciais).
 > **Arquivos:** tests/Feature/*, tests/Unit/*, FeatureTestCase
 > **Pronto quando:** composer test sem banco: 0 erros; npm run test:browser sem nenhum pulado.
+
+### Achados da execução da F0 (2026-11-02)
+> Os 15 itens originais estão ✅: 561 testes em PHP 8.3 e 8.5, PHPStan zerado, audit limpo. Estes ficaram fora do critério deles e entram como itens novos.
+> **SEC-19 · `4h`:** cards de `/financeiro`, `/financeiro/relatorios` e KPIs do dashboard somam a agência inteira, mesmo para quem não alcança todos os clientes. **Pronto quando:** perfil sem `clients.view_all` vê só a soma dos seus clientes, ou o dono decide que quem tem permissão de financeiro vê o total.
+> **SEC-20 · `1h`:** `DELETE /ia/{id}` apaga insight só com `ai_insights.view`. **Pronto quando:** exige permissão própria, com teste negativo.
+> **SEC-21 · `6h`:** `DriveUploadService.php:433` deixa todo arquivo enviado público por link, para o preview nativo funcionar. **Pronto quando:** o dono decide manter ou trocar por proxy autenticado (`streamResponse` já existe).
+> **SEC-22 · `3h`:** dois pagamentos simultâneos passam do saldo (falta `FOR UPDATE`), `/pagamentos/novo` monta o formulário para fatura cancelada, `currency_code` sem allowlist. **Pronto quando:** teste cobre os três.
+> **BUG-08 · `6h`:** plano aprovado não reabre, então post em revisão dentro dele não tem saída; plano `rejected` também não. **Pronto quando:** o dono decide entre "reabrir semana" e duplicar o plano, e o fluxo escolhido tem teste.
+> **BUG-09 · `3h`:** `create`/`update` aceitam dois planos do mesmo cliente na mesma semana, o que deixa o reagendamento ambíguo. **Pronto quando:** a colisão é recusada com mensagem.
+> **BUG-10 · `2h`:** `plan.sent_for_approval` manda link vazio a cliente sem token; `client.onboarding` manda link de portal desligado. **Pronto quando:** teste cobre os dois.
+> **FE-07 · `5h`:** negativa de alcance aparece como "Forbidden" em inglês em ~9 pontos do financeiro; `Controller::back()`, tráfego, IA e Drive ainda mostram `$e->getMessage()`. **Pronto quando:** erro traduzido em todos, sem texto cru.
 
 ---
 

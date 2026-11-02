@@ -1,0 +1,39 @@
+# Homologação local: banco próprio e caixa de e-mails falsa. Ver scripts/hom/up.sh.
+#
+# Separado do docker-compose.test.yml de propósito: o banco de teste é limpo a
+# cada `composer test`, e aqui os dados precisam durar enquanto você navega.
+# Tudo publicado só em 127.0.0.1.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: yve_hom_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hom
+      POSTGRES_DB: yve_hom
+    ports:
+      - "127.0.0.1:55433:5432"
+    volumes:
+      - yve_hom_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d yve_hom"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  mail:
+    image: axllent/mailpit:v1.20.0
+    container_name: yve_hom_mail
+    environment:
+      # O EmailService sempre exige STARTTLS + autenticação; o certificado é local.
+      MP_SMTP_TLS_CERT: /certs/hom.crt
+      MP_SMTP_TLS_KEY: /certs/hom.key
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    volumes:
+      - ./.hom:/certs:ro
+
+volumes:
+  yve_hom_data:
