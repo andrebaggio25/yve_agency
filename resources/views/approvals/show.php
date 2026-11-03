@@ -68,6 +68,7 @@ $jsI18n = [
   'revision_sent'       => t('approval.revision_sent'),
   'feedback_sent'       => t('approval.feedback_sent'),
   'action_failed'       => t('approval.action_failed'),
+  'reopened'            => t('approval.reopened'),
   'status'              => [
     'draft'    => t('status.draft'),
     'sent'     => t('status.sent'),
@@ -142,8 +143,19 @@ $jsI18nJson = e(json_encode($jsI18n, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSO
     <div class="mt-4 flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3">
       <svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <span class="text-sm text-emerald-300 font-medium">
+        <?php if (!empty($approvedByName)): ?>
+        <?= e(t('approval.approved_by_team', ['name' => $approvedByName, 'date' => date_fmt($plan['approved_at'] ?? null)])) ?>
+        <?php else: ?>
         <?= e(t('approval.approved_on', ['date' => date_fmt($plan['approved_at'] ?? null)])) ?>
+        <?php endif; ?>
       </span>
+    </div>
+    <?php endif; ?>
+
+    <?php /* BUG-08: plano fechado volta para a equipe corrigir e reenviar. */ ?>
+    <?php if ($canApprove && in_array($plan['status'], ['approved', 'rejected'], true)): ?>
+    <div class="mt-3 flex justify-end">
+      <button @click="showReopenModal = true" class="btn-secondary"><?= e(t('approval.reopen')) ?></button>
     </div>
     <?php endif; ?>
 
@@ -394,6 +406,27 @@ $jsI18nJson = e(json_encode($jsI18n, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSO
         <button @click="showRevisionModal=false" class="btn-secondary">
           <?= t('common.cancel') ?>
         </button>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <?php if ($canApprove && in_array($plan['status'], ['approved', 'rejected'], true)): ?>
+  <div x-show="showReopenModal" x-cloak x-transition.opacity
+       class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       @keydown.escape.window="showReopenModal=false" role="dialog" aria-modal="true" aria-labelledby="reopen-title">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showReopenModal=false"></div>
+    <div class="relative w-full max-w-md card p-6">
+      <h3 id="reopen-title" class="text-base font-semibold text-white mb-2"><?= e(t('approval.reopen_title')) ?></h3>
+      <p class="text-sm text-gray-400 mb-4"><?= e(t('approval.reopen_hint')) ?></p>
+      <label for="reopen-reason" class="block text-sm font-medium text-gray-300 mb-1.5"><?= e(t('approval.reopen_reason')) ?></label>
+      <textarea id="reopen-reason" x-model="reopenReason" rows="3" required maxlength="500" class="input-field resize-none mb-4"></textarea>
+      <div class="flex gap-3">
+        <button @click="reopenPlan()" :disabled="acting || !reopenReason.trim()"
+                class="flex-1 rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-amber-500 disabled:opacity-50">
+          <span x-text="acting ? <?= e(json_encode(t('approval.sending'))) ?> : <?= e(json_encode(t('approval.reopen'))) ?>"></span>
+        </button>
+        <button @click="showReopenModal=false" class="btn-secondary"><?= t('common.cancel') ?></button>
       </div>
     </div>
   </div>

@@ -100,7 +100,7 @@ final class InitialDataSeeder extends AbstractSeed
         ]],
         ['slug' => 'designer',        'name' => 'Designer',                 'permissions' => [
             'dashboard.view', 'clients.view', 'clients.view_all', 'content.view', 'drive_assets.view',
-            'approvals.view', 'approvals.comment', 'tasks.view',
+            'drive_assets.manage', 'approvals.view', 'approvals.comment', 'tasks.view',
         ]],
         // clients.view_all: o financeiro fatura a carteira inteira — sem
         // isso o relatório executivo por cliente (e o PDF) devolvia 403.

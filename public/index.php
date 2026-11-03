@@ -30,6 +30,10 @@ if (env('APP_ENV', 'production') === 'development') {
     ini_set('log_errors', '1');
 }
 
+// A pilha de uma exceção não guarda os argumentos das funções: eles incluem a
+// senha do login e iriam parar no log e na tela de erro do modo desenvolvimento.
+ini_set('zend.exception_ignore_args', '1');
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Timezone
 // ─────────────────────────────────────────────────────────────────────────────

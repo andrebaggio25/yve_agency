@@ -42,6 +42,7 @@ class NotificationService
             'plan.approved'           => $this->onPlanApproved($agencyId, $context),
             'plan.auto_created'       => $this->onPlanAutoCreated($agencyId, $context),
             'plan.revision_requested' => $this->onPlanRevision($agencyId, $context),
+            'plan.reopened'           => $this->onPlanReopened($agencyId, $context),
             'item.feedback_added'     => $this->onItemFeedback($agencyId, $context),
             'task.assigned'           => $this->onTaskAssigned($agencyId, $context),
             // Automações — recebem a própria chave: é por ela que o motor
@@ -287,6 +288,9 @@ class NotificationService
         $planId    = $ctx['plan_id'] ?? null;
         $planTitle = $ctx['plan_title'] ?? 'Plano';
         $client    = $ctx['client'] ?? null;
+        // Aprovado pela equipe: nem o aviso interno nem o WhatsApp podem dizer
+        // que foi o cliente quem aprovou.
+        $byTeam    = !empty($ctx['approved_by']);
 
         // Notify responsible user in-app
         if (!empty($ctx['responsible_user_id'])) {
@@ -295,7 +299,7 @@ class NotificationService
                 'user_id'    => (int) $ctx['responsible_user_id'],
                 'type'       => 'plan.approved',
                 'title'      => "Plano aprovado: {$planTitle}",
-                'body'       => "O cliente aprovou o plano de conteúdo.",
+                'body'       => $byTeam ? 'A equipe aprovou o plano em nome do cliente.' : 'O cliente aprovou o plano de conteúdo.',
                 'action_url' => "/conteudo/{$planId}",
             ]);
         }
@@ -306,7 +310,7 @@ class NotificationService
                 'agency_id' => $agencyId,
                 'channel'   => 'whatsapp',
                 'recipient' => $client['whatsapp'],
-                'template'  => 'plan_approved_confirmation',
+                'template'  => $byTeam ? 'plan_approved_by_team' : 'plan_approved_confirmation',
                 'locale'    => $client['language'] ?? 'pt',
                 'payload'   => ['plan_title' => $planTitle, 'client_name' => $client['name'] ?? ''],
             ]);
@@ -329,6 +333,41 @@ class NotificationService
                 'title'      => "Revisão solicitada: {$planTitle}",
                 'body'       => $note ?: "O cliente solicitou revisão do plano.",
                 'action_url' => "/conteudo/{$planId}",
+            ]);
+        }
+    }
+
+    private function onPlanReopened(int $agencyId, array $ctx): void
+    {
+        $planId    = $ctx['plan_id'] ?? null;
+        $planTitle = $ctx['plan_title'] ?? 'Plano';
+        $reason    = (string) ($ctx['reason'] ?? '');
+        $client    = $ctx['client'] ?? null;
+
+        foreach ($this->users->findByAgencyAndPermission($agencyId, 'content.edit') as $u) {
+            $this->repo->createNotification([
+                'agency_id'  => $agencyId,
+                'user_id'    => (int) $u['id'],
+                'type'       => 'plan.reopened',
+                'title'      => "Semana reaberta: {$planTitle}",
+                'body'       => $reason,
+                'action_url' => "/conteudo/{$planId}",
+            ]);
+        }
+
+        if ($client && !empty($client['whatsapp']) && ($client['notify_whatsapp'] ?? true)) {
+            $this->queueDelivery([
+                'agency_id' => $agencyId,
+                'channel'   => 'whatsapp',
+                'recipient' => $client['whatsapp'],
+                'template'  => 'plan_reopened',
+                'locale'    => $client['language'] ?? 'pt',
+                'payload'   => [
+                    'plan_title'   => $planTitle,
+                    'reason'       => $reason,
+                    'approval_url' => $ctx['approval_url'] ?? '',
+                    'client_name'  => $client['name'] ?? '',
+                ],
             ]);
         }
     }
@@ -625,6 +664,10 @@ class NotificationService
                     "Hello, *::client_name::*! 👋\n\nA new content plan *::plan_title::* is ready for your review.\n\n🔗 ::approval_url::\n\nThank you!",
                 'plan_approved_confirmation' =>
                     "Great news, *::client_name::*! 🎉\n\nYour approval for *::plan_title::* has been registered. Our team will get started right away!",
+                'plan_approved_by_team' =>
+                    "Hello, *::client_name::*!\n\nOur team recorded the approval of *::plan_title::* on your behalf. If that doesn't look right, please let us know.",
+                'plan_reopened' =>
+                    "Hello, *::client_name::*!\n\nWe reopened *::plan_title::* for adjustments.\n\nReason: ::reason::\n\nWe will send the new version for your approval.\n\n🔗 ::approval_url::",
                 'invoice_due_reminder' =>
                     "Hi, *::client_name::*! 🧾\n\nA friendly reminder: invoice *::invoice_number::* of *::total::* is due on *::due_date::* (in ::days:: days).\n\nThank you!",
                 'invoice_overdue' =>
@@ -641,6 +684,10 @@ class NotificationService
                     "¡Hola, *::client_name::*! 👋\n\nTenemos un nuevo plan de contenido *::plan_title::* listo para tu revisión.\n\n🔗 ::approval_url::\n\n¡Gracias!",
                 'plan_approved_confirmation' =>
                     "¡Excelente, *::client_name::*! 🎉\n\nTu aprobación de *::plan_title::* fue registrada. ¡Nuestro equipo comenzará de inmediato!",
+                'plan_approved_by_team' =>
+                    "¡Hola, *::client_name::*!\n\nNuestro equipo registró la aprobación de *::plan_title::* en tu nombre. Si algo no es correcto, avísanos.",
+                'plan_reopened' =>
+                    "¡Hola, *::client_name::*!\n\nReabrimos *::plan_title::* para hacer ajustes.\n\nMotivo: ::reason::\n\nTe enviaremos la nueva versión para tu aprobación.\n\n🔗 ::approval_url::",
                 'invoice_due_reminder' =>
                     "¡Hola, *::client_name::*! 🧾\n\nRecordatorio: la factura *::invoice_number::* de *::total::* vence el *::due_date::* (en ::days:: días).\n\n¡Gracias!",
                 'invoice_overdue' =>
@@ -657,6 +704,10 @@ class NotificationService
                     "Olá, *::client_name::*! 👋\n\nTemos um novo plano de conteúdo *::plan_title::* pronto para a sua revisão.\n\n🔗 ::approval_url::\n\nObrigado!",
                 'plan_approved_confirmation' =>
                     "Ótima notícia, *::client_name::*! 🎉\n\nSua aprovação do plano *::plan_title::* foi registrada. Nossa equipe já vai começar!",
+                'plan_approved_by_team' =>
+                    "Olá, *::client_name::*!\n\nNossa equipe registrou a aprovação do plano *::plan_title::* em seu nome. Se algo não estiver certo, é só avisar.",
+                'plan_reopened' =>
+                    "Olá, *::client_name::*!\n\nReabrimos o plano *::plan_title::* para fazer ajustes.\n\nMotivo: ::reason::\n\nVamos enviar a nova versão para a sua aprovação.\n\n🔗 ::approval_url::",
                 'invoice_due_reminder' =>
                     "Olá, *::client_name::*! 🧾\n\nLembrete amigável: a fatura *::invoice_number::* de *::total::* vence em *::due_date::* (em ::days:: dias).\n\nObrigado!",
                 'invoice_overdue' =>

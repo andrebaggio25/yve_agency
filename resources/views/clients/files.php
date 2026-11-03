@@ -8,8 +8,9 @@ $maxBytes = (int) ($maxUploadBytes ?? 0);
 $maxLabel = $maxBytes > 0 ? number_format($maxBytes / (1024 * 1024), 0) . ' MB' : '';
 $isConnected = (bool) ($connected ?? false);
 // BUG-03: escrever no Drive (enviar, mover, renomear, excluir, sincronizar)
-// exige content.edit no backend — sem ela a tela fica só de leitura.
-$canWrite = $isConnected && Auth::can('content.edit');
+// exige drive_assets.manage ou content.edit no backend — sem elas a tela fica
+// só de leitura.
+$canWrite = $isConnected && Auth::canAny('drive_assets.manage', 'content.edit');
 
 $jsI18n = [
   'loading'              => t('portal.files.loading'),

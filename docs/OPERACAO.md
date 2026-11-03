@@ -124,6 +124,13 @@ Depois, no navegador: **hard refresh** (Ctrl+Shift+R) — CSS e JS têm cache lo
 | `resources/css/` ou `tailwind.config.js` | `npm run build` **local** e commitar `public/css/app.css` |
 | `.env.example` | conferir se falta variável nova no `.env` de produção |
 
+### Conexão com o banco (INFRA-02)
+
+`DB_PERSISTENT` (padrão `true`) reaproveita a conexão entre requisições. Em cada requisição o sistema testa a conexão guardada com `SELECT 1` e, se ela estiver morta, abre outra sem mostrar erro ao usuário.
+
+- Na porta **6543** do Supabase (pooler em modo transação), use `DB_PERSISTENT=false`: conexão persistente e prepared statements não combinam com esse modo.
+- **Medição pendente:** depois do deploy, confira a porta em uso, compare o tempo de uma página com `true` e `false` e registre o número aqui.
+
 ---
 
 ## 4. Validação de integrações (INT-01 / INT-03)

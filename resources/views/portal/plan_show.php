@@ -64,6 +64,10 @@ foreach ($items as $it) {
   <p class="text-sm text-gray-400 mb-4 leading-relaxed"><?= e($plan['description']) ?></p>
   <?php endif; ?>
 
+  <?php if ($planStatus === 'approved' && !empty($plan['approved_by'])): ?>
+  <p class="text-sm text-gray-400 mb-4"><?= e(t('portal.plan.approved_by_team')) ?></p>
+  <?php endif; ?>
+
   <?php if (!empty($weekDays)): ?>
   <!-- A semana num relance: seg→dom com a contagem de posts por dia -->
   <div class="mb-4">

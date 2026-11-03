@@ -38,11 +38,11 @@
 | ✅ SEC-17 | Dependências com CVE e PHP de produção | 3 | 0% | ● | — |
 | ✅ SEC-18 | Login e portal endurecidos | 6 | 0% | ● | — |
 | ✅ QA-05 | Suíte que não mente | 14 | 5% | ● | — |
-| SEC-19 | Agregados de dinheiro respeitam o alcance do usuário | 4 | 0% | ○ | Decisão do dono |
+| SEC-19 | Agregados de dinheiro: quem tem financeiro vê o total da agência (D19) | 0 | 100% | ○ | ✅ Encerrado sem código |
 | SEC-20 | Permissão própria para excluir insight de IA | 1 | 0% | ○ | — |
-| SEC-21 | Arquivos do Drive públicos por link | 6 | 0% | ● | Decisão do dono |
+| SEC-21 | Arquivos do Drive: trocar link público por acesso autenticado (D18) | 6 | 0% | ● | Depois do deploy |
 | SEC-22 | Pagamento simultâneo, moeda e fatura cancelada no formulário | 3 | 0% | ○ | — |
-| BUG-08 | Saída para plano aprovado e plano rejeitado | 6 | 0% | ● | Decisão do dono |
+| BUG-08 | Saída para plano aprovado e plano rejeitado | 6 | 100% | ● | ✅ 2026-11-03 |
 | BUG-09 | Dois planos do mesmo cliente na mesma semana | 3 | 0% | ○ | — |
 | BUG-10 | Envio manual do plano sem link do portal | 2 | 0% | ● | — |
 | FE-07 | Mensagens de erro cruas restantes | 5 | 0% | ○ | — |
@@ -140,10 +140,16 @@
 ### Achados da execução da F0 (2026-11-02)
 > ✅ **BUG-11 · FEITO (2026-11-02), achado na varredura da homologação local:** o formulário de `/contratos/novo` nunca salvou (`$action` e `$method` sem definir, bug anterior a este ciclo); fatura e contrato inexistentes davam 500 e agora dão 404; Tráfego e Orgânico sem conta deixavam a seção aberta. `AllPagesRenderTest` abre toda tela e falha em aviso do PHP.
 > Os 15 itens originais estão ✅: 561 testes em PHP 8.3 e 8.5, PHPStan zerado, audit limpo. Estes ficaram fora do critério deles e entram como itens novos.
+> ✅ **ENCERRADO (2026-11-03, D19):** o dono decidiu que quem tem permissão de financeiro vê o total da agência.
+>
 > **SEC-19 · `4h`:** cards de `/financeiro`, `/financeiro/relatorios` e KPIs do dashboard somam a agência inteira, mesmo para quem não alcança todos os clientes. **Pronto quando:** perfil sem `clients.view_all` vê só a soma dos seus clientes, ou o dono decide que quem tem permissão de financeiro vê o total.
 > **SEC-20 · `1h`:** `DELETE /ia/{id}` apaga insight só com `ai_insights.view`. **Pronto quando:** exige permissão própria, com teste negativo.
+> **Decidido (2026-11-03, D18):** trocar por proxy autenticado, em entrega separada depois do deploy da F0.
+>
 > **SEC-21 · `6h`:** `DriveUploadService.php:433` deixa todo arquivo enviado público por link, para o preview nativo funcionar. **Pronto quando:** o dono decide manter ou trocar por proxy autenticado (`streamResponse` já existe).
 > **SEC-22 · `3h`:** dois pagamentos simultâneos passam do saldo (falta `FOR UPDATE`), `/pagamentos/novo` monta o formulário para fatura cancelada, `currency_code` sem allowlist. **Pronto quando:** teste cobre os três.
+> ✅ **FEITO (2026-11-03, D17):** ação "Reabrir semana" em Aprovações (`/aprovacoes/{id}/reabrir`), com `approvals.approve` e motivo obrigatório: o plano volta para revisão, os posts aprovados seguem aprovados, o motivo fica nas notas e em `activity_logs`, a equipe recebe aviso no sistema e a cliente por WhatsApp.
+>
 > **BUG-08 · `6h`:** plano aprovado não reabre, então post em revisão dentro dele não tem saída; plano `rejected` também não. **Pronto quando:** o dono decide entre "reabrir semana" e duplicar o plano, e o fluxo escolhido tem teste.
 > **BUG-09 · `3h`:** `create`/`update` aceitam dois planos do mesmo cliente na mesma semana, o que deixa o reagendamento ambíguo. **Pronto quando:** a colisão é recusada com mensagem.
 > **BUG-10 · `2h`:** `plan.sent_for_approval` manda link vazio a cliente sem token; `client.onboarding` manda link de portal desligado. **Pronto quando:** teste cobre os dois.
@@ -158,7 +164,7 @@
 | ID | Entrega | Horas | % feito | Núcleo | Depende de |
 |----|---------|------:|--------:|:------:|------------|
 | INFRA-04 | ⏸️ Worker da fila na VPS | 10 | 0% | ○ | Suspenso pela D2 |
-| INFRA-02 | Conexão persistente × pooler do Supabase | 4 | 0% | ● | — |
+| INFRA-02 | Conexão persistente × pooler do Supabase | 4 | 70% | ● | Medir em produção |
 | INFRA-05 | Fila robusta | 5 | 60% | ● | — |
 | OBS-03 | Logs que existem | 6 | 10% | ● | SEC-15 |
 
@@ -168,7 +174,8 @@
 > **Arquivos:** QueueController (extrair runner CLI), bin/worker.php, Dockerfile, docs/OPERACAO.md · **Externo:** VPS Paris
 > **Pronto quando:** Job agendado para 10:00 sai entre 10:00 e 10:01; /api/health mostra o heartbeat do worker.
 
-### INFRA-02 · Conexão persistente × pooler do Supabase — `4h` · 0% · núcleo
+### INFRA-02 · Conexão persistente × pooler do Supabase — `4h` · 70% · núcleo
+> 🟡 **PARCIAL (2026-11-03):** `Database` testa a conexão guardada a cada requisição e, se estiver morta, segue numa nova: era o erro 500 visto na homologação quando o Mac dormiu. `DB_PERSISTENT=false` desliga a persistência. O erro 500 agora vai para o log, com a rota e sem os argumentos das funções. **Falta:** a medição contra o pooler real, que só dá para fazer em produção (ver OPERACAO.md).
 > **Ação:** Desligar ATTR_PERSISTENT ou apontar para a porta de session pooling; medir latência antes e depois.
 > **Arquivos:** app/Core/Database.php, docs/OPERACAO.md
 > **Pronto quando:** Sem 'prepared statement already exists' em carga de 20 req simultâneas; número registrado no doc.
@@ -540,6 +547,16 @@
 | D12 | Versões do criativo | **Adiar até a esteira de produção rodar.** | CONT-09 |
 | D13 | Rotas pt/en | **Unificar com redirecionamento 301.** | ARCH-02 |
 | D14 | Idiomas | **Vender em pt, en e es.** FE-06 passa a núcleo e cresce para 40 h. | FE-06 |
+
+### Decisões de 2026-11-03 (achados da F0)
+
+| # | Decisão | Resposta | Afeta |
+|---|---------|----------|-------|
+| D15 | Galeria | **Designer envia e organiza arquivos**, com a permissão própria `drive_assets.manage`. Gestor de Tráfego só consulta. | migration 33 |
+| D16 | Aprovar pelo cliente | **Social Media pode, e o sistema registra quem foi.** Telas, avisos e WhatsApp não dizem que foi o cliente. | migration 34 |
+| D17 | Plano aprovado | **Ação "Reabrir semana"**, com registro e aviso à cliente. | BUG-08 |
+| D18 | Arquivos do Drive | **Trocar link público por acesso autenticado**, em entrega separada depois do deploy. | SEC-21 |
+| D19 | Totais do financeiro | **Manter:** quem tem permissão de financeiro vê o total da agência. | SEC-19 |
 
 ## Fora deste ciclo
 

@@ -40,6 +40,8 @@ function approvalShow(planId, i18n) {
     acting: false,
     showRevisionModal: false,
     revisionNote: '',
+    showReopenModal: false,
+    reopenReason: '',
     toast: { show: false, msg: '', ok: true },
 
     async approvePlan() {
@@ -66,6 +68,21 @@ function approvalShow(planId, i18n) {
         await api.post(`/aprovacoes/${planId}/revisao`, { note: this.revisionNote });
         this.showRevisionModal = false;
         this.showToast(i18n.revision_sent, true);
+        setTimeout(() => location.reload(), 800);
+      } catch (e) {
+        this.showToast(e.message || i18n.action_failed, false);
+        this.acting = false;
+      }
+    },
+
+    async reopenPlan() {
+      if (this.acting) return;
+
+      this.acting = true;
+      try {
+        await api.post(`/aprovacoes/${planId}/reabrir`, { reason: this.reopenReason });
+        this.showReopenModal = false;
+        this.showToast(i18n.reopened, true);
         setTimeout(() => location.reload(), 800);
       } catch (e) {
         this.showToast(e.message || i18n.action_failed, false);

@@ -252,7 +252,7 @@ class ContentPlanStateMachineTest extends FeatureTestCase
         $fechadoBody = $this->get("/conteudo/{$fechado['plan']}")->getBody();
         $this->assertStringNotContainsString('openAddPost(', $fechadoBody, 'Plano aprovado não oferece adicionar post.');
         $this->assertStringNotContainsString('deleteItem()', $fechadoBody, 'Plano aprovado não oferece excluir post.');
-        $this->assertStringContainsString('Semana aprovada pela cliente', $fechadoBody, 'A tela explica por que as ações sumiram.');
+        $this->assertStringContainsString('Semana aprovada —', $fechadoBody, 'A tela explica por que as ações sumiram.');
         // O "Reagendar" continua lá: é a saída da semana fechada — o post muda
         // de data (dentro ou fora dela) a pedido da cliente, sem desaparecer.
         $this->assertStringContainsString('reschedule()', $fechadoBody);
@@ -573,7 +573,7 @@ class ContentPlanStateMachineTest extends FeatureTestCase
 
         // Contraste: ainda há post sem decisão da cliente — nada a avisar.
         $this->assertStringNotContainsString(
-            'aprovou todos os posts',
+            'desta revisão já estão aprovados',
             $this->get("/aprovacoes/{$pendente['plan']}")->getBody()
         );
 
@@ -582,7 +582,7 @@ class ContentPlanStateMachineTest extends FeatureTestCase
         // a cliente já tinha decidido: a cobrança automática só olha 'sent' e o
         // botão de plano da tela interna só aparece em 'sent'.
         $this->assertStringContainsString(
-            'aprovou todos os posts',
+            'desta revisão já estão aprovados',
             $this->get("/aprovacoes/{$fechavel['plan']}")->getBody()
         );
     }
@@ -691,7 +691,7 @@ class ContentPlanStateMachineTest extends FeatureTestCase
 
         $fechadoBody = $this->get("/conteudo/{$fechado['plan']}/editar")->getBody();
         $this->assertStringNotContainsString('name="week_start"', $fechadoBody, 'Plano aprovado não oferece trocar a semana.');
-        $this->assertStringContainsString('Semana aprovada pela cliente', $fechadoBody, 'A tela explica por quê.');
+        $this->assertStringContainsString('Semana aprovada —', $fechadoBody, 'A tela explica por quê.');
     }
 
     public function test_depois_de_trocar_a_semana_o_post_continua_editavel(): void

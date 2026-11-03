@@ -103,6 +103,9 @@ class AuditTrailCoverageTest extends TestCase
         [\App\Controllers\Admin\MigrationController::class,        'run',        'migrations_run'],
         [\App\Controllers\Admin\MigrationController::class,        'rollback',   'migrations_rollback'],
 
+        // ── Aprovações ───────────────────────────────────────────────────────
+        [\App\Services\ContentPlanService::class, 'reopen', 'content_plan.reopened'],
+
         // ── Portal do cliente: acesso ───────────────────────────────────────
         [\App\Controllers\PortalController::class, 'adminRegenerateToken', 'portal_token_regenerated'],
         [\App\Controllers\PortalController::class, 'adminTogglePortal',    'portal_enabled'],

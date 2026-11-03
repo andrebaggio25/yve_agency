@@ -26,6 +26,9 @@ class ContentPlanService
      */
     private const AWAITING_CLIENT = ['sent', 'pending_approval'];
 
+    /** Plano fechado que a equipe pode reabrir (BUG-08). */
+    private const REOPENABLE = ['approved', 'rejected'];
+
     /**
      * Link PÚBLICO de aprovação (portal do cliente). O cliente não tem login —
      * mandar a rota interna /aprovacoes/{id} gera um link que ele não abre.
@@ -830,8 +833,8 @@ class ContentPlanService
                 $to   = date('d/m', (int) strtotime(self::sundayOf($targetMonday)));
                 return [
                     'success' => false,
-                    'error'   => "A semana de destino ({$from} a {$to}) já foi aprovada pela cliente. "
-                               . 'Escolha outra data — não existe reabrir semana aprovada.',
+                    'error'   => "A semana de destino ({$from} a {$to}) já foi aprovada. "
+                               . 'Escolha outra data ou reabra a semana em Aprovações.',
                 ];
             }
             $targetId = (int) $targetPlan['id'];
@@ -910,7 +913,7 @@ class ContentPlanService
         ActivityLogger::log('approval.feedback_added', 'approvals', null, $clientId, ['item_id' => $itemId, 'type' => $type], $agencyId);
 
         if ($type === 'approved') {
-            $this->maybeApprovePlanFromItems($planId, $clientId);
+            $this->maybeApprovePlanFromItems($planId, $clientId, $source === 'agency' ? $userId : null);
         }
 
         return $id;
@@ -920,7 +923,7 @@ class ContentPlanService
      * Quando o último criativo pendente é aprovado, o plano inteiro passa a
      * aprovado — sem exigir que o cliente clique também em "Aprovar Tudo".
      */
-    private function maybeApprovePlanFromItems(int $planId, int $clientId): void
+    private function maybeApprovePlanFromItems(int $planId, int $clientId, ?int $approvedBy): void
     {
         $summary = $this->repo->getItemStatusSummary($planId);
         $total   = array_sum($summary);
@@ -931,7 +934,56 @@ class ContentPlanService
         // não pode fechar plano que não está esperando decisão da cliente
         // (rascunho, em revisão, rejeitado ou já aprovado) — era o atalho que
         // contornava o guard do portal.
-        $this->approvePlan($planId, $clientId);
+        $this->approvePlan($planId, $clientId, $approvedBy);
+    }
+
+    /**
+     * Reabre a semana fechada para a equipe corrigir e reenviar (BUG-08).
+     *
+     * O plano volta a 'revision', o mesmo estado de quando a cliente pede
+     * alteração: dali em diante vale o fluxo normal, e só o reenvio o coloca de
+     * novo na mesa dela. Os posts aprovados continuam aprovados, porque a decisão
+     * sobre eles não mudou. Tarefas e rascunho da semana seguinte não se repetem
+     * na nova aprovação: as duas automações são idempotentes por plano.
+     *
+     * O motivo vai para a cliente e fica nas notas do plano e na trilha.
+     */
+    public function reopen(int $planId, int $agencyId, string $reason): bool
+    {
+        $plan   = $this->get($planId, $agencyId);
+        $reason = trim($reason);
+
+        if (!$plan || $reason === '' || !in_array((string) $plan['status'], self::REOPENABLE, true)) {
+            return false;
+        }
+
+        $current = is_string($plan['notes'] ?? null) ? trim($plan['notes']) : '';
+        $header  = t('content.reopen_note_header', ['date' => date('d/m/Y H:i')]);
+
+        $affected = $this->repo->updatePlan($planId, $agencyId, [
+            'status'      => 'revision',
+            'approved_at' => null,
+            'approved_by' => null,
+            'notes'       => ($current !== '' ? $current . "\n\n" : '') . $header . "\n" . $reason,
+        ]);
+
+        ActivityLogger::log('content_plan.reopened', 'approvals', null, (int) $plan['client_id'], [
+            'plan_id'     => $planId,
+            'from_status' => $plan['status'],
+            'reason'      => $reason,
+        ]);
+
+        if ($affected > 0) {
+            $this->notifications?->notifyEvent('plan.reopened', $agencyId, [
+                'plan_id'      => $planId,
+                'plan_title'   => $plan['title'],
+                'reason'       => $reason,
+                'client'       => $this->clientRepo?->findByIdAndAgency((int) $plan['client_id'], $agencyId),
+                'approval_url' => self::portalPlanUrl($plan['client_portal_token'] ?? null, $planId),
+            ]);
+        }
+
+        return $affected > 0;
     }
 
     /**
@@ -950,8 +1002,13 @@ class ContentPlanService
      * ninguém notar (a cliente também não consegue repetir o pedido depois,
      * porque feedback de item em plano aprovado responde 409). O plano fica
      * "Aprovado — 2/3", que é a verdade: semana fechada, um post a refazer.
+     *
+     * `$approvedBy` é quem da equipe aprovou em nome do cliente; nulo quando foi
+     * o próprio cliente, no portal. O sistema não pode afirmar que ele aprovou
+     * o que a equipe marcou. A coluna só entra na gravação quando há valor: até
+     * a migration rodar no deploy, a aprovação do portal segue funcionando.
      */
-    public function approvePlan(int $planId, int $clientId): bool
+    public function approvePlan(int $planId, int $clientId, ?int $approvedBy = null): bool
     {
         $plan = $this->repo->findByIdForClient($planId, $clientId);
         if (!$plan) return false;
@@ -963,10 +1020,12 @@ class ContentPlanService
         if (!in_array((string) $plan['status'], self::AWAITING_CLIENT, true)) return false;
 
         $agencyId = (int) $plan['agency_id'];
-        $affected = $this->repo->updatePlan($planId, $agencyId, [
-            'status'      => 'approved',
-            'approved_at' => date('Y-m-d H:i:s'),
-        ]);
+        $fields = ['status' => 'approved', 'approved_at' => date('Y-m-d H:i:s')];
+        if ($approvedBy !== null) {
+            $fields['approved_by'] = $approvedBy;
+        }
+
+        $affected = $this->repo->updatePlan($planId, $agencyId, $fields);
         $itemsApproved = $affected > 0 ? $this->repo->approvePendingItems($planId) : 0;
 
         // A agência vai explícita: aprovar vem do portal, onde não há sessão —
@@ -975,6 +1034,7 @@ class ContentPlanService
         ActivityLogger::log('content_plan.approved', 'approvals', null, $clientId, [
             'plan_id'        => $planId,
             'items_approved' => $itemsApproved,
+            'approved_by'    => $approvedBy,
         ], $agencyId);
 
         if ($affected > 0) {
@@ -984,6 +1044,7 @@ class ContentPlanService
                 'plan_title'          => $plan['title'],
                 'client'              => $client,
                 'responsible_user_id' => $plan['created_by'] ?? null,
+                'approved_by'         => $approvedBy,
             ]);
             $this->maybeCreateProductionTasks($agencyId, $clientId, $planId, $plan);
             $this->maybeCreateNextPlan($agencyId, $clientId, $planId, $plan);

@@ -43,6 +43,7 @@ return [
 
     // Assets / Drive
     'drive_assets.view'           => 'Ver arquivos do Drive',
+    'drive_assets.manage'         => 'Gerenciar arquivos do Drive',
 
     // Métricas
     'organic_metrics.view'        => 'Ver métricas orgânicas',

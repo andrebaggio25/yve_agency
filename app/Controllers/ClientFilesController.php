@@ -398,13 +398,13 @@ class ClientFilesController extends Controller
      *
      * BUG-03: `clients.view` é leitura — com só ela, qualquer perfil que abria
      * a galeria (inclusive o Gestor de Tráfego) apagava pasta de cliente.
-     * Escrever no Drive passa a exigir `content.edit`, a mesma permissão de
-     * mexer na planificação do cliente.
+     * Escrever no Drive exige `drive_assets.manage` (quem produz o material,
+     * como o Designer, sem poder mexer na planificação) ou `content.edit`.
      */
     private function requireClient(Request $request): array|Response
     {
         Auth::requirePermission('clients.view');
-        Auth::requirePermission('content.edit');
+        Auth::requireAnyPermission('drive_assets.manage', 'content.edit');
 
         $clientId = (int) $request->param('clientId');
         $client   = $this->clientRepo->findByIdAndAgency($clientId, (int) Auth::agencyId());
@@ -467,13 +467,13 @@ class ClientFilesController extends Controller
      * Reconcilia a galeria com o Google Drive (sob demanda, via botão).
      * Reflete no sistema o que foi apagado/renomeado direto no Drive.
      *
-     * Exige `content.edit` como o resto da escrita (BUG-03): o sync remove
+     * Exige a mesma permissão do resto da escrita (BUG-03): o sync remove
      * linhas de `drive_files`, não é leitura.
      */
     public function sync(Request $request): Response
     {
         Auth::requirePermission('clients.view');
-        Auth::requirePermission('content.edit');
+        Auth::requireAnyPermission('drive_assets.manage', 'content.edit');
 
         $clientId = (int) $request->param('clientId');
         $agencyId = (int) Auth::agencyId();

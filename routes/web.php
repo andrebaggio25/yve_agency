@@ -170,6 +170,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/approvals/{planId}',                 [ApprovalController::class, 'show']);
     $router->post('/approvals/{planId}/approve',        [ApprovalController::class, 'approvePlan'],    [CsrfMiddleware::class]);
     $router->post('/approvals/{planId}/revision',       [ApprovalController::class, 'requestRevision'],[CsrfMiddleware::class]);
+    $router->post('/approvals/{planId}/reopen',         [ApprovalController::class, 'reopenPlan'],     [CsrfMiddleware::class]);
     $router->post('/approvals/{planId}/items/{itemId}', [ApprovalController::class, 'feedback'],       [CsrfMiddleware::class]);
     // Financial
     $router->get('/financial',          [FinancialController::class,       'index']);
@@ -364,6 +365,7 @@ $router->group([AuthMiddleware::class], function ($router) {
     $router->get('/aprovacoes/{planId}',                 [ApprovalController::class, 'show']);
     $router->post('/aprovacoes/{planId}/aprovar',        [ApprovalController::class, 'approvePlan'],    [CsrfMiddleware::class]);
     $router->post('/aprovacoes/{planId}/revisao',        [ApprovalController::class, 'requestRevision'],[CsrfMiddleware::class]);
+    $router->post('/aprovacoes/{planId}/reabrir',        [ApprovalController::class, 'reopenPlan'],     [CsrfMiddleware::class]);
     $router->post('/aprovacoes/{planId}/items/{itemId}', [ApprovalController::class, 'feedback'],       [CsrfMiddleware::class]);
 
     // ── Financeiro ────────────────────────────────────────────────────────────

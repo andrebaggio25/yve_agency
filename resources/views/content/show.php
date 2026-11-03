@@ -313,6 +313,9 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
       <span class="inline-flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-xs text-emerald-300">
         <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
         <?= e(t('content.plan_closed_hint')) ?>
+        <?php if (Auth::can('approvals.approve')): ?>
+        <a href="/aprovacoes/<?= (int) $plan['id'] ?>" class="font-semibold underline underline-offset-2 hover:text-white"><?= e(t('approval.reopen')) ?></a>
+        <?php endif; ?>
       </span>
       <?php endif; ?>
     </div>
@@ -1043,7 +1046,7 @@ $modalPayload = static fn(array $it): string => htmlspecialchars(json_encode([
               </template>
               <template x-if="rescheduleModal.target.status === 'approved' && !rescheduleModal.target.same_plan">
                 <p class="text-amber-300">
-                  Essa semana já foi aprovada pela cliente — escolha outra data.
+                  Essa semana já foi aprovada — escolha outra data ou reabra a semana em Aprovações.
                 </p>
               </template>
             </div>

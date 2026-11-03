@@ -35,6 +35,27 @@ class ClientGalleryAccessTest extends FeatureTestCase
         $this->assertStringContainsString('Conteúdos do cliente', $response->getBody());
     }
 
+    public function test_designer_tem_as_acoes_de_escrita_e_trafego_nao(): void
+    {
+        require_once dirname(__DIR__, 2) . '/database/seeders/InitialDataSeeder.php';
+        $permissoes = array_column(\InitialDataSeeder::DEFAULT_ROLES, 'permissions', 'slug');
+
+        $agencyId = $this->createAgency();
+        $client   = $this->createClient($agencyId);
+        $this->pdo->prepare(
+            "INSERT INTO google_drive_integrations (agency_id, refresh_token, root_folder_id, status, created_at)
+             VALUES (:a, 'refresh-de-teste', 'ROOT', 'active', NOW())"
+        )->execute([':a' => $agencyId]);
+
+        $this->actingAs($this->createUser($agencyId, 'designer@test.com')['id'], permissions: $permissoes['designer']);
+        $this->assertStringContainsString('type="file"', $this->get("/clientes/{$client['id']}/conteudos")->getBody());
+        $this->assertNotSame(403, $this->post("/clientes/{$client['id']}/conteudos/folders", ['name' => 'Fotos'])->getStatus());
+
+        $this->actingAs($this->createUser($agencyId, 'trafego@test.com')['id'], permissions: array_merge($permissoes['traffic_manager'], ['clients.view']));
+        $this->assertStringNotContainsString('type="file"', $this->get("/clientes/{$client['id']}/conteudos")->getBody());
+        $this->assertSame(403, $this->post("/clientes/{$client['id']}/conteudos/folders", ['name' => 'Fotos'])->getStatus());
+    }
+
     public function test_link_da_galeria_aparece_para_quem_nao_edita_cliente(): void
     {
         $agencyId = $this->createAgency();

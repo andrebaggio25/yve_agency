@@ -104,7 +104,7 @@ class Router
                 // Guard de autorização abortou (401/403) — resposta já pronta.
                 return $e->getResponse();
             } catch (\Throwable $e) {
-                return $this->handleError($e);
+                return $this->handleError($e, "{$method} {$route->uri}");
             }
         }
 
@@ -158,8 +158,26 @@ class Router
         return Response::text('404 — Página não encontrada', 404);
     }
 
-    private function handleError(\Throwable $e): Response
+    /**
+     * @param string $where método + rota com os `{parâmetros}`, nunca a URL real:
+     *                      ela carrega token do portal e de redefinição de senha.
+     */
+    private function handleError(\Throwable $e, string $where): Response
     {
+        // Sem este registro, o 500 de produção não deixava rastro nenhum: a tela
+        // esconde o detalhe e nada ia para o log. A pilha sai sem os argumentos
+        // das funções (`zend.exception_ignore_args`, em public/index.php), que
+        // incluíam a senha digitada no login.
+        error_log(sprintf(
+            "[500] %s — %s: %s em %s:%d\n%s",
+            $where,
+            $e::class,
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine(),
+            $e->getTraceAsString(),
+        ));
+
         $isDev = env('APP_ENV', 'production') === 'development';
 
         if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {

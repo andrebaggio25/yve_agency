@@ -9,6 +9,7 @@ use App\Core\Lang;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repositories\ClientRepository;
+use App\Repositories\UserRepository;
 use App\Services\ContentPlanService;
 use App\Support\Auth;
 
@@ -32,6 +33,7 @@ class ApprovalController extends Controller
     public function __construct(
         private readonly ContentPlanService $service,
         private readonly ClientRepository   $clients,
+        private readonly UserRepository     $users,
     ) {}
 
     /** List plans awaiting approval */
@@ -67,7 +69,12 @@ class ApprovalController extends Controller
             Lang::setLocale($clientRow['language']);
         }
 
-        return $this->view('approvals.show', compact('plan'));
+        // Sem JOIN na query da tela: até a migration rodar no deploy, a coluna
+        // `approved_by` não existe e esta tela precisa continuar abrindo.
+        $approver       = !empty($plan['approved_by']) ? $this->users->findByIdAndAgency((int) $plan['approved_by'], $agencyId) : null;
+        $approvedByName = $approver['name'] ?? null;
+
+        return $this->view('approvals.show', compact('plan', 'approvedByName'));
     }
 
     /** Submit feedback on a single item */
@@ -147,7 +154,7 @@ class ApprovalController extends Controller
             return $this->planNotFound($request);
         }
 
-        if (!$this->service->approvePlan($planId, (int) $plan['client_id'])) {
+        if (!$this->service->approvePlan($planId, (int) $plan['client_id'], (int) Auth::id())) {
             return $this->actionFailed($request, $planId);
         }
 
@@ -182,6 +189,41 @@ class ApprovalController extends Controller
         }
 
         $this->withSuccess(t('approval.revision_sent'));
+        return $this->redirect("/aprovacoes/{$planId}");
+    }
+
+    /** Reopen a closed plan so the team can fix it and send it again */
+    public function reopenPlan(Request $request): Response
+    {
+        Auth::requirePermission('approvals.approve');
+
+        $planId = (int) $request->param('planId');
+        $plan   = $this->reachablePlan($planId, (int) Auth::agencyId());
+
+        if (!$plan) {
+            return $this->planNotFound($request);
+        }
+
+        $reason = $request->input('reason', '');
+        $reason = is_string($reason) ? trim($reason) : '';
+
+        if ($reason === '') {
+            if ($request->wantsJson()) {
+                return Response::json(['success' => false, 'error' => t('approval.reopen_reason_required')], 422);
+            }
+
+            return $this->withError(t('approval.reopen_reason_required'))->redirect("/aprovacoes/{$planId}");
+        }
+
+        if (!$this->service->reopen($planId, (int) Auth::agencyId(), $reason)) {
+            return $this->actionFailed($request, $planId);
+        }
+
+        if ($request->wantsJson()) {
+            return Response::json(['success' => true]);
+        }
+
+        $this->withSuccess(t('approval.reopened'));
         return $this->redirect("/aprovacoes/{$planId}");
     }
 
