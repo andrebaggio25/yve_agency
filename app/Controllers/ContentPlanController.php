@@ -40,11 +40,23 @@ class ContentPlanController extends Controller
         $nextMonday  = ContentPlanService::mondayOf(date('Y-m-d', strtotime('+7 days')));
         $withPlan    = $this->service->clientIdsWithPlanForWeek((int) $agencyId, $nextMonday);
         $radarPending = array_values(array_filter(
-            $clientList,
+            $this->onlyActive($clientList),
             fn($c) => !in_array((int) $c['id'], $withPlan, true)
         ));
 
         return $this->view('content.index', compact('plans', 'clientList', 'filters', 'radarPending', 'nextMonday'));
+    }
+
+    /**
+     * Cliente inativo segue nos filtros, para achar os planos antigos dele, mas
+     * não cobra pauta no radar nem recebe plano novo.
+     *
+     * @param array<int,array<string,mixed>> $clients
+     * @return array<int,array<string,mixed>>
+     */
+    private function onlyActive(array $clients): array
+    {
+        return array_values(array_filter($clients, fn($c) => ($c['status'] ?? null) === 'active'));
     }
 
     /**
@@ -198,7 +210,7 @@ class ContentPlanController extends Controller
         Auth::requirePermission('content.create');
 
         $agencyId   = (int) Auth::agencyId();
-        $clientList = $this->accessibleClients($agencyId);
+        $clientList = $this->onlyActive($this->accessibleClients($agencyId));
         // Pré-seleção vinda do radar ("criar plano para o cliente X").
         $preselect  = (int) $request->query('client_id', 0);
 
@@ -218,7 +230,7 @@ class ContentPlanController extends Controller
             return $this->redirect('/conteudo/criar');
         }
 
-        $allowedIds = array_map(fn($c) => (int) $c['id'], $this->accessibleClients($agencyId));
+        $allowedIds = array_map(fn($c) => (int) $c['id'], $this->onlyActive($this->accessibleClients($agencyId)));
         if (!in_array((int) $input['client_id'], $allowedIds, true)) {
             $this->withError('Cliente inválido.');
             return $this->redirect('/conteudo/criar');

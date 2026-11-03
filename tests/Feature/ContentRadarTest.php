@@ -44,6 +44,35 @@ class ContentRadarTest extends FeatureTestCase
         $this->assertStringNotContainsString('para Cliente Planejado', $body);
     }
 
+    public function test_cliente_inativo_nao_aparece_no_radar_nem_no_plano_novo(): void
+    {
+        $agencyId = $this->createAgency();
+        $ativo    = $this->createClient($agencyId, 'Cliente Ativo');
+        $inativo  = $this->createClient($agencyId, 'Cliente Parado');
+        $this->pdo->prepare("UPDATE clients SET status = 'inactive' WHERE id = :id")->execute([':id' => $inativo['id']]);
+
+        $this->login($agencyId);
+
+        // O filtro da listagem ainda cita o inativo, então o assert olha o link do radar.
+        $lista = $this->get('/conteudo')->getBody();
+        $this->assertStringContainsString('para Cliente Ativo', $lista);
+        $this->assertStringNotContainsString('para Cliente Parado', $lista);
+        $this->assertStringContainsString('Cliente Parado', $lista, 'filtro mantém o inativo para achar planos antigos');
+
+        $form = $this->get('/conteudo/criar')->getBody();
+        $this->assertStringContainsString('Cliente Ativo', $form);
+        $this->assertStringNotContainsString('Cliente Parado', $form);
+
+        $resp = $this->post('/conteudo', [
+            'client_id'  => $inativo['id'],
+            'week_start' => \App\Services\ContentPlanService::mondayOf(date('Y-m-d', strtotime('+7 days'))),
+        ]);
+        $this->assertSame(302, $resp->getStatus());
+        $criados = $this->pdo->prepare('SELECT COUNT(*) FROM content_plans WHERE client_id = :c');
+        $criados->execute([':c' => $inativo['id']]);
+        $this->assertSame(0, (int) $criados->fetchColumn());
+    }
+
     public function test_todos_planejados_nao_mostra_radar(): void
     {
         $agencyId   = $this->createAgency();
