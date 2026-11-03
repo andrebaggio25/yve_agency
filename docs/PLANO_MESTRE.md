@@ -13,7 +13,7 @@
 
 **Gates em 2026-11-02 (branch `hom`):** 564 testes / 1988 asserts verdes · suíte também verde em PHP 8.3 (561 testes, antes dos 3 últimos) · PHPStan nível 6 = 0 · `composer audit` limpo. Em 31/10 eram 244 testes e 5 advisories.
 
-**Totais revisados em 01/11 (após as decisões):** 78 entregas, ~931 h no total (incluindo INFRA-04 suspenso, que não conta no núcleo). Mudanças sobre os 838 h originais: FE-06 de 6 h para 40 h (D14: painel inteiro em 3 idiomas), AI-02 novo (18 h), META-03 e META-07 com +4 h cada (D2: rodar em fatias no cron da Hostinger), 9 itens novos achados na execução da F0 (33 h, 1 já feito). Visão interativa: artifact "Plano YVE Agency ciclo 4".
+**Totais revisados em 01/11 (após as decisões):** 78 entregas, ~927 h no total (incluindo INFRA-04 suspenso, que não conta no núcleo). Mudanças sobre os 838 h originais: FE-06 de 6 h para 40 h (D14: painel inteiro em 3 idiomas), AI-02 novo (18 h), META-03 e META-07 com +4 h cada (D2: rodar em fatias no cron da Hostinger), 9 itens novos achados na execução da F0 (29 h depois que o SEC-19 foi encerrado sem código pela D19). Visão interativa: artifact "Plano YVE Agency ciclo 4".
 
 ---
 
